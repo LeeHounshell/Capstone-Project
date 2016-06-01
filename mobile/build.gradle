@@ -1,8 +1,37 @@
 apply plugin: 'com.android.application'
+apply from: '../preprocessor.gradle'
 
 android {
     compileSdkVersion 23
     buildToolsVersion "23.0.3"
+
+    ext.addDependency = {
+        task, flavor, dependency ->
+            println('task=' + (String) task + 'flavor=' + (String) flavor + 'dependency=' + (String) dependency)
+    }
+
+    if (project.hasProperty("MyProject.properties")
+            && new File(project.property("MyProject.properties") as String).exists()) {
+
+        Properties props = new Properties()
+        props.load(new FileInputStream(file(project.property("MyProject.properties"))))
+
+        signingConfigs {
+            release {
+                keyAlias props['keystore.alias']
+                keyPassword props['keystore.password']
+                storeFile file(props['keystore'])
+                storePassword props['keystore.password']
+            }
+            debug {
+                keyAlias props['keystore.alias']
+                keyPassword props['keystore.password']
+                storeFile file(props['keystore'])
+                storePassword props['keystore.password']
+            }
+        }
+    }
+
     defaultConfig {
         applicationId "com.harlie.radiotheater.radiomysterytheater"
         minSdkVersion 21
@@ -12,12 +41,28 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
     }
+
     buildTypes {
+        debug {
+            minifyEnabled true
+            useProguard false
+            shrinkResources false
+            debuggable true
+        }
         release {
             minifyEnabled false
+            useProguard true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
+
+    buildTypes.each {
+        it.buildConfigField 'String', 'GOOGLE_PROJECT_NUMBER', MyGoogleProjectNumber
+        it.buildConfigField 'String', 'GOOGLE_PROJECT_ID', MyGoogleProjectID
+    }
+
     lintOptions {
         disable 'InconsistentLayout'
     }
@@ -26,6 +71,15 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     wearApp project(':wear')
+    compile 'com.google.firebase:firebase-core:9.0.1'
+    compile 'com.google.firebase:firebase-database:9.0.1'
+    compile 'com.google.firebase:firebase-crash:9.0.1'
+    compile 'com.google.firebase:firebase-auth:9.0.1'
+    compile 'com.google.firebase:firebase-config:9.0.1'
+    compile 'com.google.firebase:firebase-invites:9.0.1'
+    compile 'com.google.firebase:firebase-ads:9.0.1'
+    compile 'com.facebook.android:facebook-android-sdk:[4,5)'
+    compile 'com.google.android.gms:play-services-appindexing:9.0.1'
     compile 'com.google.android.gms:play-services:9.0.1'
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.android.support:support-v4:23.4.0'
@@ -37,3 +91,6 @@ dependencies {
     androidTestCompile 'com.android.support:support-annotations:23.4.0'
     compile 'com.android.support:multidex:1.0.1'
 }
+
+apply plugin: 'com.google.gms.google-services'
+
