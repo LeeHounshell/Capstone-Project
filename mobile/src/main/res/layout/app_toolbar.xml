@@ -28,7 +28,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/logo"
-            android:scaleType="centerInside"
             android:contentDescription="@string/app_name"
             android:layout_gravity="bottom|left"
             android:paddingStart="@dimen/toolbar_inset"
