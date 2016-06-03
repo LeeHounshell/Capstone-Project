@@ -2,8 +2,8 @@
 <resources>
     <dimen name="appbar_layout_height">126dp</dimen>
     <dimen name="toolbar_inset">72dp</dimen>
-    <dimen name="toolbar_elevation">6dp</dimen>
-    <dimen name="toolbar_padding">12dp</dimen>
+    <dimen name="toolbar_elevation">16dp</dimen>
+    <dimen name="toolbar_padding">2dp</dimen>
     <dimen name="button_group_padding">8dp</dimen>
     <dimen name="signup_button_padding">16dp</dimen>
     <dimen name="button_group_spacing">4dp</dimen>
