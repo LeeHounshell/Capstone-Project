@@ -46,13 +46,14 @@
 
                     <ImageView
                         android:layout_width="match_parent"
-                        android:layout_height="50dp"
+                        android:layout_height="@dimen/auth_signup_height"
                         android:src="@drawable/signup" />
 
                     <!-- Email Label -->
                     <android.support.design.widget.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:elevation="@dimen/button_elevation"
                         android:layout_marginBottom="@dimen/button_group_spacing"
                         android:layout_marginEnd="@dimen/button_group_padding"
                         android:layout_marginStart="@dimen/button_group_padding"
@@ -76,6 +77,7 @@
                     <android.support.design.widget.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:elevation="@dimen/button_elevation"
                         android:layout_marginBottom="@dimen/button_group_spacing"
                         android:layout_marginEnd="@dimen/button_group_padding"
                         android:layout_marginStart="@dimen/button_group_padding"
@@ -99,6 +101,7 @@
                         android:id="@+id/btn_signup"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:elevation="@dimen/button_elevation"
                         android:layout_marginBottom="@dimen/button_group_spacing"
                         android:layout_marginEnd="@dimen/signup_button_padding"
                         android:layout_marginStart="@dimen/signup_button_padding"
@@ -128,7 +131,7 @@
                 <android.support.v7.widget.AppCompatImageButton
                     android:id="@+id/google_auth"
                     android:layout_width="match_parent"
-                    android:layout_height="50dp"
+                    android:layout_height="@dimen/auth_google_height"
                     android:elevation="@dimen/button_elevation"
                     android:padding="0dp"
                     android:scaleType="fitCenter"
@@ -137,7 +140,7 @@
                 <android.support.v7.widget.AppCompatImageButton
                     android:id="@+id/twitter_auth"
                     android:layout_width="match_parent"
-                    android:layout_height="50dp"
+                    android:layout_height="@dimen/auth_google_height"
                     android:elevation="@dimen/button_elevation"
                     android:padding="0dp"
                     android:scaleType="fitCenter"
@@ -147,7 +150,7 @@
                 <android.support.v7.widget.AppCompatImageButton
                     android:id="@+id/facebook_auth"
                     android:layout_width="match_parent"
-                    android:layout_height="50dp"
+                    android:layout_height="@dimen/auth_google_height"
                     android:elevation="@dimen/button_elevation"
                     android:padding="0dp"
                     android:scaleType="fitCenter"
