@@ -7,6 +7,7 @@
     <string name="email">Email Address</string>
     <string name="password">Password</string>
     <string name="signup">Signup</string>
+    <string name="login_error">Login Failed.</string>
     <string name="title_activity_autoplay">AutoplayActivity</string>
     <string name="loading">loading..</string>
 </resources>

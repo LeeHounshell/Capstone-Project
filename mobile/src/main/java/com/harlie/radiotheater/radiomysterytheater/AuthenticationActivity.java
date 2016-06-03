@@ -22,6 +22,7 @@ import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -35,6 +36,11 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindString;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+
 import static android.Manifest.permission.READ_CONTACTS;
 
 /**
@@ -42,6 +48,16 @@ import static android.Manifest.permission.READ_CONTACTS;
  */
 public class AuthenticationActivity extends BaseActivity {
     private final static String TAG = "LEE: <" + AuthenticationActivity.class.getSimpleName() + ">";
+
+    @BindView(R.id.user) EditText username;
+    @BindView(R.id.pass) EditText password;
+
+    @BindString(R.string.login_error) String loginErrorMessage;
+
+    @OnClick(R.id.submit) void submit() {
+        Log.v(TAG, "call Firebase server");
+        // TODO call Firebase server... download JSON... load SQLite... start AutoplayActivity
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +72,7 @@ public class AuthenticationActivity extends BaseActivity {
                 actionBar.setDisplayShowTitleEnabled(false);
             }
         }
+        ButterKnife.bind(this);
     }
 
 }
