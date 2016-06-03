@@ -4,6 +4,7 @@ import android.media.browse.MediaBrowser.MediaItem;
 import android.media.session.MediaSession;
 import android.os.Bundle;
 import android.service.media.MediaBrowserService;
+import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -85,12 +86,12 @@ public class RadioTheaterService extends MediaBrowserService {
     }
 
     @Override
-    public BrowserRoot onGetRoot(String clientPackageName, int clientUid, Bundle rootHints) {
+    public BrowserRoot onGetRoot(@NonNull String clientPackageName, int clientUid, Bundle rootHints) {
         return new BrowserRoot("root", null);
     }
 
     @Override
-    public void onLoadChildren(final String parentMediaId, final Result<List<MediaItem>> result) {
+    public void onLoadChildren(final String parentMediaId, @NonNull final Result<List<MediaItem>> result) {
         result.sendResult(new ArrayList<MediaItem>());
     }
 
@@ -128,7 +129,7 @@ public class RadioTheaterService extends MediaBrowserService {
         }
 
         @Override
-        public void onCustomAction(String action, Bundle extras) {
+        public void onCustomAction(@NonNull String action, Bundle extras) {
         }
 
         @Override

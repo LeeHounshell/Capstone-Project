@@ -1,5 +1,6 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.support.design.widget.AppBarLayout;
@@ -10,6 +11,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 
+@SuppressLint("Registered")
 public class BaseActivity extends AppCompatActivity {
     private final static String TAG = "LEE: <" + BaseActivity.class.getSimpleName() + ">";
 
