@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBar;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,7 +19,9 @@ import com.harlie.radiotheater.radiomysterytheater.dummy.DummyContent;
  * in two-pane mode (on tablets) or a {@link EpisodeDetailActivity}
  * on handsets.
  */
-public class EpisodeDetailFragment extends Fragment {
+public class EpisodeDetailFragment extends FragmentBase {
+    private final static String TAG = "LEE: <" + EpisodeDetailFragment.class.getSimpleName() + ">";
+
     /**
      * The fragment argument representing the item ID that this fragment
      * represents.
@@ -45,12 +49,6 @@ public class EpisodeDetailFragment extends Fragment {
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
             mItem = DummyContent.ITEM_MAP.get(getArguments().getString(ARG_ITEM_ID));
-
-            Activity activity = this.getActivity();
-            CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
-            if (appBarLayout != null) {
-                appBarLayout.setTitle(mItem.content);
-            }
         }
     }
 

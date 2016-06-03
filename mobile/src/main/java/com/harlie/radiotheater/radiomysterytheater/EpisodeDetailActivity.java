@@ -16,14 +16,22 @@ import android.view.MenuItem;
  * item details are presented side-by-side with a list of items
  * in a {@link EpisodeListActivity}.
  */
-public class EpisodeDetailActivity extends AppCompatActivity {
+public class EpisodeDetailActivity extends BaseActivity {
+    private final static String TAG = "LEE: <" + EpisodeDetailActivity.class.getSimpleName() + ">";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_episode_detail);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.detail_toolbar);
-        setSupportActionBar(toolbar);
+        configureToolbarTitleBehavior();
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        if (toolbar != null) {
+            setSupportActionBar(toolbar);
+            ActionBar actionBar = getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.setDisplayShowTitleEnabled(false);
+            }
+        }
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {

@@ -64,6 +64,7 @@ import java.util.List;
  * @see <a href="README.md">README.md</a> for more details.
  */
 public class RadioTheaterService extends MediaBrowserService {
+    private final static String TAG = "LEE: <" + RadioTheaterService.class.getSimpleName() + ">";
 
     private MediaSession mSession;
 

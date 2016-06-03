@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <dimen name="appbar_layout_height">136dp</dimen>
+    <dimen name="toolbar_inset">72dp</dimen>
+    <dimen name="toolbar_elevation">6dp</dimen>
+    <dimen name="toolbar_padding">12dp</dimen>
+    <dimen name="button_group_padding">8dp</dimen>
+    <dimen name="signup_button_padding">16dp</dimen>
+    <dimen name="button_group_spacing">4dp</dimen>
+    <dimen name="image_elevation">6dp</dimen>
+    <dimen name="button_elevation">6dp</dimen>
+
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="app_bar_height">200dp</dimen>
     <dimen name="item_width">200dp</dimen>
     <dimen name="text_margin">16dp</dimen>
+
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
 </resources>

@@ -2,4 +2,11 @@
     <string name="app_name">Radio Mystery Theater</string>
     <string name="title_episode_detail">Episode Detail</string>
     <string name="facebook_app_id">1144158162290422</string>
+
+    <!-- Strings related to login -->
+    <string name="email">Email Address</string>
+    <string name="password">Password</string>
+    <string name="signup">Signup</string>
+    <string name="title_activity_autoplay">AutoplayActivity</string>
+    <string name="loading">loading..</string>
 </resources>

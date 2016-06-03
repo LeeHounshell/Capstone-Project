@@ -16,8 +16,9 @@
 #   public *;
 #}
 
-# FIREBASE: Add this global rule
+# https://firebase-dot-devsite.googleplex.com/docs/auth/android/start/#proguard
 -keepattributes Signature
+-keepattributes *Annotation*
 
 # FIREBASE: This rule will properly ProGuard all the model classes in the
 # package com.yourcompany.models. Modify to fit the structure of your app.
