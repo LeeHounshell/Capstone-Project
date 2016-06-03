@@ -15,6 +15,7 @@
         android:layout_gravity="center"
         android:layout_marginLeft="@dimen/phone_margin"
         android:layout_marginRight="@dimen/phone_margin"
+        android:paddingTop="@dimen/activity_vertical_margin"
         android:fillViewport="true"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
