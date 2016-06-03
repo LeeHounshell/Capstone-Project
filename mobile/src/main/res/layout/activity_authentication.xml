@@ -30,20 +30,22 @@
                 android:elevation="@dimen/button_elevation"
                 android:background="@color/light_blue"
                 android:orientation="vertical"
+                android:paddingTop="@dimen/button_group_padding"
+                android:paddingBottom="@dimen/button_group_padding"
                 android:paddingLeft="@dimen/button_group_padding"
                 android:paddingRight="@dimen/button_group_padding" >
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_gravity="start"
                     android:elevation="@dimen/button_elevation"
                     android:background="@android:color/white"
                     android:orientation="vertical">
 
                     <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
                         android:src="@drawable/signup" />
 
                     <!-- Email Label -->
