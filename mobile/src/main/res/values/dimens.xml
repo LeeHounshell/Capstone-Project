@@ -7,6 +7,7 @@
     <dimen name="button_group_padding">8dp</dimen>
     <dimen name="signup_button_padding">16dp</dimen>
     <dimen name="button_group_spacing">4dp</dimen>
+    <dimen name="phone_margin">32dp</dimen>
     <dimen name="image_elevation">6dp</dimen>
     <dimen name="button_elevation">6dp</dimen>
 

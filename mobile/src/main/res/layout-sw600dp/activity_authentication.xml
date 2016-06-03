@@ -13,25 +13,26 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
-        android:layout_marginLeft="@dimen/phone_margin"
-        android:layout_marginRight="@dimen/phone_margin"
         android:fillViewport="true"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:orientation="vertical">
 
+            <Space
+                android:layout_width="1dp"
+                android:layout_height="30dp" />
+
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="400dp"
                 android:layout_height="wrap_content"
                 android:elevation="@dimen/button_elevation"
                 android:background="@color/light_blue"
                 android:orientation="vertical"
-                android:paddingLeft="@dimen/button_group_padding"
-                android:paddingRight="@dimen/button_group_padding" >
+                android:padding="@dimen/button_group_padding">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -42,8 +43,8 @@
                     android:orientation="vertical">
 
                     <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="400dp"
+                        android:layout_height="50dp"
                         android:src="@drawable/signup" />
 
                     <!-- Email Label -->
@@ -115,7 +116,7 @@
                 android:layout_height="30dp" />
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="400dp"
                 android:layout_height="wrap_content"
                 android:elevation="@dimen/button_elevation"
                 android:background="@color/light_blue"
@@ -124,8 +125,8 @@
 
                 <android.support.v7.widget.AppCompatImageButton
                     android:id="@+id/google_auth"
-                    android:layout_width="match_parent"
-                    android:layout_height="50dp"
+                    android:layout_width="400dp"
+                    android:layout_height="60dp"
                     android:elevation="@dimen/button_elevation"
                     android:padding="0dp"
                     android:scaleType="fitCenter"
@@ -133,8 +134,8 @@
 
                 <android.support.v7.widget.AppCompatImageButton
                     android:id="@+id/twitter_auth"
-                    android:layout_width="match_parent"
-                    android:layout_height="50dp"
+                    android:layout_width="400dp"
+                    android:layout_height="60dp"
                     android:elevation="@dimen/button_elevation"
                     android:padding="0dp"
                     android:scaleType="fitCenter"
@@ -143,8 +144,8 @@
                 <!-- There is a problem with the Facebook Android SDK and AppCompat - the don't play nice, so disable Facebook for now -->
                 <android.support.v7.widget.AppCompatImageButton
                     android:id="@+id/facebook_auth"
-                    android:layout_width="match_parent"
-                    android:layout_height="50dp"
+                    android:layout_width="400dp"
+                    android:layout_height="60dp"
                     android:elevation="@dimen/button_elevation"
                     android:padding="0dp"
                     android:scaleType="fitCenter"
