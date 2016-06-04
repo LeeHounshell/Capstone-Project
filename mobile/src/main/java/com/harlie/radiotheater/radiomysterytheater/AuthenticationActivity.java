@@ -3,6 +3,7 @@ package com.harlie.radiotheater.radiomysterytheater;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -33,6 +34,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.firebase.ui.auth.AuthUI;
+import com.google.firebase.auth.FirebaseAuth;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,6 +46,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 import static android.Manifest.permission.READ_CONTACTS;
+import static com.firebase.ui.auth.ui.AcquireEmailHelper.RC_SIGN_IN;
 
 /**
  * A login screen that offers Firebase login via email/password or Google or Facebook or Twitter
@@ -54,25 +59,79 @@ public class AuthenticationActivity extends BaseActivity {
 
     @BindString(R.string.login_error) String loginErrorMessage;
 
-    @OnClick(R.id.submit) void submit() {
-        Log.v(TAG, "call Firebase server");
-        // TODO call Firebase server... download JSON... load SQLite... start AutoplayActivity
+    @OnClick(R.id.submit)
+    void submit() {
+        Log.v(TAG, "submit - Firebase Login using Email and Password");
+        startActivityForResult(
+                AuthUI.getInstance()
+                        .createSignInIntentBuilder()
+                        .setProviders(
+                                AuthUI.EMAIL_PROVIDER)
+                        .build(),
+                RC_SIGN_IN);
+    }
+
+    @OnClick(R.id.google_auth)
+    void authenticateGoogle() {
+        Log.v(TAG, "authenticateGoogle - Firebase Auth using Google");
+        startActivityForResult(
+                AuthUI.getInstance()
+                        .createSignInIntentBuilder()
+                        .setProviders(
+                                AuthUI.GOOGLE_PROVIDER)
+                        .build(),
+                RC_SIGN_IN);
+    }
+
+    @OnClick(R.id.twitter_auth)
+    void authenticateTwitter() {
+        Log.v(TAG, "authenticateTwitter - Firebase Auth using Twitter");
+        // TODO - FIXME
+    }
+
+    @OnClick(R.id.facebook_auth)
+    void authenticateFacebook() {
+        Log.v(TAG, "authenticateTwitter - Firebase Auth using Facebook");
+        // TODO - FIXME
+        startActivityForResult(
+                AuthUI.getInstance()
+                        .createSignInIntentBuilder()
+                        .setProviders(
+                                AuthUI.FACEBOOK_PROVIDER)
+                        .build(),
+                RC_SIGN_IN);
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_authentication);
-        configureToolbarTitleBehavior();
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        if (toolbar != null) {
-            setSupportActionBar(toolbar);
-            ActionBar actionBar = getSupportActionBar();
-            if (actionBar != null) {
-                actionBar.setDisplayShowTitleEnabled(false);
+        // first see if Authentication is even needed..
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() != null) {
+            Log.v(TAG, "Firebase: user already signed in");
+            loadRadioTheaterSQLiteTables();
+            Intent autoplayIntent = new Intent(this, AutoplayActivity.class);
+            startActivity(autoplayIntent);
+            finish();
+        } else {
+            Log.v(TAG, "Firebase: user not signed in");
+            // ok, we need to authenticate
+            setContentView(R.layout.activity_authentication);
+            configureToolbarTitleBehavior();
+            Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+            if (toolbar != null) {
+                setSupportActionBar(toolbar);
+                ActionBar actionBar = getSupportActionBar();
+                if (actionBar != null) {
+                    actionBar.setDisplayShowTitleEnabled(false);
+                }
             }
+            ButterKnife.bind(this);
         }
-        ButterKnife.bind(this);
+    }
+
+    private void loadRadioTheaterSQLiteTables() {
+        Log.v(TAG, "loadRadioTheaterSQLiteTables - TODO");
     }
 
 }

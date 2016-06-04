@@ -1,6 +1,9 @@
 # Created by https://www.gitignore.io/api/android,intellij
 # Modified by Lee Hounshell
 
+gradle.properties
+local.properties
+
 .gradle
 .DS_Store
 
