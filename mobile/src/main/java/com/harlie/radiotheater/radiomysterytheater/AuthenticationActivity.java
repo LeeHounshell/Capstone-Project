@@ -1,38 +1,12 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.annotation.TargetApi;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.app.LoaderManager.LoaderCallbacks;
-
-import android.content.CursorLoader;
-import android.content.Loader;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.AsyncTask;
-
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
+import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
 import android.util.Log;
-import android.view.KeyEvent;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.inputmethod.EditorInfo;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
@@ -47,15 +21,11 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import butterknife.BindString;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-import static android.Manifest.permission.READ_CONTACTS;
 import static com.firebase.ui.auth.ui.AcquireEmailHelper.RC_SIGN_IN;
 
 /**
@@ -65,6 +35,7 @@ public class AuthenticationActivity
         extends BaseActivity
         implements GoogleApiClient.OnConnectionFailedListener {
     private final static String TAG = "LEE: <" + AuthenticationActivity.class.getSimpleName() + ">";
+    private static final int MIN_PASSWORD_LENGTH = 6;
 
     @BindView(R.id.user) EditText username;
     @BindView(R.id.pass) EditText password;
@@ -80,22 +51,78 @@ public class AuthenticationActivity
         String email = username.getText().toString();
         String pass = password.getText().toString();
         Log.v(TAG, "email="+email);
-        mAuth.signInWithEmailAndPassword(email, pass)
+        if (mAuth != null && email != null && pass != null && isValid(email, pass)) {
+            mAuth.signInWithEmailAndPassword(email, pass)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        Log.d(TAG, "signInWithEmail:onComplete:" + task.isSuccessful());
+                        Log.d(TAG, "signInWithEmailAndPassword:onComplete:" + task.isSuccessful());
 
                         // If sign in fails, display a message to the user. If sign in succeeds
                         // the auth state listener will be notified and logic to handle the
                         // signed in user can be handled in the listener.
                         boolean success = task.isSuccessful();
                         if (!success) {
-                            Log.w(TAG, "signInWithEmail", task.getException());
+                            Log.w(TAG, "signInWithEmailAndPassword: exception=", task.getException());
                         }
                         handleAuthenticationRequestResult(success);
                     }
                 });
+        }
+        else {
+            Toast.makeText(this, "Enter your Email and Password", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void createRadioMysteryTheaterFirebaseAccount() {
+        Log.v(TAG, "createRadioMysteryTheaterFirebaseAccount - Firebase Login using Email and Password");
+        String email = username.getText().toString();
+        String pass = password.getText().toString();
+        if (mAuth != null && email != null && pass != null && isValid(email, pass)) {
+            mAuth.createUserWithEmailAndPassword(email, pass)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        Log.d(TAG, "createUserWithEmailAndPassword:onComplete:" + task.isSuccessful());
+
+                        // If sign in fails, display a message to the user. If sign in succeeds
+                        // the auth state listener will be notified and logic to handle the
+                        // signed in user can be handled in the listener.
+                        boolean success = task.isSuccessful();
+                        if (!success) {
+                            Log.w(TAG, "createUserWithEmailAndPassword: exception=", task.getException());
+                            newUserCreationFailed();
+                        }
+                        else {
+                            handleAuthenticationRequestResult(success);
+                        }
+                    }
+                });
+        }
+        else {
+            Toast.makeText(this, "Enter your Email and Password", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private boolean isValid(String email, String pass) {
+        boolean result = true;
+        if (pass != null && pass.length() >= MIN_PASSWORD_LENGTH) {
+            // from: http://stackoverflow.com/questions/624581/what-is-the-best-java-email-address-validation-method
+            String ePattern = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$";
+            java.util.regex.Pattern p = java.util.regex.Pattern.compile(ePattern);
+            java.util.regex.Matcher m = p.matcher(email);
+            result = m.matches();
+        }
+        else {
+            Toast.makeText(this, "Password too short. Use "+MIN_PASSWORD_LENGTH+"+ characters.", Toast.LENGTH_LONG).show();
+            result = false;
+        }
+        return result;
+    }
+
+    private void newUserCreationFailed() {
+        Log.v(TAG, "newUserCreationFailed");
+        Toast.makeText(this, "Invalid Email or Password", Toast.LENGTH_SHORT).show();
     }
 
     private void handleAuthenticationRequestResult(boolean success) {
@@ -105,7 +132,8 @@ public class AuthenticationActivity
             String email = username.getText().toString();
             String pass = password.getText().toString();
             if ((email != null && email.length() > 0) && (pass != null && pass.length() > 0)) {
-                Log.v(TAG, "FIXME: - confirm new account request, then create new account for email="+email);
+                Log.v(TAG, "confirm new account creation for email="+email);
+                createRadioMysteryTheaterFirebaseAccount();
             }
         }
         else {
@@ -164,7 +192,7 @@ public class AuthenticationActivity
         // first see if Authentication is even needed..
         mAuth = FirebaseAuth.getInstance();
         if (mAuth.getCurrentUser() != null) {
-            Log.v(TAG, "--> Firebase: user="+mAuth.getCurrentUser()+" already signed in!");
+            Log.v(TAG, "--> Firebase: user="+mAuth.getCurrentUser().getDisplayName()+" already signed in!");
             loadRadioTheaterSQLiteTables();
             startAutoplayActivity();
         } else {
@@ -180,6 +208,7 @@ public class AuthenticationActivity
                     actionBar.setDisplayShowTitleEnabled(false);
                 }
             }
+
             ButterKnife.bind(this);
 
             // Configure sign-in to request the user's ID, email address, and basic
