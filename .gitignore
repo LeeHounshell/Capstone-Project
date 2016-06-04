@@ -3,6 +3,7 @@
 
 gradle.properties
 local.properties
+mobile/google-services.json
 
 .gradle
 .DS_Store
