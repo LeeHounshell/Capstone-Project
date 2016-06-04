@@ -3,6 +3,7 @@ package com.harlie.radiotheater.radiomysterytheater;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -245,6 +246,12 @@ public class AuthenticationActivity
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         Log.v(TAG, "onConnectionFailed - connectionResult="+connectionResult.isSuccess());
         handleAuthenticationRequestResult(connectionResult.isSuccess());
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
     }
 
 }

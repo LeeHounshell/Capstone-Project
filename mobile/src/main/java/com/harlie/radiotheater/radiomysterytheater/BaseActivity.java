@@ -53,7 +53,6 @@ public class BaseActivity extends AppCompatActivity {
     public void onBackPressed() {
         Log.v(TAG, "onBackPressed");
         super.onBackPressed();
-        NavUtils.navigateUpFromSameTask(this);
     }
 
     //from: http://stackoverflow.com/questions/31662416/show-collapsingtoolbarlayout-title-only-when-collapsed
