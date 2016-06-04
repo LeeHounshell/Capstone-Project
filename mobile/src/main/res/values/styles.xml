@@ -14,4 +14,9 @@
         <item name="popupTheme">@style/ThemeOverlay.AppCompat.Light</item>
     </style>
 
+    <style name="RadioTheaterButton" parent="AppTheme">
+        <item name="colorControlHighlight">@color/buttonColorPressed</item>
+        <item name="colorButtonNormal">@color/buttonColor</item>
+    </style>
+
 </resources>

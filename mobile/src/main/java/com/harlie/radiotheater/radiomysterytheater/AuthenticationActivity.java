@@ -158,7 +158,10 @@ public class AuthenticationActivity
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-            boolean success = result.isSuccess();
+            boolean success = false;
+            if (result != null) {
+                success = result.isSuccess();
+            }
             if (success) {
                 GoogleSignInAccount acct = result.getSignInAccount();
                 Log.v(TAG, "Google Sign In was successful for "+acct.getDisplayName());
@@ -241,5 +244,6 @@ public class AuthenticationActivity
         Log.v(TAG, "onConnectionFailed - connectionResult="+connectionResult.isSuccess());
         handleAuthenticationRequestResult(connectionResult.isSuccess());
     }
+
 }
 
