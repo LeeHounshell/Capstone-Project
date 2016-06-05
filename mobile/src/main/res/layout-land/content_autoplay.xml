@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content_autoplay"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/black"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.harlie.radiotheater.radiomysterytheater.AutoplayActivity"
+    tools:showIn="@layout/activity_autoplay">
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/radio_theater_background"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center_horizontal"
+            android:scaleType="centerCrop"
+            android:contentDescription="@string/e_g_marshall" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/radio_theater_background"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center_horizontal"
+            android:scaleType="centerCrop"
+            android:contentDescription="@string/e_g_marshall" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/radio_theater_background"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center_horizontal"
+            android:scaleType="centerCrop"
+            android:contentDescription="@string/e_g_marshall" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/radio_theater_background"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center_horizontal"
+            android:scaleType="centerCrop"
+            android:contentDescription="@string/e_g_marshall" />
+
+    </LinearLayout>
+
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/autoplay"
+        android:layout_width="333dp"
+        android:layout_height="169dp"
+        android:theme="@style/RadioTheaterButton"
+        android:background="@drawable/radio_theater_autoplay_button_selector"
+        android:contentDescription="@string/autoplay_next"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:elevation="@dimen/button_elevation">
+    </android.support.v7.widget.AppCompatButton>
+
+</FrameLayout>

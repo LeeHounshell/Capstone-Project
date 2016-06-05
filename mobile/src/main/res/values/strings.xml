@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Radio Mystery Theater</string>
+    <string name="e_g_marshall">E. G. Marshall</string>
     <string name="title_episode_detail">Episode Detail</string>
 
     <!-- Strings related to login -->
@@ -9,4 +10,5 @@
     <string name="login_error">Login Failed.</string>
     <string name="title_activity_autoplay">AutoplayActivity</string>
     <string name="loading">loading..</string>
+    <string name="autoplay_next">Autoplay next episode</string>
 </resources>
