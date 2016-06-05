@@ -140,7 +140,7 @@
                     android:src="@drawable/google_auth" />
 
                 <!-- FIXME
-                  There is a problem with teh TwitterLoginButton and setContentView
+                  There is a problem with the TwitterLoginButton and setContentView
                   <com.twitter.sdk.android.core.identity.TwitterLoginButton
                   disable Twitter for now
                 -->

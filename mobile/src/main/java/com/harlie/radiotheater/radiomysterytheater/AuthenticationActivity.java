@@ -62,7 +62,7 @@ public class AuthenticationActivity
 
         // first see if Authentication is even needed..
         mAuth = FirebaseAuth.getInstance();
-        if (mAuth.getCurrentUser() != null) {
+        if (mAuth != null && mAuth.getCurrentUser() != null) {
             Log.v(TAG, "--> Firebase: user=" + mAuth.getCurrentUser().getDisplayName() + " already signed in!");
             checkIfNeedToCreateDatabase();
             startAutoplayActivity();
