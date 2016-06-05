@@ -14,45 +14,39 @@
 
     <LinearLayout
         android:layout_width="fill_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:gravity="center"
-        android:orientation="horizontal">
+        android:layout_height="fill_parent">
 
         <ImageView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/radio_theater_background"
-            android:layout_gravity="center_horizontal"
-            android:gravity="center_horizontal"
-            android:scaleType="centerCrop"
+            android:scaleType="fitStart"
             android:contentDescription="@string/e_g_marshall" />
 
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:src="@drawable/radio_theater_background"
-            android:layout_gravity="center_horizontal"
-            android:gravity="center_horizontal"
-            android:scaleType="centerCrop"
-            android:contentDescription="@string/e_g_marshall" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
 
         <ImageView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/radio_theater_background"
-            android:layout_gravity="center_horizontal"
-            android:gravity="center_horizontal"
-            android:scaleType="centerCrop"
+            android:scaleType="fitEnd"
             android:contentDescription="@string/e_g_marshall" />
 
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+
         <ImageView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/radio_theater_background"
-            android:layout_gravity="center_horizontal"
-            android:gravity="center_horizontal"
-            android:scaleType="centerCrop"
+            android:scaleType="fitCenter"
             android:contentDescription="@string/e_g_marshall" />
 
     </LinearLayout>
