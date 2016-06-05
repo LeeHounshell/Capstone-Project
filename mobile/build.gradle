@@ -1,5 +1,20 @@
+buildscript {
+    repositories {
+        maven { url 'https://maven.fabric.io/public' }
+    }
+
+    dependencies {
+        classpath 'io.fabric.tools:gradle:1.+'
+    }
+}
 apply plugin: 'com.android.application'
+
+repositories {
+    maven { url 'https://maven.fabric.io/public' }
+}
+
 apply plugin: 'android-apt'
+apply plugin: 'io.fabric'
 apply from: '../preprocessor.gradle'
 
 android {
@@ -41,6 +56,7 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
+        manifestPlaceholders = [ "FABRIC_API_KEY": "ec24cad1b54e4429a75f75d2f7f8e49d4fb0fcfb" ]
     }
 
     buildTypes {
@@ -62,6 +78,8 @@ android {
     buildTypes.each {
         it.buildConfigField 'String', 'GOOGLE_PROJECT_NUMBER', MyGoogleProjectNumber
         it.buildConfigField 'String', 'GOOGLE_PROJECT_ID', MyGoogleProjectID
+        it.buildConfigField 'String', 'TWITTER_API_KEY', MyTwitterAPIKey
+        it.buildConfigField 'String', 'TWITTER_API_SECRET', MyTwitterAPISecret
     }
 
     packagingOptions {
@@ -101,7 +119,12 @@ dependencies {
     androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
     androidTestCompile 'com.android.support.test:runner:0.5'
     androidTestCompile 'com.android.support:support-annotations:23.4.0'
+    compile('com.twitter.sdk.android:twitter:1.13.2@aar') {
+        transitive = true;
+    }
+    compile('com.crashlytics.sdk.android:crashlytics:2.5.6@aar') {
+        transitive = true;
+    }
 }
 
 apply plugin: 'com.google.gms.google-services'
-

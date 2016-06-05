@@ -139,8 +139,13 @@
                     android:scaleType="fitCenter"
                     android:src="@drawable/google_auth" />
 
+                <!-- FIXME
+                  There is a problem with teh TwitterLoginButton and setContentView
+                  <com.twitter.sdk.android.core.identity.TwitterLoginButton
+                  disable Twitter for now
+                -->
                 <android.support.v7.widget.AppCompatImageButton
-                    android:id="@+id/twitter_auth"
+                    android:id="@+id/twitter_login_button"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/auth_google_height"
                     android:theme="@style/RadioTheaterButton"
@@ -151,7 +156,10 @@
                     android:src="@drawable/twitter_auth"
                     android:visibility="gone"/>
 
-                <!-- There is a problem with the Facebook Android SDK and AppCompat - the don't play nice, so disable Facebook for now -->
+                <!-- FIXME
+                  There is a problem with the Facebook Android SDK and AppCompat
+                  they don't play nice, so disable Facebook for now
+                -->
                 <android.support.v7.widget.AppCompatImageButton
                     android:id="@+id/facebook_auth"
                     android:layout_width="match_parent"
