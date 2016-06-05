@@ -13,5 +13,6 @@
     <color name="forest_green">#ff228b22</color>
 
     <color name="buttonColor">#ff228b22</color>
+    <color name="sliderColor">#ffff0000</color>
     <color name="buttonColorPressed">#ffadd8e6</color>
 </resources>

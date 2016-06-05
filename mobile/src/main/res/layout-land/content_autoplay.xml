@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<!--suppress AndroidUnknownAttribute -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:circular="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/content_autoplay"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@android:color/black"
+    android:orientation="vertical"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.harlie.radiotheater.radiomysterytheater.AutoplayActivity"
     tools:showIn="@layout/activity_autoplay">
@@ -19,21 +20,32 @@
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:src="@drawable/haunted"
+            android:contentDescription="@string/e_g_marshall"
             android:scaleType="fitCenter"
-            android:contentDescription="@string/e_g_marshall" />
+            android:src="@drawable/haunted" />
 
     </LinearLayout>
+
+    <me.angrybyte.circularslider.CircularSlider
+        android:id="@+id/circular_seekbar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="30dp"
+        circular:thumb_image="@drawable/seek_thumb"
+        circular:angle="3.14"
+        circular:border_color="@color/sliderColor"
+        circular:border_thickness="9dp"
+        circular:thumb_size="30dp"
+        android:visibility="gone" />
 
     <android.support.v7.widget.AppCompatButton
         android:id="@+id/autoplay"
         android:layout_width="333dp"
         android:layout_height="111dp"
         android:layout_gravity="center"
-        android:theme="@style/RadioTheaterButton"
         android:background="@drawable/radio_theater_autoplay_button_selector"
         android:contentDescription="@string/autoplay_next"
-        android:elevation="@dimen/button_elevation">
-    </android.support.v7.widget.AppCompatButton>
+        android:elevation="@dimen/button_elevation"
+        android:theme="@style/RadioTheaterButton" />
 
 </FrameLayout>
