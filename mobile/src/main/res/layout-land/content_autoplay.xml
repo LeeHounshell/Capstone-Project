@@ -60,12 +60,11 @@
     <android.support.v7.widget.AppCompatButton
         android:id="@+id/autoplay"
         android:layout_width="333dp"
-        android:layout_height="169dp"
+        android:layout_height="111dp"
+        android:layout_gravity="center"
         android:theme="@style/RadioTheaterButton"
         android:background="@drawable/radio_theater_autoplay_button_selector"
         android:contentDescription="@string/autoplay_next"
-        android:layout_gravity="center"
-        android:gravity="center"
         android:elevation="@dimen/button_elevation">
     </android.support.v7.widget.AppCompatButton>
 
