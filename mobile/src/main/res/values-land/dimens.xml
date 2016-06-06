@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="appbar_layout_height">150dp</dimen>
-    <dimen name="autoplay_height">169dp</dimen>
-    <dimen name="autoplay_width">123dp</dimen>
+    <dimen name="autoplay_height">130dp</dimen>
+    <dimen name="autoplay_width">170dp</dimen>
 </resources>
