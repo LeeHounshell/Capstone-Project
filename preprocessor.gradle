@@ -36,7 +36,7 @@
   
 String sourceDirectory = 'src'
 FileTree javaFiles = fileTree(sourceDirectory) {
-    include 'mobile/**/*.java'
+    include '**/*.java'
 }
   
 // auto comment and uncomment source lines between #IFDEF 'configuration' and #ELSE or #ENDIF
