@@ -4,6 +4,8 @@
 gradle.properties
 local.properties
 mobile/google-services.json
+mobile/src/free/google-services.json
+mobile/src/paid/google-services.json
 
 .gradle
 .DS_Store

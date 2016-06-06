@@ -1,0 +1,52 @@
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:CircleProgressView="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:background="@color/accent"
+    android:orientation="vertical"
+    android:theme="@style/AppTheme">
+
+    <include layout="@layout/app_toolbar" />
+
+    <android.support.v4.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:layout_marginLeft="@dimen/phone_margin"
+        android:layout_marginRight="@dimen/phone_margin"
+        android:fillViewport="true"
+        android:paddingTop="@dimen/activity_vertical_margin"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical">
+
+            <at.grabner.circleprogress.CircleProgressView
+                android:id="@+id/circle_view"
+                style="@style/circleview_style"
+                CircleProgressView:barColor="#00796B"
+                CircleProgressView:barWidth="35dp"
+                CircleProgressView:contourSize="0dp"
+                CircleProgressView:maxValue="20"
+                CircleProgressView:rimColor="#B2DFDB"
+                CircleProgressView:rimWidth="35dp"
+                CircleProgressView:seekMode="true"
+                CircleProgressView:textColor="#00796B"
+                CircleProgressView:unit="%"
+                CircleProgressView:unitColor="#009688"
+                android:layout_width="277dp"
+                android:layout_height="277dp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+    </android.support.v4.widget.NestedScrollView>
+
+</android.support.design.widget.CoordinatorLayout>
+

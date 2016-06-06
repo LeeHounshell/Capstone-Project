@@ -11,13 +11,20 @@ public class RadioTheaterApplication extends android.support.multidex.MultiDexAp
     private final static String TAG = "LEE: <" + RadioTheaterApplication.class.getSimpleName() + ">";
 
     private static Context applicationContext;
+    private static RadioTheaterApplication sInstance;
 
     @Override
     public void onCreate() {
         Log.v(TAG, "onCreate");
-        applicationContext = this;
+        sInstance = this;
+        applicationContext = this.getApplicationContext();
         super.onCreate();
         Fabric.with(this, new Crashlytics());
+    }
+
+    public static synchronized RadioTheaterApplication getInstance() {
+        Log.v(TAG, "getInstance");
+        return RadioTheaterApplication.sInstance;
     }
 
     public static Context getRadioTheaterApplicationContext() {
@@ -25,3 +32,4 @@ public class RadioTheaterApplication extends android.support.multidex.MultiDexAp
     }
 
 }
+

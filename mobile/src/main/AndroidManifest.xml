@@ -5,6 +5,11 @@
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Include required permissions to determine if network is available -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Include required permissions for local SQLite database -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <!-- To auto-complete the email text field in the login form with the user's emails -->
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
@@ -12,22 +17,20 @@
     <uses-permission android:name="android.permission.READ_CONTACTS" />
 
     <application
-        android:name="com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication"
+        android:name=".RadioTheaterApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.Light.NoActionBar" >
-
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         <activity
             android:name=".EpisodeListActivity"
-            android:label="@string/app_name" >
-        </activity>
+            android:label="@string/app_name" />
 
         <activity
             android:name=".EpisodeDetailActivity"
             android:label="@string/title_episode_detail"
-            android:parentActivityName=".EpisodeListActivity" >
+            android:parentActivityName=".EpisodeListActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.harlie.radiotheater.radiomysterytheater.EpisodeListActivity" />
@@ -55,9 +58,9 @@
 
         <activity
             android:name=".AuthenticationActivity"
+            android:configChanges="keyboardHidden|orientation"
             android:label="@string/app_name"
-            android:screenOrientation="portrait"
-            android:configChanges="keyboardHidden|orientation">
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -67,12 +70,16 @@
 
         <activity
             android:name=".AutoplayActivity"
-            android:label="@string/title_activity_autoplay" >
-        </activity>
+            android:label="@string/title_activity_autoplay" />
 
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="${FABRIC_API_KEY}" />
+
+        <activity android:name=".AuthEmailActivity" />
+        <activity android:name=".AuthGoogleActivity" />
+        <activity android:name=".AuthTwitterActivity" />
+        <activity android:name=".AuthFacebookActivity" />
 
     </application>
 

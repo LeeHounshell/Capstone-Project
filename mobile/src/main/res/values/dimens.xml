@@ -9,6 +9,7 @@
     <dimen name="phone_margin">32dp</dimen>
     <dimen name="image_elevation">6dp</dimen>
     <dimen name="button_elevation">6dp</dimen>
+    <dimen name="admob_elevation">6dp</dimen>
 
     <dimen name="auth_signup_height">50dp</dimen>
     <dimen name="auth_google_height">50dp</dimen>

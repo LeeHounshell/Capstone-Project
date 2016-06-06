@@ -19,4 +19,16 @@
         <item name="colorButtonNormal">@color/buttonColor</item>
     </style>
 
+    <style name="AdMob" parent="AppTheme">
+        <item name="android:elevation">@dimen/admob_elevation</item>
+    </style>
+
+    <style name="circleview_style" >
+        <item name="android:layout_centerHorizontal">true</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:gravity">center</item>
+        <item name="android:elevation">@dimen/image_elevation</item>
+    </style>
+
 </resources>

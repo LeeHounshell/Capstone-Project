@@ -25,3 +25,8 @@
 -keepclassmembers class com.harlie.radiotheater.radiomysterytheater.** {
   *;
 }
+
+-keepclassmembers class at.grabner.circleprogress.CircleProgressView.** {
+  *;
+}
+
