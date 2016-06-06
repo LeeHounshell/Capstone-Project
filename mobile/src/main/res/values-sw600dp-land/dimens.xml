@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="autoplay_height">222dp</dimen>
+    <dimen name="autoplay_width">333dp</dimen>
+</resources>

@@ -27,8 +27,8 @@
 
     <android.support.v7.widget.AppCompatButton
         android:id="@+id/autoplay"
-        android:layout_width="238dp"
-        android:layout_height="137dp"
+        android:layout_width="@dimen/autoplay_width"
+        android:layout_height="@dimen/autoplay_height"
         android:layout_gravity="center"
         android:background="@drawable/radio_theater_autoplay_button_selector"
         android:contentDescription="@string/autoplay_next"
