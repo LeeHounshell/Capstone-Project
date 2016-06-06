@@ -46,6 +46,6 @@
         circular:border_color="@color/sliderColor"
         circular:border_thickness="9dp"
         circular:thumb_size="30dp"
-        android:visibility="gone" />
+        android:visibility="visible" />
 
 </FrameLayout>

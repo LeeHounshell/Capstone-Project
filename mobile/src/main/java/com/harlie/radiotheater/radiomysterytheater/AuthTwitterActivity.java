@@ -59,6 +59,7 @@ public class AuthTwitterActivity extends BaseActivity
         Fabric.with(this, new Twitter(authConfig));
 
         // ok, we need to authenticate
+        /*
         setContentView(R.layout.activity_auth_twitter);
         configureToolbarTitleBehavior();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -69,6 +70,7 @@ public class AuthTwitterActivity extends BaseActivity
                 actionBar.setDisplayShowTitleEnabled(false);
             }
         }
+        */
 
 /*
  * FIXME

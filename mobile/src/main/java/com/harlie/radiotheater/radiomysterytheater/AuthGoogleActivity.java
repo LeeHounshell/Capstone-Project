@@ -44,6 +44,7 @@ public class AuthGoogleActivity
         Log.v(TAG, "--> Firebase: user not signed in");
 
         // ok, we need to authenticate
+        /*
         setContentView(R.layout.activity_auth_google);
         configureToolbarTitleBehavior();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -54,6 +55,7 @@ public class AuthGoogleActivity
                 actionBar.setDisplayShowTitleEnabled(false);
             }
         }
+        */
 
         // Configure sign-in to request the user's ID, email address, and basic
         // profile. ID and basic profile are included in DEFAULT_SIGN_IN.

@@ -43,6 +43,7 @@ public class AuthFacebookActivity extends BaseActivity
         Log.v(TAG, "--> Firebase: user not signed in");
 
         // ok, we need to authenticate
+        /*
         setContentView(R.layout.activity_auth_facebook);
         configureToolbarTitleBehavior();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -53,6 +54,7 @@ public class AuthFacebookActivity extends BaseActivity
                 actionBar.setDisplayShowTitleEnabled(false);
             }
         }
+        */
     }
 
     @Override

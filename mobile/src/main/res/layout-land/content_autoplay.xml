@@ -31,8 +31,8 @@
 
     <android.support.v7.widget.AppCompatButton
         android:id="@+id/autoplay"
-        android:layout_width="333dp"
-        android:layout_height="111dp"
+        android:layout_width="169dp"
+        android:layout_height="123dp"
         android:layout_gravity="center"
         android:background="@drawable/radio_theater_autoplay_button_selector"
         android:contentDescription="@string/autoplay_next"
@@ -49,6 +49,6 @@
         circular:border_color="@color/sliderColor"
         circular:border_thickness="9dp"
         circular:thumb_size="30dp"
-        android:visibility="gone" />
+        android:visibility="visible" />
 
 </FrameLayout>

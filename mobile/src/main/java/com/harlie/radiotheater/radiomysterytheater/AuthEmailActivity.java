@@ -35,6 +35,7 @@ public class AuthEmailActivity extends BaseActivity
         Log.v(TAG, "--> Firebase: user not signed in");
 
         // ok, we need to authenticate
+        /*
         setContentView(R.layout.activity_auth_email);
         configureToolbarTitleBehavior();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -45,6 +46,7 @@ public class AuthEmailActivity extends BaseActivity
                 actionBar.setDisplayShowTitleEnabled(false);
             }
         }
+        */
 
         setEmail(null);
         setPass(null);
