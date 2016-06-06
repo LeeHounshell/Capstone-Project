@@ -107,6 +107,11 @@ public class AuthGoogleActivity
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            if (result == null) {
+                Log.v(TAG, "GoogleSignInResult is null!");
+                handleAuthenticationRequestResult(false);
+                return;
+            }
             if (result.isSuccess()) {
                 GoogleSignInAccount acct = result.getSignInAccount();
                 String personName = acct.getDisplayName();
