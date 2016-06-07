@@ -83,6 +83,7 @@ public class AuthenticationActivity extends BaseActivity
             authEmailIntent.putExtra("email", email);
             authEmailIntent.putExtra("pass", pass);
             startActivity(authEmailIntent);
+            finish();
         }
         else {
             Toast.makeText(this, "Inavlid Email. Password must use " + MIN_PASSWORD_LENGTH + "+ characters.", Toast.LENGTH_LONG).show();
@@ -94,6 +95,7 @@ public class AuthenticationActivity extends BaseActivity
         Log.v(TAG, "authenticateGoogle - Firebase Auth using Google");
         Intent authGoogleIntent = new Intent(this, AuthGoogleActivity.class);
         startActivity(authGoogleIntent);
+        finish();
     }
 
     @OnClick(R.id.twitter_auth)
@@ -101,6 +103,7 @@ public class AuthenticationActivity extends BaseActivity
         Log.v(TAG, "authenticateTwitter - Firebase Auth using Twitter");
         Intent authTwitterIntent = new Intent(this, AuthTwitterActivity.class);
         startActivity(authTwitterIntent);
+        finish();
     }
 
     @OnClick(R.id.facebook_auth)
@@ -108,6 +111,7 @@ public class AuthenticationActivity extends BaseActivity
         Log.v(TAG, "authenticateFacebook - Firebase Auth using Facebook");
         Intent authFacebookIntent = new Intent(this, AuthFacebookActivity.class);
         startActivity(authFacebookIntent);
+        finish();
     }
 
     @Override

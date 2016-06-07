@@ -1,10 +1,12 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 
@@ -43,15 +45,18 @@ public class AutoplayActivity extends BaseActivity {
 
         // initialize AdMob - note this code uses the Gradle #IFDEF / #ENDIF gradle preprocessor
         //#IFDEF 'FREE'
-        //String banner_ad_unit_id = getResources().getString(R.string.banner_ad_unit_id);
-        //MobileAds.initialize(getApplicationContext(), banner_ad_unit_id);
+        String banner_ad_unit_id = getResources().getString(R.string.banner_ad_unit_id);
+        MobileAds.initialize(getApplicationContext(), banner_ad_unit_id);
 
-        //AdView mAdView = (AdView) findViewById(R.id.adView);
-        //AdRequest adRequest = new AdRequest.Builder()
-                //.addTestDevice(AdRequest.DEVICE_ID_EMULATOR)        // All emulators
-                //.addTestDevice(getResources().getString(R.string.test_device))
-                //.build();
-        //mAdView.loadAd(adRequest);
+        final TelephonyManager tm =(TelephonyManager)getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
+
+        AdView mAdView = (AdView) findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder()
+                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)        // All emulators
+                .addTestDevice(getResources().getString(R.string.test_device1))
+                .addTestDevice(getResources().getString(R.string.test_device2))
+                .build();
+        mAdView.loadAd(adRequest);
         //#ENDIF
     }
 
