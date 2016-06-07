@@ -1,0 +1,38 @@
+{
+  "documentation": "Radio Mystery Theater writers list.",
+  "fields": [
+    {
+      "name": "field_writer_id",
+      "type": "Long",
+      "nullable": false,
+      "foreignKey": {
+        "table": "writers_episodes",
+        "onDelete": "CASCADE"
+      }
+    },
+    {
+      "documentation": "writer full name",
+      "name": "field_writer_name",
+      "type": "String",
+      "nullable": false
+    },
+    {
+      "documentation": "writer photo URL",
+      "name": "field_writer_url",
+      "type": "String",
+      "nullable": false
+    },
+    {
+      "documentation": "writer biography",
+      "name": "field_writer_bio",
+      "type": "String",
+      "nullable": true
+    }
+  ],
+  "constraints": [
+    {
+      "name": "field_unique",
+      "definition": "UNIQUE (field_writer_name) ON CONFLICT ABORT"
+    }
+  ]
+}

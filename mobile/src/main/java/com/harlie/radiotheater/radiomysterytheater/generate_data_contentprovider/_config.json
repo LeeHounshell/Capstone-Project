@@ -1,0 +1,13 @@
+{
+  "syntaxVersion": 3,
+  "projectPackageId": "com.harlie.radiotheater.radiomysterytheater",
+  "authority": "com.harlie.radiotheater.radiomysterytheater.data.radiotheaterprovider",
+  "providerJavaPackage": "com.harlie.radiotheater.radiomysterytheater.data",
+  "providerClassName": "RadioTheaterProvider",
+  "sqliteOpenHelperClassName": "RadioTheaterHelper",
+  "sqliteOpenHelperCallbacksClassName": "RadioTheaterHelperCallbacks",
+  "databaseFileName": "radiomysterytheater.db",
+  "databaseVersion": 1,
+  "enableForeignKeys": true,
+  "useAnnotations": true
+}

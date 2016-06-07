@@ -1,0 +1,47 @@
+{
+  "documentation": "Radio Mystery Theater episodes.",
+  "fields": [
+    {
+      "name": "field_episode_number",
+      "type": "Long",
+      "nullable": false
+    },
+    {
+      "documentation": "Air Date",
+      "name": "field_airdate",
+      "type": "Date",
+      "nullable": false
+    },
+    {
+      "documentation": "the episode title",
+      "name": "field_episode_title",
+      "type": "String",
+      "nullable": false
+    },
+    {
+      "documentation": "episode description",
+      "name": "field_episode_description",
+      "type": "String",
+      "nullable": false
+    },
+    {
+      "documentation": "url download path",
+      "name": "field_download_url",
+      "type": "String",
+      "nullable": false,
+      "defaultValue": ""
+    },
+    {
+      "documentation": "episode rating",
+      "name": "field_rating",
+      "type": "Integer",
+      "nullable": true
+    }
+  ],
+  "constraints": [
+    {
+      "name": "field_unique",
+      "definition": "UNIQUE (field_episode_number) ON CONFLICT ABORT"
+    }
+  ]
+}

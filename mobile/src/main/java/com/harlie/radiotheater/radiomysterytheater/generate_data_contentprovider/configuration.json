@@ -1,0 +1,62 @@
+{
+  "documentation": "Radio Mystery Theater user configuration.",
+  "fields": [
+    {
+      "name": "field_user_email",
+      "type": "String",
+      "nullable": false,
+      "foreignKey": {
+        "table": "config_episodes",
+        "onDelete": "CASCADE"
+      }
+    },
+    {
+      "name": "field_user_name",
+      "type": "String",
+      "nullable": true,
+      "defaultValue": "unknown"
+    },
+    {
+      "name": "field_authenticated",
+      "type": "Boolean",
+      "nullable": true,
+      "defaultValue": false
+    },
+    {
+      "name": "field_device_id",
+      "type": "String",
+      "nullable": true,
+      "defaultValue": ""
+    },
+    {
+      "name": "field_paid_version",
+      "type": "Boolean",
+      "nullable": false,
+      "defaultValue": false
+    },
+    {
+      "name": "field_purchase_access",
+      "type": "Boolean",
+      "nullable": false,
+      "defaultValue": false
+    },
+    {
+      "name": "field_purchase_noads",
+      "type": "Boolean",
+      "nullable": false,
+      "defaultValue": false
+    },
+    {
+      "name": "field_total_listen_count",
+      "type": "Integer",
+      "nullable": false,
+      "defaultValue": 0
+    }
+  ],
+  "constraints": [
+    {
+      "name": "field_unique",
+      "definition": "UNIQUE (field_user_email) ON CONFLICT ABORT"
+    }
+  ]
+}

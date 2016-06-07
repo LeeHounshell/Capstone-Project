@@ -1,0 +1,21 @@
+{
+  "documentation": "Radio Mystery Theater writers list.",
+  "fields": [
+    {
+      "name": "field_writer_id",
+      "type": "Long",
+      "nullable": false
+    },
+    {
+      "name": "field_episode_number",
+      "type": "Long",
+      "nullable": false,
+    }
+  ],
+  "constraints": [
+    {
+      "name": "field_unique",
+      "definition": "UNIQUE (field_writer_id, field_episode_number) ON CONFLICT ABORT"
+    }
+  ]
+}

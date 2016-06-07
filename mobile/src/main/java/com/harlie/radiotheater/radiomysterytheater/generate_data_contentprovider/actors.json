@@ -1,0 +1,38 @@
+{
+  "documentation": "Radio Mystery Theater actors list.",
+  "fields": [
+    {
+      "name": "field_actor_id",
+      "type": "Long",
+      "nullable": false,
+      "foreignKey": {
+        "table": "actors_episodes",
+        "onDelete": "CASCADE"
+      }
+    },
+    {
+      "documentation": "actor full name",
+      "name": "field_actor_name",
+      "type": "String",
+      "nullable": false
+    },
+    {
+      "documentation": "actor photo URL",
+      "name": "field_actor_url",
+      "type": "String",
+      "nullable": false
+    },
+    {
+      "documentation": "actor biography",
+      "name": "field_actor_bio",
+      "type": "String",
+      "nullable": true
+    }
+  ],
+  "constraints": [
+    {
+      "name": "field_unique",
+      "definition": "UNIQUE (field_actor_name) ON CONFLICT ABORT"
+    }
+  ]
+}
