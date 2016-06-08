@@ -2,11 +2,10 @@ package com.harlie.radiotheater.radiomysterytheater;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.MediumTest;
-import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
 
 import static org.junit.Assert.assertEquals;
 
@@ -15,8 +14,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
  */
-@MediumTest
-@RunWith(AndroidJUnit4.class)
+@RunWith(Suite.class)
 public class ExampleInstrumentationTest {
     @Test
     public void useAppContext() throws Exception {

@@ -11,14 +11,14 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.episodes;
 
-import java.util.Date;
-
-import android.content.Context;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
 import com.harlie.radiotheater.radiomysterytheater.data.base.AbstractSelection;
+
+import java.util.Date;
 
 /**
  * Selection for the {@code episodes} table.
@@ -254,6 +254,46 @@ public class EpisodesSelection extends AbstractSelection<EpisodesSelection> {
         return this;
     }
 
+    public EpisodesSelection fieldWeblinkUrl(String... value) {
+        addEquals(EpisodesColumns.FIELD_WEBLINK_URL, value);
+        return this;
+    }
+
+    public EpisodesSelection fieldWeblinkUrlNot(String... value) {
+        addNotEquals(EpisodesColumns.FIELD_WEBLINK_URL, value);
+        return this;
+    }
+
+    public EpisodesSelection fieldWeblinkUrlLike(String... value) {
+        addLike(EpisodesColumns.FIELD_WEBLINK_URL, value);
+        return this;
+    }
+
+    public EpisodesSelection fieldWeblinkUrlContains(String... value) {
+        addContains(EpisodesColumns.FIELD_WEBLINK_URL, value);
+        return this;
+    }
+
+    public EpisodesSelection fieldWeblinkUrlStartsWith(String... value) {
+        addStartsWith(EpisodesColumns.FIELD_WEBLINK_URL, value);
+        return this;
+    }
+
+    public EpisodesSelection fieldWeblinkUrlEndsWith(String... value) {
+        addEndsWith(EpisodesColumns.FIELD_WEBLINK_URL, value);
+        return this;
+    }
+
+    public EpisodesSelection orderByFieldWeblinkUrl(boolean desc) {
+        orderBy(EpisodesColumns.FIELD_WEBLINK_URL, desc);
+        return this;
+    }
+
+    public EpisodesSelection orderByFieldWeblinkUrl() {
+        orderBy(EpisodesColumns.FIELD_WEBLINK_URL, false);
+        return this;
+    }
+
     public EpisodesSelection fieldDownloadUrl(String... value) {
         addEquals(EpisodesColumns.FIELD_DOWNLOAD_URL, value);
         return this;
@@ -331,6 +371,46 @@ public class EpisodesSelection extends AbstractSelection<EpisodesSelection> {
 
     public EpisodesSelection orderByFieldRating() {
         orderBy(EpisodesColumns.FIELD_RATING, false);
+        return this;
+    }
+
+    public EpisodesSelection fieldVoteCount(Integer... value) {
+        addEquals(EpisodesColumns.FIELD_VOTE_COUNT, value);
+        return this;
+    }
+
+    public EpisodesSelection fieldVoteCountNot(Integer... value) {
+        addNotEquals(EpisodesColumns.FIELD_VOTE_COUNT, value);
+        return this;
+    }
+
+    public EpisodesSelection fieldVoteCountGt(int value) {
+        addGreaterThan(EpisodesColumns.FIELD_VOTE_COUNT, value);
+        return this;
+    }
+
+    public EpisodesSelection fieldVoteCountGtEq(int value) {
+        addGreaterThanOrEquals(EpisodesColumns.FIELD_VOTE_COUNT, value);
+        return this;
+    }
+
+    public EpisodesSelection fieldVoteCountLt(int value) {
+        addLessThan(EpisodesColumns.FIELD_VOTE_COUNT, value);
+        return this;
+    }
+
+    public EpisodesSelection fieldVoteCountLtEq(int value) {
+        addLessThanOrEquals(EpisodesColumns.FIELD_VOTE_COUNT, value);
+        return this;
+    }
+
+    public EpisodesSelection orderByFieldVoteCount(boolean desc) {
+        orderBy(EpisodesColumns.FIELD_VOTE_COUNT, desc);
+        return this;
+    }
+
+    public EpisodesSelection orderByFieldVoteCount() {
+        orderBy(EpisodesColumns.FIELD_VOTE_COUNT, false);
         return this;
     }
 }

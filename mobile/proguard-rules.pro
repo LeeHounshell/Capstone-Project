@@ -30,3 +30,9 @@
   *;
 }
 
+-keep class com.harlie.radiotheater.radiomysterytheater.** { *; }
+-keep class com.harlie.radiotheater.radiomysterytheater.** { *; }
+
+-keep class org.sqlite.** { *; }
+-keep class org.sqlite.database.** { *; }
+

@@ -11,15 +11,15 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.episodes;
 
-import java.util.Date;
-
-import android.content.Context;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.harlie.radiotheater.radiomysterytheater.data.base.AbstractContentValues;
+
+import java.util.Date;
 
 /**
  * Content values wrapper for the {@code episodes} table.
@@ -92,6 +92,19 @@ public class EpisodesContentValues extends AbstractContentValues {
 
 
     /**
+     * url weblink path
+     */
+    public EpisodesContentValues putFieldWeblinkUrl(@Nullable String value) {
+        mContentValues.put(EpisodesColumns.FIELD_WEBLINK_URL, value);
+        return this;
+    }
+
+    public EpisodesContentValues putFieldWeblinkUrlNull() {
+        mContentValues.putNull(EpisodesColumns.FIELD_WEBLINK_URL);
+        return this;
+    }
+
+    /**
      * url download path
      */
     public EpisodesContentValues putFieldDownloadUrl(@NonNull String value) {
@@ -111,6 +124,19 @@ public class EpisodesContentValues extends AbstractContentValues {
 
     public EpisodesContentValues putFieldRatingNull() {
         mContentValues.putNull(EpisodesColumns.FIELD_RATING);
+        return this;
+    }
+
+    /**
+     * episode vote count
+     */
+    public EpisodesContentValues putFieldVoteCount(@Nullable Integer value) {
+        mContentValues.put(EpisodesColumns.FIELD_VOTE_COUNT, value);
+        return this;
+    }
+
+    public EpisodesContentValues putFieldVoteCountNull() {
+        mContentValues.putNull(EpisodesColumns.FIELD_VOTE_COUNT);
         return this;
     }
 }

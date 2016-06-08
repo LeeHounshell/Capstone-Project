@@ -11,15 +11,12 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.actors;
 
-import java.util.Date;
-
-import android.content.Context;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
 import com.harlie.radiotheater.radiomysterytheater.data.base.AbstractSelection;
-import com.harlie.radiotheater.radiomysterytheater.data.actorsepisodes.*;
 
 /**
  * Selection for the {@code actors} table.
@@ -127,86 +124,6 @@ public class ActorsSelection extends AbstractSelection<ActorsSelection> {
 
     public ActorsSelection orderByFieldActorId() {
         orderBy(ActorsColumns.FIELD_ACTOR_ID, false);
-        return this;
-    }
-
-    public ActorsSelection actorsEpisodesFieldActorId(long... value) {
-        addEquals(ActorsEpisodesColumns.FIELD_ACTOR_ID, toObjectArray(value));
-        return this;
-    }
-
-    public ActorsSelection actorsEpisodesFieldActorIdNot(long... value) {
-        addNotEquals(ActorsEpisodesColumns.FIELD_ACTOR_ID, toObjectArray(value));
-        return this;
-    }
-
-    public ActorsSelection actorsEpisodesFieldActorIdGt(long value) {
-        addGreaterThan(ActorsEpisodesColumns.FIELD_ACTOR_ID, value);
-        return this;
-    }
-
-    public ActorsSelection actorsEpisodesFieldActorIdGtEq(long value) {
-        addGreaterThanOrEquals(ActorsEpisodesColumns.FIELD_ACTOR_ID, value);
-        return this;
-    }
-
-    public ActorsSelection actorsEpisodesFieldActorIdLt(long value) {
-        addLessThan(ActorsEpisodesColumns.FIELD_ACTOR_ID, value);
-        return this;
-    }
-
-    public ActorsSelection actorsEpisodesFieldActorIdLtEq(long value) {
-        addLessThanOrEquals(ActorsEpisodesColumns.FIELD_ACTOR_ID, value);
-        return this;
-    }
-
-    public ActorsSelection orderByActorsEpisodesFieldActorId(boolean desc) {
-        orderBy(ActorsEpisodesColumns.FIELD_ACTOR_ID, desc);
-        return this;
-    }
-
-    public ActorsSelection orderByActorsEpisodesFieldActorId() {
-        orderBy(ActorsEpisodesColumns.FIELD_ACTOR_ID, false);
-        return this;
-    }
-
-    public ActorsSelection actorsEpisodesFieldEpisodeNumber(long... value) {
-        addEquals(ActorsEpisodesColumns.FIELD_EPISODE_NUMBER, toObjectArray(value));
-        return this;
-    }
-
-    public ActorsSelection actorsEpisodesFieldEpisodeNumberNot(long... value) {
-        addNotEquals(ActorsEpisodesColumns.FIELD_EPISODE_NUMBER, toObjectArray(value));
-        return this;
-    }
-
-    public ActorsSelection actorsEpisodesFieldEpisodeNumberGt(long value) {
-        addGreaterThan(ActorsEpisodesColumns.FIELD_EPISODE_NUMBER, value);
-        return this;
-    }
-
-    public ActorsSelection actorsEpisodesFieldEpisodeNumberGtEq(long value) {
-        addGreaterThanOrEquals(ActorsEpisodesColumns.FIELD_EPISODE_NUMBER, value);
-        return this;
-    }
-
-    public ActorsSelection actorsEpisodesFieldEpisodeNumberLt(long value) {
-        addLessThan(ActorsEpisodesColumns.FIELD_EPISODE_NUMBER, value);
-        return this;
-    }
-
-    public ActorsSelection actorsEpisodesFieldEpisodeNumberLtEq(long value) {
-        addLessThanOrEquals(ActorsEpisodesColumns.FIELD_EPISODE_NUMBER, value);
-        return this;
-    }
-
-    public ActorsSelection orderByActorsEpisodesFieldEpisodeNumber(boolean desc) {
-        orderBy(ActorsEpisodesColumns.FIELD_EPISODE_NUMBER, desc);
-        return this;
-    }
-
-    public ActorsSelection orderByActorsEpisodesFieldEpisodeNumber() {
-        orderBy(ActorsEpisodesColumns.FIELD_EPISODE_NUMBER, false);
         return this;
     }
 

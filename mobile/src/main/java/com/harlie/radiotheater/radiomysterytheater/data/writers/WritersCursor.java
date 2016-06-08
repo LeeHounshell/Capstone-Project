@@ -11,14 +11,11 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.writers;
 
-import java.util.Date;
-
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.harlie.radiotheater.radiomysterytheater.data.base.AbstractCursor;
-import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.*;
 
 /**
  * Cursor wrapper for the {@code writers} table.
@@ -45,26 +42,6 @@ public class WritersCursor extends AbstractCursor implements WritersModel {
         Long res = getLongOrNull(WritersColumns.FIELD_WRITER_ID);
         if (res == null)
             throw new NullPointerException("The value of 'field_writer_id' in the database was null, which is not allowed according to the model definition");
-        return res;
-    }
-
-    /**
-     * Get the {@code field_writer_id} value.
-     */
-    public long getWritersEpisodesFieldWriterId() {
-        Long res = getLongOrNull(WritersEpisodesColumns.FIELD_WRITER_ID);
-        if (res == null)
-            throw new NullPointerException("The value of 'field_writer_id' in the database was null, which is not allowed according to the model definition");
-        return res;
-    }
-
-    /**
-     * Get the {@code field_episode_number} value.
-     */
-    public long getWritersEpisodesFieldEpisodeNumber() {
-        Long res = getLongOrNull(WritersEpisodesColumns.FIELD_EPISODE_NUMBER);
-        if (res == null)
-            throw new NullPointerException("The value of 'field_episode_number' in the database was null, which is not allowed according to the model definition");
         return res;
     }
 

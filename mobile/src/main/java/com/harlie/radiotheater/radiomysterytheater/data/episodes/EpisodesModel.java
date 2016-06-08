@@ -11,12 +11,12 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.episodes;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.harlie.radiotheater.radiomysterytheater.data.base.BaseModel;
 
 import java.util.Date;
-
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 /**
  * Radio Mystery Theater episodes.
@@ -50,6 +50,13 @@ public interface EpisodesModel extends BaseModel {
     String getFieldEpisodeDescription();
 
     /**
+     * url weblink path
+     * Can be {@code null}.
+     */
+    @Nullable
+    String getFieldWeblinkUrl();
+
+    /**
      * url download path
      * Cannot be {@code null}.
      */
@@ -62,4 +69,11 @@ public interface EpisodesModel extends BaseModel {
      */
     @Nullable
     Integer getFieldRating();
+
+    /**
+     * episode vote count
+     * Can be {@code null}.
+     */
+    @Nullable
+    Integer getFieldVoteCount();
 }

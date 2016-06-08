@@ -11,20 +11,17 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data;
 
-import java.util.Arrays;
-
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.harlie.radiotheater.radiomysterytheater.BuildConfig;
-import com.harlie.radiotheater.radiomysterytheater.data.base.BaseContentProvider;
 import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.actorsepisodes.ActorsEpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.base.BaseContentProvider;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
@@ -32,6 +29,8 @@ import com.harlie.radiotheater.radiomysterytheater.data.episodesactors.EpisodesA
 import com.harlie.radiotheater.radiomysterytheater.data.episodeswriters.EpisodesWritersColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesColumns;
+
+import java.util.Arrays;
 
 public class RadioTheaterProvider extends BaseContentProvider {
     private static final String TAG = RadioTheaterProvider.class.getSimpleName();
@@ -202,9 +201,6 @@ public class RadioTheaterProvider extends BaseContentProvider {
                 res.table = ActorsColumns.TABLE_NAME;
                 res.idColumn = ActorsColumns._ID;
                 res.tablesWithJoins = ActorsColumns.TABLE_NAME;
-                if (ActorsEpisodesColumns.hasColumns(projection)) {
-                    res.tablesWithJoins += " LEFT OUTER JOIN " + ActorsEpisodesColumns.TABLE_NAME + " AS " + ActorsColumns.PREFIX_ACTORS_EPISODES + " ON " + ActorsColumns.TABLE_NAME + "." + ActorsColumns.FIELD_ACTOR_ID + "=" + ActorsColumns.PREFIX_ACTORS_EPISODES + "." + ActorsEpisodesColumns._ID;
-                }
                 res.orderBy = ActorsColumns.DEFAULT_ORDER;
                 break;
 
@@ -264,9 +260,6 @@ public class RadioTheaterProvider extends BaseContentProvider {
                 res.table = WritersColumns.TABLE_NAME;
                 res.idColumn = WritersColumns._ID;
                 res.tablesWithJoins = WritersColumns.TABLE_NAME;
-                if (WritersEpisodesColumns.hasColumns(projection)) {
-                    res.tablesWithJoins += " LEFT OUTER JOIN " + WritersEpisodesColumns.TABLE_NAME + " AS " + WritersColumns.PREFIX_WRITERS_EPISODES + " ON " + WritersColumns.TABLE_NAME + "." + WritersColumns.FIELD_WRITER_ID + "=" + WritersColumns.PREFIX_WRITERS_EPISODES + "." + WritersEpisodesColumns._ID;
-                }
                 res.orderBy = WritersColumns.DEFAULT_ORDER;
                 break;
 

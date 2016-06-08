@@ -11,15 +11,12 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.writers;
 
-import java.util.Date;
-
-import android.content.Context;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
 import com.harlie.radiotheater.radiomysterytheater.data.base.AbstractSelection;
-import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.*;
 
 /**
  * Selection for the {@code writers} table.
@@ -127,86 +124,6 @@ public class WritersSelection extends AbstractSelection<WritersSelection> {
 
     public WritersSelection orderByFieldWriterId() {
         orderBy(WritersColumns.FIELD_WRITER_ID, false);
-        return this;
-    }
-
-    public WritersSelection writersEpisodesFieldWriterId(long... value) {
-        addEquals(WritersEpisodesColumns.FIELD_WRITER_ID, toObjectArray(value));
-        return this;
-    }
-
-    public WritersSelection writersEpisodesFieldWriterIdNot(long... value) {
-        addNotEquals(WritersEpisodesColumns.FIELD_WRITER_ID, toObjectArray(value));
-        return this;
-    }
-
-    public WritersSelection writersEpisodesFieldWriterIdGt(long value) {
-        addGreaterThan(WritersEpisodesColumns.FIELD_WRITER_ID, value);
-        return this;
-    }
-
-    public WritersSelection writersEpisodesFieldWriterIdGtEq(long value) {
-        addGreaterThanOrEquals(WritersEpisodesColumns.FIELD_WRITER_ID, value);
-        return this;
-    }
-
-    public WritersSelection writersEpisodesFieldWriterIdLt(long value) {
-        addLessThan(WritersEpisodesColumns.FIELD_WRITER_ID, value);
-        return this;
-    }
-
-    public WritersSelection writersEpisodesFieldWriterIdLtEq(long value) {
-        addLessThanOrEquals(WritersEpisodesColumns.FIELD_WRITER_ID, value);
-        return this;
-    }
-
-    public WritersSelection orderByWritersEpisodesFieldWriterId(boolean desc) {
-        orderBy(WritersEpisodesColumns.FIELD_WRITER_ID, desc);
-        return this;
-    }
-
-    public WritersSelection orderByWritersEpisodesFieldWriterId() {
-        orderBy(WritersEpisodesColumns.FIELD_WRITER_ID, false);
-        return this;
-    }
-
-    public WritersSelection writersEpisodesFieldEpisodeNumber(long... value) {
-        addEquals(WritersEpisodesColumns.FIELD_EPISODE_NUMBER, toObjectArray(value));
-        return this;
-    }
-
-    public WritersSelection writersEpisodesFieldEpisodeNumberNot(long... value) {
-        addNotEquals(WritersEpisodesColumns.FIELD_EPISODE_NUMBER, toObjectArray(value));
-        return this;
-    }
-
-    public WritersSelection writersEpisodesFieldEpisodeNumberGt(long value) {
-        addGreaterThan(WritersEpisodesColumns.FIELD_EPISODE_NUMBER, value);
-        return this;
-    }
-
-    public WritersSelection writersEpisodesFieldEpisodeNumberGtEq(long value) {
-        addGreaterThanOrEquals(WritersEpisodesColumns.FIELD_EPISODE_NUMBER, value);
-        return this;
-    }
-
-    public WritersSelection writersEpisodesFieldEpisodeNumberLt(long value) {
-        addLessThan(WritersEpisodesColumns.FIELD_EPISODE_NUMBER, value);
-        return this;
-    }
-
-    public WritersSelection writersEpisodesFieldEpisodeNumberLtEq(long value) {
-        addLessThanOrEquals(WritersEpisodesColumns.FIELD_EPISODE_NUMBER, value);
-        return this;
-    }
-
-    public WritersSelection orderByWritersEpisodesFieldEpisodeNumber(boolean desc) {
-        orderBy(WritersEpisodesColumns.FIELD_EPISODE_NUMBER, desc);
-        return this;
-    }
-
-    public WritersSelection orderByWritersEpisodesFieldEpisodeNumber() {
-        orderBy(WritersEpisodesColumns.FIELD_EPISODE_NUMBER, false);
         return this;
     }
 

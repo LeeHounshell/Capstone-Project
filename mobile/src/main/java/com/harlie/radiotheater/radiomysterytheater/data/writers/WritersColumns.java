@@ -15,15 +15,6 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 
 import com.harlie.radiotheater.radiomysterytheater.data.RadioTheaterProvider;
-import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsColumns;
-import com.harlie.radiotheater.radiomysterytheater.data.actorsepisodes.ActorsEpisodesColumns;
-import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesColumns;
-import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationColumns;
-import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
-import com.harlie.radiotheater.radiomysterytheater.data.episodesactors.EpisodesActorsColumns;
-import com.harlie.radiotheater.radiomysterytheater.data.episodeswriters.EpisodesWritersColumns;
-import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersColumns;
-import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesColumns;
 
 /**
  * Radio Mystery Theater writers list.
@@ -37,7 +28,7 @@ public class WritersColumns implements BaseColumns {
      */
     public static final String _ID = BaseColumns._ID;
 
-    public static final String FIELD_WRITER_ID = "writers__field_writer_id";
+    public static final String FIELD_WRITER_ID = "field_writer_id";
 
     /**
      * writer full name
@@ -78,5 +69,4 @@ public class WritersColumns implements BaseColumns {
         return false;
     }
 
-    public static final String PREFIX_WRITERS_EPISODES = TABLE_NAME + "__" + WritersEpisodesColumns.TABLE_NAME;
 }

@@ -25,6 +25,12 @@
       "nullable": false
     },
     {
+      "documentation": "url weblink path",
+      "name": "field_weblink_url",
+      "type": "String",
+      "nullable": true
+    },
+    {
       "documentation": "url download path",
       "name": "field_download_url",
       "type": "String",
@@ -34,6 +40,12 @@
     {
       "documentation": "episode rating",
       "name": "field_rating",
+      "type": "Integer",
+      "nullable": true
+    },
+    {
+      "documentation": "episode vote count",
+      "name": "field_vote_count",
       "type": "Integer",
       "nullable": true
     }

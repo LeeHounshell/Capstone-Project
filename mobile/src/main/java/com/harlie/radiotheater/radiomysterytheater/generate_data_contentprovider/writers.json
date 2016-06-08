@@ -4,11 +4,7 @@
     {
       "name": "field_writer_id",
       "type": "Long",
-      "nullable": false,
-      "foreignKey": {
-        "table": "writers_episodes",
-        "onDelete": "CASCADE"
-      }
+      "nullable": false
     },
     {
       "documentation": "writer full name",

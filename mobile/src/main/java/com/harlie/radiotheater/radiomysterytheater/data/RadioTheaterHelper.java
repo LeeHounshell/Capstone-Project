@@ -48,7 +48,6 @@ public class RadioTheaterHelper extends SQLiteOpenHelper {
             + ActorsColumns.FIELD_ACTOR_NAME + " TEXT NOT NULL, "
             + ActorsColumns.FIELD_ACTOR_URL + " TEXT NOT NULL, "
             + ActorsColumns.FIELD_ACTOR_BIO + " TEXT "
-            + ", CONSTRAINT fk_field_actor_id FOREIGN KEY (" + ActorsColumns.FIELD_ACTOR_ID + ") REFERENCES actors_episodes (_id) ON DELETE CASCADE"
             + ", CONSTRAINT field_unique UNIQUE (field_actor_name) ON CONFLICT ABORT"
             + " );";
 
@@ -94,8 +93,10 @@ public class RadioTheaterHelper extends SQLiteOpenHelper {
             + EpisodesColumns.FIELD_AIRDATE + " INTEGER NOT NULL, "
             + EpisodesColumns.FIELD_EPISODE_TITLE + " TEXT NOT NULL, "
             + EpisodesColumns.FIELD_EPISODE_DESCRIPTION + " TEXT NOT NULL, "
+            + EpisodesColumns.FIELD_WEBLINK_URL + " TEXT, "
             + EpisodesColumns.FIELD_DOWNLOAD_URL + " TEXT NOT NULL, "
-            + EpisodesColumns.FIELD_RATING + " INTEGER "
+            + EpisodesColumns.FIELD_RATING + " INTEGER, "
+            + EpisodesColumns.FIELD_VOTE_COUNT + " INTEGER "
             + ", CONSTRAINT field_unique UNIQUE (field_episode_number) ON CONFLICT ABORT"
             + " );";
 
@@ -122,7 +123,6 @@ public class RadioTheaterHelper extends SQLiteOpenHelper {
             + WritersColumns.FIELD_WRITER_NAME + " TEXT NOT NULL, "
             + WritersColumns.FIELD_WRITER_URL + " TEXT NOT NULL, "
             + WritersColumns.FIELD_WRITER_BIO + " TEXT "
-            + ", CONSTRAINT fk_field_writer_id FOREIGN KEY (" + WritersColumns.FIELD_WRITER_ID + ") REFERENCES writers_episodes (_id) ON DELETE CASCADE"
             + ", CONSTRAINT field_unique UNIQUE (field_writer_name) ON CONFLICT ABORT"
             + " );";
 

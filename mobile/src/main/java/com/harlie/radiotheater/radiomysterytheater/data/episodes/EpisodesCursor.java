@@ -11,13 +11,13 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.episodes;
 
-import java.util.Date;
-
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.harlie.radiotheater.radiomysterytheater.data.base.AbstractCursor;
+
+import java.util.Date;
 
 /**
  * Cursor wrapper for the {@code episodes} table.
@@ -84,6 +84,16 @@ public class EpisodesCursor extends AbstractCursor implements EpisodesModel {
     }
 
     /**
+     * url weblink path
+     * Can be {@code null}.
+     */
+    @Nullable
+    public String getFieldWeblinkUrl() {
+        String res = getStringOrNull(EpisodesColumns.FIELD_WEBLINK_URL);
+        return res;
+    }
+
+    /**
      * url download path
      * Cannot be {@code null}.
      */
@@ -102,6 +112,16 @@ public class EpisodesCursor extends AbstractCursor implements EpisodesModel {
     @Nullable
     public Integer getFieldRating() {
         Integer res = getIntegerOrNull(EpisodesColumns.FIELD_RATING);
+        return res;
+    }
+
+    /**
+     * episode vote count
+     * Can be {@code null}.
+     */
+    @Nullable
+    public Integer getFieldVoteCount() {
+        Integer res = getIntegerOrNull(EpisodesColumns.FIELD_VOTE_COUNT);
         return res;
     }
 }
