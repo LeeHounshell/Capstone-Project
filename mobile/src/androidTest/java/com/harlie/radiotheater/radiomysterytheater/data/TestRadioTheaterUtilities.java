@@ -24,6 +24,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.support.test.runner.AndroidJUnit4;
 import android.test.RenamingDelegatingContext;
 import android.util.Log;
 
@@ -33,6 +34,8 @@ import com.harlie.radiotheater.radiomysterytheater.util.PollingCheck;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
 
 import java.util.Map;
 import java.util.Set;
@@ -43,6 +46,8 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
 // Functions and test data to make it easier to test the database and Content Provider.
+@RunWith(AndroidJUnit4.class)
+@Suite.SuiteClasses({ TestRadioTheaterUtilities.class })
 public class TestRadioTheaterUtilities {
     private final static String TAG = "LEE: <" + TestRadioTheaterUtilities.class.getSimpleName() + ">";
 

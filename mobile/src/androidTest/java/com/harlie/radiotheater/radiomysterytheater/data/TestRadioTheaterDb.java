@@ -19,6 +19,7 @@ package com.harlie.radiotheater.radiomysterytheater.data;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.test.runner.AndroidJUnit4;
 import android.test.RenamingDelegatingContext;
 import android.util.Log;
 
@@ -27,6 +28,8 @@ import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContr
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
 
 import java.util.HashSet;
 
@@ -35,6 +38,8 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
+@RunWith(AndroidJUnit4.class)
+@Suite.SuiteClasses({ TestRadioTheaterDb.class })
 public class TestRadioTheaterDb {
     private final static String TAG = "LEE: <" + TestRadioTheaterDb.class.getSimpleName() + ">";
 

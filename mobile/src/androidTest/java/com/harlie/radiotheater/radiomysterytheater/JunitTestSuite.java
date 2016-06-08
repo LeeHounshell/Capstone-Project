@@ -10,6 +10,7 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+        ExampleInstrumentationTest.class,
         TestRadioTheaterUriMatcher.class,
         TestRadioTheaterContract.class,
         TestRadioTheaterUtilities.class,

@@ -17,19 +17,41 @@
 package com.harlie.radiotheater.radiomysterytheater.data;
 
 import android.net.Uri;
-import android.test.AndroidTestCase;
+import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
 
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
+
 // Test the RadioTheaterContract
-public class TestRadioTheaterContract extends AndroidTestCase {
+@RunWith(AndroidJUnit4.class)
+@Suite.SuiteClasses({ TestRadioTheaterContract.class })
+public class TestRadioTheaterContract {
     private final static String TAG = "LEE: <" + TestRadioTheaterContract.class.getSimpleName() + ">";
 
     private static final long TEST_EPISODE = 1;
     private static final long TEST_ACTOR = 1;
     private static final long TEST_WRITER = 1;
 
+    @Before
+    public void setUp() throws Exception {
+        Log.v(TAG, "setUp");
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        Log.v(TAG, "tearDown");
+    }
+
+    @Test
     public void testBuildEpisodeUri() {
         Log.v(TAG, "testBuildEpisodeUri");
         Uri episodeUri = RadioTheaterContract.EpisodesEntry.buildEpisodeUri(TEST_EPISODE);
@@ -40,6 +62,7 @@ public class TestRadioTheaterContract extends AndroidTestCase {
                 "content://com.harlie.radiotheater.radiomysterytheater.data.radiotheaterprovider/episodes/" + TEST_EPISODE);
     }
 
+    @Test
     public void testBuildActorUri() {
         Log.v(TAG, "testBuildActorUri");
         Uri actorUri = RadioTheaterContract.ActorsEntry.buildActorUri(TEST_ACTOR);
@@ -50,6 +73,7 @@ public class TestRadioTheaterContract extends AndroidTestCase {
                 "content://com.harlie.radiotheater.radiomysterytheater.data.radiotheaterprovider/actors/" + TEST_ACTOR);
     }
 
+    @Test
     public void testBuildWriterUri() {
         Log.v(TAG, "testBuildWriterUri");
         Uri writerUri = RadioTheaterContract.WritersEntry.buildWriterUri(TEST_WRITER);

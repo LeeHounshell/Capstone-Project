@@ -57,7 +57,7 @@ android {
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        //testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         manifestPlaceholders = ["FABRIC_API_KEY": "ec24cad1b54e4429a75f75d2f7f8e49d4fb0fcfb"]
     }
 

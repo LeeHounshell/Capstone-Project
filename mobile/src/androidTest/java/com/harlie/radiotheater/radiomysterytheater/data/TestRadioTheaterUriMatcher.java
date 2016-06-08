@@ -18,6 +18,7 @@ package com.harlie.radiotheater.radiomysterytheater.data;
 
 import android.content.UriMatcher;
 import android.net.Uri;
+import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
 
 import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsColumns;
@@ -34,6 +35,8 @@ import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContr
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
 
 import static junit.framework.Assert.assertEquals;
 
@@ -42,6 +45,8 @@ import static junit.framework.Assert.assertEquals;
     This is why the test must be in the same data package as the Android app code.
     It is a compromise between data hiding and testability.
  */
+@RunWith(AndroidJUnit4.class)
+@Suite.SuiteClasses({ TestRadioTheaterUriMatcher.class })
 public class TestRadioTheaterUriMatcher {
     private final static String TAG = "LEE: <" + TestRadioTheaterDb.class.getSimpleName() + ">";
 
