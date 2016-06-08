@@ -114,7 +114,6 @@ public class AuthEmailActivity extends BaseActivity
         Log.v(TAG, "onBackPressed");
         // FIXME: if database loading prevent back press until finished ??
         startAuthenticationActivity();
-        finish();
     }
 
 }

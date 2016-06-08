@@ -66,7 +66,6 @@ public class AuthFacebookActivity extends BaseActivity
     public void onBackPressed() {
         // FIXME: if database loading prevent back press until finished ??
         startAuthenticationActivity();
-        finish();
     }
 
 }
