@@ -3,7 +3,10 @@ package com.harlie.radiotheater.radiomysterytheater;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.v7.app.ActionBar;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 
 import com.google.android.gms.auth.api.Auth;
@@ -23,15 +26,35 @@ public class AuthGoogleActivity
     private final static String TAG = "LEE: <" + AuthGoogleActivity.class.getSimpleName() + ">";
 
     private GoogleApiClient mGoogleApiClient;
+    private Handler handler;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
 
-        // first see if Authentication is even needed..
+        boolean do_auth = false;
+        Intent intent = getIntent();
+        if (intent != null) {
+            if (intent.hasExtra("DO_AUTH")) {
+                Log.v(TAG, "found DO_AUTH");
+                do_auth = intent.getBooleanExtra("DO_AUTH", false);
+            }
+        }
+        if (! do_auth) {
+            Log.v(TAG, "DO_AUTH not present in Intent - go back to AuthenticationActivity");
+            startAuthenticationActivity();
+            return;
+        }
+
+        // see if Authentication is even needed..
         mAuth = FirebaseAuth.getInstance();
-        if (mAuth != null && mAuth.getCurrentUser() != null) {
+        if (mAuth == null) {
+            Log.v(TAG, "unable to get FirebaseAuth!");
+            startAuthenticationActivity();
+            return;
+        }
+        if (mAuth.getCurrentUser() != null) {
             Log.v(TAG, "--> Firebase: user=" + mAuth.getCurrentUser().getDisplayName() + " already signed in!");
             if (doINeedToCreateADatabase()) {
                 Log.v(TAG, "TODO - FIXME - CREATE-DATABASE");
@@ -42,7 +65,6 @@ public class AuthGoogleActivity
         Log.v(TAG, "--> Firebase: user not signed in");
 
         // ok, we need to authenticate
-        /*
         setContentView(R.layout.activity_auth_google);
         configureToolbarTitleBehavior();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -53,7 +75,6 @@ public class AuthGoogleActivity
                 actionBar.setDisplayShowTitleEnabled(false);
             }
         }
-        */
 
         // Configure sign-in to request the user's ID, email address, and basic
         // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
@@ -75,6 +96,7 @@ public class AuthGoogleActivity
 
     @Override
     public void onBackPressed() {
+        Log.v(TAG, "onBackPressed");
         // FIXME: if database loading prevent back press until finished ??
         startAuthenticationActivity();
         finish();

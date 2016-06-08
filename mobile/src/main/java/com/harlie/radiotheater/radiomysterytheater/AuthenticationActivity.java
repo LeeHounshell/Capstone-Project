@@ -72,11 +72,13 @@ public class AuthenticationActivity extends BaseActivity
             Intent authEmailIntent = new Intent(this, AuthEmailActivity.class);
             authEmailIntent.putExtra("email", email);
             authEmailIntent.putExtra("pass", pass);
+            authEmailIntent.putExtra("DO_AUTH", true);
             startActivity(authEmailIntent);
             finish();
         }
         else {
-            Toast.makeText(this, "Inavlid Email. Password must use " + MIN_PASSWORD_LENGTH + "+ characters.", Toast.LENGTH_LONG).show();
+            String message = getResources().getString(R.string.invalid_email);
+            Toast.makeText(this, message + " Password must use " + MIN_PASSWORD_LENGTH + "+ characters.", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -84,6 +86,7 @@ public class AuthenticationActivity extends BaseActivity
     void authenticateGoogle() {
         Log.v(TAG, "authenticateGoogle - Firebase Auth using Google");
         Intent authGoogleIntent = new Intent(this, AuthGoogleActivity.class);
+        authGoogleIntent.putExtra("DO_AUTH", true);
         startActivity(authGoogleIntent);
         finish();
     }
@@ -92,6 +95,7 @@ public class AuthenticationActivity extends BaseActivity
     void authenticateTwitter() {
         Log.v(TAG, "authenticateTwitter - Firebase Auth using Twitter");
         Intent authTwitterIntent = new Intent(this, AuthTwitterActivity.class);
+        authTwitterIntent.putExtra("DO_AUTH", true);
         startActivity(authTwitterIntent);
         finish();
     }
@@ -100,6 +104,7 @@ public class AuthenticationActivity extends BaseActivity
     void authenticateFacebook() {
         Log.v(TAG, "authenticateFacebook - Firebase Auth using Facebook");
         Intent authFacebookIntent = new Intent(this, AuthFacebookActivity.class);
+        authFacebookIntent.putExtra("DO_AUTH", true);
         startActivity(authFacebookIntent);
         finish();
     }

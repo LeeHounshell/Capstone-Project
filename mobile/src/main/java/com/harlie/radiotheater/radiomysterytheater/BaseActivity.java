@@ -140,19 +140,22 @@ public class BaseActivity extends AppCompatActivity {
                     });
         }
         else {
-            Toast.makeText(this, "Enter your Email and Password", Toast.LENGTH_LONG).show();
+            String message = getResources().getString(R.string.enter_email);
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
             startAuthenticationActivity();
         }
     }
 
     protected void userLoginSuccess() {
         Log.v(TAG, "userLoginSuccess");
-        Toast.makeText(this, "Successful", Toast.LENGTH_SHORT).show();
+        String message = getResources().getString(R.string.successful);
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     protected void userLoginFailed() {
         Log.v(TAG, "userLoginFailed");
-        Toast.makeText(this, "Authorization Failed", Toast.LENGTH_SHORT).show();
+        String message = getResources().getString(R.string.auth_fail);
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     protected void handleAuthenticationRequestResult(boolean userAlreadyExists) {

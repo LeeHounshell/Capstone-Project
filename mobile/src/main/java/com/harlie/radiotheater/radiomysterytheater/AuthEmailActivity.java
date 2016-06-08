@@ -3,7 +3,10 @@ package com.harlie.radiotheater.radiomysterytheater;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v7.app.ActionBar;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -13,6 +16,7 @@ import com.google.firebase.auth.FirebaseAuth;
 public class AuthEmailActivity extends BaseActivity
 {
     private final static String TAG = "LEE: <" + AuthEmailActivity.class.getSimpleName() + ">";
+
     private static final int MIN_PASSWORD_LENGTH = 6;
 
     @Override
@@ -20,9 +24,28 @@ public class AuthEmailActivity extends BaseActivity
         Log.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
 
-        // first see if Authentication is even needed..
+        boolean do_auth = false;
+        Intent intent = getIntent();
+        if (intent != null) {
+            if (intent.hasExtra("DO_AUTH")) {
+                Log.v(TAG, "found DO_AUTH");
+                do_auth = intent.getBooleanExtra("DO_AUTH", false);
+            }
+        }
+        if (! do_auth) {
+            Log.v(TAG, "DO_AUTH not present in Intent - go back to AuthenticationActivity");
+            startAuthenticationActivity();
+            return;
+        }
+
+        // see if Authentication is even needed..
         mAuth = FirebaseAuth.getInstance();
-        if (mAuth != null && mAuth.getCurrentUser() != null) {
+        if (mAuth == null) {
+            Log.v(TAG, "unable to get FirebaseAuth!");
+            startAuthenticationActivity();
+            return;
+        }
+        if (mAuth.getCurrentUser() != null) {
             Log.v(TAG, "--> Firebase: user=" + mAuth.getCurrentUser().getDisplayName() + " already signed in!");
             if (doINeedToCreateADatabase()) {
                 Log.v(TAG, "TODO - FIXME - CREATE-DATABASE");
@@ -33,7 +56,6 @@ public class AuthEmailActivity extends BaseActivity
         Log.v(TAG, "--> Firebase: user not signed in");
 
         // ok, we need to authenticate
-        /*
         setContentView(R.layout.activity_auth_email);
         configureToolbarTitleBehavior();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -44,20 +66,28 @@ public class AuthEmailActivity extends BaseActivity
                 actionBar.setDisplayShowTitleEnabled(false);
             }
         }
-        */
 
         setEmail(null);
         setPass(null);
-        Intent intent = getIntent();
+        boolean found_login_info = true;
         if (intent.hasExtra("email")) {
             setEmail(intent.getStringExtra("email"));
+        }
+        else {
+            found_login_info = false;
         }
         if (intent.hasExtra("pass")) {
             setPass(intent.getStringExtra("pass"));
         }
-        if (getEmail() == null || getEmail() == null) {
+        else {
+            found_login_info = false;
+        }
+        if (! found_login_info || getEmail() == null || getEmail().length() == 0 || getPass() == null || getPass().length() == 0) {
             Log.e(TAG, "Failure to extract email and pass from Intent bundle!");
+            String message = getResources().getString(R.string.enter_email);
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
             startAuthenticationActivity();
+            return;
         }
         Log.v(TAG, "attempting signin for email="+getEmail());
 
@@ -81,6 +111,7 @@ public class AuthEmailActivity extends BaseActivity
 
     @Override
     public void onBackPressed() {
+        Log.v(TAG, "onBackPressed");
         // FIXME: if database loading prevent back press until finished ??
         startAuthenticationActivity();
         finish();
