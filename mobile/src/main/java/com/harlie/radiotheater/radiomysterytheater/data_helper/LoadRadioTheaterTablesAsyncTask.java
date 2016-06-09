@@ -36,7 +36,7 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
         for (int i = 0; i < 10; ++i) {
             SystemClock.sleep(1000); // FIXME
         }
-        return true;
+        return false;
     }
 
     @Override

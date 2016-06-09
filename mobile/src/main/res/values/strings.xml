@@ -13,7 +13,9 @@
     <string name="invalid_email">Invalid Email or Password.</string>
     <string name="successful">Successful.</string>
     <string name="no_database">DATABASE NOT FOUND!</string>
+    <string name="too_many_requests">Too Many Requests.</string>
     <string name="auth_fail">Authorization Failed.</string>
+    <string name="initializing">Initializing. please wait</string>
     <string name="title_activity_autoplay">AutoplayActivity</string>
     <string name="loading">loading..</string>
     <string name="autoplay_next">Autoplay next episode</string>

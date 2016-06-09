@@ -166,15 +166,18 @@ public class BaseActivity extends AppCompatActivity {
                                 }
                                 else if (task.getException() instanceof com.google.firebase.FirebaseTooManyRequestsException) {
                                     Log.v(TAG, "*** FAIL - we just have a com.google.firebase.FirebaseTooManyRequestsException ***");
+                                    String message = getResources().getString(R.string.too_many_requests);
+                                    Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
                                     startAuthenticationActivity();
                                 }
                                 else {
                                     Log.v(TAG, "*** authentication failed *** reason="+task.getException().getLocalizedMessage());
+                                    String message = getResources().getString(R.string.auth_fail);
+                                    Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
                                     startAuthenticationActivity();
                                 }
                             }
                             if (success) {
-                                userLoginSuccess();
                                 startAutoplayActivity();
                             }
                             else {
@@ -271,10 +274,13 @@ public class BaseActivity extends AppCompatActivity {
         Log.v(TAG, "---> dbMissing="+dbMissing);
         if (dbMissing) {
             Log.v(TAG, "*** first need to build the RadioMysteryTheater database ***");
+            String message = getResources().getString(R.string.initializing);
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
             loadSqliteDatabase();
         }
         else {
             Log.v(TAG, "*** READY TO START RADIO MYSTERY THEATER ***");
+            userLoginSuccess();
             Intent autoplayIntent = new Intent(this, AutoplayActivity.class);
             // close existing activity stack regardless of what's in there and create new root
             autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
