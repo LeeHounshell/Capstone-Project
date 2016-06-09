@@ -40,7 +40,7 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
     @Override
     protected Boolean doInBackground(BaseActivity... params) {
         Log.v(TAG, "doInBackground");
-        loadSomeTestData();
+        //loadSomeTestData();
         for (int i = 0; i < 10; ++i) {
             SystemClock.sleep(1000); // FIXME don't pretend
         }
@@ -59,22 +59,37 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
         episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_RATING, 3.2);
         episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_VOTE_COUNT, 1); // true count is unknown at present
         Uri result;
-        result = insertEpisodeValues(episodeValues);
-        Log.v(TAG, "Episode insert result="+result);
+        try {
+            result = insertEpisodeValues(episodeValues);
+            Log.v(TAG, "Episode insert result="+result);
+        }
+        catch (Exception e) {
+            Log.e(TAG, "insert exception="+e);
+        }
 
         ContentValues actorValues = new ContentValues();
         actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_ID, 1);
         actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_NAME, "DeKoven, Roger");
         actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_URL, "dekoven_roger.jpg");
-        result = insertActorValues(actorValues);
-        Log.v(TAG, "Actor insert result="+result);
+        try {
+            result = insertActorValues(actorValues);
+            Log.v(TAG, "Actor insert result="+result);
+        }
+        catch (Exception e) {
+            Log.e(TAG, "insert exception="+e);
+        }
 
         ContentValues writerValues = new ContentValues();
         writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_ID, 1);
         writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_NAME, "Slesar, Henry");
         writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_URL, "slesar_henry.jpg");
-        result = insertWriterValues(writerValues);
-        Log.v(TAG, "Writer insert result="+result);
+        try {
+            result = insertWriterValues(writerValues);
+            Log.v(TAG, "Writer insert result="+result);
+        }
+        catch (Exception e) {
+            Log.e(TAG, "insert exception="+e);
+        }
     }
 
     private Uri insertEpisodeValues(ContentValues episodeValues) {
