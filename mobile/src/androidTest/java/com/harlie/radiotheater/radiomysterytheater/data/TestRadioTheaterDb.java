@@ -19,6 +19,7 @@ package com.harlie.radiotheater.radiomysterytheater.data;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.support.test.runner.AndroidJUnit4;
 import android.test.RenamingDelegatingContext;
 import android.util.Log;
@@ -72,6 +73,24 @@ public class TestRadioTheaterDb {
         // if this fails, it means that the database doesn't contain all of the required columns for table being tested
         Log.v(TAG, "(should be empty) columnsHashSet=" + columnsHashSet);
         assertTrue("Error: The database doesn't contain all of the required columns!", columnsHashSet.isEmpty());
+    }
+
+    private Uri insertEpisodeValues(ContentValues episodeValues) {
+        Log.v(TAG, "insertEpisodeValues=");
+        Uri episode = RadioTheaterContract.EpisodesEntry.buildEpisodesUri();
+        return activity.getContentResolver().insert(episode, episodeValues);
+    }
+
+    private Uri insertActorValues(ContentValues actorValues) {
+        Log.v(TAG, "insertActorValues");
+        Uri actor = RadioTheaterContract.ActorsEntry.buildActorsUri();
+        return activity.getContentResolver().insert(actor, actorValues);
+    }
+
+    private Uri insertWriterValues(ContentValues writerValues) {
+        Log.v(TAG, "insertWriterValues");
+        Uri writer = RadioTheaterContract.WritersEntry.buildWritersUri();
+        return activity.getContentResolver().insert(writer, writerValues);
     }
 
     @Test
@@ -197,10 +216,33 @@ public class TestRadioTheaterDb {
 
         int testNumber = 1;
         ContentValues episodeValues = TestRadioTheaterUtilities.createEpisodeValues(testNumber);
+
+        // Create actor values for the episode
+        ContentValues actorValues = TestRadioTheaterUtilities.createActorValues(episodeRowId, testNumber);
+        assertTrue(actorValues != null);
+
+        // Create writer values for the episode
+        ContentValues writerValues = TestRadioTheaterUtilities.createWritersValues(episodeRowId, testNumber);
+        assertTrue(writerValues != null);
+
+        Uri result;
+        result = insertEpisodeValues(episodeValues);
+        Log.v(TAG, "Episode insert result="+result);
+
+        result = insertActorValues(actorValues);
+        Log.v(TAG, "Actor insert result="+result);
+
+        result = insertWriterValues(writerValues);
+        Log.v(TAG, "Writer insert result="+result);
+
+        Log.v(TAG, "NOTE: If the above 3 writes worked, then we have a working Content Provider.");
+
+        // now we are going to write a clone without using the Content Provider
+
         long episodeRowId = insertAndVerifyEpisode(episodeValues);
         Log.v(TAG, "testEpisodeTables: episodeRowId=" + episodeRowId);
 
-        // Make sure we have a valid row ID.
+        // Make sure we have a valid row ID.  should be the 2nd row
         assertFalse("Error: Episode Not Inserted Correctly", episodeRowId == -1L);
 
         // If there's an error in the SQL table creation Strings,
@@ -208,18 +250,10 @@ public class TestRadioTheaterDb {
         SQLiteDatabase db = helper.getWritableDatabase();
         assertFalse("getWriteableDatabase must be WRITABLE!", db.isReadOnly());
 
-        // Create actor values for the episode
-        ContentValues actorValues = TestRadioTheaterUtilities.createActorValues(episodeRowId, testNumber);
-        assertTrue(actorValues != null);
-
         // Insert actor ContentValues into database and get a actor row ID back
         long actorRowId = db.insert(RadioTheaterContract.ActorsEntry.TABLE_NAME, null, actorValues);
         Log.v(TAG, "testEpisodeTables: actorRowId=" + actorRowId);
         assertTrue(actorRowId != -1);
-
-        // Create writer values for the episode
-        ContentValues writerValues = TestRadioTheaterUtilities.createWritersValues(episodeRowId, testNumber);
-        assertTrue(writerValues != null);
 
         // Insert writer ContentValues into database and get a writer row ID back
         long writerRowId = db.insert(RadioTheaterContract.WritersEntry.TABLE_NAME, null, writerValues);
