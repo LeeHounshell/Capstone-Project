@@ -2,12 +2,12 @@ package com.harlie.radiotheater.radiomysterytheater;
 
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -15,11 +15,15 @@ import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.harlie.radiotheater.radiomysterytheater.data.RadioTheaterHelper;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 
@@ -38,20 +42,11 @@ public class BaseActivity extends AppCompatActivity {
     private String email;
     private String pass;
 
-    public void showProgressDialog() {
-        if (mProgressDialog == null) {
-            mProgressDialog = new ProgressDialog(this);
-            mProgressDialog.setMessage(getString(R.string.loading));
-            mProgressDialog.setIndeterminate(true);
-        }
-
-        mProgressDialog.show();
-    }
-
-    public void hideProgressDialog() {
-        if (mProgressDialog != null && mProgressDialog.isShowing()) {
-            mProgressDialog.hide();
-        }
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        Log.v(TAG, "onCreate");
+        super.onCreate(savedInstanceState);
+        Firebase.setAndroidContext(this);
     }
 
     @Override
@@ -72,6 +67,21 @@ public class BaseActivity extends AppCompatActivity {
     public void onBackPressed() {
         Log.v(TAG, "onBackPressed");
         super.onBackPressed();
+    }
+
+    public void showProgressDialog() {
+        if (mProgressDialog == null) {
+            mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setMessage(getString(R.string.loading));
+            mProgressDialog.setIndeterminate(true);
+        }
+        mProgressDialog.show();
+    }
+
+    public void hideProgressDialog() {
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+            mProgressDialog.hide();
+        }
     }
 
     //from: http://stackoverflow.com/questions/31662416/show-collapsingtoolbarlayout-title-only-when-collapsed
@@ -253,10 +263,29 @@ public class BaseActivity extends AppCompatActivity {
 
     protected void loadSqliteDatabase() {
         Log.v(TAG, "*** loadSqliteDatabase ***");
-        CircleProgressView circleProgressView = (CircleProgressView) findViewById(R.id.circle_view);
-        LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(this, circleProgressView);
-        asyncTask.execute();
-        Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
+        // Get a reference to our posts
+        Firebase ref = new Firebase("https://console.firebase.google.com/project/radio-mystery-theater/database/data/radiomysterytheater");
+        final BaseActivity activity = this;
+        // Attach an listener to read the data at our posts reference
+        Log.v(TAG, "*** FIREBASE REQUEST ***");
+        ref.addValueEventListener(new com.firebase.client.ValueEventListener() {
+
+            @Override
+            public void onDataChange(com.firebase.client.DataSnapshot dataSnapshot) {
+                Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
+                Log.v(TAG, "snapshot="+dataSnapshot.getValue());
+                CircleProgressView circleProgressView = (CircleProgressView) findViewById(R.id.circle_view);
+                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, circleProgressView, dataSnapshot);
+                asyncTask.execute();
+                Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
+            }
+
+            @Override
+            public void onCancelled(FirebaseError databaseError) {
+                Log.e(TAG, "The read failed: " + databaseError.getDetails());
+                startAuthenticationActivity();
+            }
+        });
     }
 
     public void startAutoplayActivity() {

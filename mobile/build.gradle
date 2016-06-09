@@ -63,16 +63,16 @@ android {
 
     buildTypes {
         debug {
-            minifyEnabled true
-            useProguard false
+            minifyEnabled false
             shrinkResources false
+            useProguard false
             debuggable true
             signingConfig signingConfigs.debug
         }
         release {
             minifyEnabled true
-            useProguard true
             shrinkResources true
+            useProguard true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
@@ -134,6 +134,7 @@ dependencies {
     compile 'com.google.firebase:firebase-config:9.0.2'
     compile 'com.google.firebase:firebase-invites:9.0.2'
     compile 'com.google.firebase:firebase-ads:9.0.2'
+    compile 'com.firebase:firebase-client-android:2.5.2+'
     compile 'com.firebaseui:firebase-ui:0.4.0'
 
     compile 'com.google.android.gms:play-services-appindexing:9.0.2'

@@ -23,11 +23,13 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
 
     BaseActivity activity;
     CircleProgressView circleProgressView;
+    com.firebase.client.DataSnapshot dataSnapshot;
 
-    public LoadRadioTheaterTablesAsyncTask(BaseActivity activity, CircleProgressView circleProgressView) {
+    public LoadRadioTheaterTablesAsyncTask(BaseActivity activity, CircleProgressView circleProgressView, com.firebase.client.DataSnapshot dataSnapshot) {
         Log.v(TAG, "new LoadRadioTheaterTablesAsyncTask");
         this.activity = activity;
         this.circleProgressView = circleProgressView;
+        this.dataSnapshot = dataSnapshot;
     }
 
     @Override
@@ -40,7 +42,7 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
     @Override
     protected Boolean doInBackground(BaseActivity... params) {
         Log.v(TAG, "doInBackground");
-        //loadSomeTestData();
+        loadSomeTestData();
         for (int i = 0; i < 10; ++i) {
             SystemClock.sleep(1000); // FIXME don't pretend
         }
