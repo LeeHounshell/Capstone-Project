@@ -67,9 +67,10 @@ android {
             useProguard false
             shrinkResources false
             debuggable true
+            signingConfig signingConfigs.debug
         }
         release {
-            minifyEnabled false
+            minifyEnabled true
             useProguard true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -134,14 +135,9 @@ dependencies {
     compile 'com.google.firebase:firebase-ads:9.0.2'
     compile 'com.firebaseui:firebase-ui:0.4.0'
 
-    compile 'com.jakewharton:butterknife:8.0.1'
-    compile 'com.github.jakob-grabner:Circle-Progress-View:v1.2.9'
-    compile 'me.angrybyte.slider:slider:1.2.0'
-    compile 'com.readystatesoftware.sqliteasset:sqliteassethelper:+'
-
     compile 'com.google.android.gms:play-services-appindexing:9.0.2'
     compile 'com.google.android.gms:play-services-auth:9.0.2'
-    compile 'com.google.android.gms:play-services:9.0.2'
+    compile 'com.google.android.gms:play-services-gcm:9.0.2'
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.android.support:support-v4:23.4.0'
     compile 'com.android.support:recyclerview-v7:23.4.0'
@@ -154,6 +150,11 @@ dependencies {
     androidTestCompile 'com.android.support.test:runner:0.5'
     androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
 
+    compile 'com.github.jakob-grabner:Circle-Progress-View:v1.2.9'
+    compile 'me.angrybyte.slider:slider:1.2.0'
+    compile 'com.readystatesoftware.sqliteasset:sqliteassethelper:+'
+
+    compile 'com.jakewharton:butterknife:8.0.1'
     apt 'com.jakewharton:butterknife-compiler:8.0.1'
     compile 'com.android.support:multidex:1.0.1'
 }

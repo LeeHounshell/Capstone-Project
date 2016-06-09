@@ -48,9 +48,10 @@ android {
             useProguard false
             shrinkResources false
             debuggable true
+            signingConfig signingConfigs.debug
         }
         release {
-            minifyEnabled false
+            minifyEnabled true
             useProguard true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -84,3 +85,4 @@ dependencies {
     compile 'com.google.android.gms:play-services-wearable:9.0.1'
     provided 'com.google.android.wearable:wearable:1.0.0'
 }
+
