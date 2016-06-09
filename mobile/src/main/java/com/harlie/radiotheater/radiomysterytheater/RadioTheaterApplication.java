@@ -1,6 +1,7 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
 import android.content.Context;
+import android.support.multidex.MultiDex;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
@@ -29,6 +30,12 @@ public class RadioTheaterApplication extends android.support.multidex.MultiDexAp
 
     public static Context getRadioTheaterApplicationContext() {
         return applicationContext;
+    }
+
+    @Override
+    public void attachBaseContext(Context base) {
+        MultiDex.install(base);
+        super.attachBaseContext(base);
     }
 
 }
