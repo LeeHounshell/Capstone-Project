@@ -259,15 +259,6 @@ public class BaseActivity extends AppCompatActivity {
         Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
     }
 
-    public void startAuthenticationActivity() {
-        Log.v(TAG, "---> startAuthenticationActivity <---");
-        Intent authenticationIntent = new Intent(this, AuthenticationActivity.class);
-        // close existing activity stack regardless of what's in there and create new root
-        authenticationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(authenticationIntent);
-        finish();
-    }
-
     public void startAutoplayActivity() {
         Log.v(TAG, "---> startAutoplayActivity <---");
         boolean dbMissing = doINeedToCreateADatabase();
@@ -287,6 +278,15 @@ public class BaseActivity extends AppCompatActivity {
             startActivity(autoplayIntent);
             finish();
         }
+    }
+
+    public void startAuthenticationActivity() {
+        Log.v(TAG, "---> startAuthenticationActivity <---");
+        Intent authenticationIntent = new Intent(this, AuthenticationActivity.class);
+        // close existing activity stack regardless of what's in there and create new root
+        authenticationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(authenticationIntent);
+        finish();
     }
 
     public String getEmail() {
