@@ -17,8 +17,6 @@ public class AuthEmailActivity extends BaseActivity
 {
     private final static String TAG = "LEE: <" + AuthEmailActivity.class.getSimpleName() + ">";
 
-    private static final int MIN_PASSWORD_LENGTH = 6;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.v(TAG, "onCreate");
@@ -45,11 +43,8 @@ public class AuthEmailActivity extends BaseActivity
             startAuthenticationActivity();
             return;
         }
-        if (mAuth.getCurrentUser() != null) {
+        if (mAuth.getCurrentUser() != null && ! doINeedToCreateADatabase()) {
             Log.v(TAG, "--> Firebase: user=" + mAuth.getCurrentUser().getDisplayName() + " already signed in!");
-            if (doINeedToCreateADatabase()) {
-                Log.v(TAG, "TODO - FIXME - CREATE-DATABASE");
-            }
             startAutoplayActivity();
             return;
         }

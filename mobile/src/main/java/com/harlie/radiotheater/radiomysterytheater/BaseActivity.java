@@ -2,7 +2,11 @@ package com.harlie.radiotheater.radiomysterytheater;
 
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.DatabaseUtils;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -15,6 +19,11 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.harlie.radiotheater.radiomysterytheater.data.RadioTheaterHelper;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
+
+import at.grabner.circleprogress.CircleProgressView;
 
 @SuppressLint("Registered")
 public class BaseActivity extends AppCompatActivity {
@@ -22,6 +31,7 @@ public class BaseActivity extends AppCompatActivity {
 
     public FirebaseAuth mAuth;
 
+    protected static final int MIN_EMAIL_LENGTH = 3;
     protected static final int MIN_PASSWORD_LENGTH = 6;
     protected ProgressDialog mProgressDialog;
 
@@ -97,25 +107,42 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     protected boolean doINeedToCreateADatabase() {
-        Log.v(TAG, "doINeedToCreateADatabase- TODO - FIXME");
-        return true; // FIXME
+        Log.v(TAG, "doINeedToCreateADatabase");
+        if ((isExistingTable("EPISODES")) && (isExistingTable("ACTORS")) && (isExistingTable("WRITERS"))) {
+            Log.v(TAG, "*** Found SQLITE Tables! ***");
+            return false;
+        }
+        Log.v(TAG, "*** NO SQLITE DATABASE FOUND! ***");
+        return true;
     }
 
     protected boolean isValid(String email, String pass) {
-        boolean result = true;
-        if (pass != null && pass.length() >= MIN_PASSWORD_LENGTH) {
+        boolean result = false;
+        if (email != null && email.length() > MIN_EMAIL_LENGTH && pass != null && pass.length() >= MIN_PASSWORD_LENGTH) {
             // from: http://stackoverflow.com/questions/624581/what-is-the-best-java-email-address-validation-method
             String ePattern = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$";
             java.util.regex.Pattern p = java.util.regex.Pattern.compile(ePattern);
             java.util.regex.Matcher m = p.matcher(email);
             result = m.matches();
+            Log.v(TAG, "check isValid: result="+result+", email="+email);
         }
         return result;
+    }
+
+    protected void handleAuthenticationRequestResult(boolean loginSuccess) {
+        Log.d(TAG, "handleAuthenticationRequestResult - loginSuccess=" + loginSuccess);
+        if (loginSuccess) {
+            changeRadioMysteryTheaterFirebaseAccount(getEmail(), getPass());
+        } else {
+            userLoginFailed();
+            startAuthenticationActivity();
+        }
     }
 
     protected void changeRadioMysteryTheaterFirebaseAccount(String email, String pass) {
         Log.v(TAG, "changeRadioMysteryTheaterFirebaseAccount - Firebase Login using email="+email+", and password");
         if (mAuth != null && email != null && pass != null && isValid(email, pass)) {
+            final BaseActivity activity = this;
             mAuth.createUserWithEmailAndPassword(email, pass)
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                         @Override
@@ -127,14 +154,32 @@ public class BaseActivity extends AppCompatActivity {
                             // signed in user can be handled in the listener.
                             boolean success = task.isSuccessful();
                             if (!success) {
-                                Log.i(TAG, "likely the email address is already in use by another account");
-                                if (task.getException() instanceof com.google.firebase.auth.FirebaseAuthUserCollisionException) {
-                                    Log.v(TAG, "yep. we have a com.google.firebase.auth.FirebaseAuthUserCollisionException");
+                                if (task.getException() instanceof com.google.firebase.auth.FirebaseAuthInvalidCredentialsException) {
+                                    Log.v(TAG, "*** FAIL - we have a com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ***");
+                                    String message = getResources().getString(R.string.invalid_email);
+                                    Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
+                                    startAuthenticationActivity();
                                 }
-                                Log.w(TAG, "createUserWithEmailAndPassword: exception=", task.getException());
+                                else if (task.getException() instanceof com.google.firebase.auth.FirebaseAuthUserCollisionException) {
+                                    Log.v(TAG, "*** OK - we just have a com.google.firebase.auth.FirebaseAuthUserCollisionException ***");
+                                    success = true;
+                                }
+                                else if (task.getException() instanceof com.google.firebase.FirebaseTooManyRequestsException) {
+                                    Log.v(TAG, "*** FAIL - we just have a com.google.firebase.FirebaseTooManyRequestsException ***");
+                                    startAuthenticationActivity();
+                                }
+                                else {
+                                    Log.v(TAG, "*** authentication failed *** reason="+task.getException().getLocalizedMessage());
+                                    startAuthenticationActivity();
+                                }
+                            }
+                            if (success) {
+                                userLoginSuccess();
+                                startAutoplayActivity();
+                            }
+                            else {
+                                userLoginFailed();
                                 startAuthenticationActivity();
-                            } else {
-                                handleAuthenticationRequestResult(success);
                             }
                         }
                     });
@@ -158,29 +203,84 @@ public class BaseActivity extends AppCompatActivity {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
-    protected void handleAuthenticationRequestResult(boolean userAlreadyExists) {
-        Log.d(TAG, "handleAuthenticationRequestResult - userAlreadyExists="+userAlreadyExists);
-        if (userAlreadyExists) {
-            userLoginSuccess();
+    // from: http://stackoverflow.com/questions/3058909/how-does-one-check-if-a-table-exists-in-an-android-sqlite-database
+    protected boolean isExistingTable(String tableName) {
+        Log.v(TAG, "isExistingTable: "+tableName);
+        long rowId = 1;
+        Uri CONTENT_URI = null;
+        String whereClause = null;
+        if (tableName.toUpperCase().equals("EPISODES")) {
+            CONTENT_URI = RadioTheaterContract.EpisodesEntry.buildEpisodeUri(rowId);
+            tableName = RadioTheaterContract.EpisodesEntry.TABLE_NAME;
+            whereClause = RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER + "=?";
         }
-        // regardless of prior userAlreadyExists, see if the user can change Firebase keys
-        changeRadioMysteryTheaterFirebaseAccount(email, pass);
+        else if (tableName.toUpperCase().equals("ACTORS")) {
+            CONTENT_URI = RadioTheaterContract.ActorsEntry.buildActorUri(rowId);
+            tableName = RadioTheaterContract.ActorsEntry.TABLE_NAME;
+            whereClause = RadioTheaterContract.ActorsEntry.FIELD_ACTOR_ID + "=?";
+        }
+        else if (tableName.toUpperCase().equals("WRITERS")) {
+            CONTENT_URI = RadioTheaterContract.WritersEntry.buildWriterUri(rowId);
+            tableName = RadioTheaterContract.WritersEntry.TABLE_NAME;
+            whereClause = RadioTheaterContract.WritersEntry.FIELD_WRITER_ID + "=?";
+        }
+        if ( CONTENT_URI == null || whereClause == null) {
+            return false;
+        }
+
+        Cursor cursor = getContentResolver().query(
+                CONTENT_URI, // the 'content://' Uri to query
+                null,        // projection String[] - leaving "columns" null just returns all the columns.
+                whereClause, // selection - SQL where
+                new String[]{Long.toString(rowId)}, // selection args String[] - values for the "where" clause
+                null         // sort order (String)
+        );
+
+        boolean success = false;
+        if (cursor.getCount() == 0) {
+            Log.v(TAG, "SQL: nothing found for table "+tableName);
+        }
+        else {
+            Log.v(TAG, "SQL: found data in table "+tableName);
+            success = true;
+        }
+        cursor.close();
+        return success;
     }
 
-    protected void startAuthenticationActivity() {
-        Intent autoplayIntent = new Intent(this, AuthenticationActivity.class);
+    protected void loadSqliteDatabase() {
+        Log.v(TAG, "*** loadSqliteDatabase ***");
+        CircleProgressView circleProgressView = (CircleProgressView) findViewById(R.id.circle_view);
+        LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(this, circleProgressView);
+        asyncTask.execute();
+        Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
+    }
+
+    public void startAuthenticationActivity() {
+        Log.v(TAG, "---> startAuthenticationActivity <---");
+        Intent authenticationIntent = new Intent(this, AuthenticationActivity.class);
         // close existing activity stack regardless of what's in there and create new root
-        autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(autoplayIntent);
+        authenticationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(authenticationIntent);
         finish();
     }
 
-    protected void startAutoplayActivity() {
-        Intent autoplayIntent = new Intent(this, AutoplayActivity.class);
-        // close existing activity stack regardless of what's in there and create new root
-        autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(autoplayIntent);
-        finish();
+    public void startAutoplayActivity() {
+        Log.v(TAG, "---> startAutoplayActivity <---");
+        boolean dbMissing = doINeedToCreateADatabase();
+        Log.v(TAG, "---> dbMissing="+dbMissing);
+        if (dbMissing) {
+            Log.v(TAG, "*** first need to build the RadioMysteryTheater database ***");
+            loadSqliteDatabase();
+        }
+        else {
+            Log.v(TAG, "*** READY TO START RADIO MYSTERY THEATER ***");
+            Intent autoplayIntent = new Intent(this, AutoplayActivity.class);
+            // close existing activity stack regardless of what's in there and create new root
+            autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(autoplayIntent);
+            finish();
+        }
     }
 
     public String getEmail() {

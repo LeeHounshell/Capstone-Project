@@ -54,11 +54,8 @@ public class AuthGoogleActivity
             startAuthenticationActivity();
             return;
         }
-        if (mAuth.getCurrentUser() != null) {
+        if (mAuth.getCurrentUser() != null && ! doINeedToCreateADatabase()) {
             Log.v(TAG, "--> Firebase: user=" + mAuth.getCurrentUser().getDisplayName() + " already signed in!");
-            if (doINeedToCreateADatabase()) {
-                Log.v(TAG, "TODO - FIXME - CREATE-DATABASE");
-            }
             startAutoplayActivity();
             return;
         }
