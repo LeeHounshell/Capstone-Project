@@ -17,6 +17,7 @@
 package com.harlie.radiotheater.radiomysterytheater.data;
 
 import android.content.ContentValues;
+import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -25,6 +26,15 @@ import android.test.RenamingDelegatingContext;
 import android.util.Log;
 
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
+import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.actorsepisodes.ActorsEpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.episodesactors.EpisodesActorsColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.episodeswriters.EpisodesWritersColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 
 import org.junit.After;
@@ -47,6 +57,63 @@ public class TestRadioTheaterDb {
 
     private RadioTheaterHelper helper;
     private RenamingDelegatingContext context;
+    private static int testNumber = 0;
+
+    private String TEST_CONFIGURATION_DIR;
+    private String TEST_CONFIGEPISODES_DIR;
+    private String TEST_EPISODES_DIR;
+    private String TEST_EPISODESACTORS_DIR;
+    private String TEST_EPISODESWRITERS_DIR;
+    private String TEST_ACTORS_DIR;
+    private String TEST_ACTORSEPISODES_DIR;
+    private String TEST_WRITERS_DIR;
+    private String TEST_WRITERSEPISODES_DIR;
+
+    // note: these must match the generated data/RadioTheaterProvider.java
+    private static final int URI_TYPE_ACTORS = 0;
+    private static final int URI_TYPE_ACTORS_ID = 1;
+
+    private static final int URI_TYPE_ACTORS_EPISODES = 2;
+    private static final int URI_TYPE_ACTORS_EPISODES_ID = 3;
+
+    private static final int URI_TYPE_CONFIG_EPISODES = 4;
+    private static final int URI_TYPE_CONFIG_EPISODES_ID = 5;
+
+    private static final int URI_TYPE_CONFIGURATION = 6;
+    private static final int URI_TYPE_CONFIGURATION_ID = 7;
+
+    private static final int URI_TYPE_EPISODES = 8;
+    private static final int URI_TYPE_EPISODES_ID = 9;
+
+    private static final int URI_TYPE_EPISODES_ACTORS = 10;
+    private static final int URI_TYPE_EPISODES_ACTORS_ID = 11;
+
+    private static final int URI_TYPE_EPISODES_WRITERS = 12;
+    private static final int URI_TYPE_EPISODES_WRITERS_ID = 13;
+
+    private static final int URI_TYPE_WRITERS = 14;
+    private static final int URI_TYPE_WRITERS_ID = 15;
+
+    private static final int URI_TYPE_WRITERS_EPISODES = 16;
+    private static final int URI_TYPE_WRITERS_EPISODES_ID = 17;
+
+    public TestRadioTheaterDb() {
+        // content://com.harlie.radiotheater.radiomysterytheater.data.radiotheaterprovider/episodes
+
+        // for some reason I can't get DEX to keep these symbols in my App!
+        //java.lang.NoClassDefFoundError: Failed resolution of: Lcom/harlie/radiotheater/radiomysterytheater/data/configuration/ConfigurationColumns;
+        //at com.harlie.radiotheater.radiomysterytheater.data.TestRadioTheaterDb.<init>(TestRadioTheaterDb.java:103)
+
+        TEST_CONFIGURATION_DIR = new String(ConfigurationColumns.CONTENT_URI.toString());
+        TEST_CONFIGEPISODES_DIR = new String(ConfigEpisodesColumns.CONTENT_URI.toString());
+        TEST_EPISODES_DIR = new String(EpisodesColumns.CONTENT_URI.toString());
+        TEST_EPISODESACTORS_DIR = new String(EpisodesActorsColumns.CONTENT_URI.toString());
+        TEST_EPISODESWRITERS_DIR = new String(EpisodesWritersColumns.CONTENT_URI.toString());
+        TEST_ACTORS_DIR = new String(ActorsColumns.CONTENT_URI.toString());
+        TEST_ACTORSEPISODES_DIR = new String(ActorsEpisodesColumns.CONTENT_URI.toString());
+        TEST_WRITERS_DIR = new String(WritersColumns.CONTENT_URI.toString());
+        TEST_WRITERSEPISODES_DIR = new String(WritersEpisodesColumns.CONTENT_URI.toString());
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -62,19 +129,49 @@ public class TestRadioTheaterDb {
         getContext().deleteDatabase(RadioTheaterHelper.DATABASE_FILE_NAME);
     }
 
-    private void checkAllColumns(Cursor cursor, HashSet<String> columnsHashSet) {
-        Log.v(TAG, "checkAllColumns");
-        Log.v(TAG, "begin with columnsHashSet=" + columnsHashSet);
-        int columnNameIndex = cursor.getColumnIndex("name");
-        do {
-            String columnName = cursor.getString(columnNameIndex);
-            Log.v(TAG, "found column " + columnName);
-            columnsHashSet.remove(columnName);
-        } while (cursor.moveToNext());
+    // Test that the UriMatcher returns the correct integer value
+    // for each of the Uri types the ContentProvider can handle.
+    @Test
+    public void testUriMatcher() {
+        Log.v(TAG, "testUriMatcher");
+        UriMatcher testMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+        testMatcher.addURI(RadioTheaterProvider.AUTHORITY, ConfigurationColumns.TABLE_NAME, URI_TYPE_CONFIGURATION);
+        testMatcher.addURI(RadioTheaterProvider.AUTHORITY, ConfigurationColumns.TABLE_NAME + "/#", URI_TYPE_CONFIGURATION_ID);
+        testMatcher.addURI(RadioTheaterProvider.AUTHORITY, ConfigEpisodesColumns.TABLE_NAME, URI_TYPE_CONFIG_EPISODES);
+        testMatcher.addURI(RadioTheaterProvider.AUTHORITY, ConfigEpisodesColumns.TABLE_NAME + "/#", URI_TYPE_CONFIG_EPISODES_ID);
+        testMatcher.addURI(RadioTheaterProvider.AUTHORITY, EpisodesColumns.TABLE_NAME, URI_TYPE_EPISODES);
+        testMatcher.addURI(RadioTheaterProvider.AUTHORITY, EpisodesColumns.TABLE_NAME + "/#", URI_TYPE_EPISODES_ID);
+        testMatcher.addURI(RadioTheaterProvider.AUTHORITY, EpisodesActorsColumns.TABLE_NAME, URI_TYPE_EPISODES_ACTORS);
+        testMatcher.addURI(RadioTheaterProvider.AUTHORITY, EpisodesActorsColumns.TABLE_NAME + "/#", URI_TYPE_EPISODES_ACTORS_ID);
+        testMatcher.addURI(RadioTheaterProvider.AUTHORITY, EpisodesWritersColumns.TABLE_NAME, URI_TYPE_EPISODES_WRITERS);
+        testMatcher.addURI(RadioTheaterProvider.AUTHORITY, EpisodesWritersColumns.TABLE_NAME + "/#", URI_TYPE_EPISODES_WRITERS_ID);
+        testMatcher.addURI(RadioTheaterProvider.AUTHORITY, ActorsColumns.TABLE_NAME, URI_TYPE_ACTORS);
+        testMatcher.addURI(RadioTheaterProvider.AUTHORITY, ActorsColumns.TABLE_NAME + "/#", URI_TYPE_ACTORS_ID);
+        testMatcher.addURI(RadioTheaterProvider.AUTHORITY, ActorsEpisodesColumns.TABLE_NAME, URI_TYPE_ACTORS_EPISODES);
+        testMatcher.addURI(RadioTheaterProvider.AUTHORITY, ActorsEpisodesColumns.TABLE_NAME + "/#", URI_TYPE_ACTORS_EPISODES_ID);
+        testMatcher.addURI(RadioTheaterProvider.AUTHORITY, WritersColumns.TABLE_NAME, URI_TYPE_WRITERS);
+        testMatcher.addURI(RadioTheaterProvider.AUTHORITY, WritersColumns.TABLE_NAME + "/#", URI_TYPE_WRITERS_ID);
+        testMatcher.addURI(RadioTheaterProvider.AUTHORITY, WritersEpisodesColumns.TABLE_NAME, URI_TYPE_WRITERS_EPISODES);
+        testMatcher.addURI(RadioTheaterProvider.AUTHORITY, WritersEpisodesColumns.TABLE_NAME + "/#", URI_TYPE_WRITERS_EPISODES_ID);
 
-        // if this fails, it means that the database doesn't contain all of the required columns for table being tested
-        Log.v(TAG, "(should be empty) columnsHashSet=" + columnsHashSet);
-        assertTrue("Error: The database doesn't contain all of the required columns!", columnsHashSet.isEmpty());
+        assertEquals("Error: The CONFIGURATION URI was matched incorrectly.",
+                testMatcher.match(Uri.parse(TEST_CONFIGURATION_DIR)), testMatcher.match(RadioTheaterContract.ConfigurationEntry.buildConfigurationUri()));
+        assertEquals("Error: The CONFIGEPISODES URI was matched incorrectly.",
+                testMatcher.match(Uri.parse(TEST_CONFIGEPISODES_DIR)), testMatcher.match(RadioTheaterContract.ConfigEpisodesEntry.buildConfigEpisodesUri()));
+        assertEquals("Error: The EPISODES URI was matched incorrectly.",
+                testMatcher.match(Uri.parse(TEST_EPISODES_DIR)), testMatcher.match(RadioTheaterContract.EpisodesEntry.buildEpisodesUri()));
+        assertEquals("Error: The EPISODESACTORS URI was matched incorrectly.",
+                testMatcher.match(Uri.parse(TEST_EPISODESACTORS_DIR)), testMatcher.match(RadioTheaterContract.EpisodesActorsEntry.buildEpisodesActorsUri()));
+        assertEquals("Error: The EPISODESWRITERS URI was matched incorrectly.",
+                testMatcher.match(Uri.parse(TEST_EPISODESWRITERS_DIR)), testMatcher.match(RadioTheaterContract.EpisodesWritersEntry.buildEpisodesWritersUri()));
+        assertEquals("Error: The ACTORS URI was matched incorrectly.",
+                testMatcher.match(Uri.parse(TEST_ACTORS_DIR)), testMatcher.match(RadioTheaterContract.ActorsEntry.buildActorsUri()));
+        assertEquals("Error: The ACTORSEPISODES URI was matched incorrectly.",
+                testMatcher.match(Uri.parse(TEST_ACTORSEPISODES_DIR)), testMatcher.match(RadioTheaterContract.ActorsEpisodesEntry.buildActorsEpisodesUri()));
+        assertEquals("Error: The WRITERS URI was matched incorrectly.",
+                testMatcher.match(Uri.parse(TEST_WRITERS_DIR)), testMatcher.match(RadioTheaterContract.WritersEntry.buildWritersUri()));
+        assertEquals("Error: The WRITERSEPISODES URI was matched incorrectly.",
+                testMatcher.match(Uri.parse(TEST_WRITERSEPISODES_DIR)), testMatcher.match(RadioTheaterContract.WritersEpisodesEntry.buildWritersEpisodesUri()));
     }
 
     @Test
@@ -165,6 +262,21 @@ public class TestRadioTheaterDb {
         db.close();
     }
 
+    private void checkAllColumns(Cursor cursor, HashSet<String> columnsHashSet) {
+        Log.v(TAG, "checkAllColumns");
+        Log.v(TAG, "begin with columnsHashSet=" + columnsHashSet);
+        int columnNameIndex = cursor.getColumnIndex("name");
+        do {
+            String columnName = cursor.getString(columnNameIndex);
+            Log.v(TAG, "found column " + columnName);
+            columnsHashSet.remove(columnName);
+        } while (cursor.moveToNext());
+
+        // if this fails, it means that the database doesn't contain all of the required columns for table being tested
+        Log.v(TAG, "(should be empty) columnsHashSet=" + columnsHashSet);
+        assertTrue("Error: The database doesn't contain all of the required columns!", columnsHashSet.isEmpty());
+    }
+
     private void validateDatabase(SQLiteDatabase db, String tableName, ContentValues someValues) {
         Log.v(TAG, "validateDatabase");
 
@@ -198,7 +310,8 @@ public class TestRadioTheaterDb {
         // First insert the episode, and then use the episodeRowId to insert a actor.
         // Then use the episodeRowId to insert a episode writer.
 
-        int testNumber = 1;
+        ++testNumber;
+
         ContentValues episodeValues = TestRadioTheaterUtilities.createEpisodeValues(testNumber);
         assertTrue(episodeValues != null);
 
