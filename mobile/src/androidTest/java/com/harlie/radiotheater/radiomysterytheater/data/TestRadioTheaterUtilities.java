@@ -370,14 +370,13 @@ public class TestRadioTheaterUtilities {
         return writerRowId;
     }
 
-    @Test
-    static TestContentObserver getTestContentObserver() {
+    public static TestContentObserver getTestContentObserver() {
         Log.v(TAG, "getTestContentObserver");
         return TestContentObserver.getTestContentObserver();
     }
 
     @Test
-    void testEpisodesDatabase() {
+    public void testEpisodesDatabase() {
         Log.v(TAG, "testEpisodesDatabase");
         int testNumber = 1;
         long episode_id = insertEpisodeValues(getContext(), testNumber);
