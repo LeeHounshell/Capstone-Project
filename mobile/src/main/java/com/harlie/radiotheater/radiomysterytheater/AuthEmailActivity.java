@@ -37,14 +37,13 @@ public class AuthEmailActivity extends BaseActivity
         }
 
         // see if Authentication is even needed..
-        mAuth = FirebaseAuth.getInstance();
-        if (mAuth == null) {
+        if (getAuth() == null) {
             Log.v(TAG, "unable to get FirebaseAuth!");
             startAuthenticationActivity();
             return;
         }
-        if (mAuth.getCurrentUser() != null && ! doINeedToCreateADatabase()) {
-            Log.v(TAG, "--> Firebase: user=" + mAuth.getCurrentUser().getDisplayName() + " already signed in!");
+        if (getAuth().getCurrentUser() != null && ! doINeedToCreateADatabase()) {
+            Log.v(TAG, "--> Firebase: user=" + getAuth().getCurrentUser().getDisplayName() + " already signed in!");
             startAutoplayActivity();
             return;
         }
@@ -86,7 +85,7 @@ public class AuthEmailActivity extends BaseActivity
         }
         Log.v(TAG, "attempting signin for email="+getEmail());
 
-        mAuth.signInWithEmailAndPassword(getEmail(), getPass())
+        getAuth().signInWithEmailAndPassword(getEmail(), getPass())
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {

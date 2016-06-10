@@ -79,10 +79,17 @@ android {
     }
 
     buildTypes.each {
+        it.buildConfigField 'String', 'SECRET_AUTH_PREFIX', MySecretAuthPrefix
+        it.buildConfigField 'String', 'SECRET_PASS_SUFFIX', MySecretPassSuffix
         it.buildConfigField 'String', 'GOOGLE_PROJECT_NUMBER', MyGoogleProjectNumber
         it.buildConfigField 'String', 'GOOGLE_PROJECT_ID', MyGoogleProjectID
+        it.buildConfigField 'String', 'GOOGLE_GCM_API_KEY', MyGoogleCLooudMessagingAPIKey
+        it.buildConfigField 'String', 'GOOGLE_GCM_SENDER', MyGoogleCLooudMessagingSenderID
+        it.buildConfigField 'String', 'FREE_TRACKING_ID', MyFreeTrackingID
+        it.buildConfigField 'String', 'PAID_TRACKING_ID', MyPaidTrackingID
         it.buildConfigField 'String', 'TWITTER_API_KEY', MyTwitterAPIKey
         it.buildConfigField 'String', 'TWITTER_API_SECRET', MyTwitterAPISecret
+        it.buildConfigField 'String', 'FABRIC_API_KEY', MyFabricAPIKey
     }
 
     productFlavors {
@@ -140,6 +147,7 @@ dependencies {
     compile 'com.google.android.gms:play-services-appindexing:9.0.2'
     compile 'com.google.android.gms:play-services-auth:9.0.2'
     compile 'com.google.android.gms:play-services-gcm:9.0.2'
+    compile 'com.google.android.gms:play-services-plus:9.0.2'
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.android.support:support-v4:23.4.0'
     compile 'com.android.support:recyclerview-v7:23.4.0'

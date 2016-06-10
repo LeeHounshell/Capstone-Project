@@ -32,10 +32,9 @@ public class AuthenticationActivity extends BaseActivity
         super.onCreate(savedInstanceState);
 
         // first see if Authentication is even needed..
-        mAuth = FirebaseAuth.getInstance();
-        if (mAuth != null && mAuth.getCurrentUser() != null && mAuth.getCurrentUser().getEmail() != null && ! doINeedToCreateADatabase()) {
-            setEmail(mAuth.getCurrentUser().getEmail());
-            Log.v(TAG, "--> Firebase: user=" + mAuth.getCurrentUser().getDisplayName() + " already signed in with email="+getEmail());
+        if (getAuth() != null && getAuth().getCurrentUser() != null && getAuth().getCurrentUser().getEmail() != null && ! doINeedToCreateADatabase()) {
+            setEmail(getAuth().getCurrentUser().getEmail());
+            Log.v(TAG, "--> Firebase: user=" + getAuth().getCurrentUser().getDisplayName() + " already signed in with email="+getEmail());
             startAutoplayActivity();
             return;
         }
@@ -64,7 +63,7 @@ public class AuthenticationActivity extends BaseActivity
         String email = username.getText().toString();
         String pass = password.getText().toString();
         Log.v(TAG, "email="+email);
-        if (mAuth != null && email != null && pass != null && isValid(email, pass)) {
+        if (getAuth() != null && email != null && pass != null && isValid(email, pass)) {
             Log.v(TAG, "authenticateEmail - Firebase Auth using Email");
             Intent authEmailIntent = new Intent(this, AuthEmailActivity.class);
             authEmailIntent.putExtra("email", email);

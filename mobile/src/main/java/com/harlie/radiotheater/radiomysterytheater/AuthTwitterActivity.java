@@ -47,14 +47,13 @@ public class AuthTwitterActivity extends BaseActivity
         }
 
         // see if Authentication is even needed..
-        mAuth = FirebaseAuth.getInstance();
-        if (mAuth == null) {
+        if (getAuth() == null) {
             Log.v(TAG, "unable to get FirebaseAuth!");
             startAuthenticationActivity();
             return;
         }
-        if (mAuth.getCurrentUser() != null && ! doINeedToCreateADatabase()) {
-            Log.v(TAG, "--> Firebase: user=" + mAuth.getCurrentUser().getDisplayName() + " already signed in!");
+        if (getAuth().getCurrentUser() != null && ! doINeedToCreateADatabase()) {
+            Log.v(TAG, "--> Firebase: user=" + getAuth().getCurrentUser().getDisplayName() + " already signed in!");
             startAutoplayActivity();
             return;
         }
@@ -108,7 +107,7 @@ public class AuthTwitterActivity extends BaseActivity
                 session.getAuthToken().token,
                 session.getAuthToken().secret);
 
-        mAuth.signInWithCredential(credential)
+        getAuth().signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {

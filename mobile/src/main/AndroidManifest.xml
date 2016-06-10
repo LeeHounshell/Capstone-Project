@@ -15,10 +15,13 @@
     <!-- admob get device id -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
-    <!-- To auto-complete the email text field in the login form with the user's emails -->
-    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-    <uses-permission android:name="android.permission.READ_PROFILE" />
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <!-- Because of the custom authentication flow implemented for Email and Google,
+         there are some permissions i don't need now that are normally required:
+             "android.permission.GET_ACCOUNTS"
+             "android.permission.USE_CREDENTIALS"
+             "android.permission.READ_PROFILE"
+             "android.permission.READ_CONTACTS"
+     -->
 
     <application
         android:name=".RadioTheaterApplication"
@@ -33,22 +36,17 @@
             android:authorities="com.harlie.radiotheater.radiomysterytheater.data.radiotheaterprovider"
             android:exported="false" />
 
-        <activity
-            android:name=".EpisodeListActivity"
-            android:label="@string/app_name" />
-
-        <activity
-            android:name=".EpisodeDetailActivity"
-            android:label="@string/title_episode_detail"
-            android:parentActivityName=".EpisodeListActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.harlie.radiotheater.radiomysterytheater.EpisodeListActivity" />
-        </activity>
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
 
         <meta-data
             android:name="com.google.android.gms.car.application"
             android:resource="@xml/automotive_app_desc" />
+
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="${FABRIC_API_KEY}" />
 
         <!--
          Main music service, provides media browsing and media playback services to
@@ -78,18 +76,27 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".AutoplayActivity"
-            android:label="@string/title_activity_autoplay" />
-
-        <meta-data
-            android:name="io.fabric.ApiKey"
-            android:value="${FABRIC_API_KEY}" />
-
         <activity android:name=".AuthEmailActivity" />
         <activity android:name=".AuthGoogleActivity" />
         <activity android:name=".AuthTwitterActivity" />
         <activity android:name=".AuthFacebookActivity" />
+
+        <activity
+            android:name=".AutoplayActivity"
+            android:label="@string/title_activity_autoplay" />
+
+        <activity
+            android:name=".EpisodeListActivity"
+            android:label="@string/app_name" />
+
+        <activity
+            android:name=".EpisodeDetailActivity"
+            android:label="@string/title_episode_detail"
+            android:parentActivityName=".EpisodeListActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.harlie.radiotheater.radiomysterytheater.EpisodeListActivity" />
+        </activity>
 
     </application>
 

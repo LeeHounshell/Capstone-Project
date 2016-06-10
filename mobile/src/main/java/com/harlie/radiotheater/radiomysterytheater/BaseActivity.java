@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
@@ -16,13 +17,14 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
@@ -33,11 +35,15 @@ import at.grabner.circleprogress.CircleProgressView;
 public class BaseActivity extends AppCompatActivity {
     private final static String TAG = "LEE: <" + BaseActivity.class.getSimpleName() + ">";
 
-    public FirebaseAuth mAuth;
+    private FirebaseAuth mAuth;
+    private Firebase mFirebase;
+    private DatabaseReference mDatabase;
+    private Handler mHandler;
+    private ProgressDialog mProgressDialog;
 
     protected static final int MIN_EMAIL_LENGTH = 3;
     protected static final int MIN_PASSWORD_LENGTH = 6;
-    protected ProgressDialog mProgressDialog;
+    protected static final boolean LOAD_SOME_TEST_DATA = true;
 
     private String email;
     private String pass;
@@ -46,7 +52,11 @@ public class BaseActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         Log.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
+        mHandler = new Handler();
         Firebase.setAndroidContext(this);
+        mAuth = FirebaseAuth.getInstance();
+        mFirebase = new Firebase("https://radio-mystery-theater.firebaseio.com");
+        mDatabase = FirebaseDatabase.getInstance().getReference();
     }
 
     @Override
@@ -165,17 +175,21 @@ public class BaseActivity extends AppCompatActivity {
                             boolean success = task.isSuccessful();
                             if (!success) {
                                 if (task.getException() instanceof com.google.firebase.auth.FirebaseAuthInvalidCredentialsException) {
-                                    Log.v(TAG, "*** FAIL - we have a com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ***");
+                                    Log.v(TAG, "*** FAIL - com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ***");
                                     String message = getResources().getString(R.string.invalid_email);
                                     Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
                                     startAuthenticationActivity();
                                 }
                                 else if (task.getException() instanceof com.google.firebase.auth.FirebaseAuthUserCollisionException) {
-                                    Log.v(TAG, "*** OK - we just have a com.google.firebase.auth.FirebaseAuthUserCollisionException ***");
+                                    Log.v(TAG, "*** OK - com.google.firebase.auth.FirebaseAuthUserCollisionException ***"); // user+pass record already exists, so ignore
+                                    success = true;
+                                }
+                                else if(task.getException() instanceof com.google.firebase.auth.FirebaseAuthInvalidUserException) {
+                                    Log.v(TAG, "*** OK - com.google.firebase.auth.FirebaseAuthInvalidUserException"); // found deleted user - so just add them back
                                     success = true;
                                 }
                                 else if (task.getException() instanceof com.google.firebase.FirebaseTooManyRequestsException) {
-                                    Log.v(TAG, "*** FAIL - we just have a com.google.firebase.FirebaseTooManyRequestsException ***");
+                                    Log.v(TAG, "*** FAIL - com.google.firebase.FirebaseTooManyRequestsException ***");
                                     String message = getResources().getString(R.string.too_many_requests);
                                     Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
                                     startAuthenticationActivity();
@@ -261,29 +275,111 @@ public class BaseActivity extends AppCompatActivity {
         return success;
     }
 
+    // this kicks off a series of AsyncTasks to load SQL tables from Firebase
     protected void loadSqliteDatabase() {
         Log.v(TAG, "*** loadSqliteDatabase ***");
-        // Get a reference to our posts
-        Firebase ref = new Firebase("https://console.firebase.google.com/project/radio-mystery-theater/database/data/radiomysterytheater");
-        final BaseActivity activity = this;
-        // Attach an listener to read the data at our posts reference
-        Log.v(TAG, "*** FIREBASE REQUEST ***");
-        ref.addValueEventListener(new com.firebase.client.ValueEventListener() {
+        runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state
+    }
 
+    public void runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState state) {
+        Log.v(TAG, "runLoadState: for state="+state);
+        if (state == LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS) {
+            loadWritersFromFirebase();
+        }
+        else
+        if (state == LoadRadioTheaterTablesAsyncTask.LoadState.ACTORS) {
+            loadActorsFromFirebase();
+        }
+        else
+        if (state == LoadRadioTheaterTablesAsyncTask.LoadState.EPISODES) {
+            loadEpisodesFromFirebase();
+        }
+    }
+
+    public void runLoadStateCallback(LoadRadioTheaterTablesAsyncTask.LoadState state) {
+        Log.v(TAG, "runLoadStateCallback: for state="+state);
+        if (state == LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS) {
+            runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.ACTORS); // next load the ACTORS
+        }
+        else
+        if (state == LoadRadioTheaterTablesAsyncTask.LoadState.ACTORS) {
+            runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.EPISODES); // finally load the EPISODES
+        }
+        else
+        if (state == LoadRadioTheaterTablesAsyncTask.LoadState.EPISODES) {
+            // ok, we're in
+            startAutoplayActivity();
+        }
+    }
+
+    // first load the WRITERS tables
+    public void loadWritersFromFirebase() {
+        Log.v(TAG, "loadWritersFromFirebase");
+        final BaseActivity activity = this;
+        // Attach a listener to read the data initially
+        Log.v(TAG, "*** FIREBASE REQUEST ***");
+        mDatabase.child("radiomysterytheater/0/writers").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(com.firebase.client.DataSnapshot dataSnapshot) {
+            public void onDataChange(DataSnapshot dataSnapshot) {
                 Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
-                Log.v(TAG, "snapshot="+dataSnapshot.getValue());
                 CircleProgressView circleProgressView = (CircleProgressView) findViewById(R.id.circle_view);
-                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, circleProgressView, dataSnapshot);
+                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, circleProgressView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS, LOAD_SOME_TEST_DATA);
                 asyncTask.execute();
                 Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
             }
 
             @Override
-            public void onCancelled(FirebaseError databaseError) {
-                Log.e(TAG, "The read failed: " + databaseError.getDetails());
-                startAuthenticationActivity();
+            public void onCancelled(DatabaseError databaseError) {
+                Log.v(TAG, "onCancelled");
+                activity.startAuthenticationActivity();
+            }
+        });
+    }
+
+    // next load the ACTORS tables
+    public void loadActorsFromFirebase() {
+        Log.v(TAG, "loadActorsFromFirebase");
+        final BaseActivity activity = this;
+        // Attach a listener to read the data initially
+        Log.v(TAG, "*** FIREBASE REQUEST ***");
+        activity.mDatabase.child("radiomysterytheater/1/actors").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
+                CircleProgressView circleProgressView = (CircleProgressView) findViewById(R.id.circle_view);
+                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, circleProgressView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.ACTORS, false);
+                asyncTask.execute();
+                Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.v(TAG, "onCancelled");
+                activity.startAuthenticationActivity();
+            }
+        });
+    }
+
+    // finally load the EPISODES tables
+    public void loadEpisodesFromFirebase() {
+        Log.v(TAG, "loadEpisodesFromFirebase");
+        final BaseActivity activity = this;
+        // Attach a listener to read the data initially
+        Log.v(TAG, "*** FIREBASE REQUEST ***");
+        activity.mDatabase.child("radiomysterytheater/2/podcasts").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
+                CircleProgressView circleProgressView = (CircleProgressView) findViewById(R.id.circle_view);
+                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, circleProgressView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.EPISODES, false);
+                asyncTask.execute();
+                Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.v(TAG, "onCancelled");
+                activity.startAuthenticationActivity();
             }
         });
     }
@@ -332,6 +428,22 @@ public class BaseActivity extends AppCompatActivity {
 
     public void setPass(String pass) {
         this.pass = pass;
+    }
+
+    public Handler getmHandler() {
+        return mHandler;
+    }
+
+    public FirebaseAuth getAuth() {
+        return mAuth;
+    }
+
+    public Firebase getFirebase() {
+        return mFirebase;
+    }
+
+    public DatabaseReference getDatabase() {
+        return mDatabase;
     }
 
 }

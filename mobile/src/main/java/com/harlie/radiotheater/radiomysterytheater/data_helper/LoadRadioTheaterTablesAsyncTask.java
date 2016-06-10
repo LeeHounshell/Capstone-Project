@@ -1,52 +1,58 @@
 package com.harlie.radiotheater.radiomysterytheater.data_helper;
 
-import android.app.Activity;
 import android.content.ContentValues;
-import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
-import com.harlie.radiotheater.radiomysterytheater.data.RadioTheaterHelper;
+import com.harlie.radiotheater.radiomysterytheater.R;
 
 import at.grabner.circleprogress.CircleProgressView;
 
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
-
+// NOTE: this AsyncTask should run 3 times: WRITERS, ACTORS, EPISODES
 public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Void, Boolean> {
     private final static String TAG = "LEE: <" + LoadRadioTheaterTablesAsyncTask.class.getSimpleName() + ">";
 
-    BaseActivity activity;
-    CircleProgressView circleProgressView;
-    com.firebase.client.DataSnapshot dataSnapshot;
+    public enum LoadState {
+        WRITERS, ACTORS, EPISODES
+    }
+    private volatile LoadState mState = LoadState.WRITERS;
 
-    public LoadRadioTheaterTablesAsyncTask(BaseActivity activity, CircleProgressView circleProgressView, com.firebase.client.DataSnapshot dataSnapshot) {
+    private BaseActivity mActivity;
+    private CircleProgressView mCircleProgressView;
+    private DataSnapshot mDataSnapshot;
+    private boolean mTesting;
+
+    public LoadRadioTheaterTablesAsyncTask(BaseActivity activity, CircleProgressView circleProgressView, DataSnapshot dataSnapshot, LoadState state, boolean testing) {
         Log.v(TAG, "new LoadRadioTheaterTablesAsyncTask");
-        this.activity = activity;
-        this.circleProgressView = circleProgressView;
-        this.dataSnapshot = dataSnapshot;
+        this.mActivity = activity;
+        this.mCircleProgressView = circleProgressView;
+        this.mDataSnapshot = dataSnapshot;
+        this.mState = state;
+        this.mTesting = testing;
     }
 
     @Override
     protected void onPreExecute() {
         Log.v(TAG, "onPreExecute");
         super.onPreExecute();
-        circleProgressView.setVisibility(View.VISIBLE);
+        mCircleProgressView.setVisibility(View.VISIBLE);
     }
 
     @Override
     protected Boolean doInBackground(BaseActivity... params) {
-        Log.v(TAG, "doInBackground");
-        loadSomeTestData();
-        for (int i = 0; i < 10; ++i) {
-            SystemClock.sleep(1000); // FIXME don't pretend
+        Log.v(TAG, "---------> doInBackground: snapshot="+mDataSnapshot.getValue());
+        if (mTesting) {
+            loadSomeTestData();
         }
-        return false;
+        SystemClock.sleep(1000); // FIXME don't pretend
+        return true; // pretending
     }
 
     private void loadSomeTestData() {
@@ -97,32 +103,31 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
     private Uri insertEpisodeValues(ContentValues episodeValues) {
         Log.v(TAG, "insertEpisodeValues=");
         Uri episode = RadioTheaterContract.EpisodesEntry.buildEpisodesUri();
-        return activity.getContentResolver().insert(episode, episodeValues);
+        return mActivity.getContentResolver().insert(episode, episodeValues);
     }
 
     private Uri insertActorValues(ContentValues actorValues) {
         Log.v(TAG, "insertActorValues");
         Uri actor = RadioTheaterContract.ActorsEntry.buildActorsUri();
-        return activity.getContentResolver().insert(actor, actorValues);
+        return mActivity.getContentResolver().insert(actor, actorValues);
     }
 
     private Uri insertWriterValues(ContentValues writerValues) {
         Log.v(TAG, "insertWriterValues");
         Uri writer = RadioTheaterContract.WritersEntry.buildWritersUri();
-        return activity.getContentResolver().insert(writer, writerValues);
+        return mActivity.getContentResolver().insert(writer, writerValues);
     }
 
     @Override
     protected void onPostExecute(Boolean successTablesLoaded) {
-        Log.v(TAG, "onPostExecute");
+        Log.v(TAG, "onPostExecute: successTablesLoaded="+successTablesLoaded);
         super.onPostExecute(successTablesLoaded);
         if (successTablesLoaded) {
-            Log.v(TAG, "---> data loaded ok.");
-            activity.startAutoplayActivity();
-        }
-        else {
-            Log.v(TAG, "---> data failed to load.");
-            activity.startAuthenticationActivity();
+            Log.v(TAG, "---> SQL TABLES loaded ok.");
+            mActivity.runLoadStateCallback(mState);
+        } else {
+            Log.v(TAG, "---> SQL TABLES failed to load.");
+            mActivity.startAuthenticationActivity();
         }
     }
 

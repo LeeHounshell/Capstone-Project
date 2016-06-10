@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
+import android.support.v7.appcompat.*;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 
@@ -15,7 +16,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.plus.Plus;
 import com.google.firebase.auth.FirebaseAuth;
+
+import com.harlie.radiotheater.radiomysterytheater.BuildConfig;
 
 import static com.firebase.ui.auth.ui.AcquireEmailHelper.RC_SIGN_IN;
 
@@ -48,14 +52,13 @@ public class AuthGoogleActivity
         }
 
         // see if Authentication is even needed..
-        mAuth = FirebaseAuth.getInstance();
-        if (mAuth == null) {
+        if (getAuth() == null) {
             Log.v(TAG, "unable to get FirebaseAuth!");
             startAuthenticationActivity();
             return;
         }
-        if (mAuth.getCurrentUser() != null && ! doINeedToCreateADatabase()) {
-            Log.v(TAG, "--> Firebase: user=" + mAuth.getCurrentUser().getDisplayName() + " already signed in!");
+        if (getAuth().getCurrentUser() != null && ! doINeedToCreateADatabase()) {
+            Log.v(TAG, "--> Firebase: user=" + getAuth().getCurrentUser().getDisplayName() + " already signed in!");
             startAutoplayActivity();
             return;
         }
@@ -85,6 +88,7 @@ public class AuthGoogleActivity
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                .addApi(Plus.API)
                 .build();
 
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
@@ -104,21 +108,9 @@ public class AuthGoogleActivity
         handleAuthenticationRequestResult(connectionResult.isSuccess());
     }
 
-    protected void handleAuthenticationRequestResult(boolean success) {
-        Log.d(TAG, "handleAuthenticationRequestResult - success=" + success);
-        if (!success) {
-            userLoginFailed();
-            startAuthenticationActivity();
-        } else {
-            userLoginSuccess();
-            // FIXME: verify Firebase read/write access before authorizing here
-            startAutoplayActivity();
-        }
-    }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.v(TAG, "onActivityResult");
+        Log.v(TAG, "onActivityResult: requestCode="+requestCode+", resultCode="+resultCode);
         super.onActivityResult(requestCode, resultCode, data);
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
@@ -130,14 +122,29 @@ public class AuthGoogleActivity
             }
             if (result.isSuccess()) {
                 GoogleSignInAccount acct = result.getSignInAccount();
-                String personName = acct.getDisplayName();
-                String personEmail = acct.getEmail();
-                String personId = acct.getId();
-                Uri personPhoto = acct.getPhotoUrl();
-                setEmail(personEmail);
-                Log.v(TAG, "GOOGLE: name=" + personName + ", id=" + personId + ", email=" + getEmail() + ", url=" + personPhoto);
+                if (acct != null) {
+                    final String personName = acct.getDisplayName();
+                    final String personEmail = BuildConfig.SECRET_AUTH_PREFIX + acct.getEmail(); // does not collide with real email
+                    final String personId = acct.getId();
+                    final String personPass = acct.getId() + BuildConfig.SECRET_PASS_SUFFIX; // unique, repeatable and private
+                    final Uri personPhoto = acct.getPhotoUrl();
+                    setEmail(personEmail);
+                    setPass(personPass);
+                    // ok, now do the login invisibly with email to avoid extra app manifest permissions
+                    Log.v(TAG, "GOOGLE: name=" + personName + ", id=" + personId + ", email=" + getEmail() + ", url=" + personPhoto);
+                    Intent authEmailIntent = new Intent(this, AuthEmailActivity.class);
+                    authEmailIntent.putExtra("name", personName);
+                    authEmailIntent.putExtra("email", personEmail);
+                    authEmailIntent.putExtra("pass", personPass);
+                    authEmailIntent.putExtra("photo", personPhoto);
+                    authEmailIntent.putExtra("DO_AUTH", true);
+                    startActivity(authEmailIntent);
+                    finish();
+                    return;
+                }
             }
-            handleAuthenticationRequestResult(result.isSuccess());
+            Log.v(TAG, "GOOGLE: unable to retrieve: name, email, id, photo");
+            handleAuthenticationRequestResult(false);
         }
     }
 
