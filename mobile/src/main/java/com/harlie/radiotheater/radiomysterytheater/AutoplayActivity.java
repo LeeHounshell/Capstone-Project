@@ -10,9 +10,11 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 
+//#IFDEF 'FREE'
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
+//#ENDIF
 
 public class AutoplayActivity extends BaseActivity {
     private final static String TAG = "LEE: <" + AutoplayActivity.class.getSimpleName() + ">";

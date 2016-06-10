@@ -16,23 +16,24 @@
 #   public *;
 #}
 
-# https://firebase-dot-devsite.googleplex.com/docs/auth/android/start/#proguard
+-dontwarn org.w3c.dom.**
+-dontwarn org.joda.time.**
+-dontwarn org.shaded.apache.**
+-dontwarn org.ietf.jgss.**
+-dontwarn com.firebase.**
+-dontnote com.firebase.client.core.GaePlatform
+
 -keepattributes Signature
 -keepattributes *Annotation*
+-keepattributes InnerClasses,EnclosingMethod
 
-# FIREBASE: This rule will properly ProGuard all the model classes in the
-# package com.yourcompany.models. Modify to fit the structure of your app.
--keepclassmembers class com.harlie.radiotheater.radiomysterytheater.** {
-  *;
-}
+-keep class com.harlie.** { *; }
 
--keepclassmembers class at.grabner.circleprogress.CircleProgressView.** {
-  *;
-}
+# Basic ProGuard rules for Firebase Android SDK 2.0.0+
+-keep class com.firebase.** { *; }
 
--keep class com.harlie.radiotheater.radiomysterytheater.** { *; }
--keep class com.harlie.radiotheater.radiomysterytheater.** { *; }
+-keepnames class com.fasterxml.jackson.** { *; }
+-keepnames class javax.servlet.** { *; }
+-keepnames class org.ietf.jgss.** { *; }
 
--keep class org.sqlite.** { *; }
--keep class org.sqlite.database.** { *; }
 

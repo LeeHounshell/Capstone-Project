@@ -116,8 +116,11 @@ android {
     lintOptions {
         disable 'InconsistentLayout'
     }
+
     dexOptions {
+        javaMaxHeapSize "4g"
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
@@ -139,8 +142,7 @@ dependencies {
     compile 'com.google.firebase:firebase-crash:9.0.2'
     compile 'com.google.firebase:firebase-auth:9.0.2'
     compile 'com.google.firebase:firebase-config:9.0.2'
-    compile 'com.google.firebase:firebase-invites:9.0.2'
-    compile 'com.google.firebase:firebase-ads:9.0.2'
+    freeCompile 'com.google.firebase:firebase-ads:9.0.2'
     compile 'com.firebase:firebase-client-android:2.5.2+'
     compile 'com.firebaseui:firebase-ui:0.4.0'
 

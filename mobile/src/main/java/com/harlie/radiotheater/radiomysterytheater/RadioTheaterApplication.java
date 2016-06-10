@@ -34,8 +34,8 @@ public class RadioTheaterApplication extends android.support.multidex.MultiDexAp
 
     @Override
     public void attachBaseContext(Context base) {
-        MultiDex.install(base);
         super.attachBaseContext(base);
+        MultiDex.install(this);
     }
 
 }
