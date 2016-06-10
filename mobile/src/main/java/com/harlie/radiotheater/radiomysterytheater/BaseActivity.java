@@ -43,7 +43,6 @@ public class BaseActivity extends AppCompatActivity {
 
     protected static final int MIN_EMAIL_LENGTH = 3;
     protected static final int MIN_PASSWORD_LENGTH = 6;
-    protected static final boolean LOAD_SOME_TEST_DATA = true;
 
     private String email;
     private String pass;
@@ -174,32 +173,7 @@ public class BaseActivity extends AppCompatActivity {
                             // signed in user can be handled in the listener.
                             boolean success = task.isSuccessful();
                             if (!success) {
-                                if (task.getException() instanceof com.google.firebase.auth.FirebaseAuthInvalidCredentialsException) {
-                                    Log.v(TAG, "*** FAIL - com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ***");
-                                    String message = getResources().getString(R.string.invalid_email);
-                                    Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
-                                    startAuthenticationActivity();
-                                }
-                                else if (task.getException() instanceof com.google.firebase.auth.FirebaseAuthUserCollisionException) {
-                                    Log.v(TAG, "*** OK - com.google.firebase.auth.FirebaseAuthUserCollisionException ***"); // user+pass record already exists, so ignore
-                                    success = true;
-                                }
-                                else if(task.getException() instanceof com.google.firebase.auth.FirebaseAuthInvalidUserException) {
-                                    Log.v(TAG, "*** OK - com.google.firebase.auth.FirebaseAuthInvalidUserException"); // found deleted user - so just add them back
-                                    success = true;
-                                }
-                                else if (task.getException() instanceof com.google.firebase.FirebaseTooManyRequestsException) {
-                                    Log.v(TAG, "*** FAIL - com.google.firebase.FirebaseTooManyRequestsException ***");
-                                    String message = getResources().getString(R.string.too_many_requests);
-                                    Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
-                                    startAuthenticationActivity();
-                                }
-                                else {
-                                    Log.v(TAG, "*** authentication failed *** reason="+task.getException().getLocalizedMessage());
-                                    String message = getResources().getString(R.string.auth_fail);
-                                    Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
-                                    startAuthenticationActivity();
-                                }
+                                success = checkExceptionReason(task, activity);
                             }
                             if (success) {
                                 startAutoplayActivity();
@@ -216,6 +190,38 @@ public class BaseActivity extends AppCompatActivity {
             Toast.makeText(this, message, Toast.LENGTH_LONG).show();
             startAuthenticationActivity();
         }
+    }
+
+    protected boolean checkExceptionReason(@NonNull Task<AuthResult> task, BaseActivity activity) {
+        Log.v(TAG, "checkExceptionReason");
+        boolean success = false;
+        if (task.getException() instanceof com.google.firebase.auth.FirebaseAuthInvalidCredentialsException) {
+            Log.v(TAG, "*** FAIL - com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ***");
+            String message = getResources().getString(R.string.invalid_email);
+            Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
+            startAuthenticationActivity();
+        }
+        else if (task.getException() instanceof com.google.firebase.auth.FirebaseAuthUserCollisionException) {
+            Log.v(TAG, "*** OK - com.google.firebase.auth.FirebaseAuthUserCollisionException ***"); // user+pass record already exists, so ignore
+            success = true;
+        }
+        else if(task.getException() instanceof com.google.firebase.auth.FirebaseAuthInvalidUserException) {
+            Log.v(TAG, "*** OK - com.google.firebase.auth.FirebaseAuthInvalidUserException"); // found deleted user - so just add them back
+            success = true;
+        }
+        else if (task.getException() instanceof com.google.firebase.FirebaseTooManyRequestsException) {
+            Log.v(TAG, "*** FAIL - com.google.firebase.FirebaseTooManyRequestsException ***");
+            String message = getResources().getString(R.string.too_many_requests);
+            Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
+            startAuthenticationActivity();
+        }
+        else {
+            Log.v(TAG, "*** authentication failed *** reason="+task.getException().getLocalizedMessage());
+            String message = getResources().getString(R.string.auth_fail);
+            Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
+            startAuthenticationActivity();
+        }
+        return success;
     }
 
     protected void userLoginSuccess() {
@@ -278,6 +284,11 @@ public class BaseActivity extends AppCompatActivity {
     // this kicks off a series of AsyncTasks to load SQL tables from Firebase
     protected void loadSqliteDatabase() {
         Log.v(TAG, "*** loadSqliteDatabase ***");
+
+        if (! ((isExistingTable("EPISODES")) && (isExistingTable("ACTORS")) && (isExistingTable("WRITERS")))) {
+            LoadRadioTheaterTablesAsyncTask.setTesting(true); // FIXME! - load some dummy data instead of JSON
+        }
+
         runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state
     }
 
@@ -323,7 +334,7 @@ public class BaseActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
                 CircleProgressView circleProgressView = (CircleProgressView) findViewById(R.id.circle_view);
-                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, circleProgressView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS, LOAD_SOME_TEST_DATA);
+                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, circleProgressView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS);
                 asyncTask.execute();
                 Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
             }
@@ -347,7 +358,7 @@ public class BaseActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
                 CircleProgressView circleProgressView = (CircleProgressView) findViewById(R.id.circle_view);
-                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, circleProgressView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.ACTORS, false);
+                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, circleProgressView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.ACTORS);
                 asyncTask.execute();
                 Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
             }
@@ -371,7 +382,7 @@ public class BaseActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
                 CircleProgressView circleProgressView = (CircleProgressView) findViewById(R.id.circle_view);
-                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, circleProgressView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.EPISODES, false);
+                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, circleProgressView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.EPISODES);
                 asyncTask.execute();
                 Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
             }

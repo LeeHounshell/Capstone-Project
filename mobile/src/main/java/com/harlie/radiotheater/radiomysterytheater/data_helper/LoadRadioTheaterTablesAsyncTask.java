@@ -7,6 +7,7 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 
+import com.google.android.gms.common.api.BooleanResult;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
@@ -19,6 +20,8 @@ import at.grabner.circleprogress.CircleProgressView;
 public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Void, Boolean> {
     private final static String TAG = "LEE: <" + LoadRadioTheaterTablesAsyncTask.class.getSimpleName() + ">";
 
+    private static boolean mTesting = false;
+
     public enum LoadState {
         WRITERS, ACTORS, EPISODES
     }
@@ -27,15 +30,13 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
     private BaseActivity mActivity;
     private CircleProgressView mCircleProgressView;
     private DataSnapshot mDataSnapshot;
-    private boolean mTesting;
 
-    public LoadRadioTheaterTablesAsyncTask(BaseActivity activity, CircleProgressView circleProgressView, DataSnapshot dataSnapshot, LoadState state, boolean testing) {
+    public LoadRadioTheaterTablesAsyncTask(BaseActivity activity, CircleProgressView circleProgressView, DataSnapshot dataSnapshot, LoadState state) {
         Log.v(TAG, "new LoadRadioTheaterTablesAsyncTask");
         this.mActivity = activity;
         this.mCircleProgressView = circleProgressView;
         this.mDataSnapshot = dataSnapshot;
         this.mState = state;
-        this.mTesting = testing;
     }
 
     @Override
@@ -47,57 +48,110 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
 
     @Override
     protected Boolean doInBackground(BaseActivity... params) {
-        Log.v(TAG, "---------> doInBackground: snapshot="+mDataSnapshot.getValue());
-        if (mTesting) {
-            loadSomeTestData();
+        Log.v(TAG, "doInBackground");
+        Boolean rc = false;
+        if (mState == LoadState.WRITERS) {
+            Log.v(TAG, "LOADING WRITERS..");
+            rc = loadWriters();
         }
-        SystemClock.sleep(1000); // FIXME don't pretend
-        return true; // pretending
+        else if (mState == LoadState.ACTORS) {
+            Log.v(TAG, "LOADING ACTORS..");
+            rc = loadActors();
+        }
+        else if (mState == LoadState.EPISODES) {
+            Log.v(TAG, "LOADING EPISODES..");
+            rc = loadEpisodes();
+        }
+        return rc;
     }
 
-    private void loadSomeTestData() {
-        Log.v(TAG, "loadSomeTestData");
-        ContentValues episodeValues = new ContentValues();
-        episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, "0001");
-        episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_AIRDATE, "1974-01-06");
-        episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_TITLE, "The Old Ones Are Hard to Kill");
-        episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_DESCRIPTION, "An old lady rents a room to a sick boarder. She runs into problems with his strange deathbed confession.");
-        episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_DOWNLOAD_URL, "www.cbsrmt.com/mp3/CBS Radio Mystery Theater 74-01-06 e0001 The Old Ones Are Hard to Kill.mp3");
-        episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_WEBLINK_URL, "www.cbsrmt.com/episode_name-1-the-old-ones-are-hard-to-kill.html");
-        episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_RATING, 3.2);
-        episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_VOTE_COUNT, 1); // true count is unknown at present
-        Uri result;
-        try {
-            result = insertEpisodeValues(episodeValues);
-            Log.v(TAG, "Episode insert result="+result);
+    private Boolean loadWriters() {
+        Log.v(TAG, "loadWriters");
+        String writerJSON = mDataSnapshot.getValue().toString();
+        System.out.println();
+        System.out.println(writerJSON);
+        System.out.println();
+        //#IFDEF 'DEBUG'
+        if (isTesting()) {
+            Log.v(TAG, "LOADING TEST WRITER");
+            ContentValues writerValues = new ContentValues();
+            writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_ID, 1);
+            writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_NAME, "Slesar, Henry");
+            writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_URL, "slesar_henry.jpg");
+            try {
+                Uri result = insertWriterValues(writerValues);
+                Log.v(TAG, "Writer insert result="+result);
+                return true;
+            }
+            catch (Exception e) {
+                Log.e(TAG, "insert exception="+e);
+                return false;
+            }
         }
-        catch (Exception e) {
-            Log.e(TAG, "insert exception="+e);
-        }
+        //#ENDIF
+        // FIXME: parse the JSON
+        return true;
+    }
 
-        ContentValues actorValues = new ContentValues();
-        actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_ID, 1);
-        actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_NAME, "DeKoven, Roger");
-        actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_URL, "dekoven_roger.jpg");
-        try {
-            result = insertActorValues(actorValues);
-            Log.v(TAG, "Actor insert result="+result);
+    private Boolean loadActors() {
+        Log.v(TAG, "loadActors");
+        String actorJSON = mDataSnapshot.getValue().toString();
+        System.out.println();
+        System.out.println(actorJSON);
+        System.out.println();
+        //#IFDEF 'DEBUG'
+        if (isTesting()) {
+            Log.v(TAG, "LOADING TEST ACTOR");
+            ContentValues actorValues = new ContentValues();
+            actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_ID, 1);
+            actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_NAME, "DeKoven, Roger");
+            actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_URL, "dekoven_roger.jpg");
+            try {
+                Uri result = insertActorValues(actorValues);
+                Log.v(TAG, "Actor insert result="+result);
+                return true;
+            }
+            catch (Exception e) {
+                Log.e(TAG, "insert exception="+e);
+                return false;
+            }
         }
-        catch (Exception e) {
-            Log.e(TAG, "insert exception="+e);
-        }
+        //#ENDIF
+        // FIXME: parse the JSON
+        return true;
+    }
 
-        ContentValues writerValues = new ContentValues();
-        writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_ID, 1);
-        writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_NAME, "Slesar, Henry");
-        writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_URL, "slesar_henry.jpg");
-        try {
-            result = insertWriterValues(writerValues);
-            Log.v(TAG, "Writer insert result="+result);
+    private Boolean loadEpisodes() {
+        Log.v(TAG, "loadEpisodes");
+        String episodeJSON = mDataSnapshot.getValue().toString();
+        System.out.println();
+        System.out.println(episodeJSON);
+        System.out.println();
+        //#IFDEF 'DEBUG'
+        if (isTesting()) {
+            Log.v(TAG, "LOADING TEST EPISODE");
+            ContentValues episodeValues = new ContentValues();
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, "0001");
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_AIRDATE, "1974-01-06");
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_TITLE, "The Old Ones Are Hard to Kill");
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_DESCRIPTION, "An old lady rents a room to a sick boarder. She runs into problems with his strange deathbed confession.");
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_DOWNLOAD_URL, "www.cbsrmt.com/mp3/CBS Radio Mystery Theater 74-01-06 e0001 The Old Ones Are Hard to Kill.mp3");
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_WEBLINK_URL, "www.cbsrmt.com/episode_name-1-the-old-ones-are-hard-to-kill.html");
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_RATING, 3.2);
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_VOTE_COUNT, 1); // true count is unknown at present
+            try {
+                Uri result = insertEpisodeValues(episodeValues);
+                Log.v(TAG, "Episode insert result="+result);
+                return true;
+            }
+            catch (Exception e) {
+                Log.e(TAG, "insert exception="+e);
+                return false;
+            }
         }
-        catch (Exception e) {
-            Log.e(TAG, "insert exception="+e);
-        }
+        //#ENDIF
+        // FIXME: parse the JSON
+        return true;
     }
 
     private Uri insertEpisodeValues(ContentValues episodeValues) {
@@ -129,6 +183,14 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
             Log.v(TAG, "---> SQL TABLES failed to load.");
             mActivity.startAuthenticationActivity();
         }
+    }
+
+    public static boolean isTesting() {
+        return mTesting;
+    }
+
+    public static void setTesting(boolean testing) {
+        mTesting = testing;
     }
 
 }

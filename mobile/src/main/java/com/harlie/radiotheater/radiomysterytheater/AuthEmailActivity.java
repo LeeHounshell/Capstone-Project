@@ -85,6 +85,7 @@ public class AuthEmailActivity extends BaseActivity
         }
         Log.v(TAG, "attempting signin for email="+getEmail());
 
+        final AuthEmailActivity activity = this;
         getAuth().signInWithEmailAndPassword(getEmail(), getPass())
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
@@ -96,7 +97,7 @@ public class AuthEmailActivity extends BaseActivity
                         // signed in user can be handled in the listener.
                         boolean success = task.isSuccessful();
                         if (!success) {
-                            Log.w(TAG, "signInWithEmailAndPassword: exception=", task.getException());
+                            success = checkExceptionReason(task, activity);
                         }
                         handleAuthenticationRequestResult(success);
                     }
