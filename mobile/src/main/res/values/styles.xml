@@ -23,12 +23,39 @@
         <item name="android:elevation">@dimen/admob_elevation</item>
     </style>
 
-    <style name="circleview_style" >
+    <style name="circleview_style">
         <item name="android:layout_centerHorizontal">true</item>
         <item name="android:layout_centerVertical">true</item>
         <item name="android:layout_gravity">center</item>
         <item name="android:gravity">center</item>
         <item name="android:elevation">@dimen/image_elevation</item>
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="AboutImage" parent="AppTheme" />
+
+    <style name="FontStyle_Small">
+        <item name="font_small">10sp</item>
+        <item name="font_medium">14sp</item>
+        <item name="font_large">20sp</item>
+        <item name="font_xlarge">27sp</item>
+    </style>
+
+    <style name="FontStyle_Medium">
+        <item name="font_small">14sp</item>
+        <item name="font_medium">18sp</item>
+        <item name="font_large">24sp</item>
+        <item name="font_xlarge">31sp</item>
+    </style>
+
+    <style name="FontStyle_Large">
+        <item name="font_small">22sp</item>
+        <item name="font_medium">26sp</item>
+        <item name="font_large">32sp</item>
+        <item name="font_xlarge">39sp</item>
     </style>
 
 </resources>
