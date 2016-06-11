@@ -3,9 +3,11 @@ package com.harlie.radiotheater.radiomysterytheater;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
+import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.Toolbar;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -15,6 +17,8 @@ import android.view.View;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
+
+import me.angrybyte.circularslider.CircularSlider;
 //#ENDIF
 
 public class AutoplayActivity extends BaseActivity {
@@ -35,6 +39,18 @@ public class AutoplayActivity extends BaseActivity {
             }
         }
 
+        AppCompatButton autoPlay = (AppCompatButton) findViewById(R.id.autoplay);
+        autoPlay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.v(TAG, "CLICK - autoPlay");
+                AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.toolbar_container);
+                appBarLayout.setExpanded(false);
+                CircularSlider circleSlider = (CircularSlider) findViewById(R.id.circular_seekbar);
+                circleSlider.setVisibility(View.VISIBLE);
+            }
+        });
+
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         if (fab != null) {
             final AutoplayActivity activity = this;
@@ -43,6 +59,7 @@ public class AutoplayActivity extends BaseActivity {
                 public void onClick(View view) {
                     // Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     //         .setAction("Action", null).show();
+                    Log.v(TAG, "CLICK - fab");
                     Intent episodeListIntent = new Intent(activity, EpisodeListActivity.class);
                     startActivity(episodeListIntent);
                 }

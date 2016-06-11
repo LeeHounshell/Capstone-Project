@@ -6,6 +6,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -40,6 +41,7 @@ public class EpisodeDetailActivity extends BaseActivity {
                 public void onClick(View view) {
                     //Snackbar.make(view, "Replace with your own detail action", Snackbar.LENGTH_LONG)
                     //        .setAction("Action", null).show();
+                    Log.v(TAG, "CLICK - fab");
                     Intent autoplayIntent = new Intent(activity, AutoplayActivity.class);
                     // close existing activity stack regardless of what's in there and create new root
                     autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

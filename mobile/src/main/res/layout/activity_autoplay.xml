@@ -18,6 +18,7 @@
         android:id="@+id/main_frame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:layout_marginTop="@dimen/autoplay_marginTop">
 
         <android.support.v7.widget.AppCompatButton
@@ -36,7 +37,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:padding="30dp"
-            android:visibility="visible"
+            android:visibility="gone"
             circular:angle="3.14"
             circular:border_color="@color/sliderColor"
             circular:border_thickness="9dp"
