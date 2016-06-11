@@ -52,7 +52,7 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
         android:src="@drawable/idea"
-        android:scaleType="fitCenter"
+        android:scaleType="centerCrop"
         android:visibility="visible" />
 
 </android.support.design.widget.CoordinatorLayout>

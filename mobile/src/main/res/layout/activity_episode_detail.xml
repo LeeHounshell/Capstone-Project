@@ -23,7 +23,7 @@
         android:layout_gravity="center_vertical|start"
         android:layout_margin="@dimen/fab_margin"
         android:src="@drawable/idea"
-        android:scaleType="fitCenter"
+        android:scaleType="centerCrop"
         app:layout_anchor="@+id/episode_detail_container"
         app:layout_anchorGravity="top|end" />
 
