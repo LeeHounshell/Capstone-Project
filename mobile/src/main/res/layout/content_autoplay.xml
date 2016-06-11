@@ -1,51 +1,34 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--suppress AndroidUnknownAttribute -->
-<FrameLayout
+<?xml version="1.0" encoding="utf-8"?><!--suppress AndroidUnknownAttribute -->
+<android.support.v4.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:circular="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/content_autoplay"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/black"
     android:orientation="vertical"
+    android:clickable="true"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.harlie.radiotheater.radiomysterytheater.AutoplayActivity"
     tools:showIn="@layout/activity_autoplay">
 
-    <ImageView
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center_horizontal"
-        android:contentDescription="@string/e_g_marshall"
-        android:gravity="center_horizontal"
-        android:scaleType="fitStart"
-        android:src="@drawable/radio_theater_background" />
+        android:layout_height="match_parent">
 
-    <android.support.v7.widget.AppCompatButton
-        android:id="@+id/autoplay"
-        android:layout_width="@dimen/autoplay_width"
-        android:layout_height="@dimen/autoplay_height"
-        android:layout_gravity="center"
-        android:background="@drawable/radio_theater_autoplay_button_selector"
-        android:contentDescription="@string/autoplay_next"
-        android:elevation="@dimen/button_elevation"
-        android:gravity="center"
-        android:theme="@style/RadioTheaterButton" />
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal"
+            android:contentDescription="@string/e_g_marshall"
+            android:gravity="center_horizontal"
+            android:scaleType="fitStart"
+            android:adjustViewBounds="true"
+            android:src="@drawable/radio_theater_background" />
 
-    <me.angrybyte.circularslider.CircularSlider
-        android:id="@+id/circular_seekbar"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="30dp"
-        circular:thumb_image="@drawable/seek_thumb"
-        circular:angle="3.14"
-        circular:border_color="@color/sliderColor"
-        circular:border_thickness="9dp"
-        circular:thumb_size="30dp"
-        android:visibility="gone" />
+        <include layout="@layout/banner_advert" />
 
-    <include layout="@layout/banner_advert" />
+    </FrameLayout>
 
-</FrameLayout>
+</android.support.v4.widget.NestedScrollView>

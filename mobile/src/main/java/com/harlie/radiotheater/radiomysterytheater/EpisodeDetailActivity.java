@@ -34,11 +34,16 @@ public class EpisodeDetailActivity extends BaseActivity {
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         if (fab != null) {
+            final EpisodeDetailActivity activity = this;
             fab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Snackbar.make(view, "Replace with your own detail action", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
+                    //Snackbar.make(view, "Replace with your own detail action", Snackbar.LENGTH_LONG)
+                    //        .setAction("Action", null).show();
+                    Intent autoplayIntent = new Intent(activity, AutoplayActivity.class);
+                    // close existing activity stack regardless of what's in there and create new root
+                    autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(autoplayIntent);
                 }
             });
         }

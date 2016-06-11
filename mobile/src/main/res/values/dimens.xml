@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="appbar_layout_height">139dp</dimen>
+    <dimen name="autoplay_marginTop">100dp</dimen>
     <dimen name="toolbar_inset">72dp</dimen>
     <dimen name="toolbar_elevation">16dp</dimen>
     <dimen name="button_group_padding">8dp</dimen>
