@@ -1,11 +1,44 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".AutoplayActivity">
 
     <item
-        android:id="@+id/settings"
-        android:title="@string/action_settings" />
+        android:id="@+id/search"
+        android:icon="@drawable/ic_search_white_24dp"
+        android:title="@string/action_search"
+        android:orderInCategory="100"
+        app:showAsAction="always"
+        />
 
     <item
-        android:id="@+id/about"
-        android:title="@string/action_about" />
+        android:id="@+id/action_more"
+        android:icon="@drawable/ic_more_vert_white_24dp"
+        android:title="@string/action_more"
+        android:orderInCategory="101"
+        app:showAsAction="always">
+
+        <menu>
+
+            <item
+                android:id="@+id/settings"
+                android:icon="@drawable/ic_settings_black_24dp"
+                android:orderInCategory="102"
+                app:showAsAction="collapseActionView"
+                android:title="@string/action_settings"
+            />
+
+            <item
+                android:id="@+id/about"
+                android:icon="@drawable/ic_info_black_24dp"
+                android:orderInCategory="103"
+                app:showAsAction="collapseActionView"
+                android:title="@string/action_about"
+            />
+
+        </menu>
+
+    </item>
 
 </menu>

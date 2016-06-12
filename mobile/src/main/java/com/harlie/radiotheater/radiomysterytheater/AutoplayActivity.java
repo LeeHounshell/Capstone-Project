@@ -101,6 +101,10 @@ public class AutoplayActivity extends BaseActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         Log.v(TAG, "onOptionsItemSelected");
         switch (item.getItemId()) {
+            case R.id.search: {
+                // FIXME:
+                return true;
+            }
             case R.id.settings: {
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
