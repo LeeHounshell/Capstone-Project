@@ -17,6 +17,7 @@
 #}
 
 -dontwarn org.w3c.dom.**
+-dontwarn org.immutables.**
 -dontwarn org.joda.time.**
 -dontwarn org.shaded.apache.**
 -dontwarn org.ietf.jgss.**
@@ -28,6 +29,9 @@
 -keepattributes InnerClasses,EnclosingMethod
 
 -keep class com.harlie.** { *; }
+
+-keep class com.google.gson.** { *; }
+-keep class org.immutables.** { *; }
 
 # Basic ProGuard rules for Firebase Android SDK 2.0.0+
 -keep class com.firebase.** { *; }
