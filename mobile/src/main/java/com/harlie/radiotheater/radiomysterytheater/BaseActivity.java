@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -13,6 +14,7 @@ import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
@@ -29,7 +31,10 @@ import com.google.firebase.database.ValueEventListener;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 
+import at.grabner.circleprogress.AnimationState;
+import at.grabner.circleprogress.AnimationStateChangedListener;
 import at.grabner.circleprogress.CircleProgressView;
+import at.grabner.circleprogress.TextMode;
 
 @SuppressLint("Registered")
 public class BaseActivity extends AppCompatActivity {
@@ -43,7 +48,9 @@ public class BaseActivity extends AppCompatActivity {
     private Firebase mFirebase;
     private DatabaseReference mDatabase;
     private Handler mHandler;
-    private ProgressDialog mProgressDialog;
+    private View mRootView;
+    private CircleProgressView mCircleView;
+    private boolean mShowUnit;
 
     protected static final int MIN_EMAIL_LENGTH = 3;
     protected static final int MIN_PASSWORD_LENGTH = 6;
@@ -55,6 +62,7 @@ public class BaseActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         Log.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
+        mRootView = findViewById(android.R.id.content);
         mHandler = new Handler();
         Firebase.setAndroidContext(this);
         mAuth = FirebaseAuth.getInstance();
@@ -66,7 +74,11 @@ public class BaseActivity extends AppCompatActivity {
     public void onDestroy() {
         Log.v(TAG, "onDestroy");
         super.onDestroy();
-        hideProgressDialog();
+        mAuth = null;
+        mCircleView = null;
+        mDatabase = null;
+        mHandler = null;
+        mRootView = null;
     }
 
     @Override
@@ -80,21 +92,6 @@ public class BaseActivity extends AppCompatActivity {
     public void onBackPressed() {
         Log.v(TAG, "onBackPressed");
         super.onBackPressed();
-    }
-
-    public void showProgressDialog() {
-        if (mProgressDialog == null) {
-            mProgressDialog = new ProgressDialog(this);
-            mProgressDialog.setMessage(getString(R.string.loading));
-            mProgressDialog.setIndeterminate(true);
-        }
-        mProgressDialog.show();
-    }
-
-    public void hideProgressDialog() {
-        if (mProgressDialog != null && mProgressDialog.isShowing()) {
-            mProgressDialog.hide();
-        }
     }
 
     //from: http://stackoverflow.com/questions/31662416/show-collapsingtoolbarlayout-title-only-when-collapsed
@@ -297,9 +294,10 @@ public class BaseActivity extends AppCompatActivity {
     // this kicks off a series of AsyncTasks to load SQL tables from Firebase
     protected void loadSqliteDatabase() {
         Log.v(TAG, "*** loadSqliteDatabase ***");
+        initCircleView(mRootView);
 
         //if (! ((isExistingTable("EPISODES")) && (isExistingTable("ACTORS")) && (isExistingTable("WRITERS")))) {
-        //    LoadRadioTheaterTablesAsyncTask.setTesting(true); // FIXME! - load some dummy data instead of JSON
+        //    LoadRadioTheaterTablesAsyncTask.setTesting(true); // load some dummy data instead of JSON
         //}
 
         runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state
@@ -346,8 +344,7 @@ public class BaseActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
-                CircleProgressView circleProgressView = (CircleProgressView) findViewById(R.id.circle_view);
-                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, circleProgressView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS);
+                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, mCircleView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS);
                 asyncTask.execute();
                 Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
             }
@@ -370,8 +367,7 @@ public class BaseActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
-                CircleProgressView circleProgressView = (CircleProgressView) findViewById(R.id.circle_view);
-                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, circleProgressView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.ACTORS);
+                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, mCircleView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.ACTORS);
                 asyncTask.execute();
                 Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
             }
@@ -394,8 +390,7 @@ public class BaseActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
-                CircleProgressView circleProgressView = (CircleProgressView) findViewById(R.id.circle_view);
-                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, circleProgressView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.EPISODES);
+                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, mCircleView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.EPISODES);
                 asyncTask.execute();
                 Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
             }
@@ -454,7 +449,7 @@ public class BaseActivity extends AppCompatActivity {
         this.pass = pass;
     }
 
-    public Handler getmHandler() {
+    public Handler getHandler() {
         return mHandler;
     }
 
@@ -468,6 +463,105 @@ public class BaseActivity extends AppCompatActivity {
 
     public DatabaseReference getDatabase() {
         return mDatabase;
+    }
+
+    //--------------------------------------------------------------------------------
+    // CircleView related
+    //--------------------------------------------------------------------------------
+    public void initCircleView(View view) {
+        Log.v(TAG, "initCircleView (View)");
+        mCircleView = (CircleProgressView) view.findViewById(R.id.circle_view);
+        mShowUnit = false;
+    }
+
+    public void initCircleView(CircleProgressView circleView) {
+        Log.v(TAG, "initCircleView (CircleProgressView)");
+        mCircleView = circleView; // needed to get around a problem with Fragments and findViewById
+        mShowUnit = false;
+    }
+
+    public void showCircleView() {
+        Log.v(TAG, "showCircleView");
+        if (mCircleView == null) {
+            Log.w(TAG, "showCircleView: CircleProgressView issue");
+            return;
+        }
+        mCircleView.post(new Runnable() {
+            @Override
+            public void run() {
+
+                mShowUnit = false;
+                mCircleView.setVisibility(View.VISIBLE);
+                Log.w(TAG, "showCircleView: CircleView VISIBLE");
+                mCircleView.setAutoTextSize(true); // enable auto text size, previous values are overwritten
+                mCircleView.setUnitScale(0.9f); // if you want the calculated text sizes to be bigger/smaller
+                mCircleView.setTextScale(0.9f); // if you want the calculated text sizes to be bigger/smaller
+                mCircleView.setTextColor(Color.RED);
+                mCircleView.setText("Loading.."); //shows the given text in the circle view
+                mCircleView.setTextMode(TextMode.TEXT); // Set text mode to text to show text
+                mCircleView.spin(); // start spinning
+                mCircleView.setShowTextWhileSpinning(true); // Show/hide text in spinning mode
+
+                mCircleView.setOnAnimationStateChangedListener(
+
+                        new AnimationStateChangedListener() {
+                            @Override
+                            public void onAnimationStateChanged(AnimationState _animationState) {
+                                if (mCircleView != null) {
+                                    switch (_animationState) {
+                                        case IDLE:
+                                        case ANIMATING:
+                                        case START_ANIMATING_AFTER_SPINNING:
+                                            mCircleView.setTextMode(TextMode.PERCENT); // show percent if not spinning
+                                            mCircleView.setUnitVisible(mShowUnit);
+                                            break;
+                                        case SPINNING:
+                                            mCircleView.setTextMode(TextMode.TEXT); // show text while spinning
+                                            mCircleView.setUnitVisible(false);
+                                        case END_SPINNING:
+                                            break;
+                                        case END_SPINNING_START_ANIMATING:
+                                            break;
+
+                                    }
+                                }
+                            }
+                        }
+
+                );
+
+            }
+        });
+    }
+
+    public void initializeCircleViewValue(float value) {
+        if (mCircleView != null) {
+            mShowUnit = true;
+            mCircleView.setUnit("%");
+            mCircleView.setUnitVisible(mShowUnit);
+            mCircleView.setTextMode(TextMode.PERCENT); // Shows current percent of the current value from the max value
+            mCircleView.setMaxValue(value);
+            mCircleView.setValue(0);
+            Log.w(TAG, "initializeCircleViewValue: CircleView MAX=" + value);
+        }
+    }
+
+    public void setCircleViewValue(float value) {
+        if (mCircleView != null) {
+            mCircleView.setValue(value);
+            Log.w(TAG, "setCircleViewValue: CircleView value=" + value);
+            if (value == mCircleView.getMaxValue()) {
+                hideCircleView();
+            }
+        }
+    }
+
+    public void hideCircleView() {
+        if (mCircleView != null) {
+            mCircleView.stopSpinning();
+            mCircleView.setVisibility(View.GONE);
+            Log.w(TAG, "hideCircleView: CircleView HIDDEN");
+        }
     }
 
 }

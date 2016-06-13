@@ -8,6 +8,7 @@ import android.view.View;
 
 import com.google.firebase.database.DataSnapshot;
 import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
+import com.harlie.radiotheater.radiomysterytheater.CircleViewHelper;
 
 import java.util.Iterator;
 import java.util.List;
@@ -18,7 +19,10 @@ import at.grabner.circleprogress.CircleProgressView;
 public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Void, Boolean> {
     private final static String TAG = "LEE: <" + LoadRadioTheaterTablesAsyncTask.class.getSimpleName() + ">";
 
+    private static final int TOTAL_NUMBER_OF_EPISODES_ACTORS_WRITERS = 1399 + 310 + 36;
+
     private static boolean mTesting = false;
+    private static int mCount;
 
     public enum LoadState {
         WRITERS, ACTORS, EPISODES
@@ -35,6 +39,11 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
         this.mCircleProgressView = circleProgressView;
         this.mDataSnapshot = dataSnapshot;
         this.mState = state;
+        if (mState == LoadState.WRITERS) { // writers are first up..
+            mCount = 0;
+            CircleViewHelper.showCircleView(mActivity);
+            CircleViewHelper.initializeCircleViewValue((float) TOTAL_NUMBER_OF_EPISODES_ACTORS_WRITERS, mActivity);
+        }
     }
 
     @Override
@@ -102,8 +111,8 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
             int i = 1;
             while (iterator.hasNext()) {
                 TheWriters writer = (TheWriters) iterator.next();
-                String name = writer.getName();
-                String photo = writer.getPhoto();
+                String name = writer.getName().replaceAll("^\"|\"$", "");
+                String photo = writer.getPhoto().replaceAll("^\"|\"$", "");
                 ContentValues writerValues = new ContentValues();
                 writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_ID, i);
                 writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_NAME, name);
@@ -164,8 +173,8 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
             int i = 1;
             while (iterator.hasNext()) {
                 TheActors actor = (TheActors) iterator.next();
-                String name = actor.getName();
-                String photo = actor.getPhoto();
+                String name = actor.getName().replaceAll("^\"|\"$", "");
+                String photo = actor.getPhoto().replaceAll("^\"|\"$", "");
                 ContentValues actorValues = new ContentValues();
                 actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_ID, i);
                 actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_NAME, name);
@@ -232,13 +241,13 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
             while (iterator.hasNext()) {
                 ++i;
                 TheEpisodes episode = (TheEpisodes) iterator.next();
-                String number = episode.getEpisode_number();
-                String airdate = episode.getAirdate();
-                String title = episode.getEpisode_name();
-                String description = episode.getDescription();
-                String weblink = episode.getWeblink();
-                String download = episode.getDownload();
-                String rating = episode.getRating();
+                String number = episode.getEpisode_number().replaceAll("^\"|\"$", "");
+                String airdate = episode.getAirdate().replaceAll("^\"|\"$", "");
+                String title = episode.getEpisode_name().replaceAll("^\"|\"$", "");
+                String description = episode.getDescription().replaceAll("^\"|\"$", "");
+                String weblink = episode.getWeblink().replaceAll("^\"|\"$", "");
+                String download = episode.getDownload().replaceAll("^\"|\"$", "");
+                String rating = episode.getRating().replaceAll("^\"|\"$", "");
                 TheEpisodes.ActorsBean actors = episode.getActors();
                 TheEpisodes.WritersBean writers = episode.getWriters();
                 String vote_count = "1"; // true value is unknown
@@ -259,8 +268,8 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
                     Log.e(TAG, "Episode insert exception="+e);
                 }
 
-                String writerName = episode.getWriters().getName();
-                String writerPhoto = episode.getWriters().getPhoto();
+                String writerName = episode.getWriters().getName().replaceAll("^\"|\"$", "");
+                //String writerPhoto = episode.getWriters().getPhoto().replaceAll("^\"|\"$", "");
 
                 // SQLite load WritersEpisodes Table
                 ContentValues writersEpisodes = new ContentValues();
@@ -290,8 +299,8 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
                 List<String> actorPhotos = episode.getActors().getPhoto();
 
                 for (int act = 0; act < actorNames.size(); ++act) {
-                    String actorName = actorNames.get(act);
-                    String actroPhoto = actorPhotos.get(act);
+                    String actorName = actorNames.get(act).replaceAll("^\"|\"$", "");
+                    //String actroPhoto = actorPhotos.get(act).replaceAll("^\"|\"$", "");
 
                     // SQLite load ActorsEpisodes Table
                     ContentValues actorsEpisodes = new ContentValues();
@@ -330,6 +339,7 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
     private Uri insertEpisodeValues(ContentValues episodeValues) {
         Log.v(TAG, "insertEpisodeValues=");
         Uri episode = RadioTheaterContract.EpisodesEntry.buildEpisodesUri();
+        CircleViewHelper.setCircleViewValue((float) ++mCount, mActivity);
         return mActivity.getContentResolver().insert(episode, episodeValues);
     }
 
@@ -348,6 +358,7 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
     private Uri insertActorValues(ContentValues actorValues) {
         Log.v(TAG, "insertActorValues");
         Uri actor = RadioTheaterContract.ActorsEntry.buildActorsUri();
+        CircleViewHelper.setCircleViewValue((float) ++mCount, mActivity);
         return mActivity.getContentResolver().insert(actor, actorValues);
     }
 
@@ -360,6 +371,7 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
     private Uri insertWriterValues(ContentValues writerValues) {
         Log.v(TAG, "insertWriterValues");
         Uri writer = RadioTheaterContract.WritersEntry.buildWritersUri();
+        CircleViewHelper.setCircleViewValue((float) ++mCount, mActivity);
         return mActivity.getContentResolver().insert(writer, writerValues);
     }
 
@@ -373,6 +385,9 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
     protected void onPostExecute(Boolean successTablesLoaded) {
         Log.v(TAG, "onPostExecute: successTablesLoaded="+successTablesLoaded);
         super.onPostExecute(successTablesLoaded);
+        if (mState == LoadState.EPISODES) { // episodes are last. everything should be loaded.
+            CircleViewHelper.hideCircleView(mActivity);
+        }
         if (successTablesLoaded) {
             Log.v(TAG, "---> SQL TABLES loaded ok.");
             mActivity.runLoadStateCallback(mState);
