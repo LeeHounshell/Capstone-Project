@@ -1,7 +1,6 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
 import android.annotation.SuppressLint;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -28,8 +27,13 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.harlie.radiotheater.radiomysterytheater.data.RadioTheaterHelper;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
+
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import at.grabner.circleprogress.AnimationState;
 import at.grabner.circleprogress.AnimationStateChangedListener;
@@ -40,6 +44,7 @@ import at.grabner.circleprogress.TextMode;
 public class BaseActivity extends AppCompatActivity {
     private final static String TAG = "LEE: <" + BaseActivity.class.getSimpleName() + ">";
 
+    protected static final boolean COPY_PACKAGED_SQLITE_DATABASE = true;
     protected static final String FIREBASE_WRITERS_URL = "radiomysterytheater/0/writers";
     protected static final String FIREBASE_ACTORS_URL = "radiomysterytheater/1/actors";
     protected static final String FIREBASE_SHOWS_URL = "radiomysterytheater/2/shows";
@@ -300,7 +305,52 @@ public class BaseActivity extends AppCompatActivity {
         //    LoadRadioTheaterTablesAsyncTask.setTesting(true); // load some dummy data instead of JSON
         //}
 
-        runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state
+        if (COPY_PACKAGED_SQLITE_DATABASE) {
+            String DB_NAME = RadioTheaterHelper.DATABASE_FILE_NAME;
+            try {
+                String DB_OUTPUT_DIR = "databases/";
+                String DB_OUTPUT_PATH = "/data/data/" + getPackageName() + "/" + DB_OUTPUT_DIR;
+                // for performance reasons, I have included a prebuilt-sqlite database
+                String outFileName = DB_OUTPUT_PATH + DB_NAME;
+                copyFileFromAssets(DB_NAME, outFileName);
+                copyFileFromAssets(DB_NAME + "-journal", outFileName + "-journal");
+                Log.v(TAG, "*** successfully copied prebuilt SQLite database ***");
+                startAutoplayActivity();
+            }
+            catch (Exception any) {
+                Log.e(TAG, "problem copying "+DB_NAME+" database! - "+any);
+                // this will create a new SQLite database using Firebase source JSON
+                // a circle progress view progresses as the database loads - takes a few minutes to run tho
+                runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state
+            }
+        }
+        else {
+            // this will create a new SQLite database using Firebase source JSON
+            // a circle progress view progresses as the database loads - takes a few minutes to run tho
+            runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state
+        }
+    }
+
+    private void copyFileFromAssets(String inFileName, String outFileName) throws Exception {
+        Log.v(TAG, "copyFileFromAssets: INPUT="+inFileName+", OUTPUT="+outFileName);
+        InputStream input = getApplicationContext().getAssets().open(inFileName);
+        if (input == null) {
+            throw new Exception("null input stream for asset="+ inFileName);
+        }
+        Log.v(TAG, "InputStream is open.");
+        OutputStream output = new FileOutputStream(outFileName);
+        if (output == null) {
+            throw new Exception("null output stream for database="+outFileName);
+        }
+        Log.v(TAG, "OutputStream is open.");
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = input.read(buffer)) > 0) {
+            output.write(buffer, 0, len);
+        }
+        output.flush();
+        output.close();
+        input.close();
     }
 
     public void runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState state) {
