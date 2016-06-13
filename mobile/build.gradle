@@ -165,7 +165,7 @@ dependencies {
 
     compile 'com.github.jakob-grabner:Circle-Progress-View:v1.2.9'
     compile 'me.angrybyte.slider:slider:1.2.0'
-    compile 'org.immutables:gson:2.1.0.alpha'
+    compile 'org.immutables:gson:2.2.6'
     compile 'com.readystatesoftware.sqliteasset:sqliteassethelper:+'
 
     compile 'com.jakewharton:butterknife:8.0.1'

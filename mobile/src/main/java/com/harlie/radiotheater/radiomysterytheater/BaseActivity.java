@@ -35,6 +35,10 @@ import at.grabner.circleprogress.CircleProgressView;
 public class BaseActivity extends AppCompatActivity {
     private final static String TAG = "LEE: <" + BaseActivity.class.getSimpleName() + ">";
 
+    protected static final String FIREBASE_WRITERS_URL = "radiomysterytheater/0/writers";
+    protected static final String FIREBASE_ACTORS_URL = "radiomysterytheater/1/actors";
+    protected static final String FIREBASE_SHOWS_URL = "radiomysterytheater/2/shows";
+
     private FirebaseAuth mAuth;
     private Firebase mFirebase;
     private DatabaseReference mDatabase;
@@ -281,13 +285,22 @@ public class BaseActivity extends AppCompatActivity {
         return success;
     }
 
+    /*
+    private void deleteFirebaseDatabase() {
+        Log.v(TAG, "*** deleteFirebaseDatabase ***");
+        mFirebase.child("radiomysterytheater/0").removeValue();
+        mFirebase.child("radiomysterytheater/1").removeValue();
+        mFirebase.child("radiomysterytheater/2").removeValue();
+    }
+    */
+
     // this kicks off a series of AsyncTasks to load SQL tables from Firebase
     protected void loadSqliteDatabase() {
         Log.v(TAG, "*** loadSqliteDatabase ***");
 
-        if (! ((isExistingTable("EPISODES")) && (isExistingTable("ACTORS")) && (isExistingTable("WRITERS")))) {
-            LoadRadioTheaterTablesAsyncTask.setTesting(true); // FIXME! - load some dummy data instead of JSON
-        }
+        //if (! ((isExistingTable("EPISODES")) && (isExistingTable("ACTORS")) && (isExistingTable("WRITERS")))) {
+        //    LoadRadioTheaterTablesAsyncTask.setTesting(true); // FIXME! - load some dummy data instead of JSON
+        //}
 
         runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state
     }
@@ -328,8 +341,8 @@ public class BaseActivity extends AppCompatActivity {
         Log.v(TAG, "loadWritersFromFirebase");
         final BaseActivity activity = this;
         // Attach a listener to read the data initially
-        Log.v(TAG, "*** FIREBASE REQUEST ***");
-        mDatabase.child("radiomysterytheater/0/writers").addListenerForSingleValueEvent(new ValueEventListener() {
+        Log.v(TAG, "*** FIREBASE REQUEST *** "+FIREBASE_WRITERS_URL);
+        mDatabase.child(FIREBASE_WRITERS_URL).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
@@ -352,8 +365,8 @@ public class BaseActivity extends AppCompatActivity {
         Log.v(TAG, "loadActorsFromFirebase");
         final BaseActivity activity = this;
         // Attach a listener to read the data initially
-        Log.v(TAG, "*** FIREBASE REQUEST ***");
-        activity.mDatabase.child("radiomysterytheater/1/actors").addListenerForSingleValueEvent(new ValueEventListener() {
+        Log.v(TAG, "*** FIREBASE REQUEST *** "+FIREBASE_ACTORS_URL);
+        activity.mDatabase.child(FIREBASE_ACTORS_URL).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
@@ -376,8 +389,8 @@ public class BaseActivity extends AppCompatActivity {
         Log.v(TAG, "loadEpisodesFromFirebase");
         final BaseActivity activity = this;
         // Attach a listener to read the data initially
-        Log.v(TAG, "*** FIREBASE REQUEST ***");
-        activity.mDatabase.child("radiomysterytheater/2/podcasts").addListenerForSingleValueEvent(new ValueEventListener() {
+        Log.v(TAG, "*** FIREBASE REQUEST *** "+FIREBASE_SHOWS_URL);
+        activity.mDatabase.child(FIREBASE_SHOWS_URL).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");

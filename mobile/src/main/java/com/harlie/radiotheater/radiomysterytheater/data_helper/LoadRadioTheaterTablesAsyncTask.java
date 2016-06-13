@@ -3,16 +3,14 @@ package com.harlie.radiotheater.radiomysterytheater.data_helper;
 import android.content.ContentValues;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 
-import com.google.android.gms.common.api.BooleanResult;
 import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.ValueEventListener;
 import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
-import com.harlie.radiotheater.radiomysterytheater.R;
+
+import java.util.Iterator;
+import java.util.List;
 
 import at.grabner.circleprogress.CircleProgressView;
 
@@ -67,11 +65,17 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
 
     private Boolean loadWriters() {
         Log.v(TAG, "loadWriters");
-        String writerJSON = mDataSnapshot.getValue().toString();
+        Object writerObject = mDataSnapshot.getValue();
+        if (writerObject == null) {
+            Log.e(TAG, "the Writers SNAPSHOT IS null");
+            return false;
+        }
+        String writerJSON = writerObject.toString();
+
+        //#IFDEF 'DEBUG'
         System.out.println();
         System.out.println(writerJSON);
         System.out.println();
-        //#IFDEF 'DEBUG'
         if (isTesting()) {
             Log.v(TAG, "LOADING TEST WRITER");
             ContentValues writerValues = new ContentValues();
@@ -89,17 +93,51 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
             }
         }
         //#ENDIF
-        // FIXME: parse the JSON
+
+        // parse the JSON
+        List<TheWriters> writers = TheWriters.arrayTheWritersFromData(writerJSON);
+        if (writers != null) {
+            Log.v(TAG, "GOT WRITERS");
+            Iterator iterator = writers.iterator();
+            int i = 1;
+            while (iterator.hasNext()) {
+                TheWriters writer = (TheWriters) iterator.next();
+                String name = writer.getName();
+                String photo = writer.getPhoto();
+                ContentValues writerValues = new ContentValues();
+                writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_ID, i);
+                writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_NAME, name);
+                writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_URL, photo);
+                try {
+                    Uri result = insertWriterValues(writerValues);
+                    Log.v(TAG, "Writer insert result="+result);
+                }
+                catch (Exception e) {
+                    Log.e(TAG, "insert exception="+e);
+                }
+                ++i;
+            }
+        }
+        else {
+            Log.e(TAG, "writers is null!");
+            return false;
+        }
         return true;
     }
 
     private Boolean loadActors() {
         Log.v(TAG, "loadActors");
-        String actorJSON = mDataSnapshot.getValue().toString();
+        Object actorObject = mDataSnapshot.getValue();
+        if (actorObject == null) {
+            Log.e(TAG, "the Actors SNAPSHOT IS null");
+            return false;
+        }
+        String actorJSON = actorObject.toString();
+
+        //#IFDEF 'DEBUG'
         System.out.println();
         System.out.println(actorJSON);
         System.out.println();
-        //#IFDEF 'DEBUG'
         if (isTesting()) {
             Log.v(TAG, "LOADING TEST ACTOR");
             ContentValues actorValues = new ContentValues();
@@ -117,17 +155,51 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
             }
         }
         //#ENDIF
-        // FIXME: parse the JSON
+
+        // parse the JSON
+        List<TheActors> actors = TheActors.arrayTheActorsFromData(actorJSON);
+        if (actors != null) {
+            Log.v(TAG, "GOT ACTORS");
+            Iterator iterator = actors.iterator();
+            int i = 1;
+            while (iterator.hasNext()) {
+                TheActors actor = (TheActors) iterator.next();
+                String name = actor.getName();
+                String photo = actor.getPhoto();
+                ContentValues actorValues = new ContentValues();
+                actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_ID, i);
+                actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_NAME, name);
+                actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_URL, photo);
+                try {
+                    Uri result = insertActorValues(actorValues);
+                    Log.v(TAG, "Actor insert result="+result);
+                }
+                catch (Exception e) {
+                    Log.e(TAG, "insert exception="+e);
+                }
+                ++i;
+            }
+        }
+        else {
+            Log.e(TAG, "actors is null!");
+            return false;
+        }
         return true;
     }
 
     private Boolean loadEpisodes() {
         Log.v(TAG, "loadEpisodes");
-        String episodeJSON = mDataSnapshot.getValue().toString();
+        Object episodeObject = mDataSnapshot.getValue();
+        if (episodeObject == null) {
+            Log.e(TAG, "the Episodes SNAPSHOT IS null");
+            return false;
+        }
+        String episodeJSON = episodeObject.toString();
+
+        //#IFDEF 'DEBUG'
         System.out.println();
         System.out.println(episodeJSON);
         System.out.println();
-        //#IFDEF 'DEBUG'
         if (isTesting()) {
             Log.v(TAG, "LOADING TEST EPISODE");
             ContentValues episodeValues = new ContentValues();
@@ -150,7 +222,54 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
             }
         }
         //#ENDIF
-        // FIXME: parse the JSON
+
+        // parse the JSON
+        List<TheEpisodes> episodes = TheEpisodes.arrayTheEpisodesFromData(episodeJSON);
+        if (episodes != null) {
+            Log.v(TAG, "GOT EPISODES");
+            Iterator iterator = episodes.iterator();
+            int i = 1;
+            while (iterator.hasNext()) {
+                TheEpisodes episode = (TheEpisodes) iterator.next();
+                String number = episode.getEpisode_number();
+                String airdate = episode.getAirdate();
+                String title = episode.getEpisode_name();
+                String description = episode.getDescription();
+                String weblink = episode.getWeblink();
+                String download = episode.getDownload();
+                String rating = episode.getRating();
+                TheEpisodes.ActorsBean actors = episode.getActors();
+                TheEpisodes.WritersBean writers = episode.getWriters();
+                String vote_count = "1"; // true value is unknown
+                ContentValues episodeValues = new ContentValues();
+                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, number);
+                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_AIRDATE, airdate);
+                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_TITLE, title);
+                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_DESCRIPTION, description);
+                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_WEBLINK_URL, weblink);
+                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_DOWNLOAD_URL, download);
+                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_RATING, rating);
+                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_VOTE_COUNT, vote_count);
+                try {
+                    Uri result = insertEpisodeValues(episodeValues);
+                    Log.v(TAG, "Episode insert result="+result);
+                }
+                catch (Exception e) {
+                    Log.e(TAG, "insert exception="+e);
+                }
+
+                // FIXME: need to load EpisodesActors
+                // FIXME: need to load EpisodesWriters
+                // FIXME: need to load ActorsEpisodes
+                // FIXME: need to load WritersEpisodes
+
+                ++i;
+            }
+        }
+        else {
+            Log.e(TAG, "episodes is null!");
+            return false;
+        }
         return true;
     }
 
