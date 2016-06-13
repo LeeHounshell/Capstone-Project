@@ -84,11 +84,11 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
             writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_URL, "slesar_henry.jpg");
             try {
                 Uri result = insertWriterValues(writerValues);
-                Log.v(TAG, "Writer insert result="+result);
+                Log.v(TAG, "Test Writer insert result="+result);
                 return true;
             }
             catch (Exception e) {
-                Log.e(TAG, "insert exception="+e);
+                Log.e(TAG, "Test Writer insert exception="+e);
                 return false;
             }
         }
@@ -113,7 +113,7 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
                     Log.v(TAG, "Writer insert result="+result);
                 }
                 catch (Exception e) {
-                    Log.e(TAG, "insert exception="+e);
+                    Log.e(TAG, "Writer insert exception="+e);
                 }
                 ++i;
             }
@@ -146,11 +146,11 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
             actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_URL, "dekoven_roger.jpg");
             try {
                 Uri result = insertActorValues(actorValues);
-                Log.v(TAG, "Actor insert result="+result);
+                Log.v(TAG, "Test Actor insert result="+result);
                 return true;
             }
             catch (Exception e) {
-                Log.e(TAG, "insert exception="+e);
+                Log.e(TAG, "Test Actor insert exception="+e);
                 return false;
             }
         }
@@ -175,7 +175,7 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
                     Log.v(TAG, "Actor insert result="+result);
                 }
                 catch (Exception e) {
-                    Log.e(TAG, "insert exception="+e);
+                    Log.e(TAG, "Actor insert exception="+e);
                 }
                 ++i;
             }
@@ -213,11 +213,11 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
             episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_VOTE_COUNT, 1); // true count is unknown at present
             try {
                 Uri result = insertEpisodeValues(episodeValues);
-                Log.v(TAG, "Episode insert result="+result);
+                Log.v(TAG, "Test Episode insert result="+result);
                 return true;
             }
             catch (Exception e) {
-                Log.e(TAG, "insert exception="+e);
+                Log.e(TAG, "Test Episode insert exception="+e);
                 return false;
             }
         }
@@ -228,8 +228,9 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
         if (episodes != null) {
             Log.v(TAG, "GOT EPISODES");
             Iterator iterator = episodes.iterator();
-            int i = 1;
+            int i = 0;
             while (iterator.hasNext()) {
+                ++i;
                 TheEpisodes episode = (TheEpisodes) iterator.next();
                 String number = episode.getEpisode_number();
                 String airdate = episode.getAirdate();
@@ -255,16 +256,69 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
                     Log.v(TAG, "Episode insert result="+result);
                 }
                 catch (Exception e) {
-                    Log.e(TAG, "insert exception="+e);
+                    Log.e(TAG, "Episode insert exception="+e);
                 }
 
-                // FIXME: need to load EpisodesActors
-                // FIXME: need to load EpisodesWriters
-                // FIXME: need to load ActorsEpisodes
-                // FIXME: need to load WritersEpisodes
+                String writerName = episode.getWriters().getName();
+                String writerPhoto = episode.getWriters().getPhoto();
 
-                ++i;
+                // SQLite load WritersEpisodes Table
+                ContentValues writersEpisodes = new ContentValues();
+                writersEpisodes.put(RadioTheaterContract.WritersEpisodesEntry.FIELD_WRITER_ID, writerName);
+                writersEpisodes.put(RadioTheaterContract.WritersEpisodesEntry.FIELD_EPISODE_NUMBER, number);
+                try {
+                    Uri result = insertWritersEpisodesValues(writersEpisodes);
+                    Log.v(TAG, "WritersEpisodes insert result="+result);
+                }
+                catch (Exception e) {
+                    Log.e(TAG, "WritersEpisodes insert exception="+e);
+                }
+
+                // SQLite load EpisodeWriters Table
+                ContentValues episodeWriters = new ContentValues();
+                episodeWriters.put(RadioTheaterContract.EpisodesWritersEntry.FIELD_EPISODE_NUMBER, number);
+                episodeWriters.put(RadioTheaterContract.EpisodesWritersEntry.FIELD_WRITER_ID, writerName);
+                try {
+                    Uri result = insertEpisodeWritersValues(episodeWriters);
+                    Log.v(TAG, "EpisodeWriters insert result="+result);
+                }
+                catch (Exception e) {
+                    Log.e(TAG, "EpisodeWriters insert exception="+e);
+                }
+
+                List<String> actorNames = episode.getActors().getName();
+                List<String> actorPhotos = episode.getActors().getPhoto();
+
+                for (int act = 0; act < actorNames.size(); ++act) {
+                    String actorName = actorNames.get(act);
+                    String actroPhoto = actorPhotos.get(act);
+
+                    // SQLite load ActorsEpisodes Table
+                    ContentValues actorsEpisodes = new ContentValues();
+                    actorsEpisodes.put(RadioTheaterContract.ActorsEpisodesEntry.FIELD_ACTOR_ID, actorName);
+                    actorsEpisodes.put(RadioTheaterContract.ActorsEpisodesEntry.FIELD_EPISODE_NUMBER, number);
+                    try {
+                        Uri result = insertActorsEpisodesValues(actorsEpisodes);
+                        Log.v(TAG, "ActorsEpisodes insert result="+result);
+                    }
+                    catch (Exception e) {
+                        Log.e(TAG, "ActorsEpisodes insert exception="+e);
+                    }
+
+                    // SQLite load EpisodesActors Table
+                    ContentValues episodeActors = new ContentValues();
+                    episodeActors.put(RadioTheaterContract.EpisodesActorsEntry.FIELD_EPISODE_NUMBER, number);
+                    episodeActors.put(RadioTheaterContract.EpisodesActorsEntry.FIELD_ACTOR_ID, actorName);
+                    try {
+                        Uri result = insertEpisodeActorsValues(episodeActors);
+                        Log.v(TAG, "EpisodeActors insert result="+result);
+                    }
+                    catch (Exception e) {
+                        Log.e(TAG, "EpisodeActors insert exception="+e);
+                    }
+                }
             }
+            Log.v(TAG, "loaded "+i+" episodes.");
         }
         else {
             Log.e(TAG, "episodes is null!");
@@ -279,16 +333,40 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
         return mActivity.getContentResolver().insert(episode, episodeValues);
     }
 
+    private Uri insertEpisodeActorsValues(ContentValues episodeActorsValues) {
+        Log.v(TAG, "insertEpisodeActorsValues=");
+        Uri episodeActors = RadioTheaterContract.EpisodesActorsEntry.buildEpisodesActorsUri();
+        return mActivity.getContentResolver().insert(episodeActors, episodeActorsValues);
+    }
+
+    private Uri insertEpisodeWritersValues(ContentValues episodeWritersValues) {
+        Log.v(TAG, "insertEpisodeWritersValues=");
+        Uri episodeWriters = RadioTheaterContract.EpisodesWritersEntry.buildEpisodesWritersUri();
+        return mActivity.getContentResolver().insert(episodeWriters, episodeWritersValues);
+    }
+
     private Uri insertActorValues(ContentValues actorValues) {
         Log.v(TAG, "insertActorValues");
         Uri actor = RadioTheaterContract.ActorsEntry.buildActorsUri();
         return mActivity.getContentResolver().insert(actor, actorValues);
     }
 
+    private Uri insertActorsEpisodesValues(ContentValues actorsEpisodesValues) {
+        Log.v(TAG, "insertActorsEpisodesValues");
+        Uri actorsEpisodes = RadioTheaterContract.ActorsEpisodesEntry.buildActorsEpisodesUri();
+        return mActivity.getContentResolver().insert(actorsEpisodes, actorsEpisodesValues);
+    }
+
     private Uri insertWriterValues(ContentValues writerValues) {
         Log.v(TAG, "insertWriterValues");
         Uri writer = RadioTheaterContract.WritersEntry.buildWritersUri();
         return mActivity.getContentResolver().insert(writer, writerValues);
+    }
+
+    private Uri insertWritersEpisodesValues(ContentValues writersEpisodesValues) {
+        Log.v(TAG, "insertWritersEpisodesValues");
+        Uri writersEpisodes = RadioTheaterContract.WritersEpisodesEntry.buildWritersEpisodesUri();
+        return mActivity.getContentResolver().insert(writersEpisodes, writersEpisodesValues);
     }
 
     @Override

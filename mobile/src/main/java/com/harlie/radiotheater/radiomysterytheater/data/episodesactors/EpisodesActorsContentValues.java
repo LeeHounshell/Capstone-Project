@@ -11,9 +11,12 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.episodesactors;
 
-import android.content.ContentResolver;
+import java.util.Date;
+
 import android.content.Context;
+import android.content.ContentResolver;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.harlie.radiotheater.radiomysterytheater.data.base.AbstractContentValues;
@@ -53,8 +56,8 @@ public class EpisodesActorsContentValues extends AbstractContentValues {
     }
 
 
-    public EpisodesActorsContentValues putFieldWriterId(long value) {
-        mContentValues.put(EpisodesActorsColumns.FIELD_WRITER_ID, value);
+    public EpisodesActorsContentValues putFieldActorId(long value) {
+        mContentValues.put(EpisodesActorsColumns.FIELD_ACTOR_ID, value);
         return this;
     }
 

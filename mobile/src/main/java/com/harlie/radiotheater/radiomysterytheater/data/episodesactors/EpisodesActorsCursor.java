@@ -11,7 +11,11 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.episodesactors;
 
+import java.util.Date;
+
 import android.database.Cursor;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.harlie.radiotheater.radiomysterytheater.data.base.AbstractCursor;
 
@@ -44,12 +48,12 @@ public class EpisodesActorsCursor extends AbstractCursor implements EpisodesActo
     }
 
     /**
-     * Get the {@code field_writer_id} value.
+     * Get the {@code field_actor_id} value.
      */
-    public long getFieldWriterId() {
-        Long res = getLongOrNull(EpisodesActorsColumns.FIELD_WRITER_ID);
+    public long getFieldActorId() {
+        Long res = getLongOrNull(EpisodesActorsColumns.FIELD_ACTOR_ID);
         if (res == null)
-            throw new NullPointerException("The value of 'field_writer_id' in the database was null, which is not allowed according to the model definition");
+            throw new NullPointerException("The value of 'field_actor_id' in the database was null, which is not allowed according to the model definition");
         return res;
     }
 }

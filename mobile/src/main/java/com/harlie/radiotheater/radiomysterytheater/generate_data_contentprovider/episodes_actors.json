@@ -7,7 +7,7 @@
       "nullable": false
     },
     {
-      "name": "field_writer_id",
+      "name": "field_actor_id",
       "type": "Long",
       "nullable": false
     }
@@ -15,7 +15,7 @@
   "constraints": [
     {
       "name": "field_unique",
-      "definition": "UNIQUE (field_episode_number, field_writer_id) ON CONFLICT ABORT"
+      "definition": "UNIQUE (field_episode_number, field_actor_id) ON CONFLICT ABORT"
     }
   ]
 }

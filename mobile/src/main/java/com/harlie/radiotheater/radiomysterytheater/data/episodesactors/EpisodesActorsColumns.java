@@ -15,6 +15,15 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 
 import com.harlie.radiotheater.radiomysterytheater.data.RadioTheaterProvider;
+import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.actorsepisodes.ActorsEpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.episodesactors.EpisodesActorsColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.episodeswriters.EpisodesWritersColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesColumns;
 
 /**
  * Radio Mystery Theater actors for episode list.
@@ -30,7 +39,7 @@ public class EpisodesActorsColumns implements BaseColumns {
 
     public static final String FIELD_EPISODE_NUMBER = "field_episode_number";
 
-    public static final String FIELD_WRITER_ID = "field_writer_id";
+    public static final String FIELD_ACTOR_ID = "field_actor_id";
 
 
     public static final String DEFAULT_ORDER = TABLE_NAME + "." +_ID;
@@ -39,7 +48,7 @@ public class EpisodesActorsColumns implements BaseColumns {
     public static final String[] ALL_COLUMNS = new String[] {
             _ID,
             FIELD_EPISODE_NUMBER,
-            FIELD_WRITER_ID
+            FIELD_ACTOR_ID
     };
     // @formatter:on
 
@@ -47,7 +56,7 @@ public class EpisodesActorsColumns implements BaseColumns {
         if (projection == null) return true;
         for (String c : projection) {
             if (c.equals(FIELD_EPISODE_NUMBER) || c.contains("." + FIELD_EPISODE_NUMBER)) return true;
-            if (c.equals(FIELD_WRITER_ID) || c.contains("." + FIELD_WRITER_ID)) return true;
+            if (c.equals(FIELD_ACTOR_ID) || c.contains("." + FIELD_ACTOR_ID)) return true;
         }
         return false;
     }

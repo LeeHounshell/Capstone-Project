@@ -11,12 +11,14 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.configuration;
 
+import java.util.Date;
+
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.harlie.radiotheater.radiomysterytheater.data.base.AbstractCursor;
-import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.*;
 
 /**
  * Cursor wrapper for the {@code configuration} table.

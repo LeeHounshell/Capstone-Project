@@ -104,8 +104,8 @@ public class RadioTheaterHelper extends SQLiteOpenHelper {
             + EpisodesActorsColumns.TABLE_NAME + " ( "
             + EpisodesActorsColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + EpisodesActorsColumns.FIELD_EPISODE_NUMBER + " INTEGER NOT NULL, "
-            + EpisodesActorsColumns.FIELD_WRITER_ID + " INTEGER NOT NULL "
-            + ", CONSTRAINT field_unique UNIQUE (field_episode_number, field_writer_id) ON CONFLICT ABORT"
+            + EpisodesActorsColumns.FIELD_ACTOR_ID + " INTEGER NOT NULL "
+            + ", CONSTRAINT field_unique UNIQUE (field_episode_number, field_actor_id) ON CONFLICT ABORT"
             + " );";
 
     public static final String SQL_CREATE_TABLE_EPISODES_WRITERS = "CREATE TABLE IF NOT EXISTS "
