@@ -361,7 +361,7 @@ public class BaseActivity extends AppCompatActivity {
         while ((len = input.read(buffer)) > 0) {
             mCount += len;
             try {
-                Thread.sleep(9);
+                Thread.sleep(5);
             } catch (Exception e) { };
             CircleViewHelper.setCircleViewValue((float) mCount, this);
             output.write(buffer, 0, len);
