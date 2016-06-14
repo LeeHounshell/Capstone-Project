@@ -5,7 +5,6 @@ import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.AppCompatImageButton;
 import android.support.v7.widget.Toolbar;
@@ -17,7 +16,7 @@ import android.widget.ImageView;
 
 // NOTE: build uses 'preprocessor.gradle' here
 //#IFDEF 'debug'
-import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
+
 //#ENDIF
 
 public class AboutActivity extends BaseActivity {
@@ -90,7 +89,7 @@ public class AboutActivity extends BaseActivity {
                                     // clear the overlay
                                     view.getDrawable().clearColorFilter();
                                     view.invalidate();
-                                    showMyLinkedInProfile();
+                                    sendEmail_to_LeeHounshell();
                                     break;
                                 }
                             }
@@ -132,7 +131,19 @@ public class AboutActivity extends BaseActivity {
         }
     }
 
+    private void sendEmail_to_LeeHounshell() {
+        Log.v(TAG, "sendEmail_to_LeeHounshell");
+        String contact = getResources().getString(R.string.app_contact);
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("plain/text");
+        intent.putExtra(Intent.EXTRA_EMAIL, new String[] {contact});
+        intent.putExtra(Intent.EXTRA_SUBJECT, "Re: the 'Radio Mystery Theater' Android app");
+        intent.putExtra(Intent.EXTRA_TEXT, "");
+        startActivity(Intent.createChooser(intent, ""));
+    }
+
     private void showMyLinkedInProfile() {
+        Log.v(TAG, "showMyLinkedInProfile");
         // show my Linked-In profile
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_VIEW);
