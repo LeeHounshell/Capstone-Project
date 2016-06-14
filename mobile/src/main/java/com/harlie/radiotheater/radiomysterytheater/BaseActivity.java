@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
@@ -45,6 +46,7 @@ public class BaseActivity extends AppCompatActivity {
     private final static String TAG = "LEE: <" + BaseActivity.class.getSimpleName() + ">";
 
     protected static final boolean COPY_PACKAGED_SQLITE_DATABASE = true;
+    protected static final int TOTAL_SIZE_TO_COPY_IN_BYTES = 1483328;
     protected static final String FIREBASE_WRITERS_URL = "radiomysterytheater/0/writers";
     protected static final String FIREBASE_ACTORS_URL = "radiomysterytheater/1/actors";
     protected static final String FIREBASE_SHOWS_URL = "radiomysterytheater/2/shows";
@@ -56,9 +58,12 @@ public class BaseActivity extends AppCompatActivity {
     private View mRootView;
     private CircleProgressView mCircleView;
     private boolean mShowUnit;
+    private boolean mCopiedDatabaseSuccess;
 
     protected static final int MIN_EMAIL_LENGTH = 3;
     protected static final int MIN_PASSWORD_LENGTH = 6;
+
+    private static int mCount;
 
     private String email;
     private String pass;
@@ -306,16 +311,23 @@ public class BaseActivity extends AppCompatActivity {
         //}
 
         if (COPY_PACKAGED_SQLITE_DATABASE) {
+            mCount = 0;
+            CircleViewHelper.showCircleView(this);
+            CircleViewHelper.initializeCircleViewValue((float) TOTAL_SIZE_TO_COPY_IN_BYTES, this);
+            CircleViewHelper.setCircleViewValue((float) mCount, this);
             String DB_NAME = RadioTheaterHelper.DATABASE_FILE_NAME;
             try {
                 String DB_OUTPUT_DIR = "databases/";
-                String DB_OUTPUT_PATH = "/data/data/" + getPackageName() + "/" + DB_OUTPUT_DIR;
+                String DB_OUTPUT_PATH = getApplicationInfo().dataDir + "/" + DB_OUTPUT_DIR;
                 // for performance reasons, I have included a prebuilt-sqlite database
                 String outFileName = DB_OUTPUT_PATH + DB_NAME;
                 copyFileFromAssets(DB_NAME, outFileName);
                 copyFileFromAssets(DB_NAME + "-journal", outFileName + "-journal");
                 Log.v(TAG, "*** successfully copied prebuilt SQLite database ***");
+                CircleViewHelper.hideCircleView(this);
+                mCopiedDatabaseSuccess = true;
                 startAutoplayActivity();
+                return;
             }
             catch (Exception any) {
                 Log.e(TAG, "problem copying "+DB_NAME+" database! - "+any);
@@ -346,6 +358,11 @@ public class BaseActivity extends AppCompatActivity {
         byte[] buffer = new byte[1024];
         int len;
         while ((len = input.read(buffer)) > 0) {
+            mCount += len;
+            try {
+                Thread.sleep(9);
+            } catch (Exception e) { };
+            CircleViewHelper.setCircleViewValue((float) mCount, this);
             output.write(buffer, 0, len);
         }
         output.flush();
@@ -457,11 +474,18 @@ public class BaseActivity extends AppCompatActivity {
         Log.v(TAG, "---> startAutoplayActivity <---");
         boolean dbMissing = doINeedToCreateADatabase();
         Log.v(TAG, "---> dbMissing="+dbMissing);
-        if (dbMissing) {
+        if (dbMissing && !mCopiedDatabaseSuccess) {
             Log.v(TAG, "*** first need to build the RadioMysteryTheater database ***");
             String message = getResources().getString(R.string.initializing);
             Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-            loadSqliteDatabase();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Looper.prepare();
+                    loadSqliteDatabase();
+                    Looper.loop();
+                }
+            }).start();
         }
         else {
             Log.v(TAG, "*** READY TO START RADIO MYSTERY THEATER ***");

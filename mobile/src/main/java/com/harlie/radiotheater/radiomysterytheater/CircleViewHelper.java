@@ -3,70 +3,57 @@ package com.harlie.radiotheater.radiomysterytheater;
 import android.os.Handler;
 
 public class CircleViewHelper {
-    private static BaseActivity sBaseActivity = null;
 
-    private static void init(BaseActivity activity) {
-        sBaseActivity = activity;
-    }
-
-    public static void onDestroy() {
-        sBaseActivity = null;
-    }
-
-    public static void showCircleView(BaseActivity activity) {
-        init(activity);
-        if (sBaseActivity != null) {
-            Handler handler = sBaseActivity.getHandler();
+    public static void showCircleView(final BaseActivity activity) {
+        if (activity != null) {
+            Handler handler = activity.getHandler();
             if (handler != null) {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        sBaseActivity.showCircleView();
+                        activity.showCircleView();
                     }
                 });
             }
         }
     }
 
-    public static void initializeCircleViewValue(final float circleMax, BaseActivity activity) {
-        init(activity);
-        if (sBaseActivity != null) {
-            Handler handler = sBaseActivity.getHandler();
+    public static void initializeCircleViewValue(final float circleMax, final BaseActivity activity) {
+        if (activity != null) {
+            Handler handler = activity.getHandler();
             if (handler != null) {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        sBaseActivity.initializeCircleViewValue(circleMax);
+                        activity.initializeCircleViewValue(circleMax);
                     }
                 });
             }
         }
     }
 
-    public static void setCircleViewValue(final float value, BaseActivity activity) {
-        init(activity);
-        if (sBaseActivity != null) {
-            Handler handler = sBaseActivity.getHandler();
+    public static void setCircleViewValue(final float value, final BaseActivity activity) {
+        if (activity != null) {
+            Handler handler = activity.getHandler();
             if (handler != null) {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        sBaseActivity.setCircleViewValue(value);
+                        activity.setCircleViewValue(value);
                     }
                 });
             }
         }
     }
 
-    public static void hideCircleView(BaseActivity activity) {
-        init(activity);
-        if (sBaseActivity != null) {
-            Handler handler = sBaseActivity.getHandler();
+    public static void hideCircleView(final BaseActivity activity) {
+        if (activity != null) {
+            Handler handler = activity.getHandler();
             if (handler != null) {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        sBaseActivity.hideCircleView();
+                        activity.hideCircleView();
                     }
                 });
             }

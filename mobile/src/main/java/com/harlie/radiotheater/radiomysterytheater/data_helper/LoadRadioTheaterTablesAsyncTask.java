@@ -43,6 +43,7 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
             mCount = 0;
             CircleViewHelper.showCircleView(mActivity);
             CircleViewHelper.initializeCircleViewValue((float) TOTAL_NUMBER_OF_EPISODES_ACTORS_WRITERS, mActivity);
+            CircleViewHelper.setCircleViewValue((float) mCount, mActivity);
         }
     }
 
