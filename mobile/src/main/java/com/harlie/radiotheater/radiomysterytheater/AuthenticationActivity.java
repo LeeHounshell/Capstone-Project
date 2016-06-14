@@ -2,6 +2,7 @@ package com.harlie.radiotheater.radiomysterytheater;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -69,7 +70,8 @@ public class AuthenticationActivity extends BaseActivity
             authEmailIntent.putExtra("email", email);
             authEmailIntent.putExtra("pass", pass);
             authEmailIntent.putExtra("DO_AUTH", true);
-            startActivity(authEmailIntent);
+            Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
+            startActivity(authEmailIntent, bundle);
             finish();
         }
         else {
@@ -83,7 +85,8 @@ public class AuthenticationActivity extends BaseActivity
         Log.v(TAG, "authenticateGoogle - Firebase Auth using Google");
         Intent authGoogleIntent = new Intent(this, AuthGoogleActivity.class);
         authGoogleIntent.putExtra("DO_AUTH", true);
-        startActivity(authGoogleIntent);
+        Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
+        startActivity(authGoogleIntent, bundle);
         finish();
     }
 
@@ -92,7 +95,8 @@ public class AuthenticationActivity extends BaseActivity
         Log.v(TAG, "authenticateTwitter - Firebase Auth using Twitter");
         Intent authTwitterIntent = new Intent(this, AuthTwitterActivity.class);
         authTwitterIntent.putExtra("DO_AUTH", true);
-        startActivity(authTwitterIntent);
+        Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
+        startActivity(authTwitterIntent, bundle);
         finish();
     }
 
@@ -101,7 +105,8 @@ public class AuthenticationActivity extends BaseActivity
         Log.v(TAG, "authenticateFacebook - Firebase Auth using Facebook");
         Intent authFacebookIntent = new Intent(this, AuthFacebookActivity.class);
         authFacebookIntent.putExtra("DO_AUTH", true);
-        startActivity(authFacebookIntent);
+        Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
+        startActivity(authFacebookIntent, bundle);
         finish();
     }
 
