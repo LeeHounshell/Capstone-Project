@@ -2,8 +2,16 @@
 
     <string name="app_name">Radio Mystery Theater</string>
     <string name="app_description">
-        This is my Capstone Final Project for the Udacity Android Nanodegree program.
         This app provides an easy, quality listening experience for the CBS Radio Mystery Theater.
+        There are <b>1399</b> one-hour \'Radio Mystery Theatre\' episodes for you to listen to.\n\n
+        <b>Autoplay</b> will begin with the oldest unheard episode and keep playing.
+        After one episode finishes, the next automatically starts. Press Autoplay again to Pause.
+        <b>Voice Search</b> allows you to speak natural language queries into the search engine.
+        For help and advanced features, say or type <b>\'help\'</b> into a Search from the main toolbar.
+        \n\nThank you! to CBS Corporation for providing these full-cast radio dramas to the public.
+        All episodes can be downloaded for free from <b>http://www.cbsrmt.com</b>
+        \n\nThis is my Capstone Project for the <b>Udacity Android Nanodegree</b> program.
+        I hope you like it.
     </string>
 
     <string name="e_g_marshall">E. G. Marshall</string>

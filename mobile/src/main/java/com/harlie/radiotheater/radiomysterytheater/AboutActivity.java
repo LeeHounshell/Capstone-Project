@@ -7,6 +7,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
+import android.support.v7.widget.AppCompatImageButton;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -50,7 +51,7 @@ public class AboutActivity extends BaseActivity {
             }
         }
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        AppCompatImageButton fab = (android.support.v7.widget.AppCompatImageButton) findViewById(R.id.linkedin);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
