@@ -96,18 +96,19 @@
          MediaBrowser (for browsing) and MediaController (for playback control)
         -->
         <service
+            android:name=".RadioTheaterService"
+            android:exported="true"
+            tools:ignore="ExportedService">
+            <intent-filter>
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
+            </intent-filter>
+        </service>
+
+        <service
             android:name="com.google.android.libraries.cast.companionlibrary.cast.reconnection.ReconnectionService">
-            <service
-                android:name=".RadioTheaterService"
-                android:exported="true"
-                tools:ignore="ExportedService">
-                <intent-filter>
-                    <action android:name="android.media.browse.MediaBrowserService" />
-                </intent-filter>
-                <intent-filter>
-                    <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
-                </intent-filter>
-            </service>
         </service>
 
         <!--
