@@ -30,6 +30,14 @@ import me.angrybyte.circularslider.CircularSlider;
 public class AutoplayActivity extends BaseActivity {
     private final static String TAG = "LEE: <" + AutoplayActivity.class.getSimpleName() + ">";
 
+    public static final String EXTRA_START_FULLSCREEN = "com.harlie.radiotheater.radiomysterytheater.EXTRA_START_FULLSCREEN";
+    /**
+     * Optionally used with {@link #EXTRA_START_FULLSCREEN} to carry a MediaDescription to
+     * the {@link FullScreenPlayerActivity}, speeding up the screen rendering
+     * while the {@link android.support.v4.media.session.MediaControllerCompat} is connecting.
+     */
+    public static final String EXTRA_CURRENT_MEDIA_DESCRIPTION = "com.harlie.radiotheater.radiomysterytheater.CURRENT_MEDIA_DESCRIPTION";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.v(TAG, "onCreate");

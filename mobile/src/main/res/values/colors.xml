@@ -15,4 +15,9 @@
     <color name="buttonColor">#ff228b22</color>
     <color name="sliderColor">#ffff0000</color>
     <color name="buttonColorPressed">#ffadd8e6</color>
+
+    <color name="tv_branding">#ffff5722</color>
+    <color name="tv_branding_dark">#ffbf360c</color>
+    <color name="tv_branding_accent">#00B8D4</color>
+    <color name="bt_accent">#00B8D4</color>
 </resources>
