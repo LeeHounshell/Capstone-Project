@@ -26,7 +26,7 @@ import com.harlie.radiotheater.radiomysterytheater.BuildConfig;
 
 public class LogHelper {
 
-    private static final String LOG_PREFIX = "rmt_";
+    private static final String LOG_PREFIX = "harlie_";
     private static final int LOG_PREFIX_LENGTH = LOG_PREFIX.length();
     private static final int MAX_LOG_TAG_LENGTH = 23;
 
@@ -34,7 +34,6 @@ public class LogHelper {
         if (str.length() > MAX_LOG_TAG_LENGTH - LOG_PREFIX_LENGTH) {
             return LOG_PREFIX + str.substring(0, MAX_LOG_TAG_LENGTH - LOG_PREFIX_LENGTH - 1);
         }
-
         return LOG_PREFIX + str;
     }
 
@@ -45,19 +44,18 @@ public class LogHelper {
         return makeLogTag(cls.getSimpleName());
     }
 
-
     public static void v(String tag, Object... messages) {
         // Only log VERBOSE if build type is DEBUG
-        if (BuildConfig.DEBUG) {
+        //if (BuildConfig.DEBUG) {
             log(tag, Log.VERBOSE, null, messages);
-        }
+        //}
     }
 
     public static void d(String tag, Object... messages) {
         // Only log DEBUG if build type is DEBUG
-        if (BuildConfig.DEBUG) {
+        //if (BuildConfig.DEBUG) {
             log(tag, Log.DEBUG, null, messages);
-        }
+        //}
     }
 
     public static void i(String tag, Object... messages) {
@@ -81,12 +79,13 @@ public class LogHelper {
     }
 
     public static void log(String tag, int level, Throwable t, Object... messages) {
-        tag = tag.substring(0, Math.min(tag.length(), MAX_LOG_TAG_LENGTH));
-        if (Log.isLoggable(tag, level)) {
+        //tag = tag.substring(0, Math.min(tag.length(), MAX_LOG_TAG_LENGTH));
+        // FIXME
+        //if (Log.isLoggable(tag, level)) {
             String message;
             if (t == null && messages != null && messages.length == 1) {
                 // handle this common case without the extra cost of creating a stringbuffer:
-                message = messages[0].toString();
+                message = messages[0].toString().replace("com.harlie.radiotheater.radiomysterytheater", "harlie.");
             } else {
                 StringBuilder sb = new StringBuilder();
                 if (messages != null) for (Object m : messages) {
@@ -95,9 +94,31 @@ public class LogHelper {
                 if (t != null) {
                     sb.append("\n").append(Log.getStackTraceString(t));
                 }
-                message = sb.toString();
+                message = sb.toString().replace("com.harlie.radiotheater.radiomysterytheater", "harlie.");
             }
-            Log.println(level, tag, message);
-        }
+            //Log.println(level, tag, message);
+            switch (level) {
+                case Log.ERROR: {
+                    Log.e(tag, message);
+                    break;
+                }
+                case Log.WARN: {
+                    Log.w(tag, message);
+                    break;
+                }
+                case Log.INFO: {
+                    Log.i(tag, message);
+                    break;
+                }
+                case Log.DEBUG: {
+                    Log.d(tag, message);
+                    break;
+                }
+                case Log.VERBOSE: {
+                    Log.v(tag, message);
+                    break;
+                }
+            }
+        //}
     }
 }
