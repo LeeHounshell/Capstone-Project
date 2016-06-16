@@ -5,6 +5,7 @@ import android.support.multidex.MultiDex;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
+import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import io.fabric.sdk.android.Fabric;
 
@@ -16,7 +17,7 @@ public class RadioTheaterApplication extends android.support.multidex.MultiDexAp
 
     @Override
     public void onCreate() {
-        Log.v(TAG, "onCreate");
+        LogHelper.v(TAG, "onCreate");
         sInstance = this;
         applicationContext = this.getApplicationContext();
         super.onCreate();
@@ -24,7 +25,7 @@ public class RadioTheaterApplication extends android.support.multidex.MultiDexAp
     }
 
     public static synchronized RadioTheaterApplication getInstance() {
-        Log.v(TAG, "getInstance");
+        LogHelper.v(TAG, "getInstance");
         return RadioTheaterApplication.sInstance;
     }
 

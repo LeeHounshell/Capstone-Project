@@ -20,6 +20,7 @@ import com.harlie.radiotheater.radiomysterytheater.data.episodesactors.EpisodesA
 import com.harlie.radiotheater.radiomysterytheater.data.episodeswriters.EpisodesWritersColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -49,7 +50,7 @@ public class RadioTheaterContract {
                 String airDate = dt1.format(calendar.getTime());
                 return airDate;
             } else {
-                Log.w(TAG, "invalid air date! - calendar=" + calendar);
+                LogHelper.w(TAG, "invalid air date! - calendar=" + calendar);
             }
         }
         return "";
@@ -59,12 +60,12 @@ public class RadioTheaterContract {
     public static final class ConfigurationEntry extends ConfigurationColumns {
 
         public static Uri buildConfigurationUri(long id) {
-            Log.v(TAG, "buildConfigurationUri");
+            LogHelper.v(TAG, "buildConfigurationUri");
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
         public static Uri buildConfigurationUri() {
-            Log.v(TAG, "buildConfigurationUri");
+            LogHelper.v(TAG, "buildConfigurationUri");
             return CONTENT_URI;
         }
 
@@ -74,12 +75,12 @@ public class RadioTheaterContract {
     public static final class ConfigEpisodesEntry extends ConfigEpisodesColumns {
 
         public static Uri buildConfigEpisodeUri(long id) {
-            Log.v(TAG, "buildConfigEpisodeUri");
+            LogHelper.v(TAG, "buildConfigEpisodeUri");
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
         public static Uri buildConfigEpisodesUri() {
-            Log.v(TAG, "buildConfigEpisodesUri");
+            LogHelper.v(TAG, "buildConfigEpisodesUri");
             return CONTENT_URI;
         }
 
@@ -89,12 +90,12 @@ public class RadioTheaterContract {
     public static final class EpisodesEntry extends EpisodesColumns {
 
         public static Uri buildEpisodeUri(long id) {
-            Log.v(TAG, "buildEpisodeUri");
+            LogHelper.v(TAG, "buildEpisodeUri");
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
         public static Uri buildEpisodesUri() {
-            Log.v(TAG, "buildEpisodesUri");
+            LogHelper.v(TAG, "buildEpisodesUri");
             return CONTENT_URI;
         }
 
@@ -104,12 +105,12 @@ public class RadioTheaterContract {
     public static final class EpisodesActorsEntry extends EpisodesActorsColumns {
 
         public static Uri buildEpisodeActorUri(long id) {
-            Log.v(TAG, "buildEpisodeActorUri");
+            LogHelper.v(TAG, "buildEpisodeActorUri");
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
         public static Uri buildEpisodesActorsUri() {
-            Log.v(TAG, "buildEpisodesActorsUri");
+            LogHelper.v(TAG, "buildEpisodesActorsUri");
             return CONTENT_URI;
         }
 
@@ -119,12 +120,12 @@ public class RadioTheaterContract {
     public static final class EpisodesWritersEntry extends EpisodesWritersColumns {
 
         public static Uri buildEpisodeWriterUri(long id) {
-            Log.v(TAG, "buildEpisodeWriterUri");
+            LogHelper.v(TAG, "buildEpisodeWriterUri");
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
         public static Uri buildEpisodesWritersUri() {
-            Log.v(TAG, "buildEpisodesWritersUri");
+            LogHelper.v(TAG, "buildEpisodesWritersUri");
             return CONTENT_URI;
         }
 
@@ -134,12 +135,12 @@ public class RadioTheaterContract {
     public static final class ActorsEntry extends ActorsColumns {
 
         public static Uri buildActorUri(long id) {
-            Log.v(TAG, "buildActorUri");
+            LogHelper.v(TAG, "buildActorUri");
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
         public static Uri buildActorsUri() {
-            Log.v(TAG, "buildActorsUri");
+            LogHelper.v(TAG, "buildActorsUri");
             return CONTENT_URI;
         }
 
@@ -149,12 +150,12 @@ public class RadioTheaterContract {
     public static final class ActorsEpisodesEntry extends ActorsEpisodesColumns {
 
         public static Uri buildActorEpisodesUri(long id) {
-            Log.v(TAG, "buildActorEpisodesUri");
+            LogHelper.v(TAG, "buildActorEpisodesUri");
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
         public static Uri buildActorsEpisodesUri() {
-            Log.v(TAG, "buildActorsEpisodesUri");
+            LogHelper.v(TAG, "buildActorsEpisodesUri");
             return CONTENT_URI;
         }
 
@@ -164,12 +165,12 @@ public class RadioTheaterContract {
     public static final class WritersEntry extends WritersColumns {
 
         public static Uri buildWriterUri(long id) {
-            Log.v(TAG, "buildWriterUri");
+            LogHelper.v(TAG, "buildWriterUri");
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
         public static Uri buildWritersUri() {
-            Log.v(TAG, "buildWritersUri");
+            LogHelper.v(TAG, "buildWritersUri");
             return CONTENT_URI;
         }
 
@@ -179,12 +180,12 @@ public class RadioTheaterContract {
     public static final class WritersEpisodesEntry extends WritersEpisodesColumns {
 
         public static Uri buildWriterEpisodesUri(long id) {
-            Log.v(TAG, "buildWriterEpisodesUri");
+            LogHelper.v(TAG, "buildWriterEpisodesUri");
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
         public static Uri buildWritersEpisodesUri() {
-            Log.v(TAG, "buildWritersEpisodesUri");
+            LogHelper.v(TAG, "buildWritersEpisodesUri");
             return CONTENT_URI;
         }
 

@@ -32,6 +32,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.harlie.radiotheater.radiomysterytheater.data.RadioTheaterHelper;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
+import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -71,7 +72,7 @@ public class BaseActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        Log.v(TAG, "onCreate");
+        LogHelper.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         mRootView = findViewById(android.R.id.content);
         mHandler = new Handler();
@@ -83,7 +84,7 @@ public class BaseActivity extends AppCompatActivity {
 
     @Override
     public void onDestroy() {
-        Log.v(TAG, "onDestroy");
+        LogHelper.v(TAG, "onDestroy");
         super.onDestroy();
         mAuth = null;
         mCircleView = null;
@@ -94,20 +95,20 @@ public class BaseActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        Log.v(TAG, "onResume");
+        LogHelper.v(TAG, "onResume");
         super.onResume();
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
     }
 
     @Override
     public void onBackPressed() {
-        Log.v(TAG, "onBackPressed");
+        LogHelper.v(TAG, "onBackPressed");
         super.onBackPressed();
     }
 
     //from: http://stackoverflow.com/questions/31662416/show-collapsingtoolbarlayout-title-only-when-collapsed
     protected void configureToolbarTitleBehavior() {
-        Log.v(TAG, "configureToolbarTitleBehavior");
+        LogHelper.v(TAG, "configureToolbarTitleBehavior");
         final String title = getResources().getString(R.string.app_name);
         final CollapsingToolbarLayout collapsingToolbarLayout = ((CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar_layout));
         AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.toolbar_container);
@@ -138,12 +139,12 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     protected boolean doINeedToCreateADatabase() {
-        Log.v(TAG, "doINeedToCreateADatabase");
+        LogHelper.v(TAG, "doINeedToCreateADatabase");
         if ((isExistingTable("EPISODES")) && (isExistingTable("ACTORS")) && (isExistingTable("WRITERS"))) {
-            Log.v(TAG, "*** Found SQLITE Tables! ***");
+            LogHelper.v(TAG, "*** Found SQLITE Tables! ***");
             return false;
         }
-        Log.v(TAG, "*** NO SQLITE DATABASE FOUND! ***");
+        LogHelper.v(TAG, "*** NO SQLITE DATABASE FOUND! ***");
         return true;
     }
 
@@ -155,13 +156,13 @@ public class BaseActivity extends AppCompatActivity {
             java.util.regex.Pattern p = java.util.regex.Pattern.compile(ePattern);
             java.util.regex.Matcher m = p.matcher(email);
             result = m.matches();
-            Log.v(TAG, "check isValid: result="+result+", email="+email);
+            LogHelper.v(TAG, "check isValid: result="+result+", email="+email);
         }
         return result;
     }
 
     protected void handleAuthenticationRequestResult(boolean loginSuccess) {
-        Log.d(TAG, "handleAuthenticationRequestResult - loginSuccess=" + loginSuccess);
+        LogHelper.d(TAG, "handleAuthenticationRequestResult - loginSuccess=" + loginSuccess);
         if (loginSuccess) {
             changeRadioMysteryTheaterFirebaseAccount(getEmail(), getPass());
         } else {
@@ -171,14 +172,14 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     protected void changeRadioMysteryTheaterFirebaseAccount(String email, String pass) {
-        Log.v(TAG, "changeRadioMysteryTheaterFirebaseAccount - Firebase Login using email="+email+", and password");
+        LogHelper.v(TAG, "changeRadioMysteryTheaterFirebaseAccount - Firebase Login using email="+email+", and password");
         if (mAuth != null && email != null && pass != null && isValid(email, pass)) {
             final BaseActivity activity = this;
             mAuth.createUserWithEmailAndPassword(email, pass)
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
-                            Log.d(TAG, "createUserWithEmailAndPassword:onComplete:" + task.isSuccessful());
+                            LogHelper.d(TAG, "createUserWithEmailAndPassword:onComplete:" + task.isSuccessful());
 
                             // If sign in fails, display a message to the user. If sign in succeeds
                             // the auth state listener will be notified and logic to handle the
@@ -205,30 +206,30 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     protected boolean checkExceptionReason(@NonNull Task<AuthResult> task, BaseActivity activity) {
-        Log.v(TAG, "checkExceptionReason");
+        LogHelper.v(TAG, "checkExceptionReason");
         boolean success = false;
         if (task.getException() instanceof com.google.firebase.auth.FirebaseAuthInvalidCredentialsException) {
-            Log.v(TAG, "*** FAIL - com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ***");
+            LogHelper.v(TAG, "*** FAIL - com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ***");
             String message = getResources().getString(R.string.invalid_email);
             Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
             startAuthenticationActivity();
         }
         else if (task.getException() instanceof com.google.firebase.auth.FirebaseAuthUserCollisionException) {
-            Log.v(TAG, "*** OK - com.google.firebase.auth.FirebaseAuthUserCollisionException ***"); // user+pass record already exists, so ignore
+            LogHelper.v(TAG, "*** OK - com.google.firebase.auth.FirebaseAuthUserCollisionException ***"); // user+pass record already exists, so ignore
             success = true;
         }
         else if(task.getException() instanceof com.google.firebase.auth.FirebaseAuthInvalidUserException) {
-            Log.v(TAG, "*** OK - com.google.firebase.auth.FirebaseAuthInvalidUserException"); // found deleted user - so just add them back
+            LogHelper.v(TAG, "*** OK - com.google.firebase.auth.FirebaseAuthInvalidUserException"); // found deleted user - so just add them back
             success = true;
         }
         else if (task.getException() instanceof com.google.firebase.FirebaseTooManyRequestsException) {
-            Log.v(TAG, "*** FAIL - com.google.firebase.FirebaseTooManyRequestsException ***");
+            LogHelper.v(TAG, "*** FAIL - com.google.firebase.FirebaseTooManyRequestsException ***");
             String message = getResources().getString(R.string.too_many_requests);
             Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
             startAuthenticationActivity();
         }
         else {
-            Log.v(TAG, "*** authentication failed *** reason="+task.getException().getLocalizedMessage());
+            LogHelper.v(TAG, "*** authentication failed *** reason="+task.getException().getLocalizedMessage());
             String message = getResources().getString(R.string.auth_fail);
             Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
             startAuthenticationActivity();
@@ -237,20 +238,20 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     protected void userLoginSuccess() {
-        Log.v(TAG, "userLoginSuccess");
+        LogHelper.v(TAG, "userLoginSuccess");
         String message = getResources().getString(R.string.successful);
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     protected void userLoginFailed() {
-        Log.v(TAG, "userLoginFailed");
+        LogHelper.v(TAG, "userLoginFailed");
         String message = getResources().getString(R.string.auth_fail);
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     // from: http://stackoverflow.com/questions/3058909/how-does-one-check-if-a-table-exists-in-an-android-sqlite-database
     protected boolean isExistingTable(String tableName) {
-        Log.v(TAG, "isExistingTable: "+tableName);
+        LogHelper.v(TAG, "isExistingTable: "+tableName);
         long rowId = 1;
         Uri CONTENT_URI = null;
         String whereClause = null;
@@ -283,10 +284,10 @@ public class BaseActivity extends AppCompatActivity {
 
         boolean success = false;
         if (cursor.getCount() == 0) {
-            Log.v(TAG, "SQL: nothing found for table "+tableName);
+            LogHelper.v(TAG, "SQL: nothing found for table "+tableName);
         }
         else {
-            Log.v(TAG, "SQL: found data in table "+tableName);
+            LogHelper.v(TAG, "SQL: found data in table "+tableName);
             success = true;
         }
         cursor.close();
@@ -295,7 +296,7 @@ public class BaseActivity extends AppCompatActivity {
 
     /*
     private void deleteFirebaseDatabase() {
-        Log.v(TAG, "*** deleteFirebaseDatabase ***");
+        LogHelper.v(TAG, "*** deleteFirebaseDatabase ***");
         mFirebase.child("radiomysterytheater/0").removeValue();
         mFirebase.child("radiomysterytheater/1").removeValue();
         mFirebase.child("radiomysterytheater/2").removeValue();
@@ -304,7 +305,7 @@ public class BaseActivity extends AppCompatActivity {
 
     // this kicks off a series of AsyncTasks to load SQL tables from Firebase
     protected void loadSqliteDatabase() {
-        Log.v(TAG, "*** loadSqliteDatabase ***");
+        LogHelper.v(TAG, "*** loadSqliteDatabase ***");
         initCircleView(mRootView);
 
         //if (! ((isExistingTable("EPISODES")) && (isExistingTable("ACTORS")) && (isExistingTable("WRITERS")))) {
@@ -324,14 +325,14 @@ public class BaseActivity extends AppCompatActivity {
                 String outFileName = DB_OUTPUT_PATH + DB_NAME;
                 copyFileFromAssets(DB_NAME, outFileName);
                 copyFileFromAssets(DB_NAME + "-journal", outFileName + "-journal");
-                Log.v(TAG, "*** successfully copied prebuilt SQLite database ***");
+                LogHelper.v(TAG, "*** successfully copied prebuilt SQLite database ***");
                 CircleViewHelper.hideCircleView(this);
                 mCopiedDatabaseSuccess = true;
                 startAutoplayActivity();
                 return;
             }
             catch (Exception any) {
-                Log.e(TAG, "problem copying "+DB_NAME+" database! - "+any);
+                LogHelper.e(TAG, "problem copying "+DB_NAME+" database! - "+any);
                 // this will create a new SQLite database using Firebase source JSON
                 // a circle progress view progresses as the database loads - takes a few minutes to run tho
                 runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state
@@ -345,17 +346,17 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     private void copyFileFromAssets(String inFileName, String outFileName) throws Exception {
-        Log.v(TAG, "copyFileFromAssets: INPUT="+inFileName+", OUTPUT="+outFileName);
+        LogHelper.v(TAG, "copyFileFromAssets: INPUT="+inFileName+", OUTPUT="+outFileName);
         InputStream input = getApplicationContext().getAssets().open(inFileName);
         if (input == null) {
             throw new Exception("null input stream for asset="+ inFileName);
         }
-        Log.v(TAG, "InputStream is open.");
+        LogHelper.v(TAG, "InputStream is open.");
         OutputStream output = new FileOutputStream(outFileName);
         if (output == null) {
             throw new Exception("null output stream for database="+outFileName);
         }
-        Log.v(TAG, "OutputStream is open.");
+        LogHelper.v(TAG, "OutputStream is open.");
         byte[] buffer = new byte[1024];
         int len;
         while ((len = input.read(buffer)) > 0) {
@@ -372,7 +373,7 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     public void runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState state) {
-        Log.v(TAG, "runLoadState: for state="+state);
+        LogHelper.v(TAG, "runLoadState: for state="+state);
         if (state == LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS) {
             loadWritersFromFirebase();
         }
@@ -387,7 +388,7 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     public void runLoadStateCallback(LoadRadioTheaterTablesAsyncTask.LoadState state) {
-        Log.v(TAG, "runLoadStateCallback: for state="+state);
+        LogHelper.v(TAG, "runLoadStateCallback: for state="+state);
         if (state == LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS) {
             runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.ACTORS); // next load the ACTORS
         }
@@ -404,22 +405,22 @@ public class BaseActivity extends AppCompatActivity {
 
     // first load the WRITERS tables
     public void loadWritersFromFirebase() {
-        Log.v(TAG, "loadWritersFromFirebase");
+        LogHelper.v(TAG, "loadWritersFromFirebase");
         final BaseActivity activity = this;
         // Attach a listener to read the data initially
-        Log.v(TAG, "*** FIREBASE REQUEST *** "+FIREBASE_WRITERS_URL);
+        LogHelper.v(TAG, "*** FIREBASE REQUEST *** "+FIREBASE_WRITERS_URL);
         mDatabase.child(FIREBASE_WRITERS_URL).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
+                LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
                 LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, mCircleView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS);
                 asyncTask.execute();
-                Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
+                LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Log.v(TAG, "onCancelled");
+                LogHelper.v(TAG, "onCancelled");
                 activity.startAuthenticationActivity();
             }
         });
@@ -427,22 +428,22 @@ public class BaseActivity extends AppCompatActivity {
 
     // next load the ACTORS tables
     public void loadActorsFromFirebase() {
-        Log.v(TAG, "loadActorsFromFirebase");
+        LogHelper.v(TAG, "loadActorsFromFirebase");
         final BaseActivity activity = this;
         // Attach a listener to read the data initially
-        Log.v(TAG, "*** FIREBASE REQUEST *** "+FIREBASE_ACTORS_URL);
+        LogHelper.v(TAG, "*** FIREBASE REQUEST *** "+FIREBASE_ACTORS_URL);
         activity.mDatabase.child(FIREBASE_ACTORS_URL).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
+                LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
                 LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, mCircleView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.ACTORS);
                 asyncTask.execute();
-                Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
+                LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Log.v(TAG, "onCancelled");
+                LogHelper.v(TAG, "onCancelled");
                 activity.startAuthenticationActivity();
             }
         });
@@ -450,33 +451,33 @@ public class BaseActivity extends AppCompatActivity {
 
     // finally load the EPISODES tables
     public void loadEpisodesFromFirebase() {
-        Log.v(TAG, "loadEpisodesFromFirebase");
+        LogHelper.v(TAG, "loadEpisodesFromFirebase");
         final BaseActivity activity = this;
         // Attach a listener to read the data initially
-        Log.v(TAG, "*** FIREBASE REQUEST *** "+FIREBASE_SHOWS_URL);
+        LogHelper.v(TAG, "*** FIREBASE REQUEST *** "+FIREBASE_SHOWS_URL);
         activity.mDatabase.child(FIREBASE_SHOWS_URL).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
+                LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
                 LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, mCircleView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.EPISODES);
                 asyncTask.execute();
-                Log.v(TAG, "*** -------------------------------------------------------------------------------- ***");
+                LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Log.v(TAG, "onCancelled");
+                LogHelper.v(TAG, "onCancelled");
                 activity.startAuthenticationActivity();
             }
         });
     }
 
     public void startAutoplayActivity() {
-        Log.v(TAG, "---> startAutoplayActivity <---");
+        LogHelper.v(TAG, "---> startAutoplayActivity <---");
         boolean dbMissing = doINeedToCreateADatabase();
-        Log.v(TAG, "---> dbMissing="+dbMissing);
+        LogHelper.v(TAG, "---> dbMissing="+dbMissing);
         if (dbMissing && !mCopiedDatabaseSuccess) {
-            Log.v(TAG, "*** first need to build the RadioMysteryTheater database ***");
+            LogHelper.v(TAG, "*** first need to build the RadioMysteryTheater database ***");
             String message = getResources().getString(R.string.initializing);
             Toast.makeText(this, message, Toast.LENGTH_LONG).show();
             new Thread(new Runnable() {
@@ -489,7 +490,7 @@ public class BaseActivity extends AppCompatActivity {
             }).start();
         }
         else {
-            Log.v(TAG, "*** READY TO START RADIO MYSTERY THEATER ***");
+            LogHelper.v(TAG, "*** READY TO START RADIO MYSTERY THEATER ***");
             userLoginSuccess();
             Intent autoplayIntent = new Intent(this, AutoplayActivity.class);
             // close existing activity stack regardless of what's in there and create new root
@@ -501,7 +502,7 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     public void startAuthenticationActivity() {
-        Log.v(TAG, "---> startAuthenticationActivity <---");
+        LogHelper.v(TAG, "---> startAuthenticationActivity <---");
         Intent authenticationIntent = new Intent(this, AuthenticationActivity.class);
         // close existing activity stack regardless of what's in there and create new root
         authenticationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -546,21 +547,21 @@ public class BaseActivity extends AppCompatActivity {
     // CircleView related
     //--------------------------------------------------------------------------------
     public void initCircleView(View view) {
-        Log.v(TAG, "initCircleView (View)");
+        LogHelper.v(TAG, "initCircleView (View)");
         mCircleView = (CircleProgressView) view.findViewById(R.id.circle_view);
         mShowUnit = false;
     }
 
     public void initCircleView(CircleProgressView circleView) {
-        Log.v(TAG, "initCircleView (CircleProgressView)");
+        LogHelper.v(TAG, "initCircleView (CircleProgressView)");
         mCircleView = circleView; // needed to get around a problem with Fragments and findViewById
         mShowUnit = false;
     }
 
     public void showCircleView() {
-        Log.v(TAG, "showCircleView");
+        LogHelper.v(TAG, "showCircleView");
         if (mCircleView == null) {
-            Log.w(TAG, "showCircleView: CircleProgressView issue");
+            LogHelper.w(TAG, "showCircleView: CircleProgressView issue");
             return;
         }
         mCircleView.post(new Runnable() {
@@ -569,7 +570,7 @@ public class BaseActivity extends AppCompatActivity {
 
                 mShowUnit = false;
                 mCircleView.setVisibility(View.VISIBLE);
-                Log.w(TAG, "showCircleView: CircleView VISIBLE");
+                LogHelper.w(TAG, "showCircleView: CircleView VISIBLE");
                 mCircleView.setAutoTextSize(true); // enable auto text size, previous values are overwritten
                 mCircleView.setUnitScale(0.9f); // if you want the calculated text sizes to be bigger/smaller
                 mCircleView.setTextScale(0.9f); // if you want the calculated text sizes to be bigger/smaller
@@ -619,14 +620,14 @@ public class BaseActivity extends AppCompatActivity {
             mCircleView.setTextMode(TextMode.PERCENT); // Shows current percent of the current value from the max value
             mCircleView.setMaxValue(value);
             mCircleView.setValue(0);
-            Log.w(TAG, "initializeCircleViewValue: CircleView MAX=" + value);
+            LogHelper.w(TAG, "initializeCircleViewValue: CircleView MAX=" + value);
         }
     }
 
     public void setCircleViewValue(float value) {
         if (mCircleView != null) {
             mCircleView.setValue(value);
-            Log.w(TAG, "setCircleViewValue: CircleView value=" + value);
+            LogHelper.w(TAG, "setCircleViewValue: CircleView value=" + value);
             if (value == mCircleView.getMaxValue()) {
                 hideCircleView();
             }
@@ -637,7 +638,7 @@ public class BaseActivity extends AppCompatActivity {
         if (mCircleView != null) {
             mCircleView.stopSpinning();
             mCircleView.setVisibility(View.GONE);
-            Log.w(TAG, "hideCircleView: CircleView HIDDEN");
+            LogHelper.w(TAG, "hideCircleView: CircleView HIDDEN");
         }
     }
 

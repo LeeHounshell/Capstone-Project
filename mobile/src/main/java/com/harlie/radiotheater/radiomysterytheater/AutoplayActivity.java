@@ -23,6 +23,7 @@ import android.widget.FrameLayout;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
+import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import me.angrybyte.circularslider.CircularSlider;
 //#ENDIF
@@ -40,7 +41,7 @@ public class AutoplayActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.v(TAG, "onCreate");
+        LogHelper.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_autoplay);
         configureToolbarTitleBehavior();
@@ -57,7 +58,7 @@ public class AutoplayActivity extends BaseActivity {
         autoPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.v(TAG, "CLICK - autoPlay");
+                LogHelper.v(TAG, "CLICK - autoPlay");
                 AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.toolbar_container);
                 appBarLayout.setExpanded(false);
                 CircularSlider circleSlider = (CircularSlider) findViewById(R.id.circular_seekbar);
@@ -73,7 +74,7 @@ public class AutoplayActivity extends BaseActivity {
                 public void onClick(View view) {
                     // Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     //         .setAction("Action", null).show();
-                    Log.v(TAG, "CLICK - fab");
+                    LogHelper.v(TAG, "CLICK - fab");
                     Intent episodeListIntent = new Intent(activity, EpisodeListActivity.class);
                     startActivity(episodeListIntent);
                 }
@@ -99,7 +100,7 @@ public class AutoplayActivity extends BaseActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        Log.v(TAG, "onCreateOptionsMenu");
+        LogHelper.v(TAG, "onCreateOptionsMenu");
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main, menu);
         return true;
@@ -107,7 +108,7 @@ public class AutoplayActivity extends BaseActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        Log.v(TAG, "onOptionsItemSelected");
+        LogHelper.v(TAG, "onOptionsItemSelected");
         switch (item.getItemId()) {
             case R.id.search: {
                 // FIXME:

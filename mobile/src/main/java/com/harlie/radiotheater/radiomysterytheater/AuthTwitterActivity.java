@@ -13,6 +13,7 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.TwitterAuthProvider;
+import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
 import com.twitter.sdk.android.core.TwitterSession;
@@ -29,35 +30,35 @@ public class AuthTwitterActivity extends BaseActivity
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.v(TAG, "onCreate");
+        LogHelper.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
 
         boolean do_auth = false;
         Intent intent = getIntent();
         if (intent != null) {
             if (intent.hasExtra("DO_AUTH")) {
-                Log.v(TAG, "found DO_AUTH");
+                LogHelper.v(TAG, "found DO_AUTH");
                 do_auth = intent.getBooleanExtra("DO_AUTH", false);
             }
         }
         if (! do_auth) {
-            Log.v(TAG, "DO_AUTH not present in Intent - go back to AuthenticationActivity");
+            LogHelper.v(TAG, "DO_AUTH not present in Intent - go back to AuthenticationActivity");
             startAuthenticationActivity();
             return;
         }
 
         // see if Authentication is even needed..
         if (getAuth() == null) {
-            Log.v(TAG, "unable to get FirebaseAuth!");
+            LogHelper.v(TAG, "unable to get FirebaseAuth!");
             startAuthenticationActivity();
             return;
         }
         if (getAuth().getCurrentUser() != null && ! doINeedToCreateADatabase()) {
-            Log.v(TAG, "--> Firebase: user=" + getAuth().getCurrentUser().getDisplayName() + " already signed in!");
+            LogHelper.v(TAG, "--> Firebase: user=" + getAuth().getCurrentUser().getDisplayName() + " already signed in!");
             startAutoplayActivity();
             return;
         }
-        Log.v(TAG, "--> Firebase: user not signed in");
+        LogHelper.v(TAG, "--> Firebase: user not signed in");
 
         TwitterAuthConfig authConfig = new TwitterAuthConfig(BuildConfig.TWITTER_API_KEY, BuildConfig.TWITTER_API_SECRET);
         Fabric.with(this, new Twitter(authConfig));
@@ -91,7 +92,7 @@ public class AuthTwitterActivity extends BaseActivity
             }
             @Override
             public void failure(TwitterException exception) {
-                Log.d("TwitterKit", "Login with Twitter failure", exception);
+                LogHelper.d("TwitterKit", "Login with Twitter failure", exception);
             }
         });
 */
@@ -101,7 +102,7 @@ public class AuthTwitterActivity extends BaseActivity
  * FIXME
  */
     private void handleTwitterSession(TwitterSession session) {
-        Log.d(TAG, "handleTwitterSession:" + session);
+        LogHelper.d(TAG, "handleTwitterSession:" + session);
 
         AuthCredential credential = TwitterAuthProvider.getCredential(
                 session.getAuthToken().token,
@@ -111,14 +112,14 @@ public class AuthTwitterActivity extends BaseActivity
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        Log.d(TAG, "signInWithCredential:onComplete:" + task.isSuccessful());
+                        LogHelper.d(TAG, "signInWithCredential:onComplete:" + task.isSuccessful());
 
                         // If sign in fails, display a message to the user. If sign in succeeds
                         // the auth state listener will be notified and logic to handle the
                         // signed in user can be handled in the listener.
                         boolean success = task.isSuccessful();
                         if (!success) {
-                            Log.w(TAG, "signInWithCredential", task.getException());
+                            LogHelper.w(TAG, "signInWithCredential", task.getException());
                             userLoginFailed();
                         }
                         else {

@@ -30,6 +30,7 @@ import com.harlie.radiotheater.radiomysterytheater.data.episodesactors.EpisodesA
 import com.harlie.radiotheater.radiomysterytheater.data.episodeswriters.EpisodesWritersColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 public class RadioTheaterHelper extends SQLiteOpenHelper {
     private static final String TAG = RadioTheaterHelper.class.getSimpleName();
@@ -186,7 +187,7 @@ public class RadioTheaterHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        if (BuildConfig.DEBUG) Log.d(TAG, "onCreate");
+        if (BuildConfig.DEBUG) LogHelper.d(TAG, "onCreate");
         mOpenHelperCallbacks.onPreCreate(mContext, db);
         db.execSQL(SQL_CREATE_TABLE_ACTORS);
         db.execSQL(SQL_CREATE_TABLE_ACTORS_EPISODES);

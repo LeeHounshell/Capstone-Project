@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.harlie.radiotheater.radiomysterytheater.dummy.DummyContent;
+import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import java.util.List;
 
@@ -59,7 +60,7 @@ public class EpisodeListActivity extends BaseActivity {
                 public void onClick(View view) {
                     //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     //        .setAction("Action", null).show();
-                    Log.v(TAG, "CLICK - fab");
+                    LogHelper.v(TAG, "CLICK - fab");
                     Intent autoplayIntent = new Intent(activity, AutoplayActivity.class);
                     // close existing activity stack regardless of what's in there and create new root
                     autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

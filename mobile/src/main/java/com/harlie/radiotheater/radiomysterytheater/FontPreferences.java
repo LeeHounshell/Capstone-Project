@@ -14,17 +14,17 @@ class FontPreferences {
 
     public FontPreferences(Context context) {
         this.context = context;
-        //Log.v(TAG, "FontPreferences");
+        //LogHelper.v(TAG, "FontPreferences");
     }
 
     private SharedPreferences open() {
-        //Log.v(TAG, "open");
+        //LogHelper.v(TAG, "open");
         return PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
     }
 
     @SuppressWarnings("unused")
     protected SharedPreferences.Editor edit() {
-        //Log.v(TAG, "edit");
+        //LogHelper.v(TAG, "edit");
         return open().edit();
     }
 
@@ -32,7 +32,7 @@ class FontPreferences {
         final String fontNameKey = context.getResources().getString(R.string.font_name);
         final String defaultFontName = context.getResources().getString(R.string.pref_default_font);
         @SuppressWarnings("UnnecessaryLocalVariable") final String theName = open().getString(fontNameKey, defaultFontName);
-        //Log.v(TAG, "---> getFontName: theName="+theName);
+        //LogHelper.v(TAG, "---> getFontName: theName="+theName);
         return theName;
     }
 
@@ -40,7 +40,7 @@ class FontPreferences {
         final String fontSizeKey = context.getResources().getString(R.string.font_size);
         final String defaultFontSize = context.getResources().getString(R.string.pref_default_size);
         @SuppressWarnings("UnnecessaryLocalVariable") final String theSize = open().getString(fontSizeKey, defaultFontSize);
-        //Log.v(TAG, "getFontSize: theSize="+theSize);
+        //LogHelper.v(TAG, "getFontSize: theSize="+theSize);
         return theSize;
     }
 
@@ -48,11 +48,11 @@ class FontPreferences {
         String fontSize = getFontSize();
         for (FontStyle aStyle : FontStyle.values()) {
             if (aStyle.getTitle().equals(fontSize)) {
-                //Log.v(TAG, "getFontStyle: FOUND fontSize="+fontSize);
+                //LogHelper.v(TAG, "getFontStyle: FOUND fontSize="+fontSize);
                 return aStyle;
             }
         }
-        //Log.v(TAG, "getFontStyle: NOT FOUND fontSize="+fontSize);
+        //LogHelper.v(TAG, "getFontStyle: NOT FOUND fontSize="+fontSize);
         return FontStyle.Medium;
     }
 

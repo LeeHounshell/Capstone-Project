@@ -9,6 +9,7 @@ import android.view.View;
 import com.google.firebase.database.DataSnapshot;
 import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
 import com.harlie.radiotheater.radiomysterytheater.CircleViewHelper;
+import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import java.util.Iterator;
 import java.util.List;
@@ -34,7 +35,7 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
     private DataSnapshot mDataSnapshot;
 
     public LoadRadioTheaterTablesAsyncTask(BaseActivity activity, CircleProgressView circleProgressView, DataSnapshot dataSnapshot, LoadState state) {
-        Log.v(TAG, "new LoadRadioTheaterTablesAsyncTask");
+        LogHelper.v(TAG, "new LoadRadioTheaterTablesAsyncTask");
         this.mActivity = activity;
         this.mCircleProgressView = circleProgressView;
         this.mDataSnapshot = dataSnapshot;
@@ -49,65 +50,65 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
 
     @Override
     protected void onPreExecute() {
-        Log.v(TAG, "onPreExecute");
+        LogHelper.v(TAG, "onPreExecute");
         super.onPreExecute();
         mCircleProgressView.setVisibility(View.VISIBLE);
     }
 
     @Override
     protected Boolean doInBackground(BaseActivity... params) {
-        Log.v(TAG, "doInBackground");
+        LogHelper.v(TAG, "doInBackground");
         Boolean rc = false;
         if (mState == LoadState.WRITERS) {
-            Log.v(TAG, "LOADING WRITERS..");
+            LogHelper.v(TAG, "LOADING WRITERS..");
             rc = loadWriters();
         }
         else if (mState == LoadState.ACTORS) {
-            Log.v(TAG, "LOADING ACTORS..");
+            LogHelper.v(TAG, "LOADING ACTORS..");
             rc = loadActors();
         }
         else if (mState == LoadState.EPISODES) {
-            Log.v(TAG, "LOADING EPISODES..");
+            LogHelper.v(TAG, "LOADING EPISODES..");
             rc = loadEpisodes();
         }
         return rc;
     }
 
     private Boolean loadWriters() {
-        Log.v(TAG, "loadWriters");
+        LogHelper.v(TAG, "loadWriters");
         Object writerObject = mDataSnapshot.getValue();
         if (writerObject == null) {
-            Log.e(TAG, "the Writers SNAPSHOT IS null");
+            LogHelper.e(TAG, "the Writers SNAPSHOT IS null");
             return false;
         }
         String writerJSON = writerObject.toString();
 
         //#IFDEF 'DEBUG'
-        //System.out.println();
-        //System.out.println(writerJSON);
-        //System.out.println();
-        //if (isTesting()) {
-            //Log.v(TAG, "LOADING TEST WRITER");
-            //ContentValues writerValues = new ContentValues();
-            //writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_ID, 1);
-            //writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_NAME, "Slesar, Henry");
-            //writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_URL, "slesar_henry.jpg");
-            //try {
-                //Uri result = insertWriterValues(writerValues);
-                //Log.v(TAG, "Test Writer insert result="+result);
-                //return true;
-            //}
-            //catch (Exception e) {
-                //Log.e(TAG, "Test Writer insert exception="+e);
-                //return false;
-            //}
-        //}
+        System.out.println();
+        System.out.println(writerJSON);
+        System.out.println();
+        if (isTesting()) {
+            LogHelper.v(TAG, "LOADING TEST WRITER");
+            ContentValues writerValues = new ContentValues();
+            writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_ID, 1);
+            writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_NAME, "Slesar, Henry");
+            writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_URL, "slesar_henry.jpg");
+            try {
+                Uri result = insertWriterValues(writerValues);
+                LogHelper.v(TAG, "Test Writer insert result="+result);
+                return true;
+            }
+            catch (Exception e) {
+                LogHelper.e(TAG, "Test Writer insert exception="+e);
+                return false;
+            }
+        }
         //#ENDIF
 
         // parse the JSON
         List<TheWriters> writers = TheWriters.arrayTheWritersFromData(writerJSON);
         if (writers != null) {
-            Log.v(TAG, "GOT WRITERS");
+            LogHelper.v(TAG, "GOT WRITERS");
             Iterator iterator = writers.iterator();
             int i = 1;
             while (iterator.hasNext()) {
@@ -120,56 +121,56 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
                 writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_URL, photo);
                 try {
                     Uri result = insertWriterValues(writerValues);
-                    Log.v(TAG, "Writer insert result="+result);
+                    LogHelper.v(TAG, "Writer insert result="+result);
                 }
                 catch (Exception e) {
-                    Log.e(TAG, "Writer insert exception="+e);
+                    LogHelper.e(TAG, "Writer insert exception="+e);
                 }
                 ++i;
             }
         }
         else {
-            Log.e(TAG, "writers is null!");
+            LogHelper.e(TAG, "writers is null!");
             return false;
         }
         return true;
     }
 
     private Boolean loadActors() {
-        Log.v(TAG, "loadActors");
+        LogHelper.v(TAG, "loadActors");
         Object actorObject = mDataSnapshot.getValue();
         if (actorObject == null) {
-            Log.e(TAG, "the Actors SNAPSHOT IS null");
+            LogHelper.e(TAG, "the Actors SNAPSHOT IS null");
             return false;
         }
         String actorJSON = actorObject.toString();
 
         //#IFDEF 'DEBUG'
-        //System.out.println();
-        //System.out.println(actorJSON);
-        //System.out.println();
-        //if (isTesting()) {
-            //Log.v(TAG, "LOADING TEST ACTOR");
-            //ContentValues actorValues = new ContentValues();
-            //actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_ID, 1);
-            //actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_NAME, "DeKoven, Roger");
-            //actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_URL, "dekoven_roger.jpg");
-            //try {
-                //Uri result = insertActorValues(actorValues);
-                //Log.v(TAG, "Test Actor insert result="+result);
-                //return true;
-            //}
-            //catch (Exception e) {
-                //Log.e(TAG, "Test Actor insert exception="+e);
-                //return false;
-            //}
-        //}
+        System.out.println();
+        System.out.println(actorJSON);
+        System.out.println();
+        if (isTesting()) {
+            LogHelper.v(TAG, "LOADING TEST ACTOR");
+            ContentValues actorValues = new ContentValues();
+            actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_ID, 1);
+            actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_NAME, "DeKoven, Roger");
+            actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_URL, "dekoven_roger.jpg");
+            try {
+                Uri result = insertActorValues(actorValues);
+                LogHelper.v(TAG, "Test Actor insert result="+result);
+                return true;
+            }
+            catch (Exception e) {
+                LogHelper.e(TAG, "Test Actor insert exception="+e);
+                return false;
+            }
+        }
         //#ENDIF
 
         // parse the JSON
         List<TheActors> actors = TheActors.arrayTheActorsFromData(actorJSON);
         if (actors != null) {
-            Log.v(TAG, "GOT ACTORS");
+            LogHelper.v(TAG, "GOT ACTORS");
             Iterator iterator = actors.iterator();
             int i = 1;
             while (iterator.hasNext()) {
@@ -182,61 +183,61 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
                 actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_URL, photo);
                 try {
                     Uri result = insertActorValues(actorValues);
-                    Log.v(TAG, "Actor insert result="+result);
+                    LogHelper.v(TAG, "Actor insert result="+result);
                 }
                 catch (Exception e) {
-                    Log.e(TAG, "Actor insert exception="+e);
+                    LogHelper.e(TAG, "Actor insert exception="+e);
                 }
                 ++i;
             }
         }
         else {
-            Log.e(TAG, "actors is null!");
+            LogHelper.e(TAG, "actors is null!");
             return false;
         }
         return true;
     }
 
     private Boolean loadEpisodes() {
-        Log.v(TAG, "loadEpisodes");
+        LogHelper.v(TAG, "loadEpisodes");
         Object episodeObject = mDataSnapshot.getValue();
         if (episodeObject == null) {
-            Log.e(TAG, "the Episodes SNAPSHOT IS null");
+            LogHelper.e(TAG, "the Episodes SNAPSHOT IS null");
             return false;
         }
         String episodeJSON = episodeObject.toString();
 
         //#IFDEF 'DEBUG'
-        //System.out.println();
-        //System.out.println(episodeJSON);
-        //System.out.println();
-        //if (isTesting()) {
-            //Log.v(TAG, "LOADING TEST EPISODE");
-            //ContentValues episodeValues = new ContentValues();
-            //episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, "0001");
-            //episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_AIRDATE, "1974-01-06");
-            //episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_TITLE, "The Old Ones Are Hard to Kill");
-            //episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_DESCRIPTION, "An old lady rents a room to a sick boarder. She runs into problems with his strange deathbed confession.");
-            //episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_DOWNLOAD_URL, "www.cbsrmt.com/mp3/CBS Radio Mystery Theater 74-01-06 e0001 The Old Ones Are Hard to Kill.mp3");
-            //episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_WEBLINK_URL, "www.cbsrmt.com/episode_name-1-the-old-ones-are-hard-to-kill.html");
-            //episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_RATING, 3.2);
-            //episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_VOTE_COUNT, 1); // true count is unknown at present
-            //try {
-                //Uri result = insertEpisodeValues(episodeValues);
-                //Log.v(TAG, "Test Episode insert result="+result);
-                //return true;
-            //}
-            //catch (Exception e) {
-                //Log.e(TAG, "Test Episode insert exception="+e);
-                //return false;
-            //}
-        //}
+        System.out.println();
+        System.out.println(episodeJSON);
+        System.out.println();
+        if (isTesting()) {
+            LogHelper.v(TAG, "LOADING TEST EPISODE");
+            ContentValues episodeValues = new ContentValues();
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, "0001");
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_AIRDATE, "1974-01-06");
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_TITLE, "The Old Ones Are Hard to Kill");
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_DESCRIPTION, "An old lady rents a room to a sick boarder. She runs into problems with his strange deathbed confession.");
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_DOWNLOAD_URL, "www.cbsrmt.com/mp3/CBS Radio Mystery Theater 74-01-06 e0001 The Old Ones Are Hard to Kill.mp3");
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_WEBLINK_URL, "www.cbsrmt.com/episode_name-1-the-old-ones-are-hard-to-kill.html");
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_RATING, 3.2);
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_VOTE_COUNT, 1); // true count is unknown at present
+            try {
+                Uri result = insertEpisodeValues(episodeValues);
+                LogHelper.v(TAG, "Test Episode insert result="+result);
+                return true;
+            }
+            catch (Exception e) {
+                LogHelper.e(TAG, "Test Episode insert exception="+e);
+                return false;
+            }
+        }
         //#ENDIF
 
         // parse the JSON
         List<TheEpisodes> episodes = TheEpisodes.arrayTheEpisodesFromData(episodeJSON);
         if (episodes != null) {
-            Log.v(TAG, "GOT EPISODES");
+            LogHelper.v(TAG, "GOT EPISODES");
             Iterator iterator = episodes.iterator();
             int i = 0;
             while (iterator.hasNext()) {
@@ -263,10 +264,10 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_VOTE_COUNT, vote_count);
                 try {
                     Uri result = insertEpisodeValues(episodeValues);
-                    Log.v(TAG, "Episode insert result="+result);
+                    LogHelper.v(TAG, "Episode insert result="+result);
                 }
                 catch (Exception e) {
-                    Log.e(TAG, "Episode insert exception="+e);
+                    LogHelper.e(TAG, "Episode insert exception="+e);
                 }
 
                 String writerName = episode.getWriters().getName().replaceAll("^\"|\"$", "");
@@ -278,10 +279,10 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
                 writersEpisodes.put(RadioTheaterContract.WritersEpisodesEntry.FIELD_EPISODE_NUMBER, number);
                 try {
                     Uri result = insertWritersEpisodesValues(writersEpisodes);
-                    Log.v(TAG, "WritersEpisodes insert result="+result);
+                    LogHelper.v(TAG, "WritersEpisodes insert result="+result);
                 }
                 catch (Exception e) {
-                    Log.e(TAG, "WritersEpisodes insert exception="+e);
+                    LogHelper.e(TAG, "WritersEpisodes insert exception="+e);
                 }
 
                 // SQLite load EpisodeWriters Table
@@ -290,10 +291,10 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
                 episodeWriters.put(RadioTheaterContract.EpisodesWritersEntry.FIELD_WRITER_ID, writerName);
                 try {
                     Uri result = insertEpisodeWritersValues(episodeWriters);
-                    Log.v(TAG, "EpisodeWriters insert result="+result);
+                    LogHelper.v(TAG, "EpisodeWriters insert result="+result);
                 }
                 catch (Exception e) {
-                    Log.e(TAG, "EpisodeWriters insert exception="+e);
+                    LogHelper.e(TAG, "EpisodeWriters insert exception="+e);
                 }
 
                 List<String> actorNames = episode.getActors().getName();
@@ -309,10 +310,10 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
                     actorsEpisodes.put(RadioTheaterContract.ActorsEpisodesEntry.FIELD_EPISODE_NUMBER, number);
                     try {
                         Uri result = insertActorsEpisodesValues(actorsEpisodes);
-                        Log.v(TAG, "ActorsEpisodes insert result="+result);
+                        LogHelper.v(TAG, "ActorsEpisodes insert result="+result);
                     }
                     catch (Exception e) {
-                        Log.e(TAG, "ActorsEpisodes insert exception="+e);
+                        LogHelper.e(TAG, "ActorsEpisodes insert exception="+e);
                     }
 
                     // SQLite load EpisodesActors Table
@@ -321,79 +322,79 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
                     episodeActors.put(RadioTheaterContract.EpisodesActorsEntry.FIELD_ACTOR_ID, actorName);
                     try {
                         Uri result = insertEpisodeActorsValues(episodeActors);
-                        Log.v(TAG, "EpisodeActors insert result="+result);
+                        LogHelper.v(TAG, "EpisodeActors insert result="+result);
                     }
                     catch (Exception e) {
-                        Log.e(TAG, "EpisodeActors insert exception="+e);
+                        LogHelper.e(TAG, "EpisodeActors insert exception="+e);
                     }
                 }
             }
-            Log.v(TAG, "loaded "+i+" episodes.");
+            LogHelper.v(TAG, "loaded "+i+" episodes.");
         }
         else {
-            Log.e(TAG, "episodes is null!");
+            LogHelper.e(TAG, "episodes is null!");
             return false;
         }
         return true;
     }
 
     private Uri insertEpisodeValues(ContentValues episodeValues) {
-        Log.v(TAG, "insertEpisodeValues=");
+        LogHelper.v(TAG, "insertEpisodeValues=");
         Uri episode = RadioTheaterContract.EpisodesEntry.buildEpisodesUri();
         CircleViewHelper.setCircleViewValue((float) ++mCount, mActivity);
         return mActivity.getContentResolver().insert(episode, episodeValues);
     }
 
     private Uri insertEpisodeActorsValues(ContentValues episodeActorsValues) {
-        Log.v(TAG, "insertEpisodeActorsValues=");
+        LogHelper.v(TAG, "insertEpisodeActorsValues=");
         Uri episodeActors = RadioTheaterContract.EpisodesActorsEntry.buildEpisodesActorsUri();
         return mActivity.getContentResolver().insert(episodeActors, episodeActorsValues);
     }
 
     private Uri insertEpisodeWritersValues(ContentValues episodeWritersValues) {
-        Log.v(TAG, "insertEpisodeWritersValues=");
+        LogHelper.v(TAG, "insertEpisodeWritersValues=");
         Uri episodeWriters = RadioTheaterContract.EpisodesWritersEntry.buildEpisodesWritersUri();
         return mActivity.getContentResolver().insert(episodeWriters, episodeWritersValues);
     }
 
     private Uri insertActorValues(ContentValues actorValues) {
-        Log.v(TAG, "insertActorValues");
+        LogHelper.v(TAG, "insertActorValues");
         Uri actor = RadioTheaterContract.ActorsEntry.buildActorsUri();
         CircleViewHelper.setCircleViewValue((float) ++mCount, mActivity);
         return mActivity.getContentResolver().insert(actor, actorValues);
     }
 
     private Uri insertActorsEpisodesValues(ContentValues actorsEpisodesValues) {
-        Log.v(TAG, "insertActorsEpisodesValues");
+        LogHelper.v(TAG, "insertActorsEpisodesValues");
         Uri actorsEpisodes = RadioTheaterContract.ActorsEpisodesEntry.buildActorsEpisodesUri();
         return mActivity.getContentResolver().insert(actorsEpisodes, actorsEpisodesValues);
     }
 
     private Uri insertWriterValues(ContentValues writerValues) {
-        Log.v(TAG, "insertWriterValues");
+        LogHelper.v(TAG, "insertWriterValues");
         Uri writer = RadioTheaterContract.WritersEntry.buildWritersUri();
         CircleViewHelper.setCircleViewValue((float) ++mCount, mActivity);
         return mActivity.getContentResolver().insert(writer, writerValues);
     }
 
     private Uri insertWritersEpisodesValues(ContentValues writersEpisodesValues) {
-        Log.v(TAG, "insertWritersEpisodesValues");
+        LogHelper.v(TAG, "insertWritersEpisodesValues");
         Uri writersEpisodes = RadioTheaterContract.WritersEpisodesEntry.buildWritersEpisodesUri();
         return mActivity.getContentResolver().insert(writersEpisodes, writersEpisodesValues);
     }
 
     @Override
     protected void onPostExecute(Boolean successTablesLoaded) {
-        Log.v(TAG, "onPostExecute: successTablesLoaded="+successTablesLoaded);
+        LogHelper.v(TAG, "onPostExecute: successTablesLoaded="+successTablesLoaded);
         super.onPostExecute(successTablesLoaded);
         if (mState == LoadState.EPISODES) { // episodes are last. everything should be loaded.
             CircleViewHelper.hideCircleView(mActivity);
         }
         if (successTablesLoaded) {
-            Log.v(TAG, "---> SQL TABLES loaded ok.");
+            LogHelper.v(TAG, "---> SQL TABLES loaded ok.");
             mActivity.runLoadStateCallback(mState);
         } else {
-            Log.v(TAG, "---> SQL TABLES failed to load.");
+            LogHelper.v(TAG, "---> SQL TABLES failed to load.");
             mActivity.startAuthenticationActivity();
         }
     }

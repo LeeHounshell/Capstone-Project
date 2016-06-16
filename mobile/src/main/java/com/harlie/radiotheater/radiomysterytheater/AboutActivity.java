@@ -14,6 +14,8 @@ import android.view.View;
 import android.view.WindowInsets;
 import android.widget.ImageView;
 
+import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
+
 // NOTE: build uses 'preprocessor.gradle' here
 //#IFDEF 'debug'
 
@@ -27,7 +29,7 @@ public class AboutActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.v(TAG, "onCreate");
+        LogHelper.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
 
         if (savedInstanceState != null) {
@@ -73,7 +75,7 @@ public class AboutActivity extends BaseActivity {
                                 View v,
                                 MotionEvent event
                         ) {
-                            Log.v(TAG, "onTouch()");
+                            LogHelper.v(TAG, "onTouch()");
                             switch (event.getAction()) {
                                 case MotionEvent.ACTION_DOWN: {
                                     ImageView view = (ImageView) v;
@@ -84,7 +86,7 @@ public class AboutActivity extends BaseActivity {
                                 }
                                 case MotionEvent.ACTION_UP:
                                 case MotionEvent.ACTION_CANCEL: {
-                                    Log.v(TAG, "view Linked-In");
+                                    LogHelper.v(TAG, "view Linked-In");
                                     ImageView view = (ImageView) v;
                                     // clear the overlay
                                     view.getDrawable().clearColorFilter();
@@ -106,7 +108,7 @@ public class AboutActivity extends BaseActivity {
             mUpButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Log.v(TAG, "onClick");
+                    LogHelper.v(TAG, "onClick");
                     onBackPressed();
                 }
             });
@@ -132,7 +134,7 @@ public class AboutActivity extends BaseActivity {
     }
 
     private void sendEmail_to_LeeHounshell() {
-        Log.v(TAG, "sendEmail_to_LeeHounshell");
+        LogHelper.v(TAG, "sendEmail_to_LeeHounshell");
         String contact = getResources().getString(R.string.app_contact);
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("plain/text");
@@ -143,7 +145,7 @@ public class AboutActivity extends BaseActivity {
     }
 
     private void showMyLinkedInProfile() {
-        Log.v(TAG, "showMyLinkedInProfile");
+        LogHelper.v(TAG, "showMyLinkedInProfile");
         // show my Linked-In profile
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_VIEW);
