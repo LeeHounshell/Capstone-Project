@@ -4,9 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 // FIXME

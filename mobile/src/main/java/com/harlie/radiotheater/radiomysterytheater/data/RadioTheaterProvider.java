@@ -11,20 +11,17 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data;
 
-import java.util.Arrays;
-
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.harlie.radiotheater.radiomysterytheater.BuildConfig;
-import com.harlie.radiotheater.radiomysterytheater.data.base.BaseContentProvider;
 import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.actorsepisodes.ActorsEpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.base.BaseContentProvider;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
@@ -32,6 +29,8 @@ import com.harlie.radiotheater.radiomysterytheater.data.episodesactors.EpisodesA
 import com.harlie.radiotheater.radiomysterytheater.data.episodeswriters.EpisodesWritersColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesColumns;
+
+import java.util.Arrays;
 
 public class RadioTheaterProvider extends BaseContentProvider {
     private static final String TAG = RadioTheaterProvider.class.getSimpleName();

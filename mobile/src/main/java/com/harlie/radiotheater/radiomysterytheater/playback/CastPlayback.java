@@ -25,10 +25,6 @@ import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
 
-import com.harlie.radiotheater.radiomysterytheater.model.MusicProvider;
-import com.harlie.radiotheater.radiomysterytheater.model.MusicProviderSource;
-import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
-import com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper;
 import com.google.android.gms.cast.MediaInfo;
 import com.google.android.gms.cast.MediaMetadata;
 import com.google.android.gms.cast.MediaStatus;
@@ -38,6 +34,10 @@ import com.google.android.libraries.cast.companionlibrary.cast.callbacks.VideoCa
 import com.google.android.libraries.cast.companionlibrary.cast.exceptions.CastException;
 import com.google.android.libraries.cast.companionlibrary.cast.exceptions.NoConnectionException;
 import com.google.android.libraries.cast.companionlibrary.cast.exceptions.TransientNetworkDisconnectionException;
+import com.harlie.radiotheater.radiomysterytheater.model.MusicProvider;
+import com.harlie.radiotheater.radiomysterytheater.model.MusicProviderSource;
+import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
+import com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper;
 
 import org.json.JSONException;
 import org.json.JSONObject;

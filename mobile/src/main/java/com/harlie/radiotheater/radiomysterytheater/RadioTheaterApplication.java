@@ -2,7 +2,6 @@ package com.harlie.radiotheater.radiomysterytheater;
 
 import android.content.Context;
 import android.support.multidex.MultiDex;
-import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;

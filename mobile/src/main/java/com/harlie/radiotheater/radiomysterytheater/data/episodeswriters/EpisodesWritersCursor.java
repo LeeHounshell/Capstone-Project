@@ -11,11 +11,7 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.episodeswriters;
 
-import java.util.Date;
-
 import android.database.Cursor;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.harlie.radiotheater.radiomysterytheater.data.base.AbstractCursor;
 

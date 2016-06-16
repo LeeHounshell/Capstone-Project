@@ -25,8 +25,6 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Bundle;
 
-import com.harlie.radiotheater.radiomysterytheater.RadioTheaterService;
-
 public class CarHelper {
     private static final String TAG = LogHelper.makeLogTag(CarHelper.class);
 

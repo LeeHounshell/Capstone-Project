@@ -11,15 +11,13 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.configuration;
 
-import java.util.Date;
-
-import android.content.Context;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
 import com.harlie.radiotheater.radiomysterytheater.data.base.AbstractSelection;
-import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.*;
+import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesColumns;
 
 /**
  * Selection for the {@code configuration} table.

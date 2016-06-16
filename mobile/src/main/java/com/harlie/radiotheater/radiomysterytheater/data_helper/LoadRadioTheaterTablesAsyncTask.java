@@ -3,7 +3,6 @@ package com.harlie.radiotheater.radiomysterytheater.data_helper;
 import android.content.ContentValues;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.util.Log;
 import android.view.View;
 
 import com.google.firebase.database.DataSnapshot;

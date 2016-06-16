@@ -11,12 +11,9 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.writersepisodes;
 
-import java.util.Date;
-
-import android.content.Context;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.net.Uri;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.harlie.radiotheater.radiomysterytheater.data.base.AbstractContentValues;

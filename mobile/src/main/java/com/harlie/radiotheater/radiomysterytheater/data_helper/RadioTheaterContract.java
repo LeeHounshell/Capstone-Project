@@ -8,7 +8,6 @@ package com.harlie.radiotheater.radiomysterytheater.data_helper;
 import android.content.ContentUris;
 import android.net.Uri;
 import android.text.format.Time;
-import android.util.Log;
 
 import com.harlie.radiotheater.radiomysterytheater.data.RadioTheaterProvider;
 import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsColumns;

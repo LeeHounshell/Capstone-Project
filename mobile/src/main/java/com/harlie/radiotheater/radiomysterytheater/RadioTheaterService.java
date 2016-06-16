@@ -22,6 +22,9 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.media.MediaRouter;
 
+import com.google.android.gms.cast.ApplicationMetadata;
+import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
+import com.google.android.libraries.cast.companionlibrary.cast.callbacks.VideoCastConsumerImpl;
 import com.harlie.radiotheater.radiomysterytheater.model.MusicProvider;
 import com.harlie.radiotheater.radiomysterytheater.playback.CastPlayback;
 import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
@@ -31,9 +34,6 @@ import com.harlie.radiotheater.radiomysterytheater.playback.QueueManager;
 import com.harlie.radiotheater.radiomysterytheater.utils.CarHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.WearHelper;
-import com.google.android.gms.cast.ApplicationMetadata;
-import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
-import com.google.android.libraries.cast.companionlibrary.cast.callbacks.VideoCastConsumerImpl;
 
 import java.lang.ref.WeakReference;
 import java.util.List;

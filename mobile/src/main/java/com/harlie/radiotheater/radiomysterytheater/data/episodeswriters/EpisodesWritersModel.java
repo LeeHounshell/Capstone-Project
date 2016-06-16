@@ -13,11 +13,6 @@ package com.harlie.radiotheater.radiomysterytheater.data.episodeswriters;
 
 import com.harlie.radiotheater.radiomysterytheater.data.base.BaseModel;
 
-import java.util.Date;
-
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 /**
  * Radio Mystery Theater writers for episode list.
  */
