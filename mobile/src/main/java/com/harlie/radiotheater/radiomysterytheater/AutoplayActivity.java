@@ -23,10 +23,11 @@ import android.widget.FrameLayout;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
+//#ENDIF
+
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import me.angrybyte.circularslider.CircularSlider;
-//#ENDIF
 
 public class AutoplayActivity extends BaseActivity {
     private final static String TAG = "LEE: <" + AutoplayActivity.class.getSimpleName() + ">";
@@ -43,6 +44,18 @@ public class AutoplayActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         LogHelper.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
+        /*
+         * FUTURE: TV support
+         *
+        UiModeManager uiModeManager = (UiModeManager) getSystemService(UI_MODE_SERVICE);
+        if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
+            LogHelper.d(TAG, "Running on a TV Device");
+            Intent tvIntent = new Intent(this, TvPlaybackActivity.class);
+            startActivity(tvIntent);
+            finish();
+            return;
+        }
+        */
         setContentView(R.layout.activity_autoplay);
         configureToolbarTitleBehavior();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
