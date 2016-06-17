@@ -1,13 +1,16 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
 import android.annotation.SuppressLint;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
@@ -29,6 +32,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.harlie.radiotheater.radiomysterytheater.data.RadioTheaterHelper;
+import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesContentValues;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
@@ -41,6 +46,8 @@ import at.grabner.circleprogress.AnimationState;
 import at.grabner.circleprogress.AnimationStateChangedListener;
 import at.grabner.circleprogress.CircleProgressView;
 import at.grabner.circleprogress.TextMode;
+
+import static com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract.*;
 
 @SuppressLint("Registered")
 public class BaseActivity extends AppCompatActivity {
@@ -68,6 +75,7 @@ public class BaseActivity extends AppCompatActivity {
 
     private String email;
     private String pass;
+    private Boolean isPaid;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -139,7 +147,8 @@ public class BaseActivity extends AppCompatActivity {
 
     protected boolean doINeedToCreateADatabase() {
         LogHelper.v(TAG, "doINeedToCreateADatabase");
-        if ((isExistingTable("EPISODES")) && (isExistingTable("ACTORS")) && (isExistingTable("WRITERS"))) {
+        if ((isExistingTable("EPISODES")) && (isExistingTable("ACTORS")) && (isExistingTable("WRITERS")) && (isExistingTable("CONFIGURATION")))
+        {
             LogHelper.v(TAG, "*** Found SQLITE Tables! ***");
             return false;
         }
@@ -238,6 +247,7 @@ public class BaseActivity extends AppCompatActivity {
 
     protected void userLoginSuccess() {
         LogHelper.v(TAG, "userLoginSuccess");
+        setEmail(getEmail()); // save email to shared pref if it is not already there
         String message = getResources().getString(R.string.successful);
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
@@ -254,22 +264,38 @@ public class BaseActivity extends AppCompatActivity {
         long rowId = 1;
         Uri CONTENT_URI = null;
         String whereClause = null;
+        String whereArgs[] = null;
         if (tableName.toUpperCase().equals("EPISODES")) {
-            CONTENT_URI = RadioTheaterContract.EpisodesEntry.buildEpisodeUri(rowId);
-            tableName = RadioTheaterContract.EpisodesEntry.TABLE_NAME;
-            whereClause = RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER + "=?";
+            CONTENT_URI = EpisodesEntry.buildEpisodeUri(rowId);
+            tableName = EpisodesEntry.TABLE_NAME;
+            whereClause = EpisodesEntry.FIELD_EPISODE_NUMBER + "=?";
+            whereArgs = new String[]{Long.toString(rowId)};
         }
         else if (tableName.toUpperCase().equals("ACTORS")) {
-            CONTENT_URI = RadioTheaterContract.ActorsEntry.buildActorUri(rowId);
-            tableName = RadioTheaterContract.ActorsEntry.TABLE_NAME;
-            whereClause = RadioTheaterContract.ActorsEntry.FIELD_ACTOR_ID + "=?";
+            CONTENT_URI = ActorsEntry.buildActorUri(rowId);
+            tableName = ActorsEntry.TABLE_NAME;
+            whereClause = ActorsEntry.FIELD_ACTOR_ID + "=?";
+            whereArgs = new String[]{Long.toString(rowId)};
         }
         else if (tableName.toUpperCase().equals("WRITERS")) {
-            CONTENT_URI = RadioTheaterContract.WritersEntry.buildWriterUri(rowId);
-            tableName = RadioTheaterContract.WritersEntry.TABLE_NAME;
-            whereClause = RadioTheaterContract.WritersEntry.FIELD_WRITER_ID + "=?";
+            CONTENT_URI = WritersEntry.buildWriterUri(rowId);
+            tableName = WritersEntry.TABLE_NAME;
+            whereClause = WritersEntry.FIELD_WRITER_ID + "=?";
+            whereArgs = new String[]{Long.toString(rowId)};
         }
-        if ( CONTENT_URI == null || whereClause == null) {
+        else if (tableName.toUpperCase().equals("CONFIGURATION")) {
+            if (getEmail() == null || getEmail().length() == 0) {
+                CONTENT_URI = null;
+                whereClause = null;
+            }
+            else {
+                CONTENT_URI = ConfigurationEntry.buildConfigurationUri();
+                tableName = ConfigurationEntry.TABLE_NAME;
+                whereClause = ConfigurationEntry.FIELD_USER_EMAIL + "=?";
+                whereArgs = new String[]{Long.toString(rowId)};
+            }
+        }
+        if (CONTENT_URI == null) {
             return false;
         }
 
@@ -277,16 +303,16 @@ public class BaseActivity extends AppCompatActivity {
                 CONTENT_URI, // the 'content://' Uri to query
                 null,        // projection String[] - leaving "columns" null just returns all the columns.
                 whereClause, // selection - SQL where
-                new String[]{Long.toString(rowId)}, // selection args String[] - values for the "where" clause
+                whereArgs,   // selection args String[] - values for the "where" clause
                 null         // sort order (String)
         );
 
         boolean success = false;
-        if (cursor.getCount() == 0) {
+        if (cursor == null || cursor.getCount() == 0) {
             LogHelper.v(TAG, "SQL: nothing found for table "+tableName);
         }
         else {
-            LogHelper.v(TAG, "SQL: found data in table "+tableName);
+            LogHelper.v(TAG, "SQL: found "+cursor.getCount()+" records in table "+tableName);
             success = true;
         }
         cursor.close();
@@ -328,7 +354,6 @@ public class BaseActivity extends AppCompatActivity {
                 CircleViewHelper.hideCircleView(this);
                 mCopiedDatabaseSuccess = true;
                 startAutoplayActivity();
-                return;
             }
             catch (Exception any) {
                 LogHelper.e(TAG, "problem copying "+DB_NAME+" database! - "+any);
@@ -361,7 +386,7 @@ public class BaseActivity extends AppCompatActivity {
         while ((len = input.read(buffer)) > 0) {
             mCount += len;
             try {
-                Thread.sleep(5);
+                Thread.sleep(3);
             } catch (Exception e) { };
             CircleViewHelper.setCircleViewValue((float) mCount, this);
             output.write(buffer, 0, len);
@@ -490,7 +515,9 @@ public class BaseActivity extends AppCompatActivity {
         }
         else {
             LogHelper.v(TAG, "*** READY TO START RADIO MYSTERY THEATER ***");
-            userLoginSuccess();
+            if (getEmail() != null) {
+                userLoginSuccess();
+            }
             Intent autoplayIntent = new Intent(this, AutoplayActivity.class);
             // close existing activity stack regardless of what's in there and create new root
             autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -511,10 +538,23 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     public String getEmail() {
+        if (email == null) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            email = sharedPreferences.getString("userEmail", "");
+            if (email.length() == 0) {
+                email = null;
+            }
+        }
         return email;
     }
 
     public void setEmail(String email) {
+        if (email != null && email.length() > 0) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("userEmail", email);
+            editor.apply();
+        }
         this.email = email;
     }
 
@@ -524,6 +564,136 @@ public class BaseActivity extends AppCompatActivity {
 
     public void setPass(String pass) {
         this.pass = pass;
+    }
+
+    public Boolean isPaidEpisode(String episode) {
+        Boolean isPaid = new Boolean(true);
+        //
+        // FIXME: if (existing == null)
+        //            need to query Firebase record for this user to see if they paid already..
+        //            and need to see if this episode is on the user's list of 10 free episodes.
+        //
+        // NOTE: the code below uses the #IFDEF gradle preprocessor
+        //#IFDEF 'FREE'
+        isPaid = new Boolean(false);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+        isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
+        if (!isPaid) {
+            ConfigEpisodesContentValues existing = getConfigForEpiisode(episode);
+            if (existing != null) {
+                ContentValues configEpisode = existing.values();
+                isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASE_ACCESS)
+                    || configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_EPISODE_PERMISION);
+            }
+        }
+        //#ENDIF
+        return isPaid;
+    }
+
+    public void setPaidEpisode(String episode, Boolean paid) {
+        LogHelper.v(TAG, "setPaidEpisode: episode="+episode+", paid="+paid);
+        if (episode == null) {
+            // NOTE: special case with NULL episode - mark all episodes as paid
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean("userPaid", paid);
+            editor.apply();
+            // FIXME: update local SQLite Configuration table with user info
+            // FIXME: update Firebase record for this user's email to be PAID
+        }
+        else {
+            // see if a record already exists for this episode
+            ConfigEpisodesContentValues existing = getConfigForEpiisode(episode);
+            ContentValues configurationValues;
+            try {
+                if (existing != null) {
+                    // UPDATE and mark an individual episode as paid
+                    configurationValues = existing.values();
+                    LogHelper.v(TAG, "FOUND: so update ConfigEntry for episode "+episode+" with paid="+paid);
+                    configurationValues.put(ConfigEpisodesEntry.FIELD_EPISODE_NUMBER, episode);
+                    configurationValues.put(ConfigEpisodesEntry.FIELD_PURCHASE_ACCESS, paid);
+                    updateConfigEntryValues(episode, configurationValues);
+                } else {
+                    // CREATE and mark an individual episode as paid
+                    LogHelper.v(TAG, "NOT FOUND: so create ConfigEntry for episode "+episode+" with paid="+paid);
+                    configurationValues = new ContentValues();
+                    configurationValues.put(ConfigEpisodesEntry.FIELD_EPISODE_NUMBER, episode);
+                    configurationValues.put(ConfigEpisodesEntry.FIELD_PURCHASE_ACCESS, paid);
+                    Uri result = insertConfigEntryValues(configurationValues);
+                }
+            }
+            catch (Exception e) {
+                LogHelper.e(TAG, "unable to create ConfigEntry for episode "+episode+" e="+e);
+            }
+        }
+    }
+
+    private ConfigEpisodesContentValues getConfigForEpiisode(String episode) {
+        ConfigEpisodesContentValues record = null;
+        Uri CONTENT_URI = ConfigurationEntry.buildConfigurationUri();
+        String tableName = ConfigurationEntry.TABLE_NAME;
+        String whereClause = ConfigEpisodesEntry.FIELD_EPISODE_NUMBER
+                + "=? AND " + ConfigurationEntry.FIELD_USER_EMAIL + "=?";
+        String whereCondition[] = new String[]{episode, getEmail()};
+        Cursor cursor = getContentResolver().query(
+                CONTENT_URI, // the 'content://' Uri to query
+                null,        // projection String[] - leaving "columns" null just returns all the columns.
+                whereClause, // selection - SQL where
+                whereCondition, // selection args String[] - values for the "where" clause
+                null         // sort order (String)
+        );
+
+        if (cursor == null || cursor.getCount() == 0) {
+            LogHelper.v(TAG, "SQL: where="+whereClause+" "+episode+" nothing found for table "+tableName);
+            // FIXME: need to query Firebase record for this user
+        }
+        else {
+            LogHelper.v(TAG, "SQL: where="+whereClause+" "+episode+" found "+cursor.getCount()+" records in table "+tableName);
+            record = new ConfigEpisodesContentValues();
+
+            int episodeNumberColumnIndex = cursor.getColumnIndex(ConfigEpisodesEntry.FIELD_EPISODE_NUMBER);
+            Long episodeNumber = cursor.getLong(episodeNumberColumnIndex);
+            record.putFieldEpisodeNumber(episodeNumber);
+
+            int purchasedColumnIndex = cursor.getColumnIndex(ConfigEpisodesEntry.FIELD_PURCHASE_ACCESS);
+            Integer purchased = cursor.getInt(purchasedColumnIndex);
+            record.putFieldPurchaseAccess(purchased != 0);
+
+            int noAdsForShowColumnIndex = cursor.getColumnIndex(ConfigEpisodesEntry.FIELD_PURCHASE_NOADS);
+            Integer noAdsForShow = cursor.getInt(noAdsForShowColumnIndex);
+            record.putFieldPurchaseNoads(noAdsForShow != 0);
+
+            int permissionColumnIndex = cursor.getColumnIndex(ConfigEpisodesEntry.FIELD_EPISODE_PERMISION);
+            Integer permission = cursor.getInt(permissionColumnIndex);
+            record.putFieldEpisodePermision(permission != 0);
+
+            int episodeHeardColumnIndex = cursor.getColumnIndex(ConfigEpisodesEntry.FIELD_EPISODE_HEARD);
+            Integer episodeHeard = cursor.getInt(episodeHeardColumnIndex);
+            record.putFieldEpisodeHeard(episodeHeard != 0);
+
+            int listenCountColumnIndex = cursor.getColumnIndex(ConfigEpisodesEntry.FIELD_LISTEN_COUNT);
+            Integer listenCount = cursor.getInt(listenCountColumnIndex);
+            record.putFieldListenCount(listenCount);
+            cursor.close();
+        }
+        return record;
+    }
+
+    private Uri insertConfigEntryValues(ContentValues configEntryValues) {
+        LogHelper.v(TAG, "insertConfigEntryValues");
+        // FIXME: need to "update" Firebase record for this episode and user
+        Uri configEntry = ConfigEpisodesEntry.buildConfigEpisodesUri();
+        return this.getContentResolver().insert(configEntry, configEntryValues);
+    }
+
+    private int updateConfigEntryValues(String episode, ContentValues configEntryValues) {
+        LogHelper.v(TAG, "updateConfigEntryValues");
+        // FIXME: need to "update" Firebase record for this episode and user
+        Uri configEntry = ConfigEpisodesEntry.buildConfigEpisodesUri();
+        String whereClause = ConfigEpisodesEntry.FIELD_EPISODE_NUMBER
+                + "=? AND " + ConfigurationEntry.FIELD_USER_EMAIL + "=?";
+        String whereCondition[] = new String[]{episode, getEmail()};
+        return this.getContentResolver().update(configEntry, configEntryValues, whereClause, whereCondition);
     }
 
     public Handler getHandler() {

@@ -42,7 +42,7 @@
     <string name="login_error">Login Failed.</string>
     <string name="enter_email">Enter your email address and password.</string>
     <string name="invalid_email">Invalid Email or Password.</string>
-    <string name="successful">Successful.</string>
+    <string name="successful">Successful Login.</string>
     <string name="no_database">DATABASE NOT FOUND!</string>
     <string name="too_many_requests">Too Many Requests.</string>
     <string name="auth_fail">Authorization Failed.</string>
