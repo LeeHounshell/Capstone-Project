@@ -326,6 +326,31 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
                     catch (Exception e) {
                         LogHelper.e(TAG, "EpisodeActors insert exception="+e);
                     }
+
+                    // SQLite load ConfigEntry Table
+                    ContentValues configEntry = new ContentValues();
+                    configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_NUMBER, number);
+
+                    //#IFDEF 'PAID'
+                    //configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS, true);
+                    //configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_PURCHASED_NOADS, true);
+                    //#ENDIF
+
+                    //#IFDEF 'FREE'
+                    configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS, false); // FIXME: update from Firebase if present
+                    configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_PURCHASED_NOADS, false);  // FIXME: update from Firebase if present
+                    //#ENDIF
+
+                    configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_HEARD, false);    // FIXME: update from Firebase if present
+                    configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_LISTEN_COUNT, 0);         // FIXME: update from Firebase if present
+                    configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_DOWNLOADED, false);
+                    try {
+                        Uri result = insertConfigEntryValues(configEntry);
+                        LogHelper.v(TAG, "ConfigEntry insert result="+result);
+                    }
+                    catch (Exception e) {
+                        LogHelper.e(TAG, "ConfigEntry insert exception="+e);
+                    }
                 }
             }
             LogHelper.v(TAG, "loaded "+i+" episodes.");
@@ -380,6 +405,20 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
         LogHelper.v(TAG, "insertWritersEpisodesValues");
         Uri writersEpisodes = RadioTheaterContract.WritersEpisodesEntry.buildWritersEpisodesUri();
         return mActivity.getContentResolver().insert(writersEpisodes, writersEpisodesValues);
+    }
+
+    public Uri insertConfigurationValues(ContentValues configurationValues) {
+        LogHelper.v(TAG, "insertConfigEntryValues");
+        // FIXME: need to "update" Firebase record for this user's configuration
+        Uri configuration = RadioTheaterContract.ConfigurationEntry.buildConfigurationUri();
+        return mActivity.getContentResolver().insert(configuration, configurationValues);
+    }
+
+    public Uri insertConfigEntryValues(ContentValues configEntryValues) {
+        LogHelper.v(TAG, "insertConfigEntryValues");
+        // FIXME: need to "update" Firebase record for this episode and user
+        Uri configEntry = RadioTheaterContract.ConfigEpisodesEntry.buildConfigEpisodesUri();
+        return mActivity.getContentResolver().insert(configEntry, configEntryValues);
     }
 
     @Override

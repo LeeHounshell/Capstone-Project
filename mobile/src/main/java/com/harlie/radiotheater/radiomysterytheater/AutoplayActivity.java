@@ -1,7 +1,9 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -21,7 +23,13 @@ import com.google.android.gms.ads.MobileAds;
 //#ENDIF
 
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesContentValues;
+import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
+import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesContentValues;
+import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
+
+import java.util.Date;
 
 import me.angrybyte.circularslider.CircularSlider;
 
@@ -68,12 +76,63 @@ public class AutoplayActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 LogHelper.v(TAG, "CLICK - autoPlay");
+                boolean foundEpisode = false;
                 AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.toolbar_container);
-                appBarLayout.setExpanded(false);
-                ConfigEpisodesContentValues configEpisodesContentValues = getConfigForNextAvailableEpisode();
-                LogHelper.v(TAG, "configEpisodesContentValues="+configEpisodesContentValues);
-                CircularSlider circleSlider = (CircularSlider) findViewById(R.id.circular_seekbar);
-                circleSlider.setVisibility(View.VISIBLE);
+
+                ConfigEpisodesCursor configCursor = getCursorForNextAvailableEpisode();
+                if (configCursor != null && configCursor.moveToNext()) {
+                    // found the next episode to listen to
+                    appBarLayout.setExpanded(false);
+                    long episodeNumber = configCursor.getFieldEpisodeNumber();
+                    boolean purchased = configCursor.getFieldPurchasedAccess();
+                    boolean noAdsForShow = configCursor.getFieldPurchasedNoads();
+                    boolean downloaded = configCursor.getFieldEpisodeDownloaded();
+                    boolean episodeHeard = configCursor.getFieldEpisodeHeard();
+                    int listenCount = configCursor.getFieldListenCount();
+                    configCursor.close();
+
+                    LogHelper.v(TAG, "===> NEXT EPISODE TO PLAY"
+                            +": episodeNumber="+episodeNumber
+                            +", purchased="+purchased
+                            +", noAdsForShow="+noAdsForShow
+                            +", downloaded="+downloaded
+                            +", episodeHeard="+episodeHeard
+                            +", listenCount="+listenCount);
+
+                    // get this episode's info
+                    EpisodesCursor episodesCursor = getEpisodesCursor(episodeNumber);
+                    if (episodesCursor != null && episodesCursor.moveToNext()) {
+                        episodeNumber = episodesCursor.getFieldEpisodeNumber();
+                        Date airdate = episodesCursor.getFieldAirdate();
+                        String episodeTitle = episodesCursor.getFieldEpisodeTitle();
+                        String episodeDescription = episodesCursor.getFieldEpisodeDescription();
+                        String episodeWeblinkUrl = episodesCursor.getFieldWeblinkUrl();
+                        String episodeDownloadUrl = episodesCursor.getFieldDownloadUrl();
+                        Integer rating = episodesCursor.getFieldRating();
+                        Integer voteCount = episodesCursor.getFieldVoteCount();
+                        episodesCursor.close();
+                        foundEpisode = true;
+
+                        LogHelper.v(TAG, "===> EPISODE DETAIL"
+                                +": episodeNumber="+episodeNumber
+                                +": airdate="+airdate.toString()
+                                +": episodeTitle="+episodeTitle
+                                +": episodeDescription="+episodeDescription
+                                +": episodeWeblinkUrl="+episodeWeblinkUrl
+                                +": episodeDownloadUrl="+episodeDownloadUrl
+                                +": rating="+rating
+                                +": voteCount="+voteCount);
+
+                        CircularSlider circleSlider = (CircularSlider) findViewById(R.id.circular_seekbar);
+                        circleSlider.setVisibility(View.VISIBLE);
+                    }
+                }
+                if (!foundEpisode) {
+                    // FIXME: popup alert - ALL EPISODES ARE HEARD!
+                    appBarLayout.setExpanded(true);
+                    CircularSlider circleSlider = (CircularSlider) findViewById(R.id.circular_seekbar);
+                    circleSlider.setVisibility(View.GONE);
+                }
             }
         });
 

@@ -7,8 +7,10 @@ mobile/google-services.json
 mobile/src/free/google-services.json
 mobile/src/paid/google-services.json
 
-mobile/src/main/assets/radiomysterytheater.db
-mobile/src/main/assets/radiomysterytheater.db-journal
+mobile/src/main/assets/free/radiomysterytheater.db
+mobile/src/main/assets/free/radiomysterytheater.db-journal
+mobile/src/main/assets/paid/radiomysterytheater.db
+mobile/src/main/assets/paid/radiomysterytheater.db-journal
 
 .gradle
 .DS_Store

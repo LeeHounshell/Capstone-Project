@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.CursorIndexOutOfBoundsException;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -34,6 +35,12 @@ import com.google.firebase.database.ValueEventListener;
 import com.harlie.radiotheater.radiomysterytheater.data.RadioTheaterHelper;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesContentValues;
+import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
+import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesSelection;
+import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesContentValues;
+import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
+import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesSelection;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
@@ -349,8 +356,17 @@ public class BaseActivity extends AppCompatActivity {
                 String DB_OUTPUT_PATH = getApplicationInfo().dataDir + "/" + DB_OUTPUT_DIR;
                 // for performance reasons, I have included a prebuilt-sqlite database
                 String outFileName = DB_OUTPUT_PATH + DB_NAME;
-                copyFileFromAssets(DB_NAME, outFileName);
-                copyFileFromAssets(DB_NAME + "-journal", outFileName + "-journal");
+
+                //#IFDEF 'PAID'
+                //copyFileFromAssets("paid/" + DB_NAME, outFileName);
+                //copyFileFromAssets("paid/" + DB_NAME + "-journal", outFileName + "-journal");
+                //#ENDIF
+
+                //#IFDEF 'FREE'
+                copyFileFromAssets("free/" + DB_NAME, outFileName);
+                copyFileFromAssets("free/" + DB_NAME + "-journal", outFileName + "-journal");
+                //#ENDIF
+
                 LogHelper.v(TAG, "*** successfully copied prebuilt SQLite database ***");
                 CircleViewHelper.hideCircleView(this);
                 mCopiedDatabaseSuccess = true;
@@ -628,109 +644,102 @@ public class BaseActivity extends AppCompatActivity {
         }
     }
 
-    public ConfigEpisodesContentValues getConfigForNextAvailableEpisode() {
+    public ConfigEpisodesContentValues getConfigForEpisode(String episode) {
         ConfigEpisodesContentValues record = null;
-        Uri CONTENT_URI = ConfigEpisodesEntry.buildConfigEpisodesUri();
-        String tableName = ConfigEpisodesEntry.TABLE_NAME;
-        if (NetworkHelper.isOnline(this)) {
-            // find the next unwatched episode, in airdate order
-            String whereClause = ConfigEpisodesEntry.FIELD_EPISODE_HEARD + "!=1";
-            String order_limit = ConfigEpisodesEntry.FIELD_EPISODE_NUMBER + " ASC LIMIT 1";
-            Cursor cursor = getContentResolver().query(
-                    CONTENT_URI,    // the 'content://' Uri to query
-                    null,           // projection String[] - leaving "columns" null just returns all the columns.
-                    whereClause,    // selection - SQL where
-                    null,           // selection args String[] - values for the "where" clause
-                    order_limit     // sort order and limit (String)
-            );
+        ConfigEpisodesSelection where = new ConfigEpisodesSelection();
+        where.fieldEpisodeNumber(Long.parseLong(episode));
+        String order_limit = ConfigEpisodesEntry.FIELD_EPISODE_NUMBER + " ASC LIMIT 1";
 
-            if (cursor == null || cursor.getCount() == 0) {
-                LogHelper.v(TAG, "SQL: where="+whereClause+" nothing found for table "+tableName);
-                // FIXME: need to query Firebase record for this user
-            }
-            else record = getConfigEpisodesContentValues(tableName, whereClause, cursor);
+        Cursor cursor = getContentResolver().query(
+                ConfigEpisodesColumns.CONTENT_URI,  // the 'content://' Uri to query
+                null,                               // projection String[] - leaving "columns" null just returns all the columns.
+                where.sel(),                        // selection - SQL where
+                where.args(),                       // selection args String[] - values for the "where" clause
+                order_limit);                       // sort order and limit (String)
+
+        if (cursor != null && cursor.getCount() > 0) {
+            ConfigEpisodesCursor configEpisodesCursor = new ConfigEpisodesCursor(cursor);
+            record = getConfigEpisodesContentValues(configEpisodesCursor);
         }
         else {
-            // find the next DOWNLOADED unwatched episode, in airdate order
-            String whereClause = ConfigEpisodesEntry.FIELD_EPISODE_HEARD + "!=1"
-                    + " AND " + ConfigEpisodesEntry.FIELD_EPISODE_DOWNLOADED + "=1";
-            String order_limit = ConfigEpisodesEntry.FIELD_EPISODE_NUMBER + " ASC LIMIT 1";
-            Cursor cursor = getContentResolver().query(
-                    CONTENT_URI,    // the 'content://' Uri to query
-                    null,           // projection String[] - leaving "columns" null just returns all the columns.
-                    whereClause,    // selection - SQL where
-                    null,           // selection args String[] - values for the "where" clause
-                    order_limit     // sort order and limit (String)
-            );
-
-            if (cursor == null || cursor.getCount() == 0) {
-                LogHelper.v(TAG, "SQL: where="+whereClause+" nothing found for table "+tableName);
-                // FIXME: need to query Firebase record for this user
-            }
-            else record = getConfigEpisodesContentValues(tableName, whereClause, cursor);
+            LogHelper.v(TAG, "SQL: episode "+episode+" not found");
+            // FIXME: need to query Firebase record for this user
         }
         return record;
     }
 
-    public ConfigEpisodesContentValues getConfigForEpisode(String episode) {
-        ConfigEpisodesContentValues record = null;
-        Uri CONTENT_URI = ConfigEpisodesEntry.buildConfigEpisodesUri();
-        String tableName = ConfigEpisodesEntry.TABLE_NAME;
-        String whereClause = ConfigEpisodesEntry.FIELD_EPISODE_NUMBER + "=?";
-        String whereCondition[] = new String[]{episode};
-        String order_limit = ConfigEpisodesEntry.FIELD_EPISODE_NUMBER + " ASC LIMIT 1";
-        Cursor cursor = getContentResolver().query(
-                CONTENT_URI,    // the 'content://' Uri to query
-                null,           // projection String[] - leaving "columns" null just returns all the columns.
-                whereClause,    // selection - SQL where
-                whereCondition, // selection args String[] - values for the "where" clause
-                order_limit     // sort order and limit (String)
-        );
+    public EpisodesCursor getEpisodesCursor(long episode) {
+        EpisodesSelection where = new EpisodesSelection();
+        where.fieldEpisodeNumber(episode);
+        String order_limit = EpisodesEntry.FIELD_EPISODE_NUMBER + " ASC LIMIT 1";
 
-        if (cursor == null || cursor.getCount() == 0) {
-            LogHelper.v(TAG, "SQL: where="+whereClause+" "+episode+" nothing found for table "+tableName);
-            // FIXME: need to query Firebase record for this user
+        Cursor cursor = getContentResolver().query(
+                EpisodesColumns.CONTENT_URI,        // the 'content://' Uri to query
+                null,                               // projection String[] - leaving "columns" null just returns all the columns.
+                where.sel(),                        // selection - SQL where
+                where.args(),                       // selection args String[] - values for the "where" clause
+                order_limit);                       // sort order and limit (String)
+
+        return (cursor != null && cursor.getCount() > 0) ? new EpisodesCursor(cursor) : null;
+    }
+
+    public ConfigEpisodesCursor getCursorForNextAvailableEpisode() {
+        ConfigEpisodesSelection where = new ConfigEpisodesSelection();
+        // find the next unwatched episode, in airdate order
+        where.fieldEpisodeHeard(false);
+        if (! NetworkHelper.isOnline(this)) {
+            // find the next DOWNLOADED unwatched episode, in airdate order
+            where.fieldEpisodeDownloaded(true);
         }
-        else record = getConfigEpisodesContentValues(tableName, whereClause, cursor);
-        return record;
+
+        String order_limit = ConfigEpisodesEntry.FIELD_EPISODE_NUMBER + " ASC LIMIT 1";
+
+        Cursor cursor = getContentResolver().query(
+                ConfigEpisodesColumns.CONTENT_URI,  // the 'content://' Uri to query
+                null,                               // projection String[] - leaving "columns" null just returns all the columns.
+                where.sel(),                        // selection - SQL where
+                where.args(),                       // selection args String[] - values for the "where" clause
+                order_limit);                       // sort order and limit (String)
+
+        return (cursor != null) ? new ConfigEpisodesCursor(cursor) : null;
     }
 
     @NonNull
-    private ConfigEpisodesContentValues getConfigEpisodesContentValues(String tableName, String whereClause, Cursor cursor) {
-        LogHelper.v(TAG, "getConfigEpisodesContentValues: SQL where="+whereClause+" found "+cursor.getCount()+" records in table "+tableName);
-        ConfigEpisodesContentValues record;
-        record = new ConfigEpisodesContentValues();
+    private ConfigEpisodesContentValues getConfigEpisodesContentValues(ConfigEpisodesCursor cursor) {
+        LogHelper.v(TAG, "getConfigEpisodesContentValues: SQL found "+cursor.getCount()+" records");
+        ConfigEpisodesContentValues record = new ConfigEpisodesContentValues();
 
-        int episodeNumberColumnIndex = cursor.getColumnIndex(ConfigEpisodesEntry.FIELD_EPISODE_NUMBER);
-        Long episodeNumber = cursor.getLong(episodeNumberColumnIndex);
-        record.putFieldEpisodeNumber(episodeNumber);
+        if (cursor.moveToNext()) {
+            try {
+                long episodeNumber = cursor.getFieldEpisodeNumber();
+                record.putFieldEpisodeNumber(episodeNumber);
 
-        //#IFDEF 'PAID'
-        //record.putFieldPurchasedAccess(true);
-        //record.putFieldPurchasedNoads(true);
-        //#ENDIF
+                //#IFDEF 'PAID'
+                //boolean purchased = true;
+                //boolean noAdsForShow = true;
+                //#ENDIF
 
-        //#IFDEF 'FREE'
-        int purchasedColumnIndex = cursor.getColumnIndex(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
-        Integer purchased = cursor.getInt(purchasedColumnIndex);
-        record.putFieldPurchasedAccess(purchased != 0);
+                //#IFDEF 'FREE'
+                boolean purchased = cursor.getFieldPurchasedAccess();
+                boolean noAdsForShow = cursor.getFieldPurchasedNoads();
+                //#ENDIF
 
-        int noAdsForShowColumnIndex = cursor.getColumnIndex(ConfigEpisodesEntry.FIELD_PURCHASED_NOADS);
-        Integer noAdsForShow = cursor.getInt(noAdsForShowColumnIndex);
-        record.putFieldPurchasedNoads(noAdsForShow != 0);
-        //#ENDIF
+                record.putFieldPurchasedAccess(purchased);
+                record.putFieldPurchasedNoads(noAdsForShow);
 
-        int downloadedColumnIndex = cursor.getColumnIndex(ConfigEpisodesEntry.FIELD_EPISODE_DOWNLOADED);
-        Integer downloaded = cursor.getInt(downloadedColumnIndex);
-        record.putFieldEpisodeDownloaded(downloaded != 0);
+                boolean downloaded = cursor.getFieldEpisodeDownloaded();
+                record.putFieldEpisodeDownloaded(downloaded);
 
-        int episodeHeardColumnIndex = cursor.getColumnIndex(ConfigEpisodesEntry.FIELD_EPISODE_HEARD);
-        Integer episodeHeard = cursor.getInt(episodeHeardColumnIndex);
-        record.putFieldEpisodeHeard(episodeHeard != 0);
+                boolean episodeHeard = cursor.getFieldEpisodeHeard();
+                record.putFieldEpisodeHeard(episodeHeard);
 
-        int listenCountColumnIndex = cursor.getColumnIndex(ConfigEpisodesEntry.FIELD_LISTEN_COUNT);
-        Integer listenCount = cursor.getInt(listenCountColumnIndex);
-        record.putFieldListenCount(listenCount);
+                int listenCount = cursor.getFieldListenCount();
+                record.putFieldListenCount(listenCount);
+            } catch (Exception e) {
+                LogHelper.e(TAG, "RECORD NOT FOUND: Exception=" + e);
+                record = null;
+            }
+        }
         cursor.close();
         return record;
     }
