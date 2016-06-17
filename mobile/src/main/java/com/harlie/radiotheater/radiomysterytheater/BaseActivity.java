@@ -62,7 +62,7 @@ public class BaseActivity extends AppCompatActivity {
     private final static String TAG = "LEE: <" + BaseActivity.class.getSimpleName() + ">";
 
     protected static final boolean COPY_PACKAGED_SQLITE_DATABASE = true;
-    protected static final int TOTAL_SIZE_TO_COPY_IN_BYTES = 1483328;
+    protected static final int TOTAL_SIZE_TO_COPY_IN_BYTES = 1486848;
     protected static final String FIREBASE_WRITERS_URL = "radiomysterytheater/0/writers";
     protected static final String FIREBASE_ACTORS_URL = "radiomysterytheater/1/actors";
     protected static final String FIREBASE_SHOWS_URL = "radiomysterytheater/2/shows";
@@ -358,13 +358,13 @@ public class BaseActivity extends AppCompatActivity {
                 String outFileName = DB_OUTPUT_PATH + DB_NAME;
 
                 //#IFDEF 'PAID'
-                copyFileFromAssets("paid/" + DB_NAME, outFileName);
-                copyFileFromAssets("paid/" + DB_NAME + "-journal", outFileName + "-journal");
+                //copyFileFromAssets("paid/" + DB_NAME, outFileName);
+                //copyFileFromAssets("paid/" + DB_NAME + "-journal", outFileName + "-journal");
                 //#ENDIF
 
                 //#IFDEF 'FREE'
-                //copyFileFromAssets("free/" + DB_NAME, outFileName);
-                //copyFileFromAssets("free/" + DB_NAME + "-journal", outFileName + "-journal");
+                copyFileFromAssets("free/" + DB_NAME, outFileName);
+                copyFileFromAssets("free/" + DB_NAME + "-journal", outFileName + "-journal");
                 //#ENDIF
 
                 LogHelper.v(TAG, "*** successfully copied prebuilt SQLite database ***");
@@ -592,16 +592,16 @@ public class BaseActivity extends AppCompatActivity {
         //
         // NOTE: the code below uses the #IFDEF gradle preprocessor
         //#IFDEF 'FREE'
-        //isPaid = new Boolean(false);
-        //SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-        //isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
-        //if (!isPaid) {
-            //ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
-            //if (existing != null) {
-                //ContentValues configEpisode = existing.values();
-                //isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
-            //}
-        //}
+        isPaid = new Boolean(false);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+        isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
+        if (!isPaid) {
+            ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
+            if (existing != null) {
+                ContentValues configEpisode = existing.values();
+                isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
+            }
+        }
         //#ENDIF
         return isPaid;
     }
@@ -715,13 +715,13 @@ public class BaseActivity extends AppCompatActivity {
                 record.putFieldEpisodeNumber(episodeNumber);
 
                 //#IFDEF 'PAID'
-                boolean purchased = true;
-                boolean noAdsForShow = true;
+                //boolean purchased = true;
+                //boolean noAdsForShow = true;
                 //#ENDIF
 
                 //#IFDEF 'FREE'
-                //boolean purchased = cursor.getFieldPurchasedAccess();
-                //boolean noAdsForShow = cursor.getFieldPurchasedNoads();
+                boolean purchased = cursor.getFieldPurchasedAccess();
+                boolean noAdsForShow = cursor.getFieldPurchasedNoads();
                 //#ENDIF
 
                 record.putFieldPurchasedAccess(purchased);

@@ -332,13 +332,13 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
                     configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_NUMBER, number);
 
                     //#IFDEF 'PAID'
-                    configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS, true);
-                    configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_PURCHASED_NOADS, true);
+                    //configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS, true);
+                    //configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_PURCHASED_NOADS, true);
                     //#ENDIF
 
                     //#IFDEF 'FREE'
-                    //configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS, false); // FIXME: update from Firebase if present
-                    //configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_PURCHASED_NOADS, false);  // FIXME: update from Firebase if present
+                    configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS, false); // FIXME: update from Firebase if present
+                    configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_PURCHASED_NOADS, false);  // FIXME: update from Firebase if present
                     //#ENDIF
 
                     configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_HEARD, false);    // FIXME: update from Firebase if present
