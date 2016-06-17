@@ -129,38 +129,33 @@ public class EpisodesSelection extends AbstractSelection<EpisodesSelection> {
         return this;
     }
 
-    public EpisodesSelection fieldAirdate(Date... value) {
+    public EpisodesSelection fieldAirdate(String... value) {
         addEquals(EpisodesColumns.FIELD_AIRDATE, value);
         return this;
     }
 
-    public EpisodesSelection fieldAirdateNot(Date... value) {
+    public EpisodesSelection fieldAirdateNot(String... value) {
         addNotEquals(EpisodesColumns.FIELD_AIRDATE, value);
         return this;
     }
 
-    public EpisodesSelection fieldAirdate(long... value) {
-        addEquals(EpisodesColumns.FIELD_AIRDATE, toObjectArray(value));
+    public EpisodesSelection fieldAirdateLike(String... value) {
+        addLike(EpisodesColumns.FIELD_AIRDATE, value);
         return this;
     }
 
-    public EpisodesSelection fieldAirdateAfter(Date value) {
-        addGreaterThan(EpisodesColumns.FIELD_AIRDATE, value);
+    public EpisodesSelection fieldAirdateContains(String... value) {
+        addContains(EpisodesColumns.FIELD_AIRDATE, value);
         return this;
     }
 
-    public EpisodesSelection fieldAirdateAfterEq(Date value) {
-        addGreaterThanOrEquals(EpisodesColumns.FIELD_AIRDATE, value);
+    public EpisodesSelection fieldAirdateStartsWith(String... value) {
+        addStartsWith(EpisodesColumns.FIELD_AIRDATE, value);
         return this;
     }
 
-    public EpisodesSelection fieldAirdateBefore(Date value) {
-        addLessThan(EpisodesColumns.FIELD_AIRDATE, value);
-        return this;
-    }
-
-    public EpisodesSelection fieldAirdateBeforeEq(Date value) {
-        addLessThanOrEquals(EpisodesColumns.FIELD_AIRDATE, value);
+    public EpisodesSelection fieldAirdateEndsWith(String... value) {
+        addEndsWith(EpisodesColumns.FIELD_AIRDATE, value);
         return this;
     }
 
@@ -334,32 +329,32 @@ public class EpisodesSelection extends AbstractSelection<EpisodesSelection> {
         return this;
     }
 
-    public EpisodesSelection fieldRating(Integer... value) {
+    public EpisodesSelection fieldRating(Float... value) {
         addEquals(EpisodesColumns.FIELD_RATING, value);
         return this;
     }
 
-    public EpisodesSelection fieldRatingNot(Integer... value) {
+    public EpisodesSelection fieldRatingNot(Float... value) {
         addNotEquals(EpisodesColumns.FIELD_RATING, value);
         return this;
     }
 
-    public EpisodesSelection fieldRatingGt(int value) {
+    public EpisodesSelection fieldRatingGt(float value) {
         addGreaterThan(EpisodesColumns.FIELD_RATING, value);
         return this;
     }
 
-    public EpisodesSelection fieldRatingGtEq(int value) {
+    public EpisodesSelection fieldRatingGtEq(float value) {
         addGreaterThanOrEquals(EpisodesColumns.FIELD_RATING, value);
         return this;
     }
 
-    public EpisodesSelection fieldRatingLt(int value) {
+    public EpisodesSelection fieldRatingLt(float value) {
         addLessThan(EpisodesColumns.FIELD_RATING, value);
         return this;
     }
 
-    public EpisodesSelection fieldRatingLtEq(int value) {
+    public EpisodesSelection fieldRatingLtEq(float value) {
         addLessThanOrEquals(EpisodesColumns.FIELD_RATING, value);
         return this;
     }

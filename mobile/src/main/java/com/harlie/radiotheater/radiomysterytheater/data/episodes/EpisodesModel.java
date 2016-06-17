@@ -33,7 +33,7 @@ public interface EpisodesModel extends BaseModel {
      * Cannot be {@code null}.
      */
     @NonNull
-    Date getFieldAirdate();
+    String getFieldAirdate();
 
     /**
      * the episode title
@@ -68,7 +68,7 @@ public interface EpisodesModel extends BaseModel {
      * Can be {@code null}.
      */
     @Nullable
-    Integer getFieldRating();
+    Float getFieldRating();
 
     /**
      * episode vote count

@@ -17,9 +17,9 @@ import android.view.MenuItem;
 import android.view.View;
 
 //#IFDEF 'FREE'
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
-import com.google.android.gms.ads.MobileAds;
+//import com.google.android.gms.ads.AdRequest;
+//import com.google.android.gms.ads.AdView;
+//import com.google.android.gms.ads.MobileAds;
 //#ENDIF
 
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesContentValues;
@@ -103,19 +103,19 @@ public class AutoplayActivity extends BaseActivity {
                     EpisodesCursor episodesCursor = getEpisodesCursor(episodeNumber);
                     if (episodesCursor != null && episodesCursor.moveToNext()) {
                         episodeNumber = episodesCursor.getFieldEpisodeNumber();
-                        Date airdate = episodesCursor.getFieldAirdate();
+                        String airdate = episodesCursor.getFieldAirdate();
                         String episodeTitle = episodesCursor.getFieldEpisodeTitle();
                         String episodeDescription = episodesCursor.getFieldEpisodeDescription();
                         String episodeWeblinkUrl = episodesCursor.getFieldWeblinkUrl();
                         String episodeDownloadUrl = episodesCursor.getFieldDownloadUrl();
-                        Integer rating = episodesCursor.getFieldRating();
+                        Float rating = episodesCursor.getFieldRating();
                         Integer voteCount = episodesCursor.getFieldVoteCount();
                         episodesCursor.close();
                         foundEpisode = true;
 
                         LogHelper.v(TAG, "===> EPISODE DETAIL"
                                 +": episodeNumber="+episodeNumber
-                                +": airdate="+airdate.toString()
+                                +": airdate="+airdate
                                 +": episodeTitle="+episodeTitle
                                 +": episodeDescription="+episodeDescription
                                 +": episodeWeblinkUrl="+episodeWeblinkUrl
@@ -153,18 +153,18 @@ public class AutoplayActivity extends BaseActivity {
 
         // initialize AdMob - note this code uses the Gradle #IFDEF / #ENDIF gradle preprocessor
         //#IFDEF 'FREE'
-        String banner_ad_unit_id = getResources().getString(R.string.banner_ad_unit_id);
-        MobileAds.initialize(getApplicationContext(), banner_ad_unit_id);
+        //String banner_ad_unit_id = getResources().getString(R.string.banner_ad_unit_id);
+        //MobileAds.initialize(getApplicationContext(), banner_ad_unit_id);
 
-        final TelephonyManager tm =(TelephonyManager)getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
+        //final TelephonyManager tm =(TelephonyManager)getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
 
-        AdView mAdView = (AdView) findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder()
-                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)        // All emulators
-                .addTestDevice(getResources().getString(R.string.test_device1))
-                .addTestDevice(getResources().getString(R.string.test_device2))
-                .build();
-        mAdView.loadAd(adRequest);
+        //AdView mAdView = (AdView) findViewById(R.id.adView);
+        //AdRequest adRequest = new AdRequest.Builder()
+                //.addTestDevice(AdRequest.DEVICE_ID_EMULATOR)        // All emulators
+                //.addTestDevice(getResources().getString(R.string.test_device1))
+                //.addTestDevice(getResources().getString(R.string.test_device2))
+                //.build();
+        //mAdView.loadAd(adRequest);
         //#ENDIF
     }
 

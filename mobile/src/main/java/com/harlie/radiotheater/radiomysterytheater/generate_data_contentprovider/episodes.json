@@ -9,7 +9,7 @@
     {
       "documentation": "Air Date",
       "name": "field_airdate",
-      "type": "Date",
+      "type": "String",
       "nullable": false
     },
     {
@@ -40,7 +40,7 @@
     {
       "documentation": "episode rating",
       "name": "field_rating",
-      "type": "Integer",
+      "type": "Float",
       "nullable": true
     },
     {

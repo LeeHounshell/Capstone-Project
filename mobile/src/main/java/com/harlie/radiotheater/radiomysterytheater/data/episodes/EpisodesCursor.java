@@ -52,8 +52,8 @@ public class EpisodesCursor extends AbstractCursor implements EpisodesModel {
      * Cannot be {@code null}.
      */
     @NonNull
-    public Date getFieldAirdate() {
-        Date res = getDateOrNull(EpisodesColumns.FIELD_AIRDATE);
+    public String getFieldAirdate() {
+        String res = getStringOrNull(EpisodesColumns.FIELD_AIRDATE);
         if (res == null)
             throw new NullPointerException("The value of 'field_airdate' in the database was null, which is not allowed according to the model definition");
         return res;
@@ -110,8 +110,8 @@ public class EpisodesCursor extends AbstractCursor implements EpisodesModel {
      * Can be {@code null}.
      */
     @Nullable
-    public Integer getFieldRating() {
-        Integer res = getIntegerOrNull(EpisodesColumns.FIELD_RATING);
+    public Float getFieldRating() {
+        Float res = getFloatOrNull(EpisodesColumns.FIELD_RATING);
         return res;
     }
 

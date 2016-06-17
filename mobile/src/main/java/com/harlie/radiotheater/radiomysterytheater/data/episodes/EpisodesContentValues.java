@@ -59,17 +59,12 @@ public class EpisodesContentValues extends AbstractContentValues {
     /**
      * Air Date
      */
-    public EpisodesContentValues putFieldAirdate(@NonNull Date value) {
+    public EpisodesContentValues putFieldAirdate(@NonNull String value) {
         if (value == null) throw new IllegalArgumentException("fieldAirdate must not be null");
-        mContentValues.put(EpisodesColumns.FIELD_AIRDATE, value.getTime());
-        return this;
-    }
-
-
-    public EpisodesContentValues putFieldAirdate(long value) {
         mContentValues.put(EpisodesColumns.FIELD_AIRDATE, value);
         return this;
     }
+
 
     /**
      * the episode title
@@ -117,7 +112,7 @@ public class EpisodesContentValues extends AbstractContentValues {
     /**
      * episode rating
      */
-    public EpisodesContentValues putFieldRating(@Nullable Integer value) {
+    public EpisodesContentValues putFieldRating(@Nullable Float value) {
         mContentValues.put(EpisodesColumns.FIELD_RATING, value);
         return this;
     }
