@@ -11,8 +11,10 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.configepisodes;
 
-import android.content.ContentResolver;
+import java.util.Date;
+
 import android.content.Context;
+import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
 
@@ -127,48 +129,48 @@ public class ConfigEpisodesSelection extends AbstractSelection<ConfigEpisodesSel
         return this;
     }
 
-    public ConfigEpisodesSelection fieldPurchaseAccess(boolean value) {
-        addEquals(ConfigEpisodesColumns.FIELD_PURCHASE_ACCESS, toObjectArray(value));
+    public ConfigEpisodesSelection fieldPurchasedAccess(boolean value) {
+        addEquals(ConfigEpisodesColumns.FIELD_PURCHASED_ACCESS, toObjectArray(value));
         return this;
     }
 
-    public ConfigEpisodesSelection orderByFieldPurchaseAccess(boolean desc) {
-        orderBy(ConfigEpisodesColumns.FIELD_PURCHASE_ACCESS, desc);
+    public ConfigEpisodesSelection orderByFieldPurchasedAccess(boolean desc) {
+        orderBy(ConfigEpisodesColumns.FIELD_PURCHASED_ACCESS, desc);
         return this;
     }
 
-    public ConfigEpisodesSelection orderByFieldPurchaseAccess() {
-        orderBy(ConfigEpisodesColumns.FIELD_PURCHASE_ACCESS, false);
+    public ConfigEpisodesSelection orderByFieldPurchasedAccess() {
+        orderBy(ConfigEpisodesColumns.FIELD_PURCHASED_ACCESS, false);
         return this;
     }
 
-    public ConfigEpisodesSelection fieldPurchaseNoads(boolean value) {
-        addEquals(ConfigEpisodesColumns.FIELD_PURCHASE_NOADS, toObjectArray(value));
+    public ConfigEpisodesSelection fieldPurchasedNoads(boolean value) {
+        addEquals(ConfigEpisodesColumns.FIELD_PURCHASED_NOADS, toObjectArray(value));
         return this;
     }
 
-    public ConfigEpisodesSelection orderByFieldPurchaseNoads(boolean desc) {
-        orderBy(ConfigEpisodesColumns.FIELD_PURCHASE_NOADS, desc);
+    public ConfigEpisodesSelection orderByFieldPurchasedNoads(boolean desc) {
+        orderBy(ConfigEpisodesColumns.FIELD_PURCHASED_NOADS, desc);
         return this;
     }
 
-    public ConfigEpisodesSelection orderByFieldPurchaseNoads() {
-        orderBy(ConfigEpisodesColumns.FIELD_PURCHASE_NOADS, false);
+    public ConfigEpisodesSelection orderByFieldPurchasedNoads() {
+        orderBy(ConfigEpisodesColumns.FIELD_PURCHASED_NOADS, false);
         return this;
     }
 
-    public ConfigEpisodesSelection fieldEpisodePermision(boolean value) {
-        addEquals(ConfigEpisodesColumns.FIELD_EPISODE_PERMISION, toObjectArray(value));
+    public ConfigEpisodesSelection fieldEpisodeDownloaded(boolean value) {
+        addEquals(ConfigEpisodesColumns.FIELD_EPISODE_DOWNLOADED, toObjectArray(value));
         return this;
     }
 
-    public ConfigEpisodesSelection orderByFieldEpisodePermision(boolean desc) {
-        orderBy(ConfigEpisodesColumns.FIELD_EPISODE_PERMISION, desc);
+    public ConfigEpisodesSelection orderByFieldEpisodeDownloaded(boolean desc) {
+        orderBy(ConfigEpisodesColumns.FIELD_EPISODE_DOWNLOADED, desc);
         return this;
     }
 
-    public ConfigEpisodesSelection orderByFieldEpisodePermision() {
-        orderBy(ConfigEpisodesColumns.FIELD_EPISODE_PERMISION, false);
+    public ConfigEpisodesSelection orderByFieldEpisodeDownloaded() {
+        orderBy(ConfigEpisodesColumns.FIELD_EPISODE_DOWNLOADED, false);
         return this;
     }
 

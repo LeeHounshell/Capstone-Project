@@ -11,15 +11,15 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.episodes;
 
-import android.content.ContentResolver;
+import java.util.Date;
+
 import android.content.Context;
+import android.content.ContentResolver;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.harlie.radiotheater.radiomysterytheater.data.base.AbstractContentValues;
-
-import java.util.Date;
 
 /**
  * Content values wrapper for the {@code episodes} table.

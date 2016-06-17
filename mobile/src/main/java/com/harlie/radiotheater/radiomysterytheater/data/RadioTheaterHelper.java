@@ -18,6 +18,7 @@ import android.database.DefaultDatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
+import android.util.Log;
 
 import com.harlie.radiotheater.radiomysterytheater.BuildConfig;
 import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsColumns;
@@ -29,7 +30,6 @@ import com.harlie.radiotheater.radiomysterytheater.data.episodesactors.EpisodesA
 import com.harlie.radiotheater.radiomysterytheater.data.episodeswriters.EpisodesWritersColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesColumns;
-import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 public class RadioTheaterHelper extends SQLiteOpenHelper {
     private static final String TAG = RadioTheaterHelper.class.getSimpleName();
@@ -63,9 +63,9 @@ public class RadioTheaterHelper extends SQLiteOpenHelper {
             + ConfigEpisodesColumns.TABLE_NAME + " ( "
             + ConfigEpisodesColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + ConfigEpisodesColumns.FIELD_EPISODE_NUMBER + " INTEGER NOT NULL, "
-            + ConfigEpisodesColumns.FIELD_PURCHASE_ACCESS + " INTEGER NOT NULL DEFAULT 0, "
-            + ConfigEpisodesColumns.FIELD_PURCHASE_NOADS + " INTEGER NOT NULL DEFAULT 0, "
-            + ConfigEpisodesColumns.FIELD_EPISODE_PERMISION + " INTEGER NOT NULL DEFAULT 0, "
+            + ConfigEpisodesColumns.FIELD_PURCHASED_ACCESS + " INTEGER NOT NULL DEFAULT 0, "
+            + ConfigEpisodesColumns.FIELD_PURCHASED_NOADS + " INTEGER NOT NULL DEFAULT 0, "
+            + ConfigEpisodesColumns.FIELD_EPISODE_DOWNLOADED + " INTEGER NOT NULL DEFAULT 0, "
             + ConfigEpisodesColumns.FIELD_EPISODE_HEARD + " INTEGER NOT NULL DEFAULT 0, "
             + ConfigEpisodesColumns.FIELD_LISTEN_COUNT + " INTEGER NOT NULL DEFAULT 0 "
             + ", CONSTRAINT field_unique UNIQUE (field_episode_number) ON CONFLICT ABORT"
@@ -186,7 +186,7 @@ public class RadioTheaterHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        if (BuildConfig.DEBUG) LogHelper.d(TAG, "onCreate");
+        if (BuildConfig.DEBUG) Log.d(TAG, "onCreate");
         mOpenHelperCallbacks.onPreCreate(mContext, db);
         db.execSQL(SQL_CREATE_TABLE_ACTORS);
         db.execSQL(SQL_CREATE_TABLE_ACTORS_EPISODES);

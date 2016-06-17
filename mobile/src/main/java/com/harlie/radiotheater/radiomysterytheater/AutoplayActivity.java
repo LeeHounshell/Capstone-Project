@@ -20,6 +20,7 @@ import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
 //#ENDIF
 
+import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesContentValues;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import me.angrybyte.circularslider.CircularSlider;
@@ -69,6 +70,8 @@ public class AutoplayActivity extends BaseActivity {
                 LogHelper.v(TAG, "CLICK - autoPlay");
                 AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.toolbar_container);
                 appBarLayout.setExpanded(false);
+                ConfigEpisodesContentValues configEpisodesContentValues = getConfigForNextAvailableEpisode();
+                LogHelper.v(TAG, "configEpisodesContentValues="+configEpisodesContentValues);
                 CircularSlider circleSlider = (CircularSlider) findViewById(R.id.circular_seekbar);
                 circleSlider.setVisibility(View.VISIBLE);
             }

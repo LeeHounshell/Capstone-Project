@@ -7,19 +7,19 @@
       "nullable": false
     },
     {
-      "name": "field_purchase_access",
+      "name": "field_purchased_access",
       "type": "Boolean",
       "nullable": false,
       "defaultValue": false
     },
     {
-      "name": "field_purchase_noads",
+      "name": "field_purchased_noads",
       "type": "Boolean",
       "nullable": false,
       "defaultValue": false
     },
     {
-      "name": "field_episode_permision",
+      "name": "field_episode_downloaded",
       "type": "Boolean",
       "nullable": false,
       "defaultValue": false

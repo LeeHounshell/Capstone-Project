@@ -11,11 +11,12 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.base;
 
-import android.database.Cursor;
-import android.database.CursorWrapper;
-
 import java.util.Date;
 import java.util.HashMap;
+
+import android.database.Cursor;
+import android.database.CursorWrapper;
+import android.provider.BaseColumns;
 
 public abstract class AbstractCursor extends CursorWrapper {
     private final HashMap<String, Integer> mColumnIndexes;

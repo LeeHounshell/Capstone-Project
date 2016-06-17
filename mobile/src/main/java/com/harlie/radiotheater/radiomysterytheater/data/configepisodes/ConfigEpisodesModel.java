@@ -13,6 +13,11 @@ package com.harlie.radiotheater.radiomysterytheater.data.configepisodes;
 
 import com.harlie.radiotheater.radiomysterytheater.data.base.BaseModel;
 
+import java.util.Date;
+
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 /**
  * Radio Mystery Theater user configuration.
  */
@@ -24,19 +29,19 @@ public interface ConfigEpisodesModel extends BaseModel {
     long getFieldEpisodeNumber();
 
     /**
-     * Get the {@code field_purchase_access} value.
+     * Get the {@code field_purchased_access} value.
      */
-    boolean getFieldPurchaseAccess();
+    boolean getFieldPurchasedAccess();
 
     /**
-     * Get the {@code field_purchase_noads} value.
+     * Get the {@code field_purchased_noads} value.
      */
-    boolean getFieldPurchaseNoads();
+    boolean getFieldPurchasedNoads();
 
     /**
-     * Get the {@code field_episode_permision} value.
+     * Get the {@code field_episode_downloaded} value.
      */
-    boolean getFieldEpisodePermision();
+    boolean getFieldEpisodeDownloaded();
 
     /**
      * Get the {@code field_episode_heard} value.

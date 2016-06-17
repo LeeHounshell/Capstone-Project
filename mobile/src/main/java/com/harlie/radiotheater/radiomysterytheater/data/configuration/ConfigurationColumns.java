@@ -15,7 +15,15 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 
 import com.harlie.radiotheater.radiomysterytheater.data.RadioTheaterProvider;
+import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.actorsepisodes.ActorsEpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.episodesactors.EpisodesActorsColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.episodeswriters.EpisodesWritersColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesColumns;
 
 /**
  * Radio Mystery Theater user configuration.
@@ -39,9 +47,9 @@ public class ConfigurationColumns implements BaseColumns {
 
     public static final String FIELD_PAID_VERSION = "field_paid_version";
 
-    public static final String FIELD_PURCHASE_ACCESS = "configuration__field_purchase_access";
+    public static final String FIELD_PURCHASE_ACCESS = "field_purchase_access";
 
-    public static final String FIELD_PURCHASE_NOADS = "configuration__field_purchase_noads";
+    public static final String FIELD_PURCHASE_NOADS = "field_purchase_noads";
 
     public static final String FIELD_TOTAL_LISTEN_COUNT = "field_total_listen_count";
 

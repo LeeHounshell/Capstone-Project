@@ -11,9 +11,12 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.configepisodes;
 
-import android.content.ContentResolver;
+import java.util.Date;
+
 import android.content.Context;
+import android.content.ContentResolver;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.harlie.radiotheater.radiomysterytheater.data.base.AbstractContentValues;
@@ -53,20 +56,20 @@ public class ConfigEpisodesContentValues extends AbstractContentValues {
     }
 
 
-    public ConfigEpisodesContentValues putFieldPurchaseAccess(boolean value) {
-        mContentValues.put(ConfigEpisodesColumns.FIELD_PURCHASE_ACCESS, value);
+    public ConfigEpisodesContentValues putFieldPurchasedAccess(boolean value) {
+        mContentValues.put(ConfigEpisodesColumns.FIELD_PURCHASED_ACCESS, value);
         return this;
     }
 
 
-    public ConfigEpisodesContentValues putFieldPurchaseNoads(boolean value) {
-        mContentValues.put(ConfigEpisodesColumns.FIELD_PURCHASE_NOADS, value);
+    public ConfigEpisodesContentValues putFieldPurchasedNoads(boolean value) {
+        mContentValues.put(ConfigEpisodesColumns.FIELD_PURCHASED_NOADS, value);
         return this;
     }
 
 
-    public ConfigEpisodesContentValues putFieldEpisodePermision(boolean value) {
-        mContentValues.put(ConfigEpisodesColumns.FIELD_EPISODE_PERMISION, value);
+    public ConfigEpisodesContentValues putFieldEpisodeDownloaded(boolean value) {
+        mContentValues.put(ConfigEpisodesColumns.FIELD_EPISODE_DOWNLOADED, value);
         return this;
     }
 

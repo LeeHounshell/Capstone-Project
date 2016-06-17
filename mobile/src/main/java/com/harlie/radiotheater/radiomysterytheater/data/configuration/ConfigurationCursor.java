@@ -11,12 +11,14 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.configuration;
 
+import java.util.Date;
+
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.harlie.radiotheater.radiomysterytheater.data.base.AbstractCursor;
-import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.*;
 
 /**
  * Cursor wrapper for the {@code configuration} table.
@@ -59,32 +61,32 @@ public class ConfigurationCursor extends AbstractCursor implements Configuration
     }
 
     /**
-     * Get the {@code field_purchase_access} value.
+     * Get the {@code field_purchased_access} value.
      */
-    public boolean getConfigEpisodesFieldPurchaseAccess() {
-        Boolean res = getBooleanOrNull(ConfigEpisodesColumns.FIELD_PURCHASE_ACCESS);
+    public boolean getConfigEpisodesFieldPurchasedAccess() {
+        Boolean res = getBooleanOrNull(ConfigEpisodesColumns.FIELD_PURCHASED_ACCESS);
         if (res == null)
-            throw new NullPointerException("The value of 'field_purchase_access' in the database was null, which is not allowed according to the model definition");
+            throw new NullPointerException("The value of 'field_purchased_access' in the database was null, which is not allowed according to the model definition");
         return res;
     }
 
     /**
-     * Get the {@code field_purchase_noads} value.
+     * Get the {@code field_purchased_noads} value.
      */
-    public boolean getConfigEpisodesFieldPurchaseNoads() {
-        Boolean res = getBooleanOrNull(ConfigEpisodesColumns.FIELD_PURCHASE_NOADS);
+    public boolean getConfigEpisodesFieldPurchasedNoads() {
+        Boolean res = getBooleanOrNull(ConfigEpisodesColumns.FIELD_PURCHASED_NOADS);
         if (res == null)
-            throw new NullPointerException("The value of 'field_purchase_noads' in the database was null, which is not allowed according to the model definition");
+            throw new NullPointerException("The value of 'field_purchased_noads' in the database was null, which is not allowed according to the model definition");
         return res;
     }
 
     /**
-     * Get the {@code field_episode_permision} value.
+     * Get the {@code field_episode_downloaded} value.
      */
-    public boolean getConfigEpisodesFieldEpisodePermision() {
-        Boolean res = getBooleanOrNull(ConfigEpisodesColumns.FIELD_EPISODE_PERMISION);
+    public boolean getConfigEpisodesFieldEpisodeDownloaded() {
+        Boolean res = getBooleanOrNull(ConfigEpisodesColumns.FIELD_EPISODE_DOWNLOADED);
         if (res == null)
-            throw new NullPointerException("The value of 'field_episode_permision' in the database was null, which is not allowed according to the model definition");
+            throw new NullPointerException("The value of 'field_episode_downloaded' in the database was null, which is not allowed according to the model definition");
         return res;
     }
 
