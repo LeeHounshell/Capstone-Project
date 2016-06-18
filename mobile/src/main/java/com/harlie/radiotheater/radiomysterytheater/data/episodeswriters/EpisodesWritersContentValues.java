@@ -61,4 +61,11 @@ public class EpisodesWritersContentValues extends AbstractContentValues {
         return this;
     }
 
+
+    public EpisodesWritersContentValues putFieldWriterName(@NonNull String value) {
+        if (value == null) throw new IllegalArgumentException("fieldWriterName must not be null");
+        mContentValues.put(EpisodesWritersColumns.FIELD_WRITER_NAME, value);
+        return this;
+    }
+
 }

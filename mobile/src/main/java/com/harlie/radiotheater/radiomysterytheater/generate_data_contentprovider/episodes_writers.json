@@ -10,6 +10,11 @@
       "name": "field_writer_id",
       "type": "Long",
       "nullable": false
+    },
+    {
+      "name": "field_writer_name",
+      "type": "String",
+      "nullable": false
     }
   ],
   "constraints": [

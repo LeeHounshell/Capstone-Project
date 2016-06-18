@@ -39,6 +39,8 @@ public class WritersEpisodesColumns implements BaseColumns {
 
     public static final String FIELD_WRITER_ID = "field_writer_id";
 
+    public static final String FIELD_WRITER_NAME = "field_writer_name";
+
     public static final String FIELD_EPISODE_NUMBER = "field_episode_number";
 
 
@@ -48,6 +50,7 @@ public class WritersEpisodesColumns implements BaseColumns {
     public static final String[] ALL_COLUMNS = new String[] {
             _ID,
             FIELD_WRITER_ID,
+            FIELD_WRITER_NAME,
             FIELD_EPISODE_NUMBER
     };
     // @formatter:on
@@ -56,6 +59,7 @@ public class WritersEpisodesColumns implements BaseColumns {
         if (projection == null) return true;
         for (String c : projection) {
             if (c.equals(FIELD_WRITER_ID) || c.contains("." + FIELD_WRITER_ID)) return true;
+            if (c.equals(FIELD_WRITER_NAME) || c.contains("." + FIELD_WRITER_NAME)) return true;
             if (c.equals(FIELD_EPISODE_NUMBER) || c.contains("." + FIELD_EPISODE_NUMBER)) return true;
         }
         return false;

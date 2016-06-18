@@ -1,6 +1,7 @@
 package com.harlie.radiotheater.radiomysterytheater.data_helper;
 
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.view.View;
@@ -8,6 +9,13 @@ import android.view.View;
 import com.google.firebase.database.DataSnapshot;
 import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
 import com.harlie.radiotheater.radiomysterytheater.CircleViewHelper;
+import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
+import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsCursor;
+import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsSelection;
+import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersCursor;
+import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersSelection;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import java.util.Iterator;
@@ -270,11 +278,13 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
                 }
 
                 String writerName = episode.getWriters().getName().replaceAll("^\"|\"$", "");
+                long writerRowId = getWriterIdForName(writerName);
                 //String writerPhoto = episode.getWriters().getPhoto().replaceAll("^\"|\"$", "");
 
                 // SQLite load WritersEpisodes Table
                 ContentValues writersEpisodes = new ContentValues();
-                writersEpisodes.put(RadioTheaterContract.WritersEpisodesEntry.FIELD_WRITER_ID, writerName);
+                writersEpisodes.put(RadioTheaterContract.EpisodesWritersEntry.FIELD_WRITER_ID, writerRowId);
+                writersEpisodes.put(RadioTheaterContract.WritersEpisodesEntry.FIELD_WRITER_NAME, writerName);
                 writersEpisodes.put(RadioTheaterContract.WritersEpisodesEntry.FIELD_EPISODE_NUMBER, number);
                 try {
                     Uri result = insertWritersEpisodesValues(writersEpisodes);
@@ -287,7 +297,8 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
                 // SQLite load EpisodeWriters Table
                 ContentValues episodeWriters = new ContentValues();
                 episodeWriters.put(RadioTheaterContract.EpisodesWritersEntry.FIELD_EPISODE_NUMBER, number);
-                episodeWriters.put(RadioTheaterContract.EpisodesWritersEntry.FIELD_WRITER_ID, writerName);
+                episodeWriters.put(RadioTheaterContract.EpisodesWritersEntry.FIELD_WRITER_ID, writerRowId);
+                episodeWriters.put(RadioTheaterContract.EpisodesWritersEntry.FIELD_WRITER_NAME, writerName);
                 try {
                     Uri result = insertEpisodeWritersValues(episodeWriters);
                     LogHelper.v(TAG, "EpisodeWriters insert result="+result);
@@ -301,11 +312,13 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
 
                 for (int act = 0; act < actorNames.size(); ++act) {
                     String actorName = actorNames.get(act).replaceAll("^\"|\"$", "");
+                    long actorRowId = getActorIdForName(actorName);
                     //String actroPhoto = actorPhotos.get(act).replaceAll("^\"|\"$", "");
 
                     // SQLite load ActorsEpisodes Table
                     ContentValues actorsEpisodes = new ContentValues();
-                    actorsEpisodes.put(RadioTheaterContract.ActorsEpisodesEntry.FIELD_ACTOR_ID, actorName);
+                    actorsEpisodes.put(RadioTheaterContract.ActorsEpisodesEntry.FIELD_ACTOR_ID, actorRowId);
+                    actorsEpisodes.put(RadioTheaterContract.ActorsEpisodesEntry.FIELD_ACTOR_NAME, actorName);
                     actorsEpisodes.put(RadioTheaterContract.ActorsEpisodesEntry.FIELD_EPISODE_NUMBER, number);
                     try {
                         Uri result = insertActorsEpisodesValues(actorsEpisodes);
@@ -318,7 +331,8 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
                     // SQLite load EpisodesActors Table
                     ContentValues episodeActors = new ContentValues();
                     episodeActors.put(RadioTheaterContract.EpisodesActorsEntry.FIELD_EPISODE_NUMBER, number);
-                    episodeActors.put(RadioTheaterContract.EpisodesActorsEntry.FIELD_ACTOR_ID, actorName);
+                    episodeActors.put(RadioTheaterContract.EpisodesActorsEntry.FIELD_ACTOR_ID, actorRowId);
+                    episodeActors.put(RadioTheaterContract.EpisodesActorsEntry.FIELD_ACTOR_NAME, actorName);
                     try {
                         Uri result = insertEpisodeActorsValues(episodeActors);
                         LogHelper.v(TAG, "EpisodeActors insert result="+result);
@@ -360,6 +374,52 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
             return false;
         }
         return true;
+    }
+
+    private long getActorIdForName(String actorName) {
+        LogHelper.v(TAG, "getActorIdForName: "+actorName);
+        ActorsSelection where = new ActorsSelection();
+        where.fieldActorName(actorName);
+
+        Cursor cursor = RadioTheaterApplication.getRadioTheaterApplicationContext().getContentResolver().query(
+                ActorsColumns.CONTENT_URI,         // the 'content://' Uri to query
+                null,                               // projection String[] - leaving "columns" null just returns all the columns.
+                where.sel(),                        // selection - SQL where
+                where.args(),                       // selection args String[] - values for the "where" clause
+                null);                              // sort order and limit (String)
+
+        long actor = 0;
+        if (cursor != null && cursor.getCount() > 0) {
+            ActorsCursor actorsCursor = new ActorsCursor(cursor);
+            if (actorsCursor.moveToNext()) {
+                actor = actorsCursor.getFieldActorId();
+            }
+            cursor.close();
+        }
+        return actor;
+    }
+
+    private long getWriterIdForName(String writerName) {
+        LogHelper.v(TAG, "getWriterIdForName: "+writerName);
+        WritersSelection where = new WritersSelection();
+        where.fieldWriterName(writerName);
+
+        Cursor cursor = RadioTheaterApplication.getRadioTheaterApplicationContext().getContentResolver().query(
+                WritersColumns.CONTENT_URI,         // the 'content://' Uri to query
+                null,                               // projection String[] - leaving "columns" null just returns all the columns.
+                where.sel(),                        // selection - SQL where
+                where.args(),                       // selection args String[] - values for the "where" clause
+                null);                              // sort order and limit (String)
+
+        long writer = 0;
+        if (cursor != null && cursor.getCount() > 0) {
+            WritersCursor writersCursor = new WritersCursor(cursor);
+            if (writersCursor.moveToNext()) {
+                writer = writersCursor.getFieldWriterId();
+            }
+            cursor.close();
+        }
+        return writer;
     }
 
     private Uri insertEpisodeValues(ContentValues episodeValues) {

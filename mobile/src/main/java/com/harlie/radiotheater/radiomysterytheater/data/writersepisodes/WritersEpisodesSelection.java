@@ -129,6 +129,46 @@ public class WritersEpisodesSelection extends AbstractSelection<WritersEpisodesS
         return this;
     }
 
+    public WritersEpisodesSelection fieldWriterName(String... value) {
+        addEquals(WritersEpisodesColumns.FIELD_WRITER_NAME, value);
+        return this;
+    }
+
+    public WritersEpisodesSelection fieldWriterNameNot(String... value) {
+        addNotEquals(WritersEpisodesColumns.FIELD_WRITER_NAME, value);
+        return this;
+    }
+
+    public WritersEpisodesSelection fieldWriterNameLike(String... value) {
+        addLike(WritersEpisodesColumns.FIELD_WRITER_NAME, value);
+        return this;
+    }
+
+    public WritersEpisodesSelection fieldWriterNameContains(String... value) {
+        addContains(WritersEpisodesColumns.FIELD_WRITER_NAME, value);
+        return this;
+    }
+
+    public WritersEpisodesSelection fieldWriterNameStartsWith(String... value) {
+        addStartsWith(WritersEpisodesColumns.FIELD_WRITER_NAME, value);
+        return this;
+    }
+
+    public WritersEpisodesSelection fieldWriterNameEndsWith(String... value) {
+        addEndsWith(WritersEpisodesColumns.FIELD_WRITER_NAME, value);
+        return this;
+    }
+
+    public WritersEpisodesSelection orderByFieldWriterName(boolean desc) {
+        orderBy(WritersEpisodesColumns.FIELD_WRITER_NAME, desc);
+        return this;
+    }
+
+    public WritersEpisodesSelection orderByFieldWriterName() {
+        orderBy(WritersEpisodesColumns.FIELD_WRITER_NAME, false);
+        return this;
+    }
+
     public WritersEpisodesSelection fieldEpisodeNumber(long... value) {
         addEquals(WritersEpisodesColumns.FIELD_EPISODE_NUMBER, toObjectArray(value));
         return this;

@@ -32,4 +32,11 @@ public interface EpisodesWritersModel extends BaseModel {
      * Get the {@code field_writer_id} value.
      */
     long getFieldWriterId();
+
+    /**
+     * Get the {@code field_writer_name} value.
+     * Cannot be {@code null}.
+     */
+    @NonNull
+    String getFieldWriterName();
 }

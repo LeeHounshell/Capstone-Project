@@ -168,4 +168,44 @@ public class EpisodesWritersSelection extends AbstractSelection<EpisodesWritersS
         orderBy(EpisodesWritersColumns.FIELD_WRITER_ID, false);
         return this;
     }
+
+    public EpisodesWritersSelection fieldWriterName(String... value) {
+        addEquals(EpisodesWritersColumns.FIELD_WRITER_NAME, value);
+        return this;
+    }
+
+    public EpisodesWritersSelection fieldWriterNameNot(String... value) {
+        addNotEquals(EpisodesWritersColumns.FIELD_WRITER_NAME, value);
+        return this;
+    }
+
+    public EpisodesWritersSelection fieldWriterNameLike(String... value) {
+        addLike(EpisodesWritersColumns.FIELD_WRITER_NAME, value);
+        return this;
+    }
+
+    public EpisodesWritersSelection fieldWriterNameContains(String... value) {
+        addContains(EpisodesWritersColumns.FIELD_WRITER_NAME, value);
+        return this;
+    }
+
+    public EpisodesWritersSelection fieldWriterNameStartsWith(String... value) {
+        addStartsWith(EpisodesWritersColumns.FIELD_WRITER_NAME, value);
+        return this;
+    }
+
+    public EpisodesWritersSelection fieldWriterNameEndsWith(String... value) {
+        addEndsWith(EpisodesWritersColumns.FIELD_WRITER_NAME, value);
+        return this;
+    }
+
+    public EpisodesWritersSelection orderByFieldWriterName(boolean desc) {
+        orderBy(EpisodesWritersColumns.FIELD_WRITER_NAME, desc);
+        return this;
+    }
+
+    public EpisodesWritersSelection orderByFieldWriterName() {
+        orderBy(EpisodesWritersColumns.FIELD_WRITER_NAME, false);
+        return this;
+    }
 }

@@ -10,6 +10,11 @@
       "name": "field_actor_id",
       "type": "Long",
       "nullable": false
+    },
+    {
+      "name": "field_actor_name",
+      "type": "String",
+      "nullable": false
     }
   ],
   "constraints": [

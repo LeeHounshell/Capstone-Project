@@ -56,4 +56,16 @@ public class EpisodesWritersCursor extends AbstractCursor implements EpisodesWri
             throw new NullPointerException("The value of 'field_writer_id' in the database was null, which is not allowed according to the model definition");
         return res;
     }
+
+    /**
+     * Get the {@code field_writer_name} value.
+     * Cannot be {@code null}.
+     */
+    @NonNull
+    public String getFieldWriterName() {
+        String res = getStringOrNull(EpisodesWritersColumns.FIELD_WRITER_NAME);
+        if (res == null)
+            throw new NullPointerException("The value of 'field_writer_name' in the database was null, which is not allowed according to the model definition");
+        return res;
+    }
 }

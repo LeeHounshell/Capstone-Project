@@ -129,6 +129,46 @@ public class ActorsEpisodesSelection extends AbstractSelection<ActorsEpisodesSel
         return this;
     }
 
+    public ActorsEpisodesSelection fieldActorName(String... value) {
+        addEquals(ActorsEpisodesColumns.FIELD_ACTOR_NAME, value);
+        return this;
+    }
+
+    public ActorsEpisodesSelection fieldActorNameNot(String... value) {
+        addNotEquals(ActorsEpisodesColumns.FIELD_ACTOR_NAME, value);
+        return this;
+    }
+
+    public ActorsEpisodesSelection fieldActorNameLike(String... value) {
+        addLike(ActorsEpisodesColumns.FIELD_ACTOR_NAME, value);
+        return this;
+    }
+
+    public ActorsEpisodesSelection fieldActorNameContains(String... value) {
+        addContains(ActorsEpisodesColumns.FIELD_ACTOR_NAME, value);
+        return this;
+    }
+
+    public ActorsEpisodesSelection fieldActorNameStartsWith(String... value) {
+        addStartsWith(ActorsEpisodesColumns.FIELD_ACTOR_NAME, value);
+        return this;
+    }
+
+    public ActorsEpisodesSelection fieldActorNameEndsWith(String... value) {
+        addEndsWith(ActorsEpisodesColumns.FIELD_ACTOR_NAME, value);
+        return this;
+    }
+
+    public ActorsEpisodesSelection orderByFieldActorName(boolean desc) {
+        orderBy(ActorsEpisodesColumns.FIELD_ACTOR_NAME, desc);
+        return this;
+    }
+
+    public ActorsEpisodesSelection orderByFieldActorName() {
+        orderBy(ActorsEpisodesColumns.FIELD_ACTOR_NAME, false);
+        return this;
+    }
+
     public ActorsEpisodesSelection fieldEpisodeNumber(long... value) {
         addEquals(ActorsEpisodesColumns.FIELD_EPISODE_NUMBER, toObjectArray(value));
         return this;

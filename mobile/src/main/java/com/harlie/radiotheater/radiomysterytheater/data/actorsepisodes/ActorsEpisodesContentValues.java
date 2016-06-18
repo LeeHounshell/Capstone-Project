@@ -56,6 +56,13 @@ public class ActorsEpisodesContentValues extends AbstractContentValues {
     }
 
 
+    public ActorsEpisodesContentValues putFieldActorName(@NonNull String value) {
+        if (value == null) throw new IllegalArgumentException("fieldActorName must not be null");
+        mContentValues.put(ActorsEpisodesColumns.FIELD_ACTOR_NAME, value);
+        return this;
+    }
+
+
     public ActorsEpisodesContentValues putFieldEpisodeNumber(long value) {
         mContentValues.put(ActorsEpisodesColumns.FIELD_EPISODE_NUMBER, value);
         return this;

@@ -20,141 +20,137 @@
 
 package com.harlie.radiotheater.radiomysterytheater.model;
 
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.RatingCompat;
 
+import com.harlie.radiotheater.radiomysterytheater.R;
+import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
+import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
+import com.harlie.radiotheater.radiomysterytheater.data.episodeswriters.EpisodesWritersColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.episodeswriters.EpisodesWritersCursor;
+import com.harlie.radiotheater.radiomysterytheater.data.episodeswriters.EpisodesWritersSelection;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
+import com.harlie.radiotheater.radiomysterytheater.utils.BitmapHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
- * Utility class to get a list of MusicTrack's based on a server-side JSON
- * configuration.
+ * Utility class to get a list of Episodes's based on a server-side JSON configuration.
+ * Note the JSON configuration is already loaded into the local SQLite database.
+ * Also note the local SQLite database gets Firebase updates for any data changes,
+ * so the media's ultimate "source" can still be considered as sesrver-side JSON.
  */
 public class RemoteJSONSource implements MusicProviderSource {
-
     private static final String TAG = LogHelper.makeLogTag(RemoteJSONSource.class);
-
-    protected static final String CATALOG_URL =
-        "http://storage.googleapis.com/automotive-media/music.json";
-
-    private static final String JSON_MUSIC = "music";
-    private static final String JSON_TITLE = "title";
-    private static final String JSON_ALBUM = "album";
-    private static final String JSON_ARTIST = "artist";
-    private static final String JSON_GENRE = "genre";
-    private static final String JSON_SOURCE = "source";
-    private static final String JSON_IMAGE = "image";
-    private static final String JSON_TRACK_NUMBER = "trackNumber";
-    private static final String JSON_TOTAL_TRACK_COUNT = "totalTrackCount";
-    private static final String JSON_DURATION = "duration";
 
     @Override
     public Iterator<MediaMetadataCompat> iterator() {
-        try {
-            int slashPos = CATALOG_URL.lastIndexOf('/');
-            String path = CATALOG_URL.substring(0, slashPos + 1);
-            JSONObject jsonObj = fetchJSONFromUrl(CATALOG_URL);
-            ArrayList<MediaMetadataCompat> tracks = new ArrayList<>();
-            if (jsonObj != null) {
-                JSONArray jsonTracks = jsonObj.getJSONArray(JSON_MUSIC);
-
-                if (jsonTracks != null) {
-                    for (int j = 0; j < jsonTracks.length(); j++) {
-                        tracks.add(buildFromJSON(jsonTracks.getJSONObject(j), path));
-                    }
-                }
+        ArrayList<MediaMetadataCompat> tracks = new ArrayList<>();
+        EpisodesCursor episodesCursor = getEpisodes();
+        if (episodesCursor != null) {
+            while (episodesCursor.moveToNext()) {
+                tracks.add(buildFromJSON(episodesCursor));
             }
-            return tracks.iterator();
-        } catch (JSONException e) {
-            LogHelper.e(TAG, e, "Could not retrieve music list");
-            throw new RuntimeException("Could not retrieve music list", e);
+            episodesCursor.close();
         }
+        return tracks.iterator();
     }
 
-    private MediaMetadataCompat buildFromJSON(JSONObject json, String basePath) throws JSONException {
-        String title = json.getString(JSON_TITLE);
-        String album = json.getString(JSON_ALBUM);
-        String artist = json.getString(JSON_ARTIST);
-        String genre = json.getString(JSON_GENRE);
-        String source = json.getString(JSON_SOURCE);
-        String iconUrl = json.getString(JSON_IMAGE);
-        int trackNumber = json.getInt(JSON_TRACK_NUMBER);
-        int totalTrackCount = json.getInt(JSON_TOTAL_TRACK_COUNT);
-        int duration = json.getInt(JSON_DURATION) * 1000; // ms
+    public EpisodesCursor getEpisodes() {
+        String order_limit = RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER + " ASC";
 
-        LogHelper.d(TAG, "Found music track: ", json);
+        Cursor cursor = RadioTheaterApplication.getRadioTheaterApplicationContext().getContentResolver().query(
+                EpisodesColumns.CONTENT_URI,        // the 'content://' Uri to query
+                null,                               // projection String[] - leaving "columns" null just returns all the columns.
+                null,                               // selection - SQL where
+                null,                               // selection args String[] - values for the "where" clause
+                order_limit);                       // sort order and limit (String)
 
-        // Media is stored relative to JSON file
-        if (!source.startsWith("http")) {
-            source = basePath + source;
+        return (cursor != null && cursor.getCount() > 0) ? new EpisodesCursor(cursor) : null;
+    }
+
+    private String getWriterForEpisodeId(Long episodeNumber) {
+        LogHelper.v(TAG, "getWriterForEpisodeId: "+episodeNumber);
+        EpisodesWritersSelection where = new EpisodesWritersSelection();
+        where.fieldEpisodeNumber(episodeNumber);
+        String order_limit = RadioTheaterContract.EpisodesWritersEntry.FIELD_WRITER_ID + " ASC LIMIT 1";
+
+        Cursor cursor = RadioTheaterApplication.getRadioTheaterApplicationContext().getContentResolver().query(
+                EpisodesWritersColumns.CONTENT_URI, // the 'content://' Uri to query
+                null,                               // projection String[] - leaving "columns" null just returns all the columns.
+                where.sel(),                        // selection - SQL where
+                where.args(),                       // selection args String[] - values for the "where" clause
+                order_limit);                       // sort order and limit (String)
+
+        String writer = null;
+        if (cursor != null && cursor.getCount() > 0) {
+            EpisodesWritersCursor episodesWritersCursor = new EpisodesWritersCursor(cursor);
+            if (episodesWritersCursor.moveToNext()) {
+                writer = episodesWritersCursor.getFieldWriterName();
+            }
+            cursor.close();
         }
-        if (!iconUrl.startsWith("http")) {
-            iconUrl = basePath + iconUrl;
+        if (writer == null) {
+            writer = "Unknown";
         }
-        // Since we don't have a unique ID in the server, we fake one using the hashcode of
-        // the music source. In a real world app, this could come from the server.
-        String id = String.valueOf(source.hashCode());
+        return writer;
+    }
 
-        // Adding the music source to the MediaMetadata (and consequently using it in the
-        // mediaSession.setMetadata) is not a good idea for a real world music app, because
-        // the session metadata can be accessed by notification listeners. This is done in this
-        // sample for convenience only.
+    private MediaMetadataCompat buildFromJSON(EpisodesCursor episodesCursor) {
+
+        Long episodeNumber = episodesCursor.getFieldEpisodeNumber();
+        String airdate = episodesCursor.getFieldAirdate(); // yyyy-MM-dd
+        Long airdate_year = Long.valueOf(airdate.substring(0, 4));
+        String episodeTitle = episodesCursor.getFieldEpisodeTitle();
+        String episodeDescription = episodesCursor.getFieldEpisodeDescription();
+        String episodeDownloadUrl = episodesCursor.getFieldDownloadUrl();
+        Float rating = episodesCursor.getFieldRating();
+        float ratingPercent = (float) ((rating * 100.0) / 5.0);
+        RatingCompat ratingCompat = RatingCompat.newPercentageRating(ratingPercent);
+        String episodeWriter = getWriterForEpisodeId(episodeNumber);
+
+        String artist = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.e_g_marshall);
+        String genre = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.genre);
+        String iconUrl = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.icon_url);
+        Drawable iconDrawable = ResourcesCompat.getDrawable(RadioTheaterApplication.getRadioTheaterApplicationContext().getResources(), R.drawable.logo_icon, null);
+        Bitmap iconBitmap = BitmapHelper.drawableToBitmap(iconDrawable);
+        int totalTrackCount = Integer.valueOf(RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.episodes_count));
+        int duration = 60 * 60 * 1000; // on-hour in ms
+        String id = String.valueOf(episodeNumber); // unique ID
+
+        LogHelper.d(TAG, "found episode: #"+episodeNumber+" '"+episodeTitle+"' by "+episodeWriter);
+
+        // Adding the episode source to the MediaMetadata (and consequently using it in the
+        // mediaSession.setMetadata) is not a good idea for a real world player app, because
+        // the session metadata can be accessed by notification listeners.
+
         //noinspection ResourceType
         return new MediaMetadataCompat.Builder()
                 .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, id)
-                .putString(MusicProviderSource.CUSTOM_METADATA_TRACK_SOURCE, source)
-                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, album)
+                .putString(MusicProviderSource.CUSTOM_METADATA_TRACK_SOURCE, episodeDownloadUrl)
+                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, episodeTitle)
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
+                .putString(MediaMetadataCompat.METADATA_KEY_WRITER, episodeWriter)
                 .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, duration)
+                .putString(MediaMetadataCompat.METADATA_KEY_DATE, airdate)
+                .putLong(MediaMetadataCompat.METADATA_KEY_YEAR, airdate_year)
                 .putString(MediaMetadataCompat.METADATA_KEY_GENRE, genre)
+                .putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, iconBitmap)
                 .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, iconUrl)
-                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
-                .putLong(MediaMetadataCompat.METADATA_KEY_TRACK_NUMBER, trackNumber)
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, episodeTitle)
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, episodeDescription)
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_DESCRIPTION, episodeDescription)
+                .putLong(MediaMetadataCompat.METADATA_KEY_TRACK_NUMBER, episodeNumber)
                 .putLong(MediaMetadataCompat.METADATA_KEY_NUM_TRACKS, totalTrackCount)
+                .putRating(MediaMetadataCompat.METADATA_KEY_RATING, ratingCompat)
                 .build();
     }
 
-    /**
-     * Download a JSON file from a server, parse the content and return the JSON
-     * object.
-     *
-     * @return result JSONObject containing the parsed representation.
-     */
-    private JSONObject fetchJSONFromUrl(String urlString) throws JSONException {
-        BufferedReader reader = null;
-        try {
-            URLConnection urlConnection = new URL(urlString).openConnection();
-            reader = new BufferedReader(new InputStreamReader(
-                    urlConnection.getInputStream(), "iso-8859-1"));
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
-            return new JSONObject(sb.toString());
-        } catch (JSONException e) {
-            throw e;
-        } catch (Exception e) {
-            LogHelper.e(TAG, "Failed to parse the json for media list", e);
-            return null;
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    // ignore
-                }
-            }
-        }
-    }
 }

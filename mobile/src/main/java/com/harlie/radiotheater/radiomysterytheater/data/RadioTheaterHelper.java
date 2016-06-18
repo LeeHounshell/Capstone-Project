@@ -55,6 +55,7 @@ public class RadioTheaterHelper extends SQLiteOpenHelper {
             + ActorsEpisodesColumns.TABLE_NAME + " ( "
             + ActorsEpisodesColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + ActorsEpisodesColumns.FIELD_ACTOR_ID + " INTEGER NOT NULL, "
+            + ActorsEpisodesColumns.FIELD_ACTOR_NAME + " TEXT NOT NULL, "
             + ActorsEpisodesColumns.FIELD_EPISODE_NUMBER + " INTEGER NOT NULL "
             + ", CONSTRAINT field_unique UNIQUE (field_actor_id, field_episode_number) ON CONFLICT ABORT"
             + " );";
@@ -104,7 +105,8 @@ public class RadioTheaterHelper extends SQLiteOpenHelper {
             + EpisodesActorsColumns.TABLE_NAME + " ( "
             + EpisodesActorsColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + EpisodesActorsColumns.FIELD_EPISODE_NUMBER + " INTEGER NOT NULL, "
-            + EpisodesActorsColumns.FIELD_ACTOR_ID + " INTEGER NOT NULL "
+            + EpisodesActorsColumns.FIELD_ACTOR_ID + " INTEGER NOT NULL, "
+            + EpisodesActorsColumns.FIELD_ACTOR_NAME + " TEXT NOT NULL "
             + ", CONSTRAINT field_unique UNIQUE (field_episode_number, field_actor_id) ON CONFLICT ABORT"
             + " );";
 
@@ -112,7 +114,8 @@ public class RadioTheaterHelper extends SQLiteOpenHelper {
             + EpisodesWritersColumns.TABLE_NAME + " ( "
             + EpisodesWritersColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + EpisodesWritersColumns.FIELD_EPISODE_NUMBER + " INTEGER NOT NULL, "
-            + EpisodesWritersColumns.FIELD_WRITER_ID + " INTEGER NOT NULL "
+            + EpisodesWritersColumns.FIELD_WRITER_ID + " INTEGER NOT NULL, "
+            + EpisodesWritersColumns.FIELD_WRITER_NAME + " TEXT NOT NULL "
             + ", CONSTRAINT field_unique UNIQUE (field_episode_number, field_writer_id) ON CONFLICT ABORT"
             + " );";
 
@@ -130,6 +133,7 @@ public class RadioTheaterHelper extends SQLiteOpenHelper {
             + WritersEpisodesColumns.TABLE_NAME + " ( "
             + WritersEpisodesColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + WritersEpisodesColumns.FIELD_WRITER_ID + " INTEGER NOT NULL, "
+            + WritersEpisodesColumns.FIELD_WRITER_NAME + " TEXT NOT NULL, "
             + WritersEpisodesColumns.FIELD_EPISODE_NUMBER + " INTEGER NOT NULL "
             + ", CONSTRAINT field_unique UNIQUE (field_writer_id, field_episode_number) ON CONFLICT ABORT"
             + " );";

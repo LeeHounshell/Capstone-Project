@@ -29,6 +29,13 @@ public interface ActorsEpisodesModel extends BaseModel {
     long getFieldActorId();
 
     /**
+     * Get the {@code field_actor_name} value.
+     * Cannot be {@code null}.
+     */
+    @NonNull
+    String getFieldActorName();
+
+    /**
      * Get the {@code field_episode_number} value.
      */
     long getFieldEpisodeNumber();

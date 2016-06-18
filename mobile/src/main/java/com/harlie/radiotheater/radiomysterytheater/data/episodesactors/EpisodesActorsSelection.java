@@ -168,4 +168,44 @@ public class EpisodesActorsSelection extends AbstractSelection<EpisodesActorsSel
         orderBy(EpisodesActorsColumns.FIELD_ACTOR_ID, false);
         return this;
     }
+
+    public EpisodesActorsSelection fieldActorName(String... value) {
+        addEquals(EpisodesActorsColumns.FIELD_ACTOR_NAME, value);
+        return this;
+    }
+
+    public EpisodesActorsSelection fieldActorNameNot(String... value) {
+        addNotEquals(EpisodesActorsColumns.FIELD_ACTOR_NAME, value);
+        return this;
+    }
+
+    public EpisodesActorsSelection fieldActorNameLike(String... value) {
+        addLike(EpisodesActorsColumns.FIELD_ACTOR_NAME, value);
+        return this;
+    }
+
+    public EpisodesActorsSelection fieldActorNameContains(String... value) {
+        addContains(EpisodesActorsColumns.FIELD_ACTOR_NAME, value);
+        return this;
+    }
+
+    public EpisodesActorsSelection fieldActorNameStartsWith(String... value) {
+        addStartsWith(EpisodesActorsColumns.FIELD_ACTOR_NAME, value);
+        return this;
+    }
+
+    public EpisodesActorsSelection fieldActorNameEndsWith(String... value) {
+        addEndsWith(EpisodesActorsColumns.FIELD_ACTOR_NAME, value);
+        return this;
+    }
+
+    public EpisodesActorsSelection orderByFieldActorName(boolean desc) {
+        orderBy(EpisodesActorsColumns.FIELD_ACTOR_NAME, desc);
+        return this;
+    }
+
+    public EpisodesActorsSelection orderByFieldActorName() {
+        orderBy(EpisodesActorsColumns.FIELD_ACTOR_NAME, false);
+        return this;
+    }
 }

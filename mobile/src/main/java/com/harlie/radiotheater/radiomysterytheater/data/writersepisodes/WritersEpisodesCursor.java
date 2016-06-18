@@ -48,6 +48,18 @@ public class WritersEpisodesCursor extends AbstractCursor implements WritersEpis
     }
 
     /**
+     * Get the {@code field_writer_name} value.
+     * Cannot be {@code null}.
+     */
+    @NonNull
+    public String getFieldWriterName() {
+        String res = getStringOrNull(WritersEpisodesColumns.FIELD_WRITER_NAME);
+        if (res == null)
+            throw new NullPointerException("The value of 'field_writer_name' in the database was null, which is not allowed according to the model definition");
+        return res;
+    }
+
+    /**
      * Get the {@code field_episode_number} value.
      */
     public long getFieldEpisodeNumber() {

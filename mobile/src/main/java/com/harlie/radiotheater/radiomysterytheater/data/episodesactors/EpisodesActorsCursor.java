@@ -56,4 +56,16 @@ public class EpisodesActorsCursor extends AbstractCursor implements EpisodesActo
             throw new NullPointerException("The value of 'field_actor_id' in the database was null, which is not allowed according to the model definition");
         return res;
     }
+
+    /**
+     * Get the {@code field_actor_name} value.
+     * Cannot be {@code null}.
+     */
+    @NonNull
+    public String getFieldActorName() {
+        String res = getStringOrNull(EpisodesActorsColumns.FIELD_ACTOR_NAME);
+        if (res == null)
+            throw new NullPointerException("The value of 'field_actor_name' in the database was null, which is not allowed according to the model definition");
+        return res;
+    }
 }

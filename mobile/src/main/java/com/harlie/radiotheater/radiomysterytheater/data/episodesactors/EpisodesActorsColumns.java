@@ -41,6 +41,8 @@ public class EpisodesActorsColumns implements BaseColumns {
 
     public static final String FIELD_ACTOR_ID = "field_actor_id";
 
+    public static final String FIELD_ACTOR_NAME = "field_actor_name";
+
 
     public static final String DEFAULT_ORDER = TABLE_NAME + "." +_ID;
 
@@ -48,7 +50,8 @@ public class EpisodesActorsColumns implements BaseColumns {
     public static final String[] ALL_COLUMNS = new String[] {
             _ID,
             FIELD_EPISODE_NUMBER,
-            FIELD_ACTOR_ID
+            FIELD_ACTOR_ID,
+            FIELD_ACTOR_NAME
     };
     // @formatter:on
 
@@ -57,6 +60,7 @@ public class EpisodesActorsColumns implements BaseColumns {
         for (String c : projection) {
             if (c.equals(FIELD_EPISODE_NUMBER) || c.contains("." + FIELD_EPISODE_NUMBER)) return true;
             if (c.equals(FIELD_ACTOR_ID) || c.contains("." + FIELD_ACTOR_ID)) return true;
+            if (c.equals(FIELD_ACTOR_NAME) || c.contains("." + FIELD_ACTOR_NAME)) return true;
         }
         return false;
     }

@@ -5,7 +5,6 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.database.CursorIndexOutOfBoundsException;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -38,11 +37,9 @@ import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpi
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesSelection;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
-import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesContentValues;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesSelection;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
-import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.NetworkHelper;
 
