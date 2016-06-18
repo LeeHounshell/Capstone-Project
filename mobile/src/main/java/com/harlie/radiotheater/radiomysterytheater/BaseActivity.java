@@ -59,7 +59,7 @@ public class BaseActivity extends AppCompatActivity {
     private final static String TAG = "LEE: <" + BaseActivity.class.getSimpleName() + ">";
 
     protected static final boolean COPY_PACKAGED_SQLITE_DATABASE = true;
-    protected static final int TOTAL_SIZE_TO_COPY_IN_BYTES = 1486848;
+    protected static final int TOTAL_SIZE_TO_COPY_IN_BYTES = 1347584;
     protected static final String FIREBASE_WRITERS_URL = "radiomysterytheater/0/writers";
     protected static final String FIREBASE_ACTORS_URL = "radiomysterytheater/1/actors";
     protected static final String FIREBASE_SHOWS_URL = "radiomysterytheater/2/shows";
