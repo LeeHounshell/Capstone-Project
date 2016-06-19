@@ -63,7 +63,6 @@ public class AutoplayActivity extends BaseActivity
     private AppCompatButton mAutoPlay;
     private CircularSlider mCircleSlider;
     private AudioManager mAudioManager;
-    private ComponentName mRemoteControlResponder;
     private int mAudioFocusRequstResult;
     private MediaBrowserCompat mMediaBrowser;
     private MediaControllerCompat mMediaController;
@@ -497,18 +496,12 @@ public class AutoplayActivity extends BaseActivity
     protected void onResume() {
         LogHelper.d(TAG, "onResume");
         super.onResume();
-        if (mAudioManager != null && mRemoteControlResponder != null) {
-            mAudioManager.registerMediaButtonEventReceiver(mRemoteControlResponder);
-        }
     }
 
     @Override
     protected void onPause() {
         LogHelper.d(TAG, "onPause");
         super.onPause();
-        if (mAudioManager != null && mRemoteControlResponder != null) {
-            mAudioManager.unregisterMediaButtonEventReceiver(mRemoteControlResponder);
-        }
     }
 
     @Override
@@ -519,7 +512,6 @@ public class AutoplayActivity extends BaseActivity
         LogHelper.d(TAG, "---> mMediaBrowser.connect();");
         mMediaBrowser.connect();
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        mRemoteControlResponder = new ComponentName(getPackageName(), RadioTheaterReceiver.class.getName());
         // request audio focus from the system
         mAudioFocusRequstResult = mAudioManager.requestAudioFocus(mAudioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
     }
@@ -547,7 +539,6 @@ public class AutoplayActivity extends BaseActivity
         mAutoPlay = null;
         mCircleSlider = null;
         mAudioManager = null;
-        mRemoteControlResponder = null;
         mMediaBrowser = null;
         mMediaController = null;
         mMediaId = null;
