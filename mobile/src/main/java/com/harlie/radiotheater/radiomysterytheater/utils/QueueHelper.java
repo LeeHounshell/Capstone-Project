@@ -37,19 +37,19 @@ import static com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper.ME
  * Utility class to help on queue related tasks.
  */
 public class QueueHelper {
-
-    private static final String TAG = LogHelper.makeLogTag(QueueHelper.class);
+    private final static String TAG = "LEE: <" + QueueHelper.class.getSimpleName() + ">";
 
     private static final int RANDOM_QUEUE_SIZE = 10;
 
-    public static List<MediaSessionCompat.QueueItem> getPlayingQueue(String mediaId,
-            MusicProvider musicProvider) {
+    public static List<MediaSessionCompat.QueueItem> getPlayingQueue(String mediaId, MusicProvider musicProvider)
+    {
+        LogHelper.v(TAG, "getPlayingQueue: mediaId="+mediaId+", musicProvider="+musicProvider);
 
         // extract the browsing hierarchy from the media ID:
         String[] hierarchy = MediaIDHelper.getHierarchy(mediaId);
 
         if (hierarchy.length != 2) {
-            LogHelper.e(TAG, "Could not build a playing queue for this mediaId: ", mediaId);
+            LogHelper.e(TAG, "could not build a playing queue for this mediaId: ", mediaId);
             return null;
         }
 
@@ -73,11 +73,9 @@ public class QueueHelper {
         return convertToQueue(tracks, hierarchy[0], hierarchy[1]);
     }
 
-    public static List<MediaSessionCompat.QueueItem> getPlayingQueueFromSearch(String query,
-            Bundle queryParams, MusicProvider musicProvider) {
-
-        LogHelper.d(TAG, "Creating playing queue for musics from search: ", query,
-            " params=", queryParams);
+    public static List<MediaSessionCompat.QueueItem> getPlayingQueueFromSearch(String query, Bundle queryParams, MusicProvider musicProvider)
+    {
+        LogHelper.d(TAG, "getPlayingQueueFromSearch: creating playing queue from search: ", query, " params=", queryParams);
 
         VoiceSearchParams params = new VoiceSearchParams(query, queryParams);
 
@@ -115,7 +113,9 @@ public class QueueHelper {
     }
 
 
-    public static int getMusicIndexOnQueue(Iterable<MediaSessionCompat.QueueItem> queue, String mediaId) {
+    public static int getMusicIndexOnQueue(Iterable<MediaSessionCompat.QueueItem> queue, String mediaId)
+    {
+        LogHelper.v(TAG, "getMusicIndexOnQueue: mediaId="+mediaId);
         int index = 0;
         if (queue != null) {
             for (MediaSessionCompat.QueueItem item : queue) {
@@ -128,7 +128,9 @@ public class QueueHelper {
         return -1;
     }
 
-    public static int getMusicIndexOnQueue(Iterable<MediaSessionCompat.QueueItem> queue, long queueId) {
+    public static int getMusicIndexOnQueue(Iterable<MediaSessionCompat.QueueItem> queue, long queueId)
+    {
+        LogHelper.v(TAG, "getMusicIndexOnQueue: queueId="+queueId);
         int index = 0;
         for (MediaSessionCompat.QueueItem item : queue) {
             if (queueId == item.getQueueId()) {
@@ -139,8 +141,9 @@ public class QueueHelper {
         return -1;
     }
 
-    private static List<MediaSessionCompat.QueueItem> convertToQueue(
-            Iterable<MediaMetadataCompat> tracks, String... categories) {
+    private static List<MediaSessionCompat.QueueItem> convertToQueue(Iterable<MediaMetadataCompat> tracks, String... categories)
+    {
+        LogHelper.v(TAG, "convertToQueue");
         List<MediaSessionCompat.QueueItem> queue = new ArrayList<>();
         int count = 0;
         for (MediaMetadataCompat track : tracks) {
@@ -169,7 +172,9 @@ public class QueueHelper {
      * @param musicProvider the provider used for fetching music.
      * @return list containing {@link MediaSessionCompat.QueueItem}'s
      */
-    public static List<MediaSessionCompat.QueueItem> getRandomQueue(MusicProvider musicProvider) {
+    public static List<MediaSessionCompat.QueueItem> getRandomQueue(MusicProvider musicProvider)
+    {
+        LogHelper.v(TAG, "getRandomQueue");
         List<MediaMetadataCompat> result = new ArrayList<>(RANDOM_QUEUE_SIZE);
         Iterable<MediaMetadataCompat> shuffled = musicProvider.getShuffledMusic();
         for (MediaMetadataCompat metadata: shuffled) {
@@ -182,7 +187,9 @@ public class QueueHelper {
         return convertToQueue(result, MEDIA_ID_MUSICS_BY_SEARCH, "random");
     }
 
-    public static boolean isIndexPlayable(int index, List<MediaSessionCompat.QueueItem> queue) {
+    public static boolean isIndexPlayable(int index, List<MediaSessionCompat.QueueItem> queue)
+    {
+        LogHelper.v(TAG, "isIndexPlayable: index="+index);
         return (queue != null && index >= 0 && index < queue.size());
     }
 }

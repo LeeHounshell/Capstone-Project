@@ -96,10 +96,11 @@ import static com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper.ME
  * @see <a href="README.md">README.md</a> for more details.
  *
  */
-public class RadioTheaterService extends MediaBrowserServiceCompat implements
-        PlaybackManager.PlaybackServiceCallback {
-
-    private static final String TAG = LogHelper.makeLogTag(RadioTheaterService.class);
+public class RadioTheaterService
+        extends MediaBrowserServiceCompat
+        implements PlaybackManager.PlaybackServiceCallback
+{
+    private final static String TAG = "LEE: <" + RadioTheaterService.class.getSimpleName() + ">";
 
     // Extra on MediaSession that contains the Cast device name currently connected to
     public static final String EXTRA_CONNECTED_CAST = "com.harlie.radiotheater.radiomysterytheater.CAST_NAME";
@@ -138,8 +139,8 @@ public class RadioTheaterService extends MediaBrowserServiceCompat implements
     private final VideoCastConsumerImpl mCastConsumer = new VideoCastConsumerImpl() {
 
         @Override
-        public void onApplicationConnected(ApplicationMetadata appMetadata, String sessionId,
-                                           boolean wasLaunched) {
+        public void onApplicationConnected(ApplicationMetadata appMetadata, String sessionId, boolean wasLaunched) {
+            LogHelper.v(TAG, "onApplicationConnected");
             // In case we are casting, send the device name as an extra on MediaSession metadata.
             mSessionExtras.putString(EXTRA_CONNECTED_CAST, VideoCastManager.getInstance().getDeviceName());
             mSession.setExtras(mSessionExtras);
@@ -151,7 +152,7 @@ public class RadioTheaterService extends MediaBrowserServiceCompat implements
 
         @Override
         public void onDisconnectionReason(int reason) {
-            LogHelper.d(TAG, "onDisconnectionReason");
+            LogHelper.v(TAG, "onDisconnectionReason");
             // This is our final chance to update the underlying stream position
             // In onDisconnected(), the underlying CastPlayback#mVideoCastConsumer
             // is disconnected and hence we update our local value of stream position
@@ -161,7 +162,7 @@ public class RadioTheaterService extends MediaBrowserServiceCompat implements
 
         @Override
         public void onDisconnected() {
-            LogHelper.d(TAG, "onDisconnected");
+            LogHelper.v(TAG, "onDisconnected");
             mSessionExtras.remove(EXTRA_CONNECTED_CAST);
             mSession.setExtras(mSessionExtras);
             Playback playback = new LocalPlayback(RadioTheaterService.this, mMusicProvider);
@@ -177,7 +178,7 @@ public class RadioTheaterService extends MediaBrowserServiceCompat implements
     @Override
     public void onCreate() {
         super.onCreate();
-        LogHelper.d(TAG, "onCreate");
+        LogHelper.v(TAG, "onCreate");
 
         mMusicProvider = new MusicProvider();
 
@@ -282,7 +283,7 @@ public class RadioTheaterService extends MediaBrowserServiceCompat implements
      */
     @Override
     public void onDestroy() {
-        LogHelper.d(TAG, "onDestroy");
+        LogHelper.v(TAG, "onDestroy");
         unregisterCarConnectionReceiver();
         // Service is being killed, so make sure we release our resources
         mPlaybackManager.handleStopRequest(null);
@@ -293,17 +294,14 @@ public class RadioTheaterService extends MediaBrowserServiceCompat implements
     }
 
     @Override
-    public BrowserRoot onGetRoot(@NonNull String clientPackageName, int clientUid,
-                                 Bundle rootHints) {
-        LogHelper.d(TAG, "OnGetRoot: clientPackageName=" + clientPackageName,
-                "; clientUid=" + clientUid + " ; rootHints=", rootHints);
+    public BrowserRoot onGetRoot(@NonNull String clientPackageName, int clientUid, Bundle rootHints) {
+        LogHelper.v(TAG, "onGetRoot: clientPackageName=" + clientPackageName, "; clientUid=" + clientUid + " ; rootHints=", rootHints);
         // To ensure you are not allowing any arbitrary app to browse your app's contents, you
         // need to check the origin:
         if (!mPackageValidator.isCallerAllowed(this, clientPackageName, clientUid)) {
             // If the request comes from an untrusted package, return null. No further calls will
             // be made to other media browsing methods.
-            LogHelper.w(TAG, "OnGetRoot: IGNORING request from untrusted package "
-                    + clientPackageName);
+            LogHelper.w(TAG, "OnGetRoot: IGNORING request from untrusted package " + clientPackageName);
             return null;
         }
         //noinspection StatementWithEmptyBody
@@ -327,7 +325,7 @@ public class RadioTheaterService extends MediaBrowserServiceCompat implements
     @Override
     public void onLoadChildren(@NonNull final String parentMediaId,
                                @NonNull final Result<List<MediaItem>> result) {
-        LogHelper.d(TAG, "OnLoadChildren: parentMediaId=", parentMediaId);
+        LogHelper.v(TAG, "onLoadChildren: parentMediaId=", parentMediaId);
         result.sendResult(mMusicProvider.getChildren(parentMediaId, getResources()));
     }
 
@@ -336,6 +334,7 @@ public class RadioTheaterService extends MediaBrowserServiceCompat implements
      */
     @Override
     public void onPlaybackStart() {
+        LogHelper.v(TAG, "onPlaybackStart");
         if (!mSession.isActive()) {
             LogHelper.v(TAG, "*** WE ARE THE DEFAULT MEDIA RECEIVER NOW ***");
             mSession.setActive(true);
@@ -355,6 +354,7 @@ public class RadioTheaterService extends MediaBrowserServiceCompat implements
      */
     @Override
     public void onPlaybackStop() {
+        LogHelper.v(TAG, "onPlaybackStop");
         // Reset the delayed stop handler, so after STOP_DELAY it will be executed again,
         // potentially stopping the service.
         mDelayedStopHandler.removeCallbacksAndMessages(null);
@@ -364,15 +364,18 @@ public class RadioTheaterService extends MediaBrowserServiceCompat implements
 
     @Override
     public void onNotificationRequired() {
+        LogHelper.v(TAG, "onNotificationRequired");
         mMediaNotificationManager.startNotification();
     }
 
     @Override
     public void onPlaybackStateUpdated(PlaybackStateCompat newState) {
+        LogHelper.v(TAG, "onPlaybackStateUpdated");
         mSession.setPlaybackState(newState);
     }
 
     private void registerCarConnectionReceiver() {
+        LogHelper.v(TAG, "registerCarConnectionReceiver");
         IntentFilter filter = new IntentFilter(CarHelper.ACTION_MEDIA_STATUS);
         mCarConnectionReceiver = new BroadcastReceiver() {
             @Override
@@ -387,6 +390,7 @@ public class RadioTheaterService extends MediaBrowserServiceCompat implements
     }
 
     private void unregisterCarConnectionReceiver() {
+        LogHelper.v(TAG, "unregisterCarConnectionReceiver");
         unregisterReceiver(mCarConnectionReceiver);
     }
 
@@ -402,6 +406,7 @@ public class RadioTheaterService extends MediaBrowserServiceCompat implements
 
         @Override
         public void handleMessage(Message msg) {
+            LogHelper.v(TAG, "handleMessage: msg="+msg);
             RadioTheaterService service = mWeakReference.get();
             if (service != null && service.mPlaybackManager.getPlayback() != null) {
                 if (service.mPlaybackManager.getPlayback().isPlaying()) {

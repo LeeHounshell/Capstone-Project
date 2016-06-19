@@ -23,6 +23,7 @@ package com.harlie.radiotheater.radiomysterytheater.model;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.RatingCompat;
@@ -37,9 +38,13 @@ import com.harlie.radiotheater.radiomysterytheater.data.episodeswriters.Episodes
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 import com.harlie.radiotheater.radiomysterytheater.utils.BitmapHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
+import com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+
+import static com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper.MEDIA_ID_MUSICS_BY_GENRE;
+import static com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper.createMediaID;
 
 /**
  * Utility class to get a list of Episodes's based on a server-side JSON configuration.
@@ -48,10 +53,13 @@ import java.util.Iterator;
  * so the media's ultimate "source" can still be considered as sesrver-side JSON.
  */
 public class RemoteJSONSource implements MusicProviderSource {
-    private static final String TAG = LogHelper.makeLogTag(RemoteJSONSource.class);
+    private final static String TAG = "LEE: <" + RemoteJSONSource.class.getSimpleName() + ">";
+
+    private String mMediaId;
 
     @Override
     public Iterator<MediaMetadataCompat> iterator() {
+        mMediaId = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.genre);
         ArrayList<MediaMetadataCompat> tracks = new ArrayList<>();
         EpisodesCursor episodesCursor = getEpisodes();
         if (episodesCursor != null) {
@@ -110,7 +118,7 @@ public class RemoteJSONSource implements MusicProviderSource {
         Long airdate_year = Long.valueOf(airdate.substring(0, 4));
         String episodeTitle = episodesCursor.getFieldEpisodeTitle();
         String episodeDescription = episodesCursor.getFieldEpisodeDescription();
-        String episodeDownloadUrl = episodesCursor.getFieldDownloadUrl();
+        String episodeDownloadUrl = Uri.parse("http://"+episodesCursor.getFieldDownloadUrl()).toString();
         Float rating = episodesCursor.getFieldRating();
         float ratingPercent = (float) ((rating * 100.0) / 5.0);
         RatingCompat ratingCompat = RatingCompat.newPercentageRating(ratingPercent);
@@ -123,9 +131,10 @@ public class RemoteJSONSource implements MusicProviderSource {
         Bitmap iconBitmap = BitmapHelper.drawableToBitmap(iconDrawable);
         int totalTrackCount = Integer.valueOf(RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.episodes_count));
         int duration = 60 * 60 * 1000; // on-hour in ms
-        String id = String.valueOf(episodeDownloadUrl.hashCode()); // unique ID
+        String id = String.valueOf(episodeDownloadUrl.hashCode());
+        //String episodeMediaId = MediaIDHelper.createMediaID(id, MediaIDHelper.MEDIA_ID_ROOT, mMediaId);
 
-        LogHelper.d(TAG, "found episode: #"+episodeNumber+" '"+episodeTitle+"' by "+episodeWriter+" with mediaId="+id);
+        LogHelper.d(TAG, "found episode: #"+episodeNumber+" '"+episodeTitle+"' by "+episodeWriter+" with id="+id);
 
         // Adding the episode source to the MediaMetadata (and consequently using it in the
         // mediaSession.setMetadata) is not a good idea for a real world player app, because

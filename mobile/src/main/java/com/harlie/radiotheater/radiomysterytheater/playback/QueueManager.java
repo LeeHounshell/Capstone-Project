@@ -45,7 +45,7 @@ import java.util.List;
  * given MusicProvider to provide the actual media metadata.
  */
 public class QueueManager {
-    private static final String TAG = LogHelper.makeLogTag(QueueManager.class);
+    private final static String TAG = "LEE: <" + QueueManager.class.getSimpleName() + ">";
 
     private MusicProvider mMusicProvider;
     private MetadataUpdateListener mListener;
@@ -57,7 +57,9 @@ public class QueueManager {
 
     public QueueManager(@NonNull MusicProvider musicProvider,
                         @NonNull Resources resources,
-                        @NonNull MetadataUpdateListener listener) {
+                        @NonNull MetadataUpdateListener listener)
+    {
+        LogHelper.v(TAG, "QueueManager");
         this.mMusicProvider = musicProvider;
         this.mListener = listener;
         this.mResources = resources;
@@ -67,18 +69,18 @@ public class QueueManager {
     }
 
     public boolean isSameBrowsingCategory(@NonNull String mediaId) {
+        LogHelper.v(TAG, "isSameBrowsingCategory");
         String[] newBrowseHierarchy = MediaIDHelper.getHierarchy(mediaId);
         MediaSessionCompat.QueueItem current = getCurrentMusic();
         if (current == null) {
             return false;
         }
-        String[] currentBrowseHierarchy = MediaIDHelper.getHierarchy(
-                current.getDescription().getMediaId());
-
+        String[] currentBrowseHierarchy = MediaIDHelper.getHierarchy(current.getDescription().getMediaId());
         return Arrays.equals(newBrowseHierarchy, currentBrowseHierarchy);
     }
 
     private void setCurrentQueueIndex(int index) {
+        LogHelper.v(TAG, "setCurrentQueueIndex: index="+index);
         if (index >= 0 && index < mPlayingQueue.size()) {
             mCurrentIndex = index;
             mListener.onCurrentQueueIndexUpdated(mCurrentIndex);
@@ -86,6 +88,7 @@ public class QueueManager {
     }
 
     public boolean setCurrentQueueItem(long queueId) {
+        LogHelper.v(TAG, "setCurrentQueueItem: queueId="+queueId);
         // set the current index on queue from the queue Id:
         int index = QueueHelper.getMusicIndexOnQueue(mPlayingQueue, queueId);
         setCurrentQueueIndex(index);
@@ -93,6 +96,7 @@ public class QueueManager {
     }
 
     public boolean setCurrentQueueItem(String mediaId) {
+        LogHelper.v(TAG, "setCurrentQueueItem: mediaId="+mediaId);
         // set the current index on queue from the music Id:
         int index = QueueHelper.getMusicIndexOnQueue(mPlayingQueue, mediaId);
         setCurrentQueueIndex(index);
@@ -100,6 +104,7 @@ public class QueueManager {
     }
 
     public boolean skipQueuePosition(int amount) {
+        LogHelper.v(TAG, "skipQueuePosition: amount="+amount);
         int index = mCurrentIndex + amount;
         if (index < 0) {
             // skip backwards before the first song will keep you on the first song
@@ -118,17 +123,18 @@ public class QueueManager {
     }
 
     public void setQueueFromSearch(String query, Bundle extras) {
+        LogHelper.v(TAG, "setQueueFromSearch: query="+query);
         setCurrentQueue(mResources.getString(R.string.search_queue_title),
                 QueueHelper.getPlayingQueueFromSearch(query, extras, mMusicProvider));
     }
 
     public void setRandomQueue() {
-        setCurrentQueue(mResources.getString(R.string.random_queue_title),
-                QueueHelper.getRandomQueue(mMusicProvider));
+        LogHelper.v(TAG, "setRandomQueue");
+        setCurrentQueue(mResources.getString(R.string.random_queue_title), QueueHelper.getRandomQueue(mMusicProvider));
     }
 
     public void setQueueFromMusic(String mediaId) {
-        LogHelper.d(TAG, "setQueueFromMusic", mediaId);
+        LogHelper.v(TAG, "setQueueFromMusic: mediaId="+mediaId);
 
         // The mediaId used here is not the unique musicId. This one comes from the
         // MediaBrowser, and is actually a "hierarchy-aware mediaID": a concatenation of
@@ -149,6 +155,7 @@ public class QueueManager {
     }
 
     public MediaSessionCompat.QueueItem getCurrentMusic() {
+        LogHelper.v(TAG, "getCurrentMusic");
         if (!QueueHelper.isIndexPlayable(mCurrentIndex, mPlayingQueue)) {
             return null;
         }
@@ -156,6 +163,7 @@ public class QueueManager {
     }
 
     public int getCurrentQueueSize() {
+        LogHelper.v(TAG, "getCurrentQueueSize");
         if (mPlayingQueue == null) {
             return 0;
         }
@@ -163,11 +171,12 @@ public class QueueManager {
     }
 
     protected void setCurrentQueue(String title, List<MediaSessionCompat.QueueItem> newQueue) {
+        LogHelper.v(TAG, "setCurrentQueue");
         setCurrentQueue(title, newQueue, null);
     }
 
-    protected void setCurrentQueue(String title, List<MediaSessionCompat.QueueItem> newQueue,
-                                   String initialMediaId) {
+    protected void setCurrentQueue(String title, List<MediaSessionCompat.QueueItem> newQueue, String initialMediaId) {
+        LogHelper.v(TAG, "setCurrentQueue: title="+title);
         mPlayingQueue = newQueue;
         int index = 0;
         if (initialMediaId != null) {
@@ -178,6 +187,7 @@ public class QueueManager {
     }
 
     public void updateMetadata() {
+        LogHelper.v(TAG, "updateMetadata");
         MediaSessionCompat.QueueItem currentMusic = getCurrentMusic();
         if (currentMusic == null) {
             mListener.onMetadataRetrieveError();
@@ -219,8 +229,11 @@ public class QueueManager {
 
     public interface MetadataUpdateListener {
         void onMetadataChanged(MediaMetadataCompat metadata);
+
         void onMetadataRetrieveError();
+
         void onCurrentQueueIndexUpdated(int queueIndex);
+
         void onQueueUpdated(String title, List<MediaSessionCompat.QueueItem> newQueue);
     }
 }

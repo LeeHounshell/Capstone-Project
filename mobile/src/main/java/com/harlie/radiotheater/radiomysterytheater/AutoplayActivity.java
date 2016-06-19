@@ -48,6 +48,8 @@ import java.util.List;
 
 import me.angrybyte.circularslider.CircularSlider;
 
+import static com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper.MEDIA_ID_MUSICS_BY_GENRE;
+
 public class AutoplayActivity extends BaseActivity
 {
     private final static String TAG = "LEE: <" + AutoplayActivity.class.getSimpleName() + ">";
@@ -106,15 +108,11 @@ public class AutoplayActivity extends BaseActivity
                 @Override
                 public void onChildrenLoaded(@NonNull String parentId,
                                              @NonNull List<MediaBrowserCompat.MediaItem> children) {
-                    try {
-                        LogHelper.d(TAG, "********* onChildrenLoaded, parentId=" + parentId + "  count=" + children.size());
-                        for (MediaBrowserCompat.MediaItem item : children) {
-                            LogHelper.v(TAG, "item="+item.getDescription()+", MediaId="+item.getMediaId());
-                            mMediaId = item.getMediaId();
-                        }
-                    } catch (Throwable t) {
-                        LogHelper.e(TAG, "Error on childrenloaded", t);
+                    if (children == null || children.isEmpty()) {
+                        LogHelper.w(TAG, "onChildrenLoaded: NO CHILDREN!");
+                        return;
                     }
+                    LogHelper.d(TAG, "********* onChildrenLoaded, parentId=" + parentId + "  count=" + children.size());
                 }
 
                 @Override
@@ -137,7 +135,8 @@ public class AutoplayActivity extends BaseActivity
                         hidePlaybackControls();
                     }
 
-                    mMediaId = mMediaBrowser.getRoot();
+                    //mMediaId = mMediaBrowser.getRoot();
+                    mMediaId = getResources().getString(R.string.genre);
 
                     // Unsubscribing before subscribing is required if this mediaId already has a subscriber
                     // on this MediaBrowser instance. Subscribing to an already subscribed mediaId will replace
@@ -185,8 +184,7 @@ public class AutoplayActivity extends BaseActivity
                     if (shouldShowControls()) {
                         showPlaybackControls();
                     } else {
-                        LogHelper.d(TAG, "mediaControllerCallback.onMetadataChanged: " +
-                                "hiding controls because metadata is null");
+                        LogHelper.d(TAG, "mediaControllerCallback.onMetadataChanged: hiding the controls");
                         hidePlaybackControls();
                     }
                 }
@@ -259,8 +257,8 @@ public class AutoplayActivity extends BaseActivity
                         String airdate = episodesCursor.getFieldAirdate();
                         String episodeTitle = episodesCursor.getFieldEpisodeTitle();
                         String episodeDescription = episodesCursor.getFieldEpisodeDescription();
-                        String episodeWeblinkUrl = episodesCursor.getFieldWeblinkUrl();
-                        String episodeDownloadUrl = episodesCursor.getFieldDownloadUrl();
+                        String episodeWeblinkUrl = Uri.parse(episodesCursor.getFieldWeblinkUrl()).getEncodedPath();
+                        String episodeDownloadUrl = Uri.parse("http://"+episodesCursor.getFieldDownloadUrl()).toString();
                         Float rating = episodesCursor.getFieldRating();
                         Integer voteCount = episodesCursor.getFieldVoteCount();
                         episodesCursor.close();
@@ -318,10 +316,6 @@ public class AutoplayActivity extends BaseActivity
                 .build();
         mAdView.loadAd(adRequest);
         //#ENDIF
-
-        // manually (debug) start the RadioTheaterService
-        //Intent it = new Intent(this, RadioTheaterService.class);
-        //startService(it); // Start the Radio Theater service.
     }
 
     private void playPauseEpisode(long episodeNumber, String episodeTitle, String episodeDownloadUrl, boolean purchased, boolean downloaded) {
@@ -348,12 +342,13 @@ public class AutoplayActivity extends BaseActivity
                     // FIXME: scheduleSeekbarUpdate();
                     break;
                 default:
+                    mMediaId = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.genre);
                     Uri mediaUri = Uri.parse(episodeDownloadUrl);
                     LogHelper.d(TAG, "*** START PLAYBACK *** state="+state.getState()+", mMediaId="+mMediaId+", mediaUri="+mediaUri);
-                    mMediaId = String.valueOf(episodeDownloadUrl.hashCode());
+                    String id = String.valueOf(episodeDownloadUrl.hashCode());
+                    String episodeMediaId = MediaIDHelper.createMediaID(id, MediaIDHelper.MEDIA_ID_MUSICS_BY_GENRE, mMediaId);
                     Bundle bundle = new Bundle();
-                    mMediaController.getTransportControls().playFromMediaId(mMediaId, bundle);
-                    press_PLAY_PAUSE();
+                    mMediaController.getTransportControls().playFromMediaId(episodeMediaId, bundle);
             }
         }
     }
