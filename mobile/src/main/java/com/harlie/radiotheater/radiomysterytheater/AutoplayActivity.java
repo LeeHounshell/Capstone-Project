@@ -1,17 +1,20 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
-import android.app.PendingIntent;
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
@@ -26,6 +29,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 
 //#IFDEF 'FREE'
 import com.google.android.gms.ads.AdRequest;
@@ -36,6 +41,10 @@ import com.google.android.gms.ads.MobileAds;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
+import com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import me.angrybyte.circularslider.CircularSlider;
 
@@ -53,21 +62,104 @@ public class AutoplayActivity extends BaseActivity
 
     private AppCompatButton mAutoPlay;
     private CircularSlider mCircleSlider;
+    private AudioManager mAudioManager;
+    private ComponentName mRemoteControlResponder;
+    private int mAudioFocusRequstResult;
     private MediaBrowserCompat mMediaBrowser;
     private MediaControllerCompat mMediaController;
-    private MediaSessionCompat mMediaSession;
-    private ComponentName mMediaButtonReceiver;
+    private String mMediaId;
 
+    static final int STATE_INVALID = -1;
+    static final int STATE_NONE = 0;
+    static final int STATE_PLAYABLE = 1;
+    static final int STATE_PAUSED = 2;
+    static final int STATE_PLAYING = 3;
+
+    // Callback for Audio Focus
+    private final AudioManager.OnAudioFocusChangeListener mAudioFocusChangeListener =
+        new AudioManager.OnAudioFocusChangeListener() {
+            public void onAudioFocusChange(int focusChange) {
+                LogHelper.v(TAG, "===> onAudioFocusChange="+focusChange+" <===");
+                if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+                    LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_GAIN <<---");
+                }
+                else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+                    LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_LOSS <<---");
+                    mAudioFocusRequstResult = 0;
+                    // FIXME: stop playback
+                }
+                else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
+                    LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_LOSS_TRANSIENT <<---");
+                    mAudioFocusRequstResult = 0;
+                    // FIXME: pause playback
+                }
+                else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
+                    LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK <<---");
+                    mAudioFocusRequstResult = 0;
+                    // FIXME: lower volume
+                }
+            }
+        };
+
+    // Callback for media subscription
+    private final MediaBrowserCompat.SubscriptionCallback mSubscriptionCallback =
+            new MediaBrowserCompat.SubscriptionCallback() {
+                @Override
+                public void onChildrenLoaded(@NonNull String parentId,
+                                             @NonNull List<MediaBrowserCompat.MediaItem> children) {
+                    try {
+                        LogHelper.d(TAG, "********* onChildrenLoaded, parentId=" + parentId + "  count=" + children.size());
+                        for (MediaBrowserCompat.MediaItem item : children) {
+                            LogHelper.v(TAG, "item="+item.getDescription()+", MediaId="+item.getMediaId());
+                            mMediaId = item.getMediaId();
+                        }
+                    } catch (Throwable t) {
+                        LogHelper.e(TAG, "Error on childrenloaded", t);
+                    }
+                }
+
+                @Override
+                public void onError(@NonNull String id) {
+                    LogHelper.e(TAG, "browse subscription onError, id=" + id);
+                }
+            };
+
+    // Callback for Media Browser Connection
     private final MediaBrowserCompat.ConnectionCallback mConnectionCallback =
             new MediaBrowserCompat.ConnectionCallback() {
                 @Override
                 public void onConnected() {
-                    LogHelper.d(TAG, "onConnected");
+                    LogHelper.d(TAG, "MediaBrowserCompat.ConnectionCallback onConnected <<<---------");
+
                     try {
                         connectToSession(mMediaBrowser.getSessionToken());
                     } catch (RemoteException e) {
                         LogHelper.e(TAG, e, "could not connect media controller");
                         hidePlaybackControls();
+                    }
+
+                    mMediaId = mMediaBrowser.getRoot();
+
+                    // Unsubscribing before subscribing is required if this mediaId already has a subscriber
+                    // on this MediaBrowser instance. Subscribing to an already subscribed mediaId will replace
+                    // the callback, but won't trigger the initial callback.onChildrenLoaded.
+                    //
+                    // This is temporary: A bug is being fixed that will make subscribe
+                    // consistently call onChildrenLoaded initially, no matter if it is replacing an existing
+                    // subscriber or not. Currently this only happens if the mediaID has no previous
+                    // subscriber or if the media content changes on the service side, so we need to
+                    // unsubscribe first.
+                    mMediaBrowser.unsubscribe(mMediaId);
+
+                    mMediaBrowser.subscribe(mMediaId, mSubscriptionCallback);
+
+                    // Add MediaController callback so we can redraw the list when metadata changes:
+                    if (mMediaController != null) {
+                        LogHelper.v(TAG, "mMediaController.registerCallback(mMediaControllerCallback);");
+                        mMediaController.registerCallback(mMediaControllerCallback);
+                    }
+                    else {
+                        LogHelper.w(TAG, "UNABLE: mMediaController.registerCallback(mMediaControllerCallback);");
                     }
                 }
             };
@@ -77,7 +169,7 @@ public class AutoplayActivity extends BaseActivity
             new MediaControllerCompat.Callback() {
                 @Override
                 public void onPlaybackStateChanged(@NonNull PlaybackStateCompat state) {
-                    LogHelper.d(TAG, "onPlaybackStateChanged");
+                    LogHelper.d(TAG, "MediaControllerCompat.Callback onPlaybackStateChanged state="+state+" <<<---------");
                     if (shouldShowControls()) {
                         showPlaybackControls();
                     } else {
@@ -90,6 +182,7 @@ public class AutoplayActivity extends BaseActivity
                 @Override
                 public void onMetadataChanged(MediaMetadataCompat metadata) {
                     LogHelper.d(TAG, "onMetadataChanged");
+                    LogHelper.d(TAG, "MediaControllerCompat.Callback onMetadataChanged metadata="+metadata+" <<<---------");
                     if (shouldShowControls()) {
                         showPlaybackControls();
                     } else {
@@ -184,7 +277,7 @@ public class AutoplayActivity extends BaseActivity
                                 +": rating="+rating
                                 +": voteCount="+voteCount);
 
-                        press_PLAY_PAUSE();
+                        playPauseEpisode(episodeNumber, episodeTitle, episodeDownloadUrl, purchased, downloaded);
                     }
                 }
                 if (!foundEpisode) {
@@ -226,6 +319,42 @@ public class AutoplayActivity extends BaseActivity
                 .build();
         mAdView.loadAd(adRequest);
         //#ENDIF
+
+        // manually (debug) start the RadioTheaterService
+        //Intent it = new Intent(this, RadioTheaterService.class);
+        //startService(it); // Start the Radio Theater service.
+    }
+
+    private void playPauseEpisode(long episodeNumber, String episodeTitle, String episodeDownloadUrl, boolean purchased, boolean downloaded) {
+        LogHelper.v(TAG, "playPauseEpisode: episodeNumber="+episodeNumber
+                +", episodeTitle="+episodeTitle
+                +", episodeDownloadUrl="+episodeDownloadUrl
+                +", purchased="+purchased
+                +", downloaded="+downloaded);
+
+        PlaybackStateCompat state = getSupportMediaController().getPlaybackState();
+        if (state != null) {
+            MediaControllerCompat.TransportControls controls = getSupportMediaController().getTransportControls();
+            switch (state.getState()) {
+                case PlaybackStateCompat.STATE_PLAYING: // fall through
+                case PlaybackStateCompat.STATE_BUFFERING:
+                    LogHelper.v(TAG, "controls.pause();");
+                    controls.pause();
+                    // FIXME: stopSeekbarUpdate();
+                    break;
+                case PlaybackStateCompat.STATE_PAUSED:
+                case PlaybackStateCompat.STATE_STOPPED:
+                    LogHelper.v(TAG, "controls.play();");
+                    controls.play();
+                    // FIXME: scheduleSeekbarUpdate();
+                    break;
+                default:
+                    Uri mediaUri = Uri.parse(episodeDownloadUrl);
+                    LogHelper.d(TAG, "*** START PLAYBACK *** state="+state.getState()+", mMediaId="+mMediaId+", mediaUri="+mediaUri);
+                    mMediaController.getTransportControls().playFromUri(mediaUri, null);
+                    press_PLAY_PAUSE();
+            }
+        }
     }
 
     // from: http://stackoverflow.com/questions/19890643/android-4-4-play-default-music-player/20439822#20439822
@@ -233,31 +362,25 @@ public class AutoplayActivity extends BaseActivity
     private void press_PLAY_PAUSE() {
         LogHelper.v(TAG, "press_PLAY_PAUSE");
         final Context context = getApplicationContext();
-        final AudioManager.OnAudioFocusChangeListener af = new AudioManager.OnAudioFocusChangeListener() {
-            // do nothing with this listener, but it's required for the next step.
+        if (mAudioFocusRequstResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            mAudioFocusRequstResult = mAudioManager.requestAudioFocus(mAudioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+        }
+        if (mAudioFocusRequstResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            LogHelper.v(TAG, "---> AudioFocus GRANTED");
+            long eventtime = SystemClock.uptimeMillis();
 
-            public void onAudioFocusChange(int focusChange) {
-                LogHelper.v(TAG, "onAudioFocusChange");
-            }
+            Intent downIntent = new Intent(Intent.ACTION_MEDIA_BUTTON, null);
+            KeyEvent downEvent = new KeyEvent(eventtime, eventtime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0);
+            downIntent.putExtra(Intent.EXTRA_KEY_EVENT, downEvent);
+            sendOrderedBroadcast(downIntent, null);
 
-        };
-        final AudioManager am = (AudioManager)context.getSystemService(Context.AUDIO_SERVICE);
+            Intent upIntent = new Intent(Intent.ACTION_MEDIA_BUTTON, null);
+            KeyEvent upEvent = new KeyEvent(eventtime, eventtime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0);
+            upIntent.putExtra(Intent.EXTRA_KEY_EVENT, upEvent);
+            sendOrderedBroadcast(upIntent, null);
 
-        // request audio focus from the system
-        int request = am.requestAudioFocus(af, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-        long eventtime = SystemClock.uptimeMillis();
-
-        Intent downIntent = new Intent(Intent.ACTION_MEDIA_BUTTON, null);
-        KeyEvent downEvent = new KeyEvent(eventtime, eventtime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0);
-        downIntent.putExtra(Intent.EXTRA_KEY_EVENT, downEvent);
-        sendOrderedBroadcast(downIntent, null);
-
-        Intent upIntent = new Intent(Intent.ACTION_MEDIA_BUTTON, null);
-        KeyEvent upEvent = new KeyEvent(eventtime, eventtime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0);
-        upIntent.putExtra(Intent.EXTRA_KEY_EVENT, upEvent);
-        sendOrderedBroadcast(upIntent, null);
-
-        am.abandonAudioFocus(af);
+            // hold audio focus until playback stopped
+        }
     }
 
     private void press_NEXT() {
@@ -321,8 +444,7 @@ public class AutoplayActivity extends BaseActivity
         if (shouldShowControls()) {
             showPlaybackControls();
         } else {
-            LogHelper.d(TAG, "connectionCallback.onConnected: " +
-                    "hiding controls because metadata is null");
+            LogHelper.d(TAG, "connectToSession: hiding controls");
             hidePlaybackControls();
         }
     }
@@ -372,20 +494,48 @@ public class AutoplayActivity extends BaseActivity
     }
 
     @Override
+    protected void onResume() {
+        LogHelper.d(TAG, "onResume");
+        super.onResume();
+        if (mAudioManager != null && mRemoteControlResponder != null) {
+            mAudioManager.registerMediaButtonEventReceiver(mRemoteControlResponder);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        LogHelper.d(TAG, "onPause");
+        super.onPause();
+        if (mAudioManager != null && mRemoteControlResponder != null) {
+            mAudioManager.unregisterMediaButtonEventReceiver(mRemoteControlResponder);
+        }
+    }
+
+    @Override
     protected void onStart() {
         LogHelper.d(TAG, "onStart");
         super.onStart();
         hidePlaybackControls();
+        LogHelper.d(TAG, "---> mMediaBrowser.connect();");
         mMediaBrowser.connect();
+        mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        mRemoteControlResponder = new ComponentName(getPackageName(), RadioTheaterReceiver.class.getName());
+        // request audio focus from the system
+        mAudioFocusRequstResult = mAudioManager.requestAudioFocus(mAudioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
     }
 
     @Override
     protected void onStop() {
         LogHelper.d(TAG, "onStop");
         super.onStop();
-        if (getSupportMediaController() != null) {
-            getSupportMediaController().unregisterCallback(mMediaControllerCallback);
+        if (mAudioManager != null && mAudioFocusRequstResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            mAudioManager.abandonAudioFocus(mAudioFocusChangeListener);
+            mAudioFocusRequstResult = 0;
         }
+        if (mMediaController != null) {
+            mMediaController.unregisterCallback(mMediaControllerCallback);
+        }
+        LogHelper.d(TAG, "---> mMediaBrowser.disconnect();");
         mMediaBrowser.disconnect();
     }
 
@@ -393,12 +543,14 @@ public class AutoplayActivity extends BaseActivity
     public void onDestroy() {
         LogHelper.v(TAG, "onDestroy");
         super.onDestroy();
+        mAudioManager = null;
         mAutoPlay = null;
         mCircleSlider = null;
+        mAudioManager = null;
+        mRemoteControlResponder = null;
         mMediaBrowser = null;
         mMediaController = null;
-        mMediaButtonReceiver = null;
-        mMediaSession = null;
+        mMediaId = null;
     }
 
 }

@@ -56,7 +56,7 @@ public class RemoteJSONSource implements MusicProviderSource {
         EpisodesCursor episodesCursor = getEpisodes();
         if (episodesCursor != null) {
             while (episodesCursor.moveToNext()) {
-                tracks.add(buildFromJSON(episodesCursor));
+                tracks.add(buildFromEpisodesCursor(episodesCursor));
             }
             episodesCursor.close();
         }
@@ -103,7 +103,7 @@ public class RemoteJSONSource implements MusicProviderSource {
         return writer;
     }
 
-    private MediaMetadataCompat buildFromJSON(EpisodesCursor episodesCursor) {
+    private MediaMetadataCompat buildFromEpisodesCursor(EpisodesCursor episodesCursor) {
 
         Long episodeNumber = episodesCursor.getFieldEpisodeNumber();
         String airdate = episodesCursor.getFieldAirdate(); // yyyy-MM-dd
@@ -125,14 +125,14 @@ public class RemoteJSONSource implements MusicProviderSource {
         int duration = 60 * 60 * 1000; // on-hour in ms
         String id = String.valueOf(episodeNumber); // unique ID
 
-        LogHelper.d(TAG, "found episode: #"+episodeNumber+" '"+episodeTitle+"' by "+episodeWriter);
+        LogHelper.d(TAG, "found episode: #"+episodeNumber+" '"+episodeTitle+"' by "+episodeWriter+" with mediaId="+id);
 
         // Adding the episode source to the MediaMetadata (and consequently using it in the
         // mediaSession.setMetadata) is not a good idea for a real world player app, because
         // the session metadata can be accessed by notification listeners.
 
         //noinspection ResourceType
-        return new MediaMetadataCompat.Builder()
+        MediaMetadataCompat theMetadata = new MediaMetadataCompat.Builder()
                 .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, id)
                 .putString(MusicProviderSource.CUSTOM_METADATA_TRACK_SOURCE, episodeDownloadUrl)
                 .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, episodeTitle)
@@ -151,6 +151,8 @@ public class RemoteJSONSource implements MusicProviderSource {
                 .putLong(MediaMetadataCompat.METADATA_KEY_NUM_TRACKS, totalTrackCount)
                 .putRating(MediaMetadataCompat.METADATA_KEY_RATING, ratingCompat)
                 .build();
+
+        return theMetadata;
     }
 
 }

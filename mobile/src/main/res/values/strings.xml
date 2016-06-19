@@ -29,6 +29,7 @@
     <string name="episodes_count">1399</string>
     <string name="genre">Radio Drama</string>
     <string name="icon_url">http://harlie.com/radiotheater/logo_icon.png</string>
+    <string name="error_loading_media">Error Loading Media</string>
 
     <!-- Strings related to RadioTheaterService -->
     <string name="casting_to_device">Casting to %1$s</string>

@@ -141,8 +141,7 @@ public class RadioTheaterService extends MediaBrowserServiceCompat implements
         public void onApplicationConnected(ApplicationMetadata appMetadata, String sessionId,
                                            boolean wasLaunched) {
             // In case we are casting, send the device name as an extra on MediaSession metadata.
-            mSessionExtras.putString(EXTRA_CONNECTED_CAST,
-                    VideoCastManager.getInstance().getDeviceName());
+            mSessionExtras.putString(EXTRA_CONNECTED_CAST, VideoCastManager.getInstance().getDeviceName());
             mSession.setExtras(mSessionExtras);
             // Now we can switch to CastPlayback
             Playback playback = new CastPlayback(mMusicProvider);
@@ -198,8 +197,7 @@ public class RadioTheaterService extends MediaBrowserServiceCompat implements
 
                     @Override
                     public void onMetadataRetrieveError() {
-                        mPlaybackManager.updatePlaybackState(
-                                getString(R.string.error_no_metadata));
+                        mPlaybackManager.updatePlaybackState(getString(R.string.error_no_metadata));
                     }
 
                     @Override
@@ -208,8 +206,7 @@ public class RadioTheaterService extends MediaBrowserServiceCompat implements
                     }
 
                     @Override
-                    public void onQueueUpdated(String title,
-                                               List<MediaSessionCompat.QueueItem> newQueue) {
+                    public void onQueueUpdated(String title, List<MediaSessionCompat.QueueItem> newQueue) {
                         mSession.setQueue(newQueue);
                         mSession.setQueueTitle(title);
                     }
@@ -257,6 +254,7 @@ public class RadioTheaterService extends MediaBrowserServiceCompat implements
      */
     @Override
     public int onStartCommand(Intent startIntent, int flags, int startId) {
+        LogHelper.v(TAG, "=========>>> onStartCommand: startIntent="+startIntent+", flags="+flags+", startId="+startId);
         if (startIntent != null) {
             String action = startIntent.getAction();
             String command = startIntent.getStringExtra(CMD_NAME);
@@ -339,6 +337,7 @@ public class RadioTheaterService extends MediaBrowserServiceCompat implements
     @Override
     public void onPlaybackStart() {
         if (!mSession.isActive()) {
+            LogHelper.v(TAG, "*** WE ARE THE DEFAULT MEDIA RECEIVER NOW ***");
             mSession.setActive(true);
         }
 

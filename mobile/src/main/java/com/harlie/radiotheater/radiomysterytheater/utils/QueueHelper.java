@@ -115,20 +115,20 @@ public class QueueHelper {
     }
 
 
-    public static int getMusicIndexOnQueue(Iterable<MediaSessionCompat.QueueItem> queue,
-             String mediaId) {
+    public static int getMusicIndexOnQueue(Iterable<MediaSessionCompat.QueueItem> queue, String mediaId) {
         int index = 0;
-        for (MediaSessionCompat.QueueItem item : queue) {
-            if (mediaId.equals(item.getDescription().getMediaId())) {
-                return index;
+        if (queue != null) {
+            for (MediaSessionCompat.QueueItem item : queue) {
+                if (mediaId.equals(item.getDescription().getMediaId())) {
+                    return index;
+                }
+                index++;
             }
-            index++;
         }
         return -1;
     }
 
-    public static int getMusicIndexOnQueue(Iterable<MediaSessionCompat.QueueItem> queue,
-             long queueId) {
+    public static int getMusicIndexOnQueue(Iterable<MediaSessionCompat.QueueItem> queue, long queueId) {
         int index = 0;
         for (MediaSessionCompat.QueueItem item : queue) {
             if (queueId == item.getQueueId()) {
@@ -161,7 +161,6 @@ public class QueueHelper {
             queue.add(item);
         }
         return queue;
-
     }
 
     /**
@@ -180,7 +179,6 @@ public class QueueHelper {
             result.add(metadata);
         }
         LogHelper.d(TAG, "getRandomQueue: result.size=", result.size());
-
         return convertToQueue(result, MEDIA_ID_MUSICS_BY_SEARCH, "random");
     }
 

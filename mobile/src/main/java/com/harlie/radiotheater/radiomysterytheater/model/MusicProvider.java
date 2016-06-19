@@ -341,7 +341,6 @@ public class MusicProvider {
                 .build();
         return new MediaBrowserCompat.MediaItem(copy.getDescription(),
                 MediaBrowserCompat.MediaItem.FLAG_PLAYABLE);
-
     }
 
 }
