@@ -350,7 +350,9 @@ public class AutoplayActivity extends BaseActivity
                 default:
                     Uri mediaUri = Uri.parse(episodeDownloadUrl);
                     LogHelper.d(TAG, "*** START PLAYBACK *** state="+state.getState()+", mMediaId="+mMediaId+", mediaUri="+mediaUri);
-                    mMediaController.getTransportControls().playFromUri(mediaUri, null);
+                    mMediaId = String.valueOf(episodeDownloadUrl.hashCode());
+                    Bundle bundle = new Bundle();
+                    mMediaController.getTransportControls().playFromMediaId(mMediaId, bundle);
                     press_PLAY_PAUSE();
             }
         }

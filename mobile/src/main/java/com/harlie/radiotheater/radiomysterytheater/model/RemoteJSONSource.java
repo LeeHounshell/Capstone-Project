@@ -123,7 +123,7 @@ public class RemoteJSONSource implements MusicProviderSource {
         Bitmap iconBitmap = BitmapHelper.drawableToBitmap(iconDrawable);
         int totalTrackCount = Integer.valueOf(RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.episodes_count));
         int duration = 60 * 60 * 1000; // on-hour in ms
-        String id = String.valueOf(episodeNumber); // unique ID
+        String id = String.valueOf(episodeDownloadUrl.hashCode()); // unique ID
 
         LogHelper.d(TAG, "found episode: #"+episodeNumber+" '"+episodeTitle+"' by "+episodeWriter+" with mediaId="+id);
 
