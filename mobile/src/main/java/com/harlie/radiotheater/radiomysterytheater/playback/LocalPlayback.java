@@ -26,12 +26,14 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.PowerManager;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
 
+import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterService;
 import com.harlie.radiotheater.radiomysterytheater.model.MusicProvider;
 import com.harlie.radiotheater.radiomysterytheater.model.MusicProviderSource;
@@ -207,7 +209,9 @@ public class LocalPlayback
                 mState = PlaybackStateCompat.STATE_BUFFERING;
 
                 mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                mMediaPlayer.setDataSource(source);
+                //Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+                //mMediaPlayer.setDataSource(context, Uri.parse(source));
+                mMediaPlayer.setDataSource(source.replaceAll(" ", "%20"));
 
                 // Starts preparing the media player in the background. When
                 // it's done, it will call our OnPreparedListener (that is,
