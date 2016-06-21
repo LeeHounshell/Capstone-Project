@@ -44,6 +44,7 @@
     <string name="ok">OK</string>
     <string name="no_metadata">Missing Episode Metadata</string>
     <string name="metadata_loading_problem">Unable to load Episode information. Something went wrong.</string>
+    <string name="duration">duration:</string>
 
     <!-- Strings related to RadioTheaterService -->
     <string name="casting_to_device">Casting to %1$s</string>

@@ -76,6 +76,7 @@ public class AutoplayActivity extends BaseActivity
     private static final String KEY_HEARD = "heard";
     private static final String KEY_AUDIO_FOCUS = "audioFocus";
     private static final String KEY_DURATION = "duration";
+    private static final String KEY_REAL_DURATION = "realDuration";
     private static final String KEY_CURRENT_POSITION = "position";
     private static final String KEY_SEEKING = "seeking";
     private static final String KEY_AIRDATE = "airdate";
@@ -106,6 +107,7 @@ public class AutoplayActivity extends BaseActivity
     private boolean mEpisodeHeard;
     private int mAudioFocusRequstResult;
     private long mDuration;
+    private boolean mHaveRealDuration;
     private long mCurrentPosition;
     private boolean mSeeking;
     private String mAirdate;
@@ -407,6 +409,7 @@ public class AutoplayActivity extends BaseActivity
         mMediaId = null;
         mAudioFocusRequstResult = 0;
         mDuration = DEFAULT_DURATION; // one-hour in ms
+        mHaveRealDuration = false;
         mCurrentPosition = 0;
         mAutoplayState = AutoplayState.READY2PLAY;
 
@@ -420,6 +423,7 @@ public class AutoplayActivity extends BaseActivity
             mEpisodeHeard = savedInstanceState.getBoolean(KEY_HEARD);
             mAudioFocusRequstResult = savedInstanceState.getInt(KEY_AUDIO_FOCUS);
             mDuration = savedInstanceState.getLong(KEY_DURATION);
+            mHaveRealDuration = savedInstanceState.getBoolean(KEY_REAL_DURATION);
             mCurrentPosition = savedInstanceState.getLong(KEY_CURRENT_POSITION);
             mSeeking = savedInstanceState.getBoolean(KEY_SEEKING);
             mAirdate = savedInstanceState.getString(KEY_AIRDATE);
@@ -514,7 +518,6 @@ public class AutoplayActivity extends BaseActivity
         else {
             mCircularSeekBar.setBackgroundColor(getResources().getColor(R.color.transparent));
         }
-        mDuration = DEFAULT_DURATION; // one-hour in ms
         mCircularSeekBar.setMaxProgress((int) mDuration);
         mCircularSeekBar.setProgress(0);
         mCircularSeekBar.setVisibility(View.INVISIBLE);
@@ -581,6 +584,7 @@ public class AutoplayActivity extends BaseActivity
                     mEpisodeWeblinkUrl = Uri.parse(episodesCursor.getFieldWeblinkUrl()).getEncodedPath();
                     mEpisodeDownloadUrl = Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString();
                     mDuration = DEFAULT_DURATION; // one-hour in ms
+                    mHaveRealDuration = false;
                     episodesCursor.close();
                     foundEpisode = true;
                     playPauseEpisode();
@@ -769,8 +773,10 @@ public class AutoplayActivity extends BaseActivity
         if (metadata == null) {
             return;
         }
-        mDuration = (int) metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
-        LogHelper.v(TAG, "===> EPISODE DURATION="+mDuration/1000);
+        if (! mHaveRealDuration) {
+            mDuration = (int) metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
+        }
+        LogHelper.v(TAG, "===> EPISODE DURATION="+mDuration/1000+", mHaveRealDuration="+mHaveRealDuration);
         mCircularSeekBar.setMaxProgress((int) mDuration);
         showPlaybackControls();
         if (mLastPlaybackState != null) {
@@ -827,11 +833,11 @@ public class AutoplayActivity extends BaseActivity
                 long timeDelta = SystemClock.elapsedRealtime() - mLastPlaybackState.getLastPositionUpdateTime();
                 mCurrentPosition += (int) timeDelta * mLastPlaybackState.getPlaybackSpeed();
             }
-            if (mDuration == 0) { // paranoia
+            if (!mHaveRealDuration && mDuration == 0) { // paranoia
                 mDuration = DEFAULT_DURATION; // one-hour in ms
                 mCircularSeekBar.setMaxProgress((int) mDuration);
             }
-            LogHelper.v(TAG, "updateProgress: mCurrentPosition=" + mCurrentPosition + ", mDuration=" + mDuration);
+            LogHelper.v(TAG, "updateProgress: mCurrentPosition=" + mCurrentPosition + ", mDuration=" + mDuration + ", mHaveRealDuration=" + mHaveRealDuration);
             mCircularSeekBar.setProgress((int) mCurrentPosition);
             mCircularSeekBar.invalidate();
             mCircularSeekBar.setVisibility(View.VISIBLE);
@@ -852,7 +858,9 @@ public class AutoplayActivity extends BaseActivity
                 LogHelper.v(TAG, "*** RECEIVED BROADCAST: "+message);
                 String load_fail = getResources().getString(R.string.error_no_metadata);
                 String load_ok = getResources().getString(R.string.metadata_loaded);
+                String duration = getResources().getString(R.string.duration);
                 if (message.equals(load_ok)) {
+                    LogHelper.v(TAG, load_ok);
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -861,12 +869,20 @@ public class AutoplayActivity extends BaseActivity
                     });
                 }
                 else if (message.equals(load_fail)) {
+                    LogHelper.v(TAG, load_fail);
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
                             problemLoadingMetadata();
                         }
                     });
+                }
+                else if (message.substring(0, duration.length()).equals(duration)) {
+                    LogHelper.v(TAG, duration);
+                    mDuration = Long.valueOf(message.substring(duration.length(), message.length()));
+                    mHaveRealDuration = true;
+                    mCircularSeekBar.setMaxProgress((int) mDuration);
+                    LogHelper.v(TAG, "*** REVISED EPISODE DURATION="+mDuration);
                 }
                 else {
                     LogHelper.v(TAG, "*** UNKNOWN MESSAGE VIA INTENT: "+message);
@@ -939,6 +955,7 @@ public class AutoplayActivity extends BaseActivity
         outState.putBoolean(KEY_HEARD, mEpisodeHeard);
         outState.putInt(KEY_AUDIO_FOCUS, mAudioFocusRequstResult);
         outState.putLong(KEY_DURATION, mDuration);
+        outState.putBoolean(KEY_REAL_DURATION, mHaveRealDuration);
         outState.putLong(KEY_CURRENT_POSITION, mCurrentPosition);
         outState.putBoolean(KEY_SEEKING, mSeeking);
         outState.putString(KEY_AIRDATE, mAirdate);

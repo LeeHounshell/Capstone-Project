@@ -26,13 +26,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.PowerManager;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
 
+import com.harlie.radiotheater.radiomysterytheater.R;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterService;
 import com.harlie.radiotheater.radiomysterytheater.model.MusicProvider;
@@ -448,6 +448,10 @@ public class LocalPlayback
         // The media player is done preparing. That means we can start playing if we
         // have audio focus.
         configMediaPlayerState();
+        String duration = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.duration);
+        String message = duration+String.valueOf(mMediaPlayer.getDuration());
+        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra("initialization", message);
+        RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
     }
 
     /**
