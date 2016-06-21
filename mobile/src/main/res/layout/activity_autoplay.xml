@@ -31,6 +31,7 @@
             android:contentDescription="@string/autoplay_next"
             android:elevation="@dimen/button_elevation"
             android:gravity="center"
+            android:visibility="invisible"
             android:theme="@style/RadioTheaterButton" />
 
     </FrameLayout>

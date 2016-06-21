@@ -20,6 +20,7 @@
 
 package com.harlie.radiotheater.radiomysterytheater.model;
 
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -29,6 +30,7 @@ import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 
 import com.harlie.radiotheater.radiomysterytheater.R;
+import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper;
 
@@ -290,6 +292,14 @@ public class MusicProvider {
                 // Something bad happened, so we reset state to NON_INITIALIZED to allow
                 // retries (eg if the network connection is temporary unavailable)
                 mCurrentState = State.NON_INITIALIZED;
+                String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.error_no_metadata);
+                Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra("initialization", message);
+                RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
+            }
+            else {
+                String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.metadata_loaded);
+                Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra("initialization", message);
+                RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
             }
         }
     }

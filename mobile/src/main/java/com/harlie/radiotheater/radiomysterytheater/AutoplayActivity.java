@@ -1,9 +1,11 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -85,6 +87,7 @@ public class AutoplayActivity extends BaseActivity
     private boolean mSeeking;
 
     private final Handler mHandler = new Handler();
+    private BroadcastReceiver mReceiver;
 
     private final ScheduledExecutorService mExecutorService =
             Executors.newSingleThreadScheduledExecutor();
@@ -194,6 +197,7 @@ public class AutoplayActivity extends BaseActivity
             new MediaControllerCompat.Callback() {
                 @Override
                 public void onPlaybackStateChanged(@NonNull PlaybackStateCompat state) {
+                    LogHelper.v(TAG, "onPlaybackStateChanged: state="+state.getState());
                     mLastPlaybackState = state;
                     if (mSeeking && mLastPlaybackState.getState() != PlaybackStateCompat.STATE_PLAYING) {
                         LogHelper.v(TAG, "ignoring onPlaybackStateChanged until seekTo completes");
@@ -243,7 +247,41 @@ public class AutoplayActivity extends BaseActivity
                 break;
             default:
                 LogHelper.d(TAG, "unhandled state ", mLastPlaybackState.getState());
+                if (mAutoplayState == AutoplayState.LOADING) {
+                    LogHelper.v(TAG, "AutoplayState.LOADING - need to reset");
+                    mAutoplayState = AutoplayState.PLAY;
+                    hidePlaybackControls();
+                    problemWithPlayback();
+                }
         }
+    }
+
+    private void problemLoadingMetadata() {
+        LogHelper.v(TAG, "problemLoadingMetadata");
+        AlertDialog alertDialog = new AlertDialog.Builder(AutoplayActivity.this).create();
+        alertDialog.setTitle(getResources().getString(R.string.no_metadata));
+        alertDialog.setMessage(getResources().getString(R.string.metadata_loading_problem));
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        alertDialog.show();
+    }
+
+    private void problemWithPlayback() {
+        LogHelper.v(TAG, "problemWithPlayback");
+        AlertDialog alertDialog = new AlertDialog.Builder(AutoplayActivity.this).create();
+        alertDialog.setTitle(getResources().getString(R.string.unable_to_load));
+        alertDialog.setMessage(getResources().getString(R.string.playback_problem));
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        alertDialog.show();
     }
 
     @Override
@@ -694,12 +732,45 @@ public class AutoplayActivity extends BaseActivity
     protected void onResume() {
         LogHelper.d(TAG, "onResume");
         super.onResume();
+        IntentFilter intentFilter = new IntentFilter("android.intent.action.MAIN");
+
+        mReceiver = new BroadcastReceiver() {
+
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String message = intent.getStringExtra("initialization"); // did metadata load ok?
+                LogHelper.v(TAG, "*** RECEIVED BROADCAST: "+message);
+                String load_fail = getResources().getString(R.string.error_no_metadata);
+                String load_ok = getResources().getString(R.string.metadata_loaded);
+                if (message.equals(load_ok)) {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            mAutoPlay.setVisibility(View.VISIBLE);
+                        }
+                    });
+                }
+                else if (message.equals(load_fail)) {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            problemLoadingMetadata();
+                        }
+                    });
+                }
+                else {
+                    LogHelper.v(TAG, "*** UNKNOWN MESSAGE VIA INTENT: "+message);
+                }
+            }
+        };
+        this.registerReceiver(mReceiver, intentFilter);
     }
 
     @Override
     protected void onPause() {
         LogHelper.d(TAG, "onPause");
         super.onPause();
+        this.unregisterReceiver(mReceiver);
     }
 
     @Override

@@ -39,10 +39,15 @@
     <string name="error_loading_media">Error Loading Media</string>
     <string name="nothing_unheard">No Unheard Episodes</string>
     <string name="heard_everything">You have listened to all 1399 episodes!\nNo unheard episodes remain.</string>
+    <string name="unable_to_load">Episode Failed to Load</string>
+    <string name="playback_problem">There was a problem loading this episode.  Try again.</string>
     <string name="ok">OK</string>
+    <string name="no_metadata">Missing Episode Metadata</string>
+    <string name="metadata_loading_problem">Unable to load Episode information. Something went wrong.</string>
 
     <!-- Strings related to RadioTheaterService -->
     <string name="casting_to_device">Casting to %1$s</string>
+    <string name="metadata_loaded">Successfully loaded metadata.</string>
     <string name="error_no_metadata">Unable to retrieve metadata.</string>
     <string name="favorite">Favorite</string>
     <string name="browse_genre_subtitle">Episodes by genre</string>
