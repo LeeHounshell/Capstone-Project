@@ -85,7 +85,7 @@ public class RemoteJSONSource implements MusicProviderSource {
     }
 
     private String getWriterForEpisodeId(Long episodeNumber) {
-        LogHelper.v(TAG, "getWriterForEpisodeId: "+episodeNumber);
+        //LogHelper.v(TAG, "getWriterForEpisodeId: "+episodeNumber);
         EpisodesWritersSelection where = new EpisodesWritersSelection();
         where.fieldEpisodeNumber(episodeNumber);
         String order_limit = RadioTheaterContract.EpisodesWritersEntry.FIELD_WRITER_ID + " ASC LIMIT 1";
@@ -127,10 +127,16 @@ public class RemoteJSONSource implements MusicProviderSource {
         String artist = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.e_g_marshall);
         String genre = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.genre);
         String iconUrl = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.icon_url);
+        String keyArtUrl =  RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.key_art_url);
+        String hauntedUrl =  RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.haunted_url);
         Drawable iconDrawable = ResourcesCompat.getDrawable(RadioTheaterApplication.getRadioTheaterApplicationContext().getResources(), R.drawable.logo_icon, null);
         Bitmap iconBitmap = BitmapHelper.drawableToBitmap(iconDrawable);
+        Drawable keyArtDrawable = ResourcesCompat.getDrawable(RadioTheaterApplication.getRadioTheaterApplicationContext().getResources(), R.drawable.e_g_marshall_1970, null);
+        Bitmap keyArtBitmap = BitmapHelper.drawableToBitmap(keyArtDrawable);
+        Drawable hauntedDrawable = ResourcesCompat.getDrawable(RadioTheaterApplication.getRadioTheaterApplicationContext().getResources(), R.drawable.haunted, null);
+        Bitmap hauntedBitmap = BitmapHelper.drawableToBitmap(hauntedDrawable);
         int totalTrackCount = Integer.valueOf(RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.episodes_count));
-        int duration = 60 * 60 * 1000; // on-hour in ms
+        int duration = 60 * 60 * 1000; // one-hour in ms
         String id = String.valueOf(episodeDownloadUrl.hashCode());
         //String episodeMediaId = MediaIDHelper.createMediaID(id, MediaIDHelper.MEDIA_ID_ROOT, mMediaId);
 
@@ -144,6 +150,9 @@ public class RemoteJSONSource implements MusicProviderSource {
         MediaMetadataCompat theMetadata = new MediaMetadataCompat.Builder()
                 .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, id)
                 .putString(MusicProviderSource.CUSTOM_METADATA_TRACK_SOURCE, episodeDownloadUrl)
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, episodeTitle)
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, episodeDescription)
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_DESCRIPTION, episodeDescription)
                 .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, episodeTitle)
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
                 .putString(MediaMetadataCompat.METADATA_KEY_WRITER, episodeWriter)
@@ -151,11 +160,12 @@ public class RemoteJSONSource implements MusicProviderSource {
                 .putString(MediaMetadataCompat.METADATA_KEY_DATE, airdate)
                 .putLong(MediaMetadataCompat.METADATA_KEY_YEAR, airdate_year)
                 .putString(MediaMetadataCompat.METADATA_KEY_GENRE, genre)
+                .putBitmap(MediaMetadataCompat.METADATA_KEY_ART, keyArtBitmap)
+//                .putString(MediaMetadataCompat.METADATA_KEY_ART_URI, keyArtUrl)
                 .putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, iconBitmap)
-                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, iconUrl)
-                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, episodeTitle)
-                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, episodeDescription)
-                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_DESCRIPTION, episodeDescription)
+//                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, iconUrl)
+                .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, hauntedBitmap)
+//                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, hauntedUrl)
                 .putLong(MediaMetadataCompat.METADATA_KEY_TRACK_NUMBER, episodeNumber)
                 .putLong(MediaMetadataCompat.METADATA_KEY_NUM_TRACKS, totalTrackCount)
                 .putRating(MediaMetadataCompat.METADATA_KEY_RATING, ratingCompat)

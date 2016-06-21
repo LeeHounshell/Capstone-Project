@@ -1,36 +1,37 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.Toolbar;
 import android.telephony.TelephonyManager;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+import android.widget.FrameLayout;
 
 //#IFDEF 'FREE'
 import com.google.android.gms.ads.AdRequest;
@@ -43,12 +44,11 @@ import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import me.angrybyte.circularslider.CircularSlider;
-
-import static com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper.MEDIA_ID_MUSICS_BY_GENRE;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class AutoplayActivity extends BaseActivity
 {
@@ -62,42 +62,68 @@ public class AutoplayActivity extends BaseActivity
      */
     public static final String EXTRA_CURRENT_MEDIA_DESCRIPTION = "com.harlie.radiotheater.radiomysterytheater.CURRENT_MEDIA_DESCRIPTION";
 
+    private static final long PROGRESS_UPDATE_INTERNAL = 1000;
+    private static final long PROGRESS_UPDATE_INITIAL_INTERVAL = 100;
+    private static final long DEFAULT_DURATION = 60 * 60 * 1000;
+
+    public enum AutoplayState {
+        PLAY, LOADING, PAUSE
+    }
+    AutoplayState mAutoplayState = AutoplayState.PLAY;
+
     private AppCompatButton mAutoPlay;
-    private CircularSlider mCircleSlider;
+    private CircularSeekBar mCircularSeekBar;
     private AudioManager mAudioManager;
-    private int mAudioFocusRequstResult;
     private MediaBrowserCompat mMediaBrowser;
     private MediaControllerCompat mMediaController;
+    private ScheduledFuture<?> mScheduleFuture;
+    private PlaybackStateCompat mLastPlaybackState;
     private String mMediaId;
+    private int mAudioFocusRequstResult;
+    private long mDuration;
+    private long mCurrentPosition;
+    private boolean mSeeking;
 
-    static final int STATE_INVALID = -1;
-    static final int STATE_NONE = 0;
-    static final int STATE_PLAYABLE = 1;
-    static final int STATE_PAUSED = 2;
-    static final int STATE_PLAYING = 3;
+    private final Handler mHandler = new Handler();
+
+    private final ScheduledExecutorService mExecutorService =
+            Executors.newSingleThreadScheduledExecutor();
+
+    private final Runnable mUpdateProgressTask = new Runnable() {
+        @Override
+        public void run() {
+            if (!mCircularSeekBar.isProcessingTouchEvents() && !mSeeking && mLastPlaybackState != null) {
+                mCurrentPosition = mLastPlaybackState.getPosition();
+                if (mLastPlaybackState != null && mLastPlaybackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
+                    updateProgress();
+                }
+            }
+        }
+    };
 
     // Callback for Audio Focus
     private final AudioManager.OnAudioFocusChangeListener mAudioFocusChangeListener =
         new AudioManager.OnAudioFocusChangeListener() {
             public void onAudioFocusChange(int focusChange) {
                 LogHelper.v(TAG, "===> onAudioFocusChange="+focusChange+" <===");
+                MediaControllerCompat.TransportControls controls = mMediaController.getTransportControls();
                 if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
                     LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_GAIN <<---");
                 }
                 else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
                     LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_LOSS <<---");
                     mAudioFocusRequstResult = 0;
-                    // FIXME: stop playback
+                    controls.stop();
                 }
                 else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
                     LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_LOSS_TRANSIENT <<---");
                     mAudioFocusRequstResult = 0;
-                    // FIXME: pause playback
+                    controls.pause();
                 }
                 else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
                     LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK <<---");
                     mAudioFocusRequstResult = 0;
-                    // FIXME: lower volume
+                    controls.pause();
                 }
             }
         };
@@ -130,7 +156,8 @@ public class AutoplayActivity extends BaseActivity
 
                     try {
                         connectToSession(mMediaBrowser.getSessionToken());
-                    } catch (RemoteException e) {
+                    }
+                    catch (RemoteException e) {
                         LogHelper.e(TAG, e, "could not connect media controller");
                         hidePlaybackControls();
                     }
@@ -167,13 +194,14 @@ public class AutoplayActivity extends BaseActivity
             new MediaControllerCompat.Callback() {
                 @Override
                 public void onPlaybackStateChanged(@NonNull PlaybackStateCompat state) {
-                    LogHelper.d(TAG, "MediaControllerCompat.Callback onPlaybackStateChanged state="+state+" <<<---------");
-                    if (shouldShowControls()) {
-                        showPlaybackControls();
-                    } else {
-                        LogHelper.d(TAG, "mediaControllerCallback.onPlaybackStateChanged: " +
-                                "hiding controls because state is ", state.getState());
-                        hidePlaybackControls();
+                    mLastPlaybackState = state;
+                    if (mSeeking && mLastPlaybackState.getState() != PlaybackStateCompat.STATE_PLAYING) {
+                        LogHelper.v(TAG, "ignoring onPlaybackStateChanged until seekTo completes");
+                    }
+                    else if (!mCircularSeekBar.isProcessingTouchEvents()) {
+                        LogHelper.d(TAG, "MediaControllerCompat.Callback onPlaybackStateChanged state=" + mLastPlaybackState + " <<<---------");
+                        mSeeking = false;
+                        updatePlaybackState();
                     }
                 }
 
@@ -181,19 +209,53 @@ public class AutoplayActivity extends BaseActivity
                 public void onMetadataChanged(MediaMetadataCompat metadata) {
                     LogHelper.d(TAG, "onMetadataChanged");
                     LogHelper.d(TAG, "MediaControllerCompat.Callback onMetadataChanged metadata="+metadata+" <<<---------");
-                    if (shouldShowControls()) {
-                        showPlaybackControls();
-                    } else {
-                        LogHelper.d(TAG, "mediaControllerCallback.onMetadataChanged: hiding the controls");
-                        hidePlaybackControls();
+                    if (metadata != null) {
+                        updateMediaDescription(metadata.getDescription());
+                        updateDuration(metadata);
                     }
+                    mLastPlaybackState = mMediaController.getPlaybackState();
+                    updatePlaybackState();
                 }
             };
+
+    private void updatePlaybackState() {
+        LogHelper.v(TAG, "updatePlaybackState");
+        if (mLastPlaybackState == null) {
+            return;
+        }
+        switch (mLastPlaybackState.getState()) {
+            case PlaybackStateCompat.STATE_PLAYING:
+                updateControls();
+                scheduleSeekbarUpdate();
+                break;
+            case PlaybackStateCompat.STATE_PAUSED:
+                hidePlaybackControls();
+                stopSeekbarUpdate();
+                break;
+            case PlaybackStateCompat.STATE_NONE:
+            case PlaybackStateCompat.STATE_STOPPED:
+                hidePlaybackControls();
+                stopSeekbarUpdate();
+                break;
+            case PlaybackStateCompat.STATE_BUFFERING:
+                hidePlaybackControls();
+                stopSeekbarUpdate();
+                break;
+            default:
+                LogHelper.d(TAG, "unhandled state ", mLastPlaybackState.getState());
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         LogHelper.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
+
+        mMediaId = null;
+        mAudioFocusRequstResult = 0;
+        mDuration = DEFAULT_DURATION; // one-hour in ms
+        mCurrentPosition = 0;
+
         /*
          * FUTURE: TV support
          *
@@ -206,6 +268,7 @@ public class AutoplayActivity extends BaseActivity
             return;
         }
         */
+
         setContentView(R.layout.activity_autoplay);
         configureToolbarTitleBehavior();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -224,65 +287,82 @@ public class AutoplayActivity extends BaseActivity
 
         mAutoPlay = (AppCompatButton) findViewById(R.id.autoplay);
         mAutoPlay.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View v) {
-                LogHelper.v(TAG, "CLICK - autoPlay");
-                boolean foundEpisode = false;
-                AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.toolbar_container);
+                if (!mCircularSeekBar.isProcessingTouchEvents() && !mSeeking) {
+                    LogHelper.v(TAG, "CLICK - autoPlay");
+                    boolean foundEpisode = false;
+                    AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.toolbar_container);
 
-                ConfigEpisodesCursor configCursor = getCursorForNextAvailableEpisode();
-                if (configCursor != null && configCursor.moveToNext()) {
-                    // found the next episode to listen to
-                    appBarLayout.setExpanded(false);
-                    long episodeNumber = configCursor.getFieldEpisodeNumber();
-                    boolean purchased = configCursor.getFieldPurchasedAccess();
-                    boolean noAdsForShow = configCursor.getFieldPurchasedNoads();
-                    boolean downloaded = configCursor.getFieldEpisodeDownloaded();
-                    boolean episodeHeard = configCursor.getFieldEpisodeHeard();
-                    int listenCount = configCursor.getFieldListenCount();
-                    configCursor.close();
+                    ConfigEpisodesCursor configCursor = getCursorForNextAvailableEpisode();
+                    if (configCursor != null && configCursor.moveToNext()) {
+                        // found the next episode to listen to
+                        appBarLayout.setExpanded(false);
+                        long episodeNumber = configCursor.getFieldEpisodeNumber();
+                        boolean purchased = configCursor.getFieldPurchasedAccess();
+                        boolean noAdsForShow = configCursor.getFieldPurchasedNoads();
+                        boolean downloaded = configCursor.getFieldEpisodeDownloaded();
+                        boolean episodeHeard = configCursor.getFieldEpisodeHeard();
+                        int listenCount = configCursor.getFieldListenCount();
+                        configCursor.close();
 
-                    LogHelper.v(TAG, "===> NEXT EPISODE TO PLAY"
-                            +": episodeNumber="+episodeNumber
-                            +", purchased="+purchased
-                            +", noAdsForShow="+noAdsForShow
-                            +", downloaded="+downloaded
-                            +", episodeHeard="+episodeHeard
-                            +", listenCount="+listenCount);
+                        LogHelper.v(TAG, "===> NEXT EPISODE TO PLAY"
+                                + ": episodeNumber=" + episodeNumber
+                                + ", purchased=" + purchased
+                                + ", noAdsForShow=" + noAdsForShow
+                                + ", downloaded=" + downloaded
+                                + ", episodeHeard=" + episodeHeard
+                                + ", listenCount=" + listenCount);
 
-                    // get this episode's info
-                    EpisodesCursor episodesCursor = getEpisodesCursor(episodeNumber);
-                    if (episodesCursor != null && episodesCursor.moveToNext()) {
-                        episodeNumber = episodesCursor.getFieldEpisodeNumber();
-                        String airdate = episodesCursor.getFieldAirdate();
-                        String episodeTitle = episodesCursor.getFieldEpisodeTitle();
-                        String episodeDescription = episodesCursor.getFieldEpisodeDescription();
-                        String episodeWeblinkUrl = Uri.parse(episodesCursor.getFieldWeblinkUrl()).getEncodedPath();
-                        String episodeDownloadUrl = Uri.parse("http://"+episodesCursor.getFieldDownloadUrl()).toString();
-                        Float rating = episodesCursor.getFieldRating();
-                        Integer voteCount = episodesCursor.getFieldVoteCount();
-                        episodesCursor.close();
-                        foundEpisode = true;
+                        // get this episode's detail info
+                        EpisodesCursor episodesCursor = getEpisodesCursor(episodeNumber);
+                        if (episodesCursor != null && episodesCursor.moveToNext()) {
+                            episodeNumber = episodesCursor.getFieldEpisodeNumber();
+                            String airdate = episodesCursor.getFieldAirdate();
+                            String episodeTitle = episodesCursor.getFieldEpisodeTitle();
+                            String episodeDescription = episodesCursor.getFieldEpisodeDescription();
+                            String episodeWeblinkUrl = Uri.parse(episodesCursor.getFieldWeblinkUrl()).getEncodedPath();
+                            String episodeDownloadUrl = Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString();
+                            Float rating = episodesCursor.getFieldRating();
+                            mDuration = DEFAULT_DURATION; // one-hour in ms
+                            Integer voteCount = episodesCursor.getFieldVoteCount();
+                            episodesCursor.close();
+                            foundEpisode = true;
 
-                        LogHelper.v(TAG, "===> EPISODE DETAIL"
-                                +": episodeNumber="+episodeNumber
-                                +": airdate="+airdate
-                                +": episodeTitle="+episodeTitle
-                                +": episodeDescription="+episodeDescription
-                                +": episodeWeblinkUrl="+episodeWeblinkUrl
-                                +": episodeDownloadUrl="+episodeDownloadUrl
-                                +": rating="+rating
-                                +": voteCount="+voteCount);
+                            LogHelper.v(TAG, "===> EPISODE DETAIL"
+                                    + ": episodeNumber=" + episodeNumber
+                                    + ": airdate=" + airdate
+                                    + ": episodeTitle=" + episodeTitle
+                                    + ": episodeDescription=" + episodeDescription
+                                    + ": episodeWeblinkUrl=" + episodeWeblinkUrl
+                                    + ": episodeDownloadUrl=" + episodeDownloadUrl
+                                    + ": rating=" + rating
+                                    + ": voteCount=" + voteCount);
 
-                        playPauseEpisode(episodeNumber, episodeTitle, episodeDownloadUrl, purchased, downloaded);
+                            playPauseEpisode(episodeNumber, episodeTitle, episodeDownloadUrl, purchased, downloaded);
+                        }
                     }
-                }
-                if (!foundEpisode) {
-                    // FIXME: popup alert - ALL EPISODES ARE HEARD!
-                    appBarLayout.setExpanded(true);
+                    if (!foundEpisode) {
+                        LogHelper.v(TAG, "popup alert - ALL EPISODES ARE HEARD!");
+                        AlertDialog alertDialog = new AlertDialog.Builder(AutoplayActivity.this).create();
+                        alertDialog.setTitle(getResources().getString(R.string.nothing_unheard));
+                        alertDialog.setMessage(getResources().getString(R.string.heard_everything));
+                        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                    }
+                                });
+                        alertDialog.show();
+                        appBarLayout.setExpanded(true);
+                    }
+                } else {
+                    LogHelper.v(TAG, "isProcessingTouchEvents or seeking - onClick ignored");
                 }
             }
         });
+        mAutoplayState = AutoplayState.PLAY;
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         if (fab != null) {
@@ -290,16 +370,52 @@ public class AutoplayActivity extends BaseActivity
             fab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    // Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                    //         .setAction("Action", null).show();
-                    LogHelper.v(TAG, "CLICK - fab");
-                    Intent episodeListIntent = new Intent(activity, EpisodeListActivity.class);
-                    startActivity(episodeListIntent);
+                    if (!mCircularSeekBar.isProcessingTouchEvents() && !mSeeking) {
+                        LogHelper.v(TAG, "onClick - fab");
+                        Intent episodeListIntent = new Intent(activity, EpisodeListActivity.class);
+                        startActivity(episodeListIntent);
+                        // Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        //         .setAction("Action", null).show();
+                    }
+                    else {
+                        LogHelper.v(TAG, "isProcessingTouchEvents or seeking - onClick ignored");
+                    }
                 }
             });
         }
 
-        mCircleSlider = (CircularSlider) findViewById(R.id.circular_seekbar);
+        // create a new View for the seek-bar and add it into the main_frame
+        FrameLayout theFrame = (FrameLayout) findViewById(R.id.main_frame);
+        mCircularSeekBar = new CircularSeekBar(this);
+        mCircularSeekBar.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        mCircularSeekBar.setBarWidth(5);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            mCircularSeekBar.setBackgroundColor(getResources().getColor(R.color.transparent, null));
+        }
+        else {
+            mCircularSeekBar.setBackgroundColor(getResources().getColor(R.color.transparent));
+        }
+        mDuration = DEFAULT_DURATION; // one-hour in ms
+        mCircularSeekBar.setMaxProgress((int) mDuration);
+        mCircularSeekBar.setProgress(0);
+        mCircularSeekBar.setVisibility(View.INVISIBLE);
+        mCircularSeekBar.setEnabled(true);
+        mCircularSeekBar.showSeekBar();
+        theFrame.addView(mCircularSeekBar);
+        mCircularSeekBar.invalidate();
+
+        mCircularSeekBar.setSeekBarChangeListener(new CircularSeekBar.OnSeekChangeListener() {
+
+            @Override
+            public void onProgressChange(CircularSeekBar view, int newProgress) {
+                if (!mCircularSeekBar.isProcessingTouchEvents() && !mSeeking) {
+                    LogHelper.v(TAG, "onProgressChange: newProgress:" + newProgress);
+                    mSeeking = true;
+                    mCurrentPosition = newProgress;
+                    mMediaController.getTransportControls().seekTo(newProgress);
+                }
+            }
+        });
 
         // initialize AdMob - note this code uses the Gradle #IFDEF / #ENDIF gradle preprocessor
         //#IFDEF 'FREE'
@@ -325,76 +441,45 @@ public class AutoplayActivity extends BaseActivity
                 +", purchased="+purchased
                 +", downloaded="+downloaded);
 
-        PlaybackStateCompat state = getSupportMediaController().getPlaybackState();
-        if (state != null) {
-            MediaControllerCompat.TransportControls controls = getSupportMediaController().getTransportControls();
-            switch (state.getState()) {
-                case PlaybackStateCompat.STATE_PLAYING: // fall through
-                case PlaybackStateCompat.STATE_BUFFERING:
+        mLastPlaybackState = mMediaController.getPlaybackState();
+        if (mLastPlaybackState != null) {
+            MediaControllerCompat.TransportControls controls = mMediaController.getTransportControls();
+            switch (mLastPlaybackState.getState()) {
+                case PlaybackStateCompat.STATE_BUFFERING: // fall through
+                case PlaybackStateCompat.STATE_PLAYING:
                     LogHelper.v(TAG, "controls.pause();");
                     controls.pause();
-                    // FIXME: stopSeekbarUpdate();
+                    stopSeekbarUpdate();
                     break;
                 case PlaybackStateCompat.STATE_PAUSED:
                 case PlaybackStateCompat.STATE_STOPPED:
                     LogHelper.v(TAG, "controls.play();");
                     controls.play();
-                    // FIXME: scheduleSeekbarUpdate();
+                    scheduleSeekbarUpdate();
                     break;
                 default:
-                    mMediaId = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.genre);
-                    Uri mediaUri = Uri.parse(episodeDownloadUrl);
-                    LogHelper.d(TAG, "*** START PLAYBACK *** state="+state.getState()+", mMediaId="+mMediaId+", mediaUri="+mediaUri);
-                    String id = String.valueOf(episodeDownloadUrl.hashCode());
-                    String episodeMediaId = MediaIDHelper.createMediaID(id, MediaIDHelper.MEDIA_ID_MUSICS_BY_GENRE, mMediaId);
-                    Bundle bundle = new Bundle();
-                    mMediaController.getTransportControls().playFromMediaId(episodeMediaId, bundle);
+                    if (mAutoplayState == AutoplayState.PLAY) {
+                        LogHelper.v(TAG, "start auto-playing..");
+                        loadingPlaybackControls();
+                        mMediaId = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.genre);
+                        Uri mediaUri = Uri.parse(episodeDownloadUrl);
+                        LogHelper.d(TAG, "*** START PLAYBACK *** state=" + mLastPlaybackState.getState() + ", mMediaId=" + mMediaId + ", mediaUri=" + mediaUri);
+                        String id = String.valueOf(episodeDownloadUrl.hashCode());
+                        String episodeMediaId = MediaIDHelper.createMediaID(id, MediaIDHelper.MEDIA_ID_MUSICS_BY_GENRE, mMediaId);
+                        Bundle bundle = new Bundle();
+                        mMediaController.getTransportControls().playFromMediaId(episodeMediaId, bundle);
+                    }
+                    else {
+                        LogHelper.v(TAG, "stop auto-playing..");
+                        controls.stop();
+                        stopSeekbarUpdate();
+                        mAutoplayState = AutoplayState.PLAY;
+                        hidePlaybackControls();
+                        mAudioFocusRequstResult = 0;
+                        mCurrentPosition = 0;
+                    }
             }
         }
-    }
-
-    // from: http://stackoverflow.com/questions/19890643/android-4-4-play-default-music-player/20439822#20439822
-    // from: http://stackoverflow.com/questions/11275400/reliably-pausing-media-playback-system-wide-in-android
-    private void press_PLAY_PAUSE() {
-        LogHelper.v(TAG, "press_PLAY_PAUSE");
-        final Context context = getApplicationContext();
-        if (mAudioFocusRequstResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            mAudioFocusRequstResult = mAudioManager.requestAudioFocus(mAudioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-        }
-        if (mAudioFocusRequstResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            LogHelper.v(TAG, "---> AudioFocus GRANTED");
-            long eventtime = SystemClock.uptimeMillis();
-
-            Intent downIntent = new Intent(Intent.ACTION_MEDIA_BUTTON, null);
-            KeyEvent downEvent = new KeyEvent(eventtime, eventtime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0);
-            downIntent.putExtra(Intent.EXTRA_KEY_EVENT, downEvent);
-            sendOrderedBroadcast(downIntent, null);
-
-            Intent upIntent = new Intent(Intent.ACTION_MEDIA_BUTTON, null);
-            KeyEvent upEvent = new KeyEvent(eventtime, eventtime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0);
-            upIntent.putExtra(Intent.EXTRA_KEY_EVENT, upEvent);
-            sendOrderedBroadcast(upIntent, null);
-
-            // hold audio focus until playback stopped
-        }
-    }
-
-    private void press_NEXT() {
-        LogHelper.v(TAG, "press_NEXT");
-        long eventtime = SystemClock.uptimeMillis();
-        Intent downIntent = new Intent(Intent.ACTION_MEDIA_BUTTON, null);
-        KeyEvent downEvent = new KeyEvent(eventtime, eventtime, KeyEvent.ACTION_DOWN,   KeyEvent.KEYCODE_MEDIA_NEXT, 0);
-        downIntent.putExtra(Intent.EXTRA_KEY_EVENT, downEvent);
-        sendOrderedBroadcast(downIntent, null);
-    }
-
-    private void press_PREVIOUS() {
-        LogHelper.v(TAG, "press_PREVIOUS");
-        long eventtime = SystemClock.uptimeMillis();
-        Intent downIntent = new Intent(Intent.ACTION_MEDIA_BUTTON, null);
-        KeyEvent downEvent = new KeyEvent(eventtime, eventtime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PREVIOUS, 0);
-        downIntent.putExtra(Intent.EXTRA_KEY_EVENT, downEvent);
-        sendOrderedBroadcast(downIntent, null);
     }
 
     @Override
@@ -436,27 +521,83 @@ public class AutoplayActivity extends BaseActivity
         mMediaController = new MediaControllerCompat(this, token);
         setSupportMediaController(mMediaController);
         mMediaController.registerCallback(mMediaControllerCallback);
+    }
 
-        if (shouldShowControls()) {
-            showPlaybackControls();
-        } else {
-            LogHelper.d(TAG, "connectToSession: hiding controls");
-            hidePlaybackControls();
+    private void stopSeekbarUpdate() {
+        LogHelper.v(TAG, "stopSeekbarUpdate");
+        if (mScheduleFuture != null) {
+            mScheduleFuture.cancel(false);
+        }
+    }
+
+    private void scheduleSeekbarUpdate() {
+        LogHelper.v(TAG, "scheduleSeekbarUpdate");
+        stopSeekbarUpdate();
+        if (!mExecutorService.isShutdown()) {
+            mScheduleFuture = mExecutorService.scheduleAtFixedRate(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            mHandler.post(mUpdateProgressTask);
+                        }
+                    }, PROGRESS_UPDATE_INITIAL_INTERVAL,
+                    PROGRESS_UPDATE_INTERNAL, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    private void updateMediaDescription(MediaDescriptionCompat description) {
+        LogHelper.d(TAG, "updateMediaDescription: description="+description);
+        // FIXME: update description
+    }
+
+    private void updateDuration(MediaMetadataCompat metadata) {
+        LogHelper.d(TAG, "updateDuration");
+        if (metadata == null) {
+            return;
+        }
+        mDuration = (int) metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
+        LogHelper.v(TAG, "===> EPISODE DURATION="+mDuration/1000);
+        mCircularSeekBar.setMaxProgress((int) mDuration);
+        showPlaybackControls();
+        if (mLastPlaybackState != null) {
+            mCurrentPosition = mLastPlaybackState.getPosition();
+            updateProgress();
         }
     }
 
     protected void showPlaybackControls() {
-        LogHelper.d(TAG, "showPlaybackControls");
-        Drawable pauseButton = getResources().getDrawable(R.drawable.radio_theater_pause_button_selector);
-        mAutoPlay.setBackground(pauseButton);
-        mCircleSlider.setVisibility(View.VISIBLE);
+        if (!mCircularSeekBar.isProcessingTouchEvents() && !mSeeking) {
+            LogHelper.d(TAG, "showPlaybackControls");
+            if (mAutoplayState != AutoplayState.LOADING) {
+                Drawable pauseButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_pause_button_selector, null);
+                mAutoPlay.setBackground(pauseButton);
+                mCircularSeekBar.setVisibility(View.VISIBLE);
+            }
+        }
     }
 
     protected void hidePlaybackControls() {
-        LogHelper.d(TAG, "hidePlaybackControls");
-        Drawable autoplayButton = getResources().getDrawable(R.drawable.radio_theater_autoplay_button_selector);
-        mAutoPlay.setBackground(autoplayButton);
-        mCircleSlider.setVisibility(View.GONE);
+        if (!mCircularSeekBar.isProcessingTouchEvents() && !mSeeking) {
+            LogHelper.d(TAG, "hidePlaybackControls");
+            if (mAutoplayState != AutoplayState.LOADING) {
+                if (mCurrentPosition > 0) {
+                    Drawable resumeButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_resume_button_selector, null);
+                    mAutoPlay.setBackground(resumeButton);
+                }
+                else {
+                    Drawable autoplayButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_autoplay_button_selector, null);
+                    mAutoPlay.setBackground(autoplayButton);
+                }
+            }
+            mCircularSeekBar.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    protected void loadingPlaybackControls() {
+        LogHelper.d(TAG, "loadingPlaybackControls");
+        Drawable loadingButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_loading_button_selector, null);
+        mAutoPlay.setBackground(loadingButton);
+        mAutoplayState = AutoplayState.LOADING;
     }
 
     /**
@@ -465,27 +606,87 @@ public class AutoplayActivity extends BaseActivity
      *
      * @return true if the MediaSession's state requires playback controls to be visible.
      */
-    protected boolean shouldShowControls() {
-        LogHelper.v(TAG, "shouldShowControls");
-        MediaControllerCompat mediaController = getSupportMediaController();
-        if (mediaController == null ||
-                mediaController.getMetadata() == null ||
-                mediaController.getPlaybackState() == null) {
-            return false;
+    protected void updateControls() {
+        LogHelper.v(TAG, "updateControls");
+        if (mMediaController == null ||
+                mMediaController.getMetadata() == null ||
+                mMediaController.getPlaybackState() == null) {
+            return;
         }
-        switch (mediaController.getPlaybackState().getState()) {
+        mLastPlaybackState = mMediaController.getPlaybackState();
+        switch (mLastPlaybackState.getState()) {
+            case PlaybackStateCompat.STATE_BUFFERING:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_BUFFERING");
+                loadingPlaybackControls();
+                return;
+            case PlaybackStateCompat.STATE_CONNECTING:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_CONNECTING");
+                loadingPlaybackControls();
+                return;
             case PlaybackStateCompat.STATE_ERROR:
                 LogHelper.v(TAG, "PlaybackStateCompat.STATE_ERROR");
-                return false;
+                hidePlaybackControls();
+                return;
+            case PlaybackStateCompat.STATE_FAST_FORWARDING:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_FORWARDING");
+                return;
             case PlaybackStateCompat.STATE_NONE:
                 LogHelper.v(TAG, "PlaybackStateCompat.STATE_NONE");
-                return false;
+                hidePlaybackControls();
+                return;
+            case PlaybackStateCompat.STATE_PAUSED:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_PAUSED");
+                mAutoplayState = AutoplayState.PLAY;
+                hidePlaybackControls();
+                return;
+            case PlaybackStateCompat.STATE_PLAYING:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_PLAYING");
+                mAutoplayState = AutoplayState.PAUSE;
+                showPlaybackControls();
+                return;
+            case PlaybackStateCompat.STATE_REWINDING:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_REWINDING");
+                return;
+            case PlaybackStateCompat.STATE_SKIPPING_TO_NEXT:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_SKIPPING_TO_NEXT");
+                return;
+            case PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS");
+                return;
+            case PlaybackStateCompat.STATE_SKIPPING_TO_QUEUE_ITEM:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_SKIPPING_TO_QUEUE_ITEM");
+                return;
             case PlaybackStateCompat.STATE_STOPPED:
                 LogHelper.v(TAG, "PlaybackStateCompat.STATE_STOPPED");
-                return false;
+                hidePlaybackControls();
+                return;
             default:
                 LogHelper.v(TAG, "PlaybackStateCompat.STATE_DEFAULT");
-                return true;
+                hidePlaybackControls();
+        }
+    }
+
+    private void updateProgress() {
+        if (!mCircularSeekBar.isProcessingTouchEvents() && !mSeeking) {
+            if (mLastPlaybackState == null) {
+                mLastPlaybackState = mMediaController.getPlaybackState();
+            }
+            if (mLastPlaybackState.getState() != PlaybackStateCompat.STATE_PAUSED) {
+                // Calculate the elapsed time between the last position update and now and unless
+                // paused, we can assume (delta * speed) + current position is approximately the
+                // latest position. This ensure that we do not repeatedly call the getPlaybackState()
+                // on MediaControllerCompat.
+                long timeDelta = SystemClock.elapsedRealtime() - mLastPlaybackState.getLastPositionUpdateTime();
+                mCurrentPosition += (int) timeDelta * mLastPlaybackState.getPlaybackSpeed();
+            }
+            if (mDuration == 0) { // paranoia
+                mDuration = DEFAULT_DURATION; // one-hour in ms
+                mCircularSeekBar.setMaxProgress((int) mDuration);
+            }
+            LogHelper.v(TAG, "updateProgress: mCurrentPosition=" + mCurrentPosition + ", mDuration=" + mDuration);
+            mCircularSeekBar.setProgress((int) mCurrentPosition);
+            mCircularSeekBar.invalidate();
+            mCircularSeekBar.setVisibility(View.VISIBLE);
         }
     }
 
@@ -532,12 +733,16 @@ public class AutoplayActivity extends BaseActivity
     public void onDestroy() {
         LogHelper.v(TAG, "onDestroy");
         super.onDestroy();
+        stopSeekbarUpdate();
+        mExecutorService.shutdown();
         mAudioManager = null;
         mAutoPlay = null;
-        mCircleSlider = null;
+        mCircularSeekBar = null;
         mAudioManager = null;
         mMediaBrowser = null;
         mMediaController = null;
+        mScheduleFuture = null;
+        mLastPlaybackState = null;
         mMediaId = null;
     }
 

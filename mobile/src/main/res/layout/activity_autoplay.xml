@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.design.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:circular="http://schemas.android.com/apk/res-auto"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -33,18 +32,6 @@
             android:elevation="@dimen/button_elevation"
             android:gravity="center"
             android:theme="@style/RadioTheaterButton" />
-
-        <me.angrybyte.circularslider.CircularSlider
-            android:id="@+id/circular_seekbar"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="30dp"
-            android:visibility="gone"
-            circular:angle="3.14"
-            circular:border_color="@color/sliderColor"
-            circular:border_thickness="9dp"
-            circular:thumb_image="@drawable/seek_thumb"
-            circular:thumb_size="30dp" />
 
     </FrameLayout>
 

@@ -258,7 +258,7 @@ public class MusicProvider {
         for (MutableMediaMetadata m : mMusicListById.values()) {
             String genre = m.metadata.getString(MediaMetadataCompat.METADATA_KEY_GENRE);
             List<MediaMetadataCompat> list = newMusicListByGenre.get(genre);
-            LogHelper.v(TAG, "buildListsByGenre: genre="+genre+", meta="+m.metadata);
+            //LogHelper.v(TAG, "buildListsByGenre: genre="+genre+", meta="+m.metadata);
             if (list == null) {
                 list = new ArrayList<>();
                 newMusicListByGenre.put(genre, list);
@@ -279,7 +279,7 @@ public class MusicProvider {
                 while (tracks.hasNext()) {
                     MediaMetadataCompat item = tracks.next();
                     String musicId = item.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
-                    LogHelper.v(TAG, "item="+item.getDescription()+", meta="+item.getMediaMetadata()+", musicId="+musicId);
+                    //LogHelper.v(TAG, "item="+item.getDescription()+", meta="+item.getMediaMetadata()+", musicId="+musicId);
                     mMusicListById.put(musicId, new MutableMediaMetadata(musicId, item));
                 }
                 buildListsByGenre();

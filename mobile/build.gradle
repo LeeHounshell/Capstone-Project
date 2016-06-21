@@ -161,7 +161,6 @@ dependencies {
     freeCompile 'com.google.android.gms:play-services-ads:9.0.2'
 
     compile 'com.github.jakob-grabner:Circle-Progress-View:v1.2.9'
-    compile 'me.angrybyte.slider:slider:1.2.0'
     compile 'org.immutables:gson:2.2.6'
 
     compile 'com.jakewharton:butterknife:8.0.1'

@@ -13,6 +13,11 @@
         All episodes can be downloaded for free from <b>http://www.cbsrmt.com</b>
         \n\nThis is my Capstone Project for the <b>Udacity Android Nanodegree</b> program.
         I hope you like it.
+        \n\n
+        CREDITS:\n
+                - Circle Progress View by Jakob Grabner\n
+                - Circular Seekbar by Raghav Sood\n
+                - ButterKnife by Jake Warton
     </string>
 
     <string name="e_g_marshall">E. G. Marshall</string>
@@ -29,7 +34,12 @@
     <string name="episodes_count">1399</string>
     <string name="genre">__RADIO_DRAMA__</string>
     <string name="icon_url">http://harlie.com/radiotheater/logo_icon.png</string>
+    <string name="key_art_url">http://harlie.com/radiotheater/e_g_marshal_1970.jpg</string>
+    <string name="haunted_url">http://harlie.com/radiotheater/haunted.png</string>
     <string name="error_loading_media">Error Loading Media</string>
+    <string name="nothing_unheard">No Unheard Episodes</string>
+    <string name="heard_everything">You have listened to all 1399 episodes!\nNo unheard episodes remain.</string>
+    <string name="ok">OK</string>
 
     <!-- Strings related to RadioTheaterService -->
     <string name="casting_to_device">Casting to %1$s</string>
