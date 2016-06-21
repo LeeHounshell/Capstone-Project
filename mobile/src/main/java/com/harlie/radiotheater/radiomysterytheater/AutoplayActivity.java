@@ -68,10 +68,27 @@ public class AutoplayActivity extends BaseActivity
     private static final long PROGRESS_UPDATE_INITIAL_INTERVAL = 100;
     private static final long DEFAULT_DURATION = 60 * 60 * 1000;
 
+    private static final String KEY_MEDIA_ID = "mediaId";
+    private static final String KEY_EPISODE = "episodeNumber";
+    private static final String KEY_PURCHASED = "purchased";
+    private static final String KEY_NOADS = "noads";
+    private static final String KEY_DOWNLOADED = "downloaded";
+    private static final String KEY_HEARD = "heard";
+    private static final String KEY_AUDIO_FOCUS = "audioFocus";
+    private static final String KEY_DURATION = "duration";
+    private static final String KEY_CURRENT_POSITION = "position";
+    private static final String KEY_SEEKING = "seeking";
+    private static final String KEY_AIRDATE = "airdate";
+    private static final String KEY_TITLE = "title";
+    private static final String KEY_DESCRIPTION = "description";
+    private static final String KEY_WEBLINK = "weblink";
+    private static final String KEY_DOWNLOAD_URL = "downloadUrl";
+    private static final String KEY_AUTOPLAY_STATE = "autoplayState";
+
     public enum AutoplayState {
-        PLAY, LOADING, PAUSE
+        READY2PLAY, LOADING, PLAYING, PAUSED
     }
-    AutoplayState mAutoplayState = AutoplayState.PLAY;
+    AutoplayState mAutoplayState = AutoplayState.READY2PLAY;
 
     private AppCompatButton mAutoPlay;
     private CircularSeekBar mCircularSeekBar;
@@ -80,12 +97,24 @@ public class AutoplayActivity extends BaseActivity
     private MediaControllerCompat mMediaController;
     private ScheduledFuture<?> mScheduleFuture;
     private PlaybackStateCompat mLastPlaybackState;
+
     private String mMediaId;
+    private long mEpisodeNumber;
+    private boolean mPurchased;
+    private boolean mNoAdsForShow;
+    private boolean mDownloaded;
+    private boolean mEpisodeHeard;
     private int mAudioFocusRequstResult;
     private long mDuration;
     private long mCurrentPosition;
     private boolean mSeeking;
+    private String mAirdate;
+    private String mEpisodeTitle;
+    private String mEpisodeDescription;
+    private String mEpisodeWeblinkUrl;
+    private String mEpisodeDownloadUrl;
 
+    private boolean mHandleRotationEvent;
     private final Handler mHandler = new Handler();
     private BroadcastReceiver mReceiver;
 
@@ -199,13 +228,39 @@ public class AutoplayActivity extends BaseActivity
                 public void onPlaybackStateChanged(@NonNull PlaybackStateCompat state) {
                     LogHelper.v(TAG, "onPlaybackStateChanged: state="+state.getState());
                     mLastPlaybackState = state;
+                    switch (mLastPlaybackState.getState()) {
+                        case PlaybackStateCompat.STATE_PLAYING: {
+                            mAutoplayState = AutoplayState.PLAYING;
+                            break;
+                        }
+                        case PlaybackStateCompat.STATE_BUFFERING: {
+                            mAutoplayState = AutoplayState.LOADING;
+                            break;
+                        }
+                        case PlaybackStateCompat.STATE_PAUSED: {
+                            mAutoplayState = AutoplayState.PAUSED;
+                            break;
+                        }
+                        case PlaybackStateCompat.STATE_ERROR:
+                        case PlaybackStateCompat.STATE_NONE:
+                        case PlaybackStateCompat.STATE_STOPPED: {
+                            mAutoplayState = AutoplayState.READY2PLAY;
+                            break;
+                        }
+                    }
                     if (mSeeking && mLastPlaybackState.getState() != PlaybackStateCompat.STATE_PLAYING) {
-                        LogHelper.v(TAG, "ignoring onPlaybackStateChanged until seekTo completes");
+                        LogHelper.v(TAG, "*** ignoring onPlaybackStateChanged until seekTo completes");
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                loadingScreen();
+                            }
+                        });
                     }
                     else if (!mCircularSeekBar.isProcessingTouchEvents()) {
                         LogHelper.d(TAG, "MediaControllerCompat.Callback onPlaybackStateChanged state=" + mLastPlaybackState + " <<<---------");
                         mSeeking = false;
-                        updatePlaybackState();
+                        do_UpdateControls();
                     }
                 }
 
@@ -218,39 +273,97 @@ public class AutoplayActivity extends BaseActivity
                         updateDuration(metadata);
                     }
                     mLastPlaybackState = mMediaController.getPlaybackState();
-                    updatePlaybackState();
+                    do_UpdateControls();
                 }
             };
 
-    private void updatePlaybackState() {
-        LogHelper.v(TAG, "updatePlaybackState");
-        if (mLastPlaybackState == null) {
+    private void do_UpdateControls() {
+        LogHelper.v(TAG, "do_UpdateControls");
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                updateControls();
+            }
+        });
+    }
+
+    /**
+     * Check if the MediaSession is active and in a "playback-able" state
+     * (not NONE and not STOPPED).
+     *
+     * @return true if the MediaSession's state requires playback controls to be visible.
+     */
+    protected void updateControls() {
+        LogHelper.v(TAG, "updateControls");
+        if (mMediaController == null ||
+                mMediaController.getMetadata() == null ||
+                mMediaController.getPlaybackState() == null) {
+                LogHelper.v(TAG, "no MediaController or no MetaData!");
             return;
         }
+        mLastPlaybackState = mMediaController.getPlaybackState();
         switch (mLastPlaybackState.getState()) {
-            case PlaybackStateCompat.STATE_PLAYING:
-                updateControls();
-                scheduleSeekbarUpdate();
-                break;
-            case PlaybackStateCompat.STATE_PAUSED:
-                hidePlaybackControls();
-                stopSeekbarUpdate();
-                break;
-            case PlaybackStateCompat.STATE_NONE:
-            case PlaybackStateCompat.STATE_STOPPED:
-                hidePlaybackControls();
-                stopSeekbarUpdate();
-                break;
             case PlaybackStateCompat.STATE_BUFFERING:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_BUFFERING");
+                loadingScreen();
                 hidePlaybackControls();
                 stopSeekbarUpdate();
-                break;
+                return;
+            case PlaybackStateCompat.STATE_CONNECTING:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_CONNECTING");
+                loadingScreen();
+                return;
+            case PlaybackStateCompat.STATE_ERROR:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_ERROR");
+                hidePlaybackControls();
+                return;
+            case PlaybackStateCompat.STATE_FAST_FORWARDING:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_FORWARDING");
+                return;
+            case PlaybackStateCompat.STATE_NONE:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_NONE");
+                hidePlaybackControls();
+                return;
+            case PlaybackStateCompat.STATE_PAUSED:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_PAUSED");
+                mAutoplayState = AutoplayState.READY2PLAY;
+                mAutoPlay.setVisibility(View.VISIBLE);
+                hidePlaybackControls();
+                stopSeekbarUpdate();
+                return;
+            case PlaybackStateCompat.STATE_PLAYING:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_PLAYING");
+                mAutoPlay.setVisibility(View.VISIBLE);
+                mAutoplayState = AutoplayState.PLAYING;
+                showPlaybackControls();
+                scheduleSeekbarUpdate();
+                return;
+            case PlaybackStateCompat.STATE_REWINDING:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_REWINDING");
+                return;
+            case PlaybackStateCompat.STATE_SKIPPING_TO_NEXT:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_SKIPPING_TO_NEXT");
+                return;
+            case PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS");
+                return;
+            case PlaybackStateCompat.STATE_SKIPPING_TO_QUEUE_ITEM:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_SKIPPING_TO_QUEUE_ITEM");
+                return;
+            case PlaybackStateCompat.STATE_STOPPED:
+                LogHelper.v(TAG, "PlaybackStateCompat.STATE_STOPPED");
+                mAutoPlay.setVisibility(View.VISIBLE);
+                hidePlaybackControls();
+                stopSeekbarUpdate();
+                return;
             default:
                 LogHelper.d(TAG, "unhandled state ", mLastPlaybackState.getState());
+                mAutoPlay.setVisibility(View.VISIBLE);
+                hidePlaybackControls();
+                stopSeekbarUpdate();
                 if (mAutoplayState == AutoplayState.LOADING) {
                     LogHelper.v(TAG, "AutoplayState.LOADING - need to reset");
-                    mAutoplayState = AutoplayState.PLAY;
-                    hidePlaybackControls();
+                    mAutoplayState = AutoplayState.READY2PLAY;
                     problemWithPlayback();
                 }
         }
@@ -258,6 +371,7 @@ public class AutoplayActivity extends BaseActivity
 
     private void problemLoadingMetadata() {
         LogHelper.v(TAG, "problemLoadingMetadata");
+        mCurrentPosition = 0;
         AlertDialog alertDialog = new AlertDialog.Builder(AutoplayActivity.this).create();
         alertDialog.setTitle(getResources().getString(R.string.no_metadata));
         alertDialog.setMessage(getResources().getString(R.string.metadata_loading_problem));
@@ -272,6 +386,7 @@ public class AutoplayActivity extends BaseActivity
 
     private void problemWithPlayback() {
         LogHelper.v(TAG, "problemWithPlayback");
+        mCurrentPosition = 0;
         AlertDialog alertDialog = new AlertDialog.Builder(AutoplayActivity.this).create();
         alertDialog.setTitle(getResources().getString(R.string.unable_to_load));
         alertDialog.setMessage(getResources().getString(R.string.playback_problem));
@@ -293,6 +408,41 @@ public class AutoplayActivity extends BaseActivity
         mAudioFocusRequstResult = 0;
         mDuration = DEFAULT_DURATION; // one-hour in ms
         mCurrentPosition = 0;
+        mAutoplayState = AutoplayState.READY2PLAY;
+
+        if (savedInstanceState != null) {
+            LogHelper.v(TAG, "rotation event");
+            mMediaId = savedInstanceState.getString(KEY_MEDIA_ID);
+            mEpisodeNumber = savedInstanceState.getLong(KEY_EPISODE);
+            mPurchased = savedInstanceState.getBoolean(KEY_PURCHASED);
+            mNoAdsForShow = savedInstanceState.getBoolean(KEY_NOADS);
+            mDownloaded = savedInstanceState.getBoolean(KEY_DOWNLOADED);
+            mEpisodeHeard = savedInstanceState.getBoolean(KEY_HEARD);
+            mAudioFocusRequstResult = savedInstanceState.getInt(KEY_AUDIO_FOCUS);
+            mDuration = savedInstanceState.getLong(KEY_DURATION);
+            mCurrentPosition = savedInstanceState.getLong(KEY_CURRENT_POSITION);
+            mSeeking = savedInstanceState.getBoolean(KEY_SEEKING);
+            mAirdate = savedInstanceState.getString(KEY_AIRDATE);
+            mEpisodeTitle = savedInstanceState.getString(KEY_TITLE);
+            mEpisodeDescription = savedInstanceState.getString(KEY_DESCRIPTION);
+            mEpisodeWeblinkUrl = savedInstanceState.getString(KEY_WEBLINK);
+            mEpisodeDownloadUrl = savedInstanceState.getString(KEY_DOWNLOAD_URL);
+
+            int state = savedInstanceState.getInt(KEY_AUTOPLAY_STATE);
+            if (state == 1) {
+                mAutoplayState = AutoplayState.LOADING;
+            }
+            else if (state == 2) {
+                mAutoplayState = AutoplayState.PLAYING;
+            }
+            else if (state == 3) {
+                mAutoplayState = AutoplayState.PAUSED;
+            }
+            else {
+                mAutoplayState = AutoplayState.READY2PLAY;
+            }
+            mHandleRotationEvent = true;
+        }
 
         /*
          * FUTURE: TV support
@@ -328,79 +478,10 @@ public class AutoplayActivity extends BaseActivity
 
             @Override
             public void onClick(View v) {
-                if (!mCircularSeekBar.isProcessingTouchEvents() && !mSeeking) {
-                    LogHelper.v(TAG, "CLICK - autoPlay");
-                    boolean foundEpisode = false;
-                    AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.toolbar_container);
-
-                    ConfigEpisodesCursor configCursor = getCursorForNextAvailableEpisode();
-                    if (configCursor != null && configCursor.moveToNext()) {
-                        // found the next episode to listen to
-                        appBarLayout.setExpanded(false);
-                        long episodeNumber = configCursor.getFieldEpisodeNumber();
-                        boolean purchased = configCursor.getFieldPurchasedAccess();
-                        boolean noAdsForShow = configCursor.getFieldPurchasedNoads();
-                        boolean downloaded = configCursor.getFieldEpisodeDownloaded();
-                        boolean episodeHeard = configCursor.getFieldEpisodeHeard();
-                        int listenCount = configCursor.getFieldListenCount();
-                        configCursor.close();
-
-                        LogHelper.v(TAG, "===> NEXT EPISODE TO PLAY"
-                                + ": episodeNumber=" + episodeNumber
-                                + ", purchased=" + purchased
-                                + ", noAdsForShow=" + noAdsForShow
-                                + ", downloaded=" + downloaded
-                                + ", episodeHeard=" + episodeHeard
-                                + ", listenCount=" + listenCount);
-
-                        // get this episode's detail info
-                        EpisodesCursor episodesCursor = getEpisodesCursor(episodeNumber);
-                        if (episodesCursor != null && episodesCursor.moveToNext()) {
-                            episodeNumber = episodesCursor.getFieldEpisodeNumber();
-                            String airdate = episodesCursor.getFieldAirdate();
-                            String episodeTitle = episodesCursor.getFieldEpisodeTitle();
-                            String episodeDescription = episodesCursor.getFieldEpisodeDescription();
-                            String episodeWeblinkUrl = Uri.parse(episodesCursor.getFieldWeblinkUrl()).getEncodedPath();
-                            String episodeDownloadUrl = Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString();
-                            Float rating = episodesCursor.getFieldRating();
-                            mDuration = DEFAULT_DURATION; // one-hour in ms
-                            Integer voteCount = episodesCursor.getFieldVoteCount();
-                            episodesCursor.close();
-                            foundEpisode = true;
-
-                            LogHelper.v(TAG, "===> EPISODE DETAIL"
-                                    + ": episodeNumber=" + episodeNumber
-                                    + ": airdate=" + airdate
-                                    + ": episodeTitle=" + episodeTitle
-                                    + ": episodeDescription=" + episodeDescription
-                                    + ": episodeWeblinkUrl=" + episodeWeblinkUrl
-                                    + ": episodeDownloadUrl=" + episodeDownloadUrl
-                                    + ": rating=" + rating
-                                    + ": voteCount=" + voteCount);
-
-                            playPauseEpisode(episodeNumber, episodeTitle, episodeDownloadUrl, purchased, downloaded);
-                        }
-                    }
-                    if (!foundEpisode) {
-                        LogHelper.v(TAG, "popup alert - ALL EPISODES ARE HEARD!");
-                        AlertDialog alertDialog = new AlertDialog.Builder(AutoplayActivity.this).create();
-                        alertDialog.setTitle(getResources().getString(R.string.nothing_unheard));
-                        alertDialog.setMessage(getResources().getString(R.string.heard_everything));
-                        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        dialog.dismiss();
-                                    }
-                                });
-                        alertDialog.show();
-                        appBarLayout.setExpanded(true);
-                    }
-                } else {
-                    LogHelper.v(TAG, "isProcessingTouchEvents or seeking - onClick ignored");
-                }
+                LogHelper.v(TAG, "onClick");
+                handleAutoplayClick();
             }
         });
-        mAutoplayState = AutoplayState.PLAY;
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         if (fab != null) {
@@ -472,13 +553,96 @@ public class AutoplayActivity extends BaseActivity
         //#ENDIF
     }
 
-    private void playPauseEpisode(long episodeNumber, String episodeTitle, String episodeDownloadUrl, boolean purchased, boolean downloaded) {
-        LogHelper.v(TAG, "playPauseEpisode: episodeNumber="+episodeNumber
-                +", episodeTitle="+episodeTitle
-                +", episodeDownloadUrl="+episodeDownloadUrl
-                +", purchased="+purchased
-                +", downloaded="+downloaded);
+    private void handleAutoplayClick() {
+        LogHelper.v(TAG, "handleAutoplayClick");
+        if (!mCircularSeekBar.isProcessingTouchEvents() && !mSeeking) {
+            LogHelper.v(TAG, "do autoPlay");
+            boolean foundEpisode = false;
+            AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.toolbar_container);
 
+            ConfigEpisodesCursor configCursor = getCursorForNextAvailableEpisode();
+            if (configCursor != null && configCursor.moveToNext()) {
+                // found the next episode to listen to
+                appBarLayout.setExpanded(false);
+                mEpisodeNumber = configCursor.getFieldEpisodeNumber();
+                mPurchased = configCursor.getFieldPurchasedAccess();
+                mNoAdsForShow = configCursor.getFieldPurchasedNoads();
+                mDownloaded = configCursor.getFieldEpisodeDownloaded();
+                mEpisodeHeard = configCursor.getFieldEpisodeHeard();
+                configCursor.close();
+
+                // get this episode's detail info
+                EpisodesCursor episodesCursor = getEpisodesCursor(mEpisodeNumber);
+                if (episodesCursor != null && episodesCursor.moveToNext()) {
+                    mEpisodeNumber = episodesCursor.getFieldEpisodeNumber();
+                    mAirdate = episodesCursor.getFieldAirdate();
+                    mEpisodeTitle = episodesCursor.getFieldEpisodeTitle();
+                    mEpisodeDescription = episodesCursor.getFieldEpisodeDescription();
+                    mEpisodeWeblinkUrl = Uri.parse(episodesCursor.getFieldWeblinkUrl()).getEncodedPath();
+                    mEpisodeDownloadUrl = Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString();
+                    mDuration = DEFAULT_DURATION; // one-hour in ms
+                    episodesCursor.close();
+                    foundEpisode = true;
+                    playPauseEpisode();
+                }
+            }
+            if (!foundEpisode) {
+                LogHelper.v(TAG, "popup alert - ALL EPISODES ARE HEARD!");
+                AlertDialog alertDialog = new AlertDialog.Builder(AutoplayActivity.this).create();
+                alertDialog.setTitle(getResources().getString(R.string.nothing_unheard));
+                alertDialog.setMessage(getResources().getString(R.string.heard_everything));
+                alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+                alertDialog.show();
+                appBarLayout.setExpanded(true);
+            }
+        } else {
+            LogHelper.v(TAG, "isProcessingTouchEvents or seeking - onClick ignored");
+        }
+    }
+
+    private void showCurrentInfo() {
+        String state = "unknown";
+        switch (mAutoplayState) {
+            case READY2PLAY: {
+                state = "READY to PLAY";
+                break;
+            }
+            case LOADING: {
+                state = "LOADING Episode";
+                break;
+            }
+            case PLAYING: {
+                state = "PLAYING Episode";
+                break;
+            }
+            case PAUSED: {
+                state = "Episode PAUSED";
+                break;
+            }
+        }
+        LogHelper.v(TAG, "===> EPISODE INFO"
+                + ": mEpisodeTitle=" + mEpisodeTitle
+                + ": mEpisodeNumber=" + mEpisodeNumber
+                + ": mEpisodeDownloadUrl=" + mEpisodeDownloadUrl
+                + ": mAirdate=" + mAirdate
+                + ": mEpisodeDescription=" + mEpisodeDescription
+                + ": mEpisodeWeblinkUrl=" + mEpisodeWeblinkUrl
+                + ": mEpisodeDownloadUrl=" + mEpisodeDownloadUrl
+                + ", mPurchased=" + mPurchased
+                + ", mNoAdsForShow=" + mNoAdsForShow
+                + ", mDownloaded=" + mDownloaded
+                + ", mEpisodeHeard=" + mEpisodeHeard
+                + ", mAutoplayState=" + state);
+    }
+
+    private void playPauseEpisode() {
+        LogHelper.v(TAG, "playPauseEpisode");
+        showCurrentInfo();
         mLastPlaybackState = mMediaController.getPlaybackState();
         if (mLastPlaybackState != null) {
             MediaControllerCompat.TransportControls controls = mMediaController.getTransportControls();
@@ -488,21 +652,23 @@ public class AutoplayActivity extends BaseActivity
                     LogHelper.v(TAG, "controls.pause();");
                     controls.pause();
                     stopSeekbarUpdate();
+                    mAutoplayState = AutoplayState.PAUSED;
                     break;
                 case PlaybackStateCompat.STATE_PAUSED:
                 case PlaybackStateCompat.STATE_STOPPED:
                     LogHelper.v(TAG, "controls.play();");
                     controls.play();
                     scheduleSeekbarUpdate();
+                    mAutoplayState = AutoplayState.PLAYING;
                     break;
                 default:
-                    if (mAutoplayState == AutoplayState.PLAY) {
+                    if (mAutoplayState == AutoplayState.READY2PLAY) {
                         LogHelper.v(TAG, "start auto-playing..");
-                        loadingPlaybackControls();
+                        loadingScreen();
                         mMediaId = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.genre);
-                        Uri mediaUri = Uri.parse(episodeDownloadUrl);
+                        Uri mediaUri = Uri.parse(mEpisodeDownloadUrl);
                         LogHelper.d(TAG, "*** START PLAYBACK *** state=" + mLastPlaybackState.getState() + ", mMediaId=" + mMediaId + ", mediaUri=" + mediaUri);
-                        String id = String.valueOf(episodeDownloadUrl.hashCode());
+                        String id = String.valueOf(mEpisodeDownloadUrl.hashCode());
                         String episodeMediaId = MediaIDHelper.createMediaID(id, MediaIDHelper.MEDIA_ID_MUSICS_BY_GENRE, mMediaId);
                         Bundle bundle = new Bundle();
                         mMediaController.getTransportControls().playFromMediaId(episodeMediaId, bundle);
@@ -511,7 +677,7 @@ public class AutoplayActivity extends BaseActivity
                         LogHelper.v(TAG, "stop auto-playing..");
                         controls.stop();
                         stopSeekbarUpdate();
-                        mAutoplayState = AutoplayState.PLAY;
+                        mAutoplayState = AutoplayState.READY2PLAY;
                         hidePlaybackControls();
                         mAudioFocusRequstResult = 0;
                         mCurrentPosition = 0;
@@ -559,6 +725,16 @@ public class AutoplayActivity extends BaseActivity
         mMediaController = new MediaControllerCompat(this, token);
         setSupportMediaController(mMediaController);
         mMediaController.registerCallback(mMediaControllerCallback);
+        if (mHandleRotationEvent) {
+            LogHelper.v(TAG, "*** RESTORE PLAYBACK STATE AFTER ROTATION ***");
+            if (mAutoplayState != AutoplayState.READY2PLAY) {
+                LogHelper.v(TAG, "RELOADING EPISODE: "+mEpisodeTitle);
+                playPauseEpisode();
+            }
+            else {
+                showCurrentInfo();
+            }
+        }
     }
 
     private void stopSeekbarUpdate() {
@@ -631,77 +807,11 @@ public class AutoplayActivity extends BaseActivity
         }
     }
 
-    protected void loadingPlaybackControls() {
-        LogHelper.d(TAG, "loadingPlaybackControls");
+    protected void loadingScreen() {
+        LogHelper.d(TAG, "loadingScreen");
         Drawable loadingButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_loading_button_selector, null);
         mAutoPlay.setBackground(loadingButton);
         mAutoplayState = AutoplayState.LOADING;
-    }
-
-    /**
-     * Check if the MediaSession is active and in a "playback-able" state
-     * (not NONE and not STOPPED).
-     *
-     * @return true if the MediaSession's state requires playback controls to be visible.
-     */
-    protected void updateControls() {
-        LogHelper.v(TAG, "updateControls");
-        if (mMediaController == null ||
-                mMediaController.getMetadata() == null ||
-                mMediaController.getPlaybackState() == null) {
-            return;
-        }
-        mLastPlaybackState = mMediaController.getPlaybackState();
-        switch (mLastPlaybackState.getState()) {
-            case PlaybackStateCompat.STATE_BUFFERING:
-                LogHelper.v(TAG, "PlaybackStateCompat.STATE_BUFFERING");
-                loadingPlaybackControls();
-                return;
-            case PlaybackStateCompat.STATE_CONNECTING:
-                LogHelper.v(TAG, "PlaybackStateCompat.STATE_CONNECTING");
-                loadingPlaybackControls();
-                return;
-            case PlaybackStateCompat.STATE_ERROR:
-                LogHelper.v(TAG, "PlaybackStateCompat.STATE_ERROR");
-                hidePlaybackControls();
-                return;
-            case PlaybackStateCompat.STATE_FAST_FORWARDING:
-                LogHelper.v(TAG, "PlaybackStateCompat.STATE_FORWARDING");
-                return;
-            case PlaybackStateCompat.STATE_NONE:
-                LogHelper.v(TAG, "PlaybackStateCompat.STATE_NONE");
-                hidePlaybackControls();
-                return;
-            case PlaybackStateCompat.STATE_PAUSED:
-                LogHelper.v(TAG, "PlaybackStateCompat.STATE_PAUSED");
-                mAutoplayState = AutoplayState.PLAY;
-                hidePlaybackControls();
-                return;
-            case PlaybackStateCompat.STATE_PLAYING:
-                LogHelper.v(TAG, "PlaybackStateCompat.STATE_PLAYING");
-                mAutoplayState = AutoplayState.PAUSE;
-                showPlaybackControls();
-                return;
-            case PlaybackStateCompat.STATE_REWINDING:
-                LogHelper.v(TAG, "PlaybackStateCompat.STATE_REWINDING");
-                return;
-            case PlaybackStateCompat.STATE_SKIPPING_TO_NEXT:
-                LogHelper.v(TAG, "PlaybackStateCompat.STATE_SKIPPING_TO_NEXT");
-                return;
-            case PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS:
-                LogHelper.v(TAG, "PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS");
-                return;
-            case PlaybackStateCompat.STATE_SKIPPING_TO_QUEUE_ITEM:
-                LogHelper.v(TAG, "PlaybackStateCompat.STATE_SKIPPING_TO_QUEUE_ITEM");
-                return;
-            case PlaybackStateCompat.STATE_STOPPED:
-                LogHelper.v(TAG, "PlaybackStateCompat.STATE_STOPPED");
-                hidePlaybackControls();
-                return;
-            default:
-                LogHelper.v(TAG, "PlaybackStateCompat.STATE_DEFAULT");
-                hidePlaybackControls();
-        }
     }
 
     private void updateProgress() {
@@ -815,6 +925,46 @@ public class AutoplayActivity extends BaseActivity
         mScheduleFuture = null;
         mLastPlaybackState = null;
         mMediaId = null;
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        LogHelper.v(TAG, "onSaveInstanceState");
+        super.onSaveInstanceState(outState);
+        outState.putString(KEY_MEDIA_ID, mMediaId);
+        outState.putLong(KEY_EPISODE, mEpisodeNumber);
+        outState.putBoolean(KEY_PURCHASED, mPurchased);
+        outState.putBoolean(KEY_NOADS, mNoAdsForShow);
+        outState.putBoolean(KEY_DOWNLOADED, mDownloaded);
+        outState.putBoolean(KEY_HEARD, mEpisodeHeard);
+        outState.putInt(KEY_AUDIO_FOCUS, mAudioFocusRequstResult);
+        outState.putLong(KEY_DURATION, mDuration);
+        outState.putLong(KEY_CURRENT_POSITION, mCurrentPosition);
+        outState.putBoolean(KEY_SEEKING, mSeeking);
+        outState.putString(KEY_AIRDATE, mAirdate);
+        outState.putString(KEY_TITLE, mEpisodeTitle);
+        outState.putString(KEY_DESCRIPTION, mEpisodeDescription);
+        outState.putString(KEY_WEBLINK, mEpisodeWeblinkUrl);
+        outState.putString(KEY_DOWNLOAD_URL, mEpisodeDownloadUrl);
+
+        switch (mAutoplayState) {
+            case READY2PLAY: {
+                outState.putInt(KEY_AUTOPLAY_STATE, 0);
+                break;
+            }
+            case LOADING: {
+                outState.putInt(KEY_AUTOPLAY_STATE, 1);
+                break;
+            }
+            case PLAYING: {
+                outState.putInt(KEY_AUTOPLAY_STATE, 2);
+                break;
+            }
+            case PAUSED: {
+                outState.putInt(KEY_AUTOPLAY_STATE, 3);
+                break;
+            }
+        }
     }
 
 }
