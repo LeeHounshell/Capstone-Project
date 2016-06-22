@@ -40,6 +40,7 @@ import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesSelection;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadingAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.NetworkHelper;
 
@@ -64,17 +65,39 @@ public class BaseActivity extends AppCompatActivity {
     protected static final String FIREBASE_ACTORS_URL = "radiomysterytheater/1/actors";
     protected static final String FIREBASE_SHOWS_URL = "radiomysterytheater/2/shows";
 
-    private FirebaseAuth mAuth;
-    private Firebase mFirebase;
-    private DatabaseReference mDatabase;
-    private Handler mHandler;
-    private View mRootView;
-    private CircleProgressView mCircleView;
-    private boolean mShowUnit;
-    private boolean mCopiedDatabaseSuccess;
+    public enum AutoplayState {
+        READY2PLAY, LOADING, PLAYING, PAUSED
+    }
+    protected AutoplayState mAutoplayState = AutoplayState.READY2PLAY;
+
+    protected String mMediaId;
+    protected long mEpisodeNumber;
+    protected boolean mPurchased;
+    protected boolean mNoAdsForShow;
+    protected boolean mDownloaded;
+    protected boolean mEpisodeHeard;
+    protected int mAudioFocusRequstResult;
+    protected long mDuration;
+    protected boolean mHaveRealDuration;
+    protected long mCurrentPosition;
+    protected boolean mSeeking;
+    protected String mAirdate;
+    protected String mEpisodeTitle;
+    protected String mEpisodeDescription;
+    protected String mEpisodeWeblinkUrl;
+    protected String mEpisodeDownloadUrl;
 
     protected static final int MIN_EMAIL_LENGTH = 3;
     protected static final int MIN_PASSWORD_LENGTH = 6;
+
+    protected FirebaseAuth mAuth;
+    protected Firebase mFirebase;
+    protected DatabaseReference mDatabase;
+    protected Handler mHandler;
+    protected View mRootView;
+    protected CircleProgressView mCircleView;
+    protected boolean mShowUnit;
+    protected boolean mCopiedDatabaseSuccess;
 
     private static int mCount;
 
@@ -86,6 +109,15 @@ public class BaseActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         LogHelper.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
+        if (savedInstanceState != null) {
+            restorePlayInfoFromBundle(savedInstanceState);
+        }
+        else {
+            Bundle playInfo = getIntent().getExtras();
+            if (playInfo != null) {
+                restorePlayInfoFromBundle(playInfo);
+            }
+        }
         mRootView = findViewById(android.R.id.content);
         mHandler = new Handler();
         Firebase.setAndroidContext(this);
@@ -103,6 +135,7 @@ public class BaseActivity extends AppCompatActivity {
         mDatabase = null;
         mHandler = null;
         mRootView = null;
+        mMediaId = null;
     }
 
     @Override
@@ -148,17 +181,6 @@ public class BaseActivity extends AppCompatActivity {
                 }
             });
         }
-    }
-
-    protected boolean doINeedToCreateADatabase() {
-        LogHelper.v(TAG, "doINeedToCreateADatabase");
-        if ((isExistingTable("EPISODES")) && (isExistingTable("ACTORS")) && (isExistingTable("WRITERS")))
-        {
-            LogHelper.v(TAG, "*** Found SQLITE Tables! ***");
-            return false;
-        }
-        LogHelper.v(TAG, "*** NO SQLITE DATABASE FOUND! ***");
-        return true;
     }
 
     protected boolean isValid(String email, String pass) {
@@ -263,6 +285,140 @@ public class BaseActivity extends AppCompatActivity {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
+    public void startAuthenticationActivity() {
+        LogHelper.v(TAG, "---> startAuthenticationActivity <---");
+        Intent authenticationIntent = new Intent(this, AuthenticationActivity.class);
+        // close existing activity stack regardless of what's in there and create new root
+        authenticationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        Bundle playInfo = new Bundle();
+        savePlayInfoToBundle(playInfo);
+        authenticationIntent.putExtras(playInfo);
+        Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
+        startActivity(authenticationIntent, bundle);
+        finish();
+    }
+
+    public String getEmail() {
+        if (email == null) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            email = sharedPreferences.getString("userEmail", "");
+            if (email.length() == 0) {
+                email = null;
+            }
+        }
+        return email;
+    }
+
+    public void setEmail(String email) {
+        if (email != null && email.length() > 0) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("userEmail", email);
+            editor.apply();
+        }
+        this.email = email;
+    }
+
+    public String getPass() {
+        return pass;
+    }
+
+    public void setPass(String pass) {
+        this.pass = pass;
+    }
+
+    public void startAutoplayActivity() {
+        LogHelper.v(TAG, "---> startAutoplayActivity <---");
+        boolean dbMissing = doINeedToCreateADatabase();
+        LogHelper.v(TAG, "---> dbMissing="+dbMissing);
+        if (dbMissing && !mCopiedDatabaseSuccess) {
+            LogHelper.v(TAG, "*** first need to build the RadioMysteryTheater database ***");
+            String message = getResources().getString(R.string.initializing);
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Looper.prepare();
+                    loadSqliteDatabase();
+                    Looper.loop();
+                }
+            }).start();
+        }
+        else {
+            LogHelper.v(TAG, "*** READY TO START RADIO MYSTERY THEATER ***");
+            if (getEmail() != null) {
+                userLoginSuccess();
+            }
+            Intent autoplayIntent = new Intent(this, AutoplayActivity.class);
+            // close existing activity stack regardless of what's in there and create new root
+            autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            Bundle playInfo = new Bundle();
+            savePlayInfoToBundle(playInfo);
+            autoplayIntent.putExtras(playInfo);
+            Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
+            startActivity(autoplayIntent, bundle);
+            finish();
+        }
+    }
+
+    private void copyFileFromAssets(String inFileName, String outFileName) throws Exception {
+        LogHelper.v(TAG, "copyFileFromAssets: INPUT="+inFileName+", OUTPUT="+outFileName);
+        InputStream input = getApplicationContext().getAssets().open(inFileName);
+        if (input == null) {
+            throw new Exception("null input stream for asset="+ inFileName);
+        }
+        LogHelper.v(TAG, "InputStream is open.");
+        OutputStream output = new FileOutputStream(outFileName);
+        if (output == null) {
+            throw new Exception("null output stream for database="+outFileName);
+        }
+        LogHelper.v(TAG, "OutputStream is open.");
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = input.read(buffer)) > 0) {
+            mCount += len;
+            try {
+                Thread.sleep(3);
+            } catch (Exception e) { };
+            CircleViewHelper.setCircleViewValue((float) mCount, this);
+            output.write(buffer, 0, len);
+        }
+        output.flush();
+        output.close();
+        input.close();
+    }
+
+    public Handler getHandler() {
+        return mHandler;
+    }
+
+    public FirebaseAuth getAuth() {
+        return mAuth;
+    }
+
+    public Firebase getFirebase() {
+        return mFirebase;
+    }
+
+    public DatabaseReference getDatabase() {
+        return mDatabase;
+    }
+
+    //--------------------------------------------------------------------------------
+    // SQLite Database Related
+    //--------------------------------------------------------------------------------
+
+    protected boolean doINeedToCreateADatabase() {
+        LogHelper.v(TAG, "doINeedToCreateADatabase");
+        if ((isExistingTable("EPISODES")) && (isExistingTable("ACTORS")) && (isExistingTable("WRITERS")))
+        {
+            LogHelper.v(TAG, "*** Found SQLITE Tables! ***");
+            return false;
+        }
+        LogHelper.v(TAG, "*** NO SQLITE DATABASE FOUND! ***");
+        return true;
+    }
+
     // from: http://stackoverflow.com/questions/3058909/how-does-one-check-if-a-table-exists-in-an-android-sqlite-database
     protected boolean isExistingTable(String tableName) {
         LogHelper.v(TAG, "isExistingTable: "+tableName);
@@ -324,19 +480,71 @@ public class BaseActivity extends AppCompatActivity {
         return success;
     }
 
-    /*
-    private void deleteFirebaseDatabase() {
-        LogHelper.v(TAG, "*** deleteFirebaseDatabase ***");
-        mFirebase.child("radiomysterytheater/0").removeValue();
-        mFirebase.child("radiomysterytheater/1").removeValue();
-        mFirebase.child("radiomysterytheater/2").removeValue();
+    public Boolean isPaidEpisode(String episode) {
+        Boolean isPaid = new Boolean(true);
+        //
+        // FIXME: if (existing == null)
+        //            need to query Firebase record for this user to see if they paid already..
+        //            and need to see if this episode is on the user's list of 10 free episodes.
+        //
+        // NOTE: the code below uses the #IFDEF gradle preprocessor
+        //#IFDEF 'FREE'
+        isPaid = new Boolean(false);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+        isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
+        if (!isPaid) {
+            ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
+            if (existing != null) {
+                ContentValues configEpisode = existing.values();
+                isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
+            }
+        }
+        //#ENDIF
+        return isPaid;
     }
-    */
+
+    public void setPaidEpisode(String episode, Boolean paid) {
+        LogHelper.v(TAG, "setPaidEpisode: episode="+episode+", paid="+paid);
+        if (episode == null) {
+            // NOTE: special case with NULL episode - mark all episodes as paid
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean("userPaid", paid);
+            editor.apply();
+            // FIXME: update local SQLite Configuration table with user info
+            // FIXME: update Firebase record for this user's email to be PAID
+        }
+        else {
+            // see if a record already exists for this episode
+            ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
+            ContentValues configurationValues;
+            try {
+                if (existing != null) {
+                    // UPDATE and mark an individual episode as paid
+                    configurationValues = existing.values();
+                    LogHelper.v(TAG, "FOUND: so update ConfigEntry for episode "+episode+" with paid="+paid);
+                    configurationValues.put(ConfigEpisodesEntry.FIELD_EPISODE_NUMBER, episode);
+                    configurationValues.put(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS, paid);
+                    updateConfigEntryValues(episode, configurationValues);
+                } else {
+                    // CREATE and mark an individual episode as paid
+                    LogHelper.v(TAG, "NOT FOUND: so create ConfigEntry for episode "+episode+" with paid="+paid);
+                    configurationValues = new ContentValues();
+                    configurationValues.put(ConfigEpisodesEntry.FIELD_EPISODE_NUMBER, episode);
+                    configurationValues.put(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS, paid);
+                    Uri result = insertConfigEntryValues(configurationValues);
+                }
+            }
+            catch (Exception e) {
+                LogHelper.e(TAG, "unable to create ConfigEntry for episode "+episode+" e="+e);
+            }
+        }
+    }
 
     // this kicks off a series of AsyncTasks to load SQL tables from Firebase
     protected void loadSqliteDatabase() {
         LogHelper.v(TAG, "*** loadSqliteDatabase ***");
-        initCircleView(mRootView);
+        mCircleView = (CircleProgressView) mRootView.findViewById(R.id.circle_view);
 
         //if (! ((isExistingTable("EPISODES")) && (isExistingTable("ACTORS")) && (isExistingTable("WRITERS")))) {
         //    LoadRadioTheaterTablesAsyncTask.setTesting(true); // load some dummy data instead of JSON
@@ -344,8 +552,8 @@ public class BaseActivity extends AppCompatActivity {
 
         if (COPY_PACKAGED_SQLITE_DATABASE) {
             mCount = 0;
-            CircleViewHelper.showCircleView(this);
-            CircleViewHelper.initializeCircleViewValue((float) TOTAL_SIZE_TO_COPY_IN_BYTES, this);
+            CircleViewHelper.showCircleView(this, mCircleView, CircleViewHelper.CircleViewType.CREATE_DATABASE);
+            CircleViewHelper.setCircleViewMaximum((float) TOTAL_SIZE_TO_COPY_IN_BYTES, this);
             CircleViewHelper.setCircleViewValue((float) mCount, this);
             String DB_NAME = RadioTheaterHelper.DATABASE_FILE_NAME;
             try {
@@ -381,33 +589,6 @@ public class BaseActivity extends AppCompatActivity {
             // a circle progress view progresses as the database loads - takes a few minutes to run tho
             runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state
         }
-    }
-
-    private void copyFileFromAssets(String inFileName, String outFileName) throws Exception {
-        LogHelper.v(TAG, "copyFileFromAssets: INPUT="+inFileName+", OUTPUT="+outFileName);
-        InputStream input = getApplicationContext().getAssets().open(inFileName);
-        if (input == null) {
-            throw new Exception("null input stream for asset="+ inFileName);
-        }
-        LogHelper.v(TAG, "InputStream is open.");
-        OutputStream output = new FileOutputStream(outFileName);
-        if (output == null) {
-            throw new Exception("null output stream for database="+outFileName);
-        }
-        LogHelper.v(TAG, "OutputStream is open.");
-        byte[] buffer = new byte[1024];
-        int len;
-        while ((len = input.read(buffer)) > 0) {
-            mCount += len;
-            try {
-                Thread.sleep(3);
-            } catch (Exception e) { };
-            CircleViewHelper.setCircleViewValue((float) mCount, this);
-            output.write(buffer, 0, len);
-        }
-        output.flush();
-        output.close();
-        input.close();
     }
 
     public void runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState state) {
@@ -508,137 +689,6 @@ public class BaseActivity extends AppCompatActivity {
                 activity.startAuthenticationActivity();
             }
         });
-    }
-
-    public void startAutoplayActivity() {
-        LogHelper.v(TAG, "---> startAutoplayActivity <---");
-        boolean dbMissing = doINeedToCreateADatabase();
-        LogHelper.v(TAG, "---> dbMissing="+dbMissing);
-        if (dbMissing && !mCopiedDatabaseSuccess) {
-            LogHelper.v(TAG, "*** first need to build the RadioMysteryTheater database ***");
-            String message = getResources().getString(R.string.initializing);
-            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    Looper.prepare();
-                    loadSqliteDatabase();
-                    Looper.loop();
-                }
-            }).start();
-        }
-        else {
-            LogHelper.v(TAG, "*** READY TO START RADIO MYSTERY THEATER ***");
-            if (getEmail() != null) {
-                userLoginSuccess();
-            }
-            Intent autoplayIntent = new Intent(this, AutoplayActivity.class);
-            // close existing activity stack regardless of what's in there and create new root
-            autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
-            startActivity(autoplayIntent, bundle);
-            finish();
-        }
-    }
-
-    public void startAuthenticationActivity() {
-        LogHelper.v(TAG, "---> startAuthenticationActivity <---");
-        Intent authenticationIntent = new Intent(this, AuthenticationActivity.class);
-        // close existing activity stack regardless of what's in there and create new root
-        authenticationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
-        startActivity(authenticationIntent, bundle);
-        finish();
-    }
-
-    public String getEmail() {
-        if (email == null) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            email = sharedPreferences.getString("userEmail", "");
-            if (email.length() == 0) {
-                email = null;
-            }
-        }
-        return email;
-    }
-
-    public void setEmail(String email) {
-        if (email != null && email.length() > 0) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("userEmail", email);
-            editor.apply();
-        }
-        this.email = email;
-    }
-
-    public String getPass() {
-        return pass;
-    }
-
-    public void setPass(String pass) {
-        this.pass = pass;
-    }
-
-    public Boolean isPaidEpisode(String episode) {
-        Boolean isPaid = new Boolean(true);
-        //
-        // FIXME: if (existing == null)
-        //            need to query Firebase record for this user to see if they paid already..
-        //            and need to see if this episode is on the user's list of 10 free episodes.
-        //
-        // NOTE: the code below uses the #IFDEF gradle preprocessor
-        //#IFDEF 'FREE'
-        isPaid = new Boolean(false);
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-        isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
-        if (!isPaid) {
-            ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
-            if (existing != null) {
-                ContentValues configEpisode = existing.values();
-                isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
-            }
-        }
-        //#ENDIF
-        return isPaid;
-    }
-
-    public void setPaidEpisode(String episode, Boolean paid) {
-        LogHelper.v(TAG, "setPaidEpisode: episode="+episode+", paid="+paid);
-        if (episode == null) {
-            // NOTE: special case with NULL episode - mark all episodes as paid
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putBoolean("userPaid", paid);
-            editor.apply();
-            // FIXME: update local SQLite Configuration table with user info
-            // FIXME: update Firebase record for this user's email to be PAID
-        }
-        else {
-            // see if a record already exists for this episode
-            ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
-            ContentValues configurationValues;
-            try {
-                if (existing != null) {
-                    // UPDATE and mark an individual episode as paid
-                    configurationValues = existing.values();
-                    LogHelper.v(TAG, "FOUND: so update ConfigEntry for episode "+episode+" with paid="+paid);
-                    configurationValues.put(ConfigEpisodesEntry.FIELD_EPISODE_NUMBER, episode);
-                    configurationValues.put(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS, paid);
-                    updateConfigEntryValues(episode, configurationValues);
-                } else {
-                    // CREATE and mark an individual episode as paid
-                    LogHelper.v(TAG, "NOT FOUND: so create ConfigEntry for episode "+episode+" with paid="+paid);
-                    configurationValues = new ContentValues();
-                    configurationValues.put(ConfigEpisodesEntry.FIELD_EPISODE_NUMBER, episode);
-                    configurationValues.put(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS, paid);
-                    Uri result = insertConfigEntryValues(configurationValues);
-                }
-            }
-            catch (Exception e) {
-                LogHelper.e(TAG, "unable to create ConfigEntry for episode "+episode+" e="+e);
-            }
-        }
     }
 
     public ConfigEpisodesContentValues getConfigForEpisode(String episode) {
@@ -757,35 +807,35 @@ public class BaseActivity extends AppCompatActivity {
         return this.getContentResolver().update(configEntry, configEntryValues, whereClause, whereCondition);
     }
 
-    public Handler getHandler() {
-        return mHandler;
+    /*
+    private void deleteFirebaseDatabase() {
+        LogHelper.v(TAG, "*** deleteFirebaseDatabase ***");
+        mFirebase.child("radiomysterytheater/0").removeValue();
+        mFirebase.child("radiomysterytheater/1").removeValue();
+        mFirebase.child("radiomysterytheater/2").removeValue();
     }
-
-    public FirebaseAuth getAuth() {
-        return mAuth;
-    }
-
-    public Firebase getFirebase() {
-        return mFirebase;
-    }
-
-    public DatabaseReference getDatabase() {
-        return mDatabase;
-    }
+    */
 
     //--------------------------------------------------------------------------------
     // CircleView related
     //--------------------------------------------------------------------------------
-    public void initCircleView(View view) {
-        LogHelper.v(TAG, "initCircleView (View)");
-        mCircleView = (CircleProgressView) view.findViewById(R.id.circle_view);
-        mShowUnit = false;
-    }
 
-    public void initCircleView(CircleProgressView circleView) {
+    public void initCircleView(CircleProgressView circleView, CircleViewHelper.CircleViewType what) {
         LogHelper.v(TAG, "initCircleView (CircleProgressView)");
         mCircleView = circleView; // needed to get around a problem with Fragments and findViewById
         mShowUnit = false;
+        if (what == CircleViewHelper.CircleViewType.CREATE_DATABASE) {
+            LogHelper.v(TAG, "initCircleView: CREATE_DATABASE");
+            mCircleView.setUnit("%");
+            mCircleView.setUnitVisible(true);
+            mCircleView.setTextMode(TextMode.PERCENT); // Shows current percent of the current value from the max value
+        }
+        else if (what == CircleViewHelper.CircleViewType.PLAY_EPISODE) {
+            LogHelper.v(TAG, "initCircleView: PLAY_EPISODE");
+            mCircleView.setUnit("");
+            mCircleView.setUnitVisible(false);
+            mCircleView.setTextMode(TextMode.TEXT);
+        }
     }
 
     public void showCircleView() {
@@ -842,22 +892,18 @@ public class BaseActivity extends AppCompatActivity {
         });
     }
 
-    public void initializeCircleViewValue(float value) {
+    public void setCircleViewMaximum(float value) {
+        LogHelper.w(TAG, "setCircleViewMaximum: MAX value=" + value);
         if (mCircleView != null) {
-            mShowUnit = true;
-            mCircleView.setUnit("%");
-            mCircleView.setUnitVisible(mShowUnit);
-            mCircleView.setTextMode(TextMode.PERCENT); // Shows current percent of the current value from the max value
             mCircleView.setMaxValue(value);
             mCircleView.setValue(0);
-            LogHelper.w(TAG, "initializeCircleViewValue: CircleView MAX=" + value);
         }
     }
 
     public void setCircleViewValue(float value) {
         if (mCircleView != null) {
             mCircleView.setValue(value);
-            LogHelper.w(TAG, "setCircleViewValue: CircleView value=" + value);
+            LogHelper.w(TAG, "setCircleViewValue: value=" + value);
             if (value == mCircleView.getMaxValue()) {
                 hideCircleView();
             }
@@ -867,9 +913,146 @@ public class BaseActivity extends AppCompatActivity {
     public void hideCircleView() {
         if (mCircleView != null) {
             mCircleView.stopSpinning();
-            mCircleView.setVisibility(View.GONE);
+            mCircleView.setVisibility(View.INVISIBLE);
             LogHelper.w(TAG, "hideCircleView: CircleView HIDDEN");
         }
+    }
+
+    //--------------------------------------------------------------------------------
+    // Autoplay related
+    //--------------------------------------------------------------------------------
+
+    private static final String KEY_MEDIA_ID            = "mediaId";
+    private static final String KEY_EPISODE             = "episodeNumber";
+    private static final String KEY_PURCHASED           = "purchased";
+    private static final String KEY_NOADS               = "noads";
+    private static final String KEY_DOWNLOADED          = "downloaded";
+    private static final String KEY_HEARD               = "heard";
+    private static final String KEY_AUDIO_FOCUS         = "audioFocus";
+    private static final String KEY_DURATION            = "duration";
+    private static final String KEY_REAL_DURATION       = "realDuration";
+    private static final String KEY_CURRENT_POSITION    = "position";
+    private static final String KEY_SEEKING             = "seeking";
+    private static final String KEY_AIRDATE             = "airdate";
+    private static final String KEY_TITLE               = "title";
+    private static final String KEY_DESCRIPTION         = "description";
+    private static final String KEY_WEBLINK             = "weblink";
+    private static final String KEY_DOWNLOAD_URL        = "downloadUrl";
+    private static final String KEY_AUTOPLAY_STATE      = "autoplayState";
+
+    protected void savePlayInfoToBundle(Bundle playInfoBundle) {
+        playInfoBundle.putString(KEY_MEDIA_ID, mMediaId);
+        playInfoBundle.putLong(KEY_EPISODE, mEpisodeNumber);
+        playInfoBundle.putBoolean(KEY_PURCHASED, mPurchased);
+        playInfoBundle.putBoolean(KEY_NOADS, mNoAdsForShow);
+        playInfoBundle.putBoolean(KEY_DOWNLOADED, mDownloaded);
+        playInfoBundle.putBoolean(KEY_HEARD, mEpisodeHeard);
+        playInfoBundle.putInt(KEY_AUDIO_FOCUS, mAudioFocusRequstResult);
+        playInfoBundle.putLong(KEY_DURATION, mDuration);
+        playInfoBundle.putBoolean(KEY_REAL_DURATION, mHaveRealDuration);
+        playInfoBundle.putLong(KEY_CURRENT_POSITION, mCurrentPosition);
+        playInfoBundle.putBoolean(KEY_SEEKING, mSeeking);
+        playInfoBundle.putString(KEY_AIRDATE, mAirdate);
+        playInfoBundle.putString(KEY_TITLE, mEpisodeTitle);
+        playInfoBundle.putString(KEY_DESCRIPTION, mEpisodeDescription);
+        playInfoBundle.putString(KEY_WEBLINK, mEpisodeWeblinkUrl);
+        playInfoBundle.putString(KEY_DOWNLOAD_URL, mEpisodeDownloadUrl);
+
+        switch (mAutoplayState) {
+            case READY2PLAY: {
+                playInfoBundle.putInt(KEY_AUTOPLAY_STATE, 0);
+                break;
+            }
+            case LOADING: {
+                playInfoBundle.putInt(KEY_AUTOPLAY_STATE, 1);
+                break;
+            }
+            case PLAYING: {
+                playInfoBundle.putInt(KEY_AUTOPLAY_STATE, 2);
+                break;
+            }
+            case PAUSED: {
+                playInfoBundle.putInt(KEY_AUTOPLAY_STATE, 3);
+                break;
+            }
+        }
+    }
+
+    protected void restorePlayInfoFromBundle(Bundle playInfoBundle) {
+        mMediaId = playInfoBundle.getString(KEY_MEDIA_ID);
+        mEpisodeNumber = playInfoBundle.getLong(KEY_EPISODE);
+        mPurchased = playInfoBundle.getBoolean(KEY_PURCHASED);
+        mNoAdsForShow = playInfoBundle.getBoolean(KEY_NOADS);
+        mDownloaded = playInfoBundle.getBoolean(KEY_DOWNLOADED);
+        mEpisodeHeard = playInfoBundle.getBoolean(KEY_HEARD);
+        mAudioFocusRequstResult = playInfoBundle.getInt(KEY_AUDIO_FOCUS);
+        mDuration = playInfoBundle.getLong(KEY_DURATION);
+        mHaveRealDuration = playInfoBundle.getBoolean(KEY_REAL_DURATION);
+        mCurrentPosition = playInfoBundle.getLong(KEY_CURRENT_POSITION);
+        mSeeking = playInfoBundle.getBoolean(KEY_SEEKING);
+        mAirdate = playInfoBundle.getString(KEY_AIRDATE);
+        mEpisodeTitle = playInfoBundle.getString(KEY_TITLE);
+        mEpisodeDescription = playInfoBundle.getString(KEY_DESCRIPTION);
+        mEpisodeWeblinkUrl = playInfoBundle.getString(KEY_WEBLINK);
+        mEpisodeDownloadUrl = playInfoBundle.getString(KEY_DOWNLOAD_URL);
+
+        int state = playInfoBundle.getInt(KEY_AUTOPLAY_STATE);
+        if (state == 1) {
+            setAutoplayState(AutoplayState.LOADING);
+        }
+        else if (state == 2) {
+            setAutoplayState(AutoplayState.PLAYING);
+        }
+        else if (state == 3) {
+            setAutoplayState(AutoplayState.PAUSED);
+        }
+        else {
+            setAutoplayState(AutoplayState.READY2PLAY);
+        }
+        showCurrentInfo();
+    }
+
+    protected void showCurrentInfo() {
+        String state = "unknown";
+        switch (mAutoplayState) {
+            case READY2PLAY: {
+                state = "READY to PLAY";
+                break;
+            }
+            case LOADING: {
+                state = "LOADING Episode";
+                break;
+            }
+            case PLAYING: {
+                state = "PLAYING Episode";
+                break;
+            }
+            case PAUSED: {
+                state = "Episode PAUSED";
+                break;
+            }
+        }
+        LogHelper.v(TAG, "===> EPISODE INFO"
+                + ": mEpisodeTitle=" + mEpisodeTitle
+                + ": mEpisodeNumber=" + mEpisodeNumber
+                + ": mEpisodeDownloadUrl=" + mEpisodeDownloadUrl
+                + ": mAirdate=" + mAirdate
+                + ": mEpisodeDescription=" + mEpisodeDescription
+                + ": mEpisodeWeblinkUrl=" + mEpisodeWeblinkUrl
+                + ": mEpisodeDownloadUrl=" + mEpisodeDownloadUrl
+                + ", mPurchased=" + mPurchased
+                + ", mNoAdsForShow=" + mNoAdsForShow
+                + ", mDownloaded=" + mDownloaded
+                + ", mEpisodeHeard=" + mEpisodeHeard
+                + ", mAutoplayState=" + state);
+    }
+
+    protected void setAutoplayState(AutoplayState autoplayState) {
+        LogHelper.v(TAG, "setAutoplayState: "+autoplayState);
+        if (this.mAutoplayState == AutoplayState.LOADING && autoplayState != AutoplayState.LOADING) {
+            LoadingAsyncTask.mDoneLoading = true;
+        }
+        this.mAutoplayState = autoplayState;
     }
 
 }

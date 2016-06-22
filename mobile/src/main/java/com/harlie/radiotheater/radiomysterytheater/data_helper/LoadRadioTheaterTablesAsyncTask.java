@@ -49,8 +49,8 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
         this.mState = state;
         if (mState == LoadState.WRITERS) { // writers are first up..
             mCount = 0;
-            CircleViewHelper.showCircleView(mActivity);
-            CircleViewHelper.initializeCircleViewValue((float) TOTAL_NUMBER_OF_EPISODES_ACTORS_WRITERS, mActivity);
+            CircleViewHelper.showCircleView(mActivity, mCircleProgressView, CircleViewHelper.CircleViewType.CREATE_DATABASE);
+            CircleViewHelper.setCircleViewMaximum((float) TOTAL_NUMBER_OF_EPISODES_ACTORS_WRITERS, mActivity);
             CircleViewHelper.setCircleViewValue((float) mCount, mActivity);
         }
     }

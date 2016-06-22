@@ -62,6 +62,9 @@ public class EpisodeListActivity extends BaseActivity {
                     Intent autoplayIntent = new Intent(activity, AutoplayActivity.class);
                     // close existing activity stack regardless of what's in there and create new root
                     autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    Bundle playInfo = new Bundle();
+                    savePlayInfoToBundle(playInfo);
+                    autoplayIntent.putExtras(playInfo);
                     startActivity(autoplayIntent);
                 }
             });
@@ -121,7 +124,9 @@ public class EpisodeListActivity extends BaseActivity {
                         Context context = v.getContext();
                         Intent intent = new Intent(context, EpisodeDetailActivity.class);
                         intent.putExtra(EpisodeDetailFragment.ARG_ITEM_ID, holder.mItem.id);
-
+                        Bundle playInfo = new Bundle();
+                        savePlayInfoToBundle(playInfo);
+                        intent.putExtras(playInfo);
                         context.startActivity(intent);
                     }
                 }
