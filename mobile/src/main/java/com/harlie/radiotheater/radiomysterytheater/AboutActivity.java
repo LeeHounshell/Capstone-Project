@@ -31,11 +31,6 @@ public class AboutActivity extends BaseActivity {
         LogHelper.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
 
-        if (savedInstanceState != null) {
-            // restore our old session..
-            onRestoreInstanceState(savedInstanceState);
-        }
-
         setContentView(R.layout.activity_about);
 
         getTheme().applyStyle(new FontPreferences(this).getFontStyle().getResId(), true);

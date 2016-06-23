@@ -110,7 +110,7 @@ public class BaseActivity extends AppCompatActivity {
         LogHelper.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
-            restorePlayInfoFromBundle(savedInstanceState);
+            onRestoreInstanceState(savedInstanceState);
         }
         else {
             Bundle playInfo = getIntent().getExtras();
@@ -940,7 +940,22 @@ public class BaseActivity extends AppCompatActivity {
     private static final String KEY_DOWNLOAD_URL        = "downloadUrl";
     private static final String KEY_AUTOPLAY_STATE      = "autoplayState";
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        LogHelper.v(TAG, "onSaveInstanceState");
+        super.onSaveInstanceState(outState);
+        savePlayInfoToBundle(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        LogHelper.v(TAG, "onRestoreInstanceState");
+        super.onRestoreInstanceState(savedInstanceState);
+        restorePlayInfoFromBundle(savedInstanceState);
+    }
+
     protected void savePlayInfoToBundle(Bundle playInfoBundle) {
+        LogHelper.v(TAG, "savePlayInfoToBundle");
         playInfoBundle.putString(KEY_MEDIA_ID, mMediaId);
         playInfoBundle.putLong(KEY_EPISODE, mEpisodeNumber);
         playInfoBundle.putBoolean(KEY_PURCHASED, mPurchased);
@@ -979,6 +994,7 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     protected void restorePlayInfoFromBundle(Bundle playInfoBundle) {
+        LogHelper.v(TAG, "restorePlayInfoFromBundle");
         mMediaId = playInfoBundle.getString(KEY_MEDIA_ID);
         mEpisodeNumber = playInfoBundle.getLong(KEY_EPISODE);
         mPurchased = playInfoBundle.getBoolean(KEY_PURCHASED);

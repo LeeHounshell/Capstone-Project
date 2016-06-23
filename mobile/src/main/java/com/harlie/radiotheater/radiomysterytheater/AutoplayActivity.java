@@ -203,6 +203,7 @@ public class AutoplayActivity extends BaseActivity
                     switch (mLastPlaybackState.getState()) {
                         case PlaybackStateCompat.STATE_PLAYING: {
                             setAutoplayState(AutoplayState.PLAYING);
+                            setAutoPlayVisibility(View.VISIBLE, "onPlaybackStateChanged - PLAYING");
                             break;
                         }
                         case PlaybackStateCompat.STATE_BUFFERING: {
@@ -211,12 +212,14 @@ public class AutoplayActivity extends BaseActivity
                         }
                         case PlaybackStateCompat.STATE_PAUSED: {
                             setAutoplayState(AutoplayState.PAUSED);
+                            setAutoPlayVisibility(View.VISIBLE, "onPlaybackStateChanged - PAUSED");
                             break;
                         }
                         case PlaybackStateCompat.STATE_ERROR:
                         case PlaybackStateCompat.STATE_NONE:
                         case PlaybackStateCompat.STATE_STOPPED: {
                             setAutoplayState(AutoplayState.READY2PLAY);
+                            setAutoPlayVisibility(View.VISIBLE, "onPlaybackStateChanged - STOPPED");
                             break;
                         }
                     }
@@ -267,7 +270,7 @@ public class AutoplayActivity extends BaseActivity
     protected void updateControls() {
         LogHelper.v(TAG, "updateControls");
         if (mAutoplayState == AutoplayState.LOADING ||
-                LoadingAsyncTask.mInitializing ||
+                LoadingAsyncTask.mLoadingNow ||
                 mMediaController == null ||
                 mMediaController.getMetadata() == null ||
                 mMediaController.getPlaybackState() == null) {
@@ -477,7 +480,7 @@ public class AutoplayActivity extends BaseActivity
 
             @Override
             public void onProgressChange(CircularSeekBar view, final int newProgress) {
-                LoadingAsyncTask.mInitializing = true; // well.. it will be true in a moment but this will settle the display
+                LoadingAsyncTask.mLoadingNow = true; // well.. it will be true in a moment but this will settle the display
                 if (!mCircularSeekBar.isProcessingTouchEvents() && !mSeeking) {
                     LogHelper.v(TAG, "onProgressChange: newProgress:" + newProgress);
                     getHandler().post(new Runnable() {
@@ -716,7 +719,7 @@ public class AutoplayActivity extends BaseActivity
 
     protected void showPlaybackControls() {
         LogHelper.d(TAG, "showPlaybackControls");
-        if (LoadingAsyncTask.mInitializing) {
+        if (LoadingAsyncTask.mLoadingNow) {
             setAutoPlayVisibility(View.INVISIBLE, "showPlaybackControls");
             mCircularSeekBar.setVisibility(View.INVISIBLE);
         }
@@ -731,7 +734,7 @@ public class AutoplayActivity extends BaseActivity
 
     protected void hidePlaybackControls() {
         LogHelper.d(TAG, "hidePlaybackControls");
-        if (LoadingAsyncTask.mInitializing) {
+        if (LoadingAsyncTask.mLoadingNow) {
             setAutoPlayVisibility(View.INVISIBLE, "hidePlaybackControls");
             mCircularSeekBar.setVisibility(View.INVISIBLE);
         }
@@ -754,8 +757,8 @@ public class AutoplayActivity extends BaseActivity
         LogHelper.d(TAG, "loadingScreen: enabled="+mLoadingScreenEnabled);
         if (mLoadingScreenEnabled) {
             LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
-            LoadingAsyncTask asyncTask = new LoadingAsyncTask(this, mCircleView, mCircularSeekBar, mAutoPlay, mAutoplayState);
             setAutoplayState(AutoplayState.LOADING);
+            LoadingAsyncTask asyncTask = new LoadingAsyncTask(this, mCircleView, mCircularSeekBar, mAutoPlay);
             asyncTask.execute();
             LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
         }
@@ -806,7 +809,7 @@ public class AutoplayActivity extends BaseActivity
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
-                            if (!LoadingAsyncTask.mInitializing) {
+                            if (!LoadingAsyncTask.mLoadingNow) {
                                 setAutoPlayVisibility(View.VISIBLE, "onReceive");
                                 mFabActionButton.setVisibility(View.VISIBLE);
                             }
@@ -891,23 +894,38 @@ public class AutoplayActivity extends BaseActivity
         mLastPlaybackState = null;
     }
 
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        LogHelper.v(TAG, "onSaveInstanceState");
-        super.onSaveInstanceState(outState);
-        savePlayInfoToBundle(outState);
-    }
-
     public void setAutoPlayVisibility(int visible, String log) {
         LogHelper.v(TAG, "setAutoPlayVisibility: "+log);
-        if (! LoadingAsyncTask.mInitializing) {
-            mAutoPlay.setVisibility(visible);
-            mFabActionButton.setVisibility(visible);
+        if (mMediaController != null) {
+            mLastPlaybackState = mMediaController.getPlaybackState();
+        }
+        if (mAutoPlay != null && mLastPlaybackState != null && mCircularSeekBar != null) {
+            if (!LoadingAsyncTask.mLoadingNow) {
+                mAutoPlay.setVisibility(visible);
+                mFabActionButton.setVisibility(visible);
+                if (mLastPlaybackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
+                    mCircularSeekBar.setVisibility(View.VISIBLE);
+                }
+            }
+            else {
+                mAutoPlay.setVisibility(View.INVISIBLE);
+                mFabActionButton.setVisibility(View.INVISIBLE);
+                mCircularSeekBar.setVisibility(View.INVISIBLE);
+            }
+        }
+    }
+
+    @Override
+    protected void setAutoplayState(AutoplayState autoplayState) {
+        LogHelper.v(TAG, "setAutoplayState: "+autoplayState);
+        super.setAutoplayState(autoplayState);
+        if (this.mAutoplayState == AutoplayState.LOADING) {
+            setAutoPlayVisibility(View.INVISIBLE, "setAutoplayState - LOADING");
         }
         else {
-            mAutoPlay.setVisibility(View.INVISIBLE);
-            mFabActionButton.setVisibility(View.INVISIBLE);
+            setAutoPlayVisibility(View.VISIBLE, "setAutoplayState - state="+mAutoplayState);
         }
+        this.mAutoplayState = autoplayState;
     }
 
 }

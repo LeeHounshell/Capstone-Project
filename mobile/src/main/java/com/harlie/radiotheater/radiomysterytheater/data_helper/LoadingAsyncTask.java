@@ -14,7 +14,7 @@ import at.grabner.circleprogress.CircleProgressView;
 public class LoadingAsyncTask extends AsyncTask<AutoplayActivity, Void, Boolean> {
     private final static String TAG = "LEE: <" + LoadingAsyncTask.class.getSimpleName() + ">";
 
-    public static volatile boolean mInitializing;
+    public static volatile boolean mLoadingNow;
     public static volatile boolean mDoneLoading;
 
     private static int mCount;
@@ -22,16 +22,14 @@ public class LoadingAsyncTask extends AsyncTask<AutoplayActivity, Void, Boolean>
 
     private AutoplayActivity mActivity;
     private AppCompatButton mAutoPlay;
-    private AutoplayActivity.AutoplayState mOldState;
     private CircleProgressView mCircleProgressView;
     private CircularSeekBar mCircularSeekBar;
 
-    public LoadingAsyncTask(AutoplayActivity activity, CircleProgressView circleProgressView, CircularSeekBar circularSeekBar, AppCompatButton autoPlay, AutoplayActivity.AutoplayState oldState) {
+    public LoadingAsyncTask(AutoplayActivity activity, CircleProgressView circleProgressView, CircularSeekBar circularSeekBar, AppCompatButton autoPlay) {
         LogHelper.v(TAG, "new LoadingAsyncTask");
-        mInitializing = true;
+        mLoadingNow = true;
         this.mActivity = activity;
         this.mAutoPlay = autoPlay;
-        this.mOldState = oldState;
         this.mCircleProgressView = circleProgressView;
         this.mCircularSeekBar = circularSeekBar;
         mCount = 0;
@@ -61,7 +59,6 @@ public class LoadingAsyncTask extends AsyncTask<AutoplayActivity, Void, Boolean>
     @Override
     protected Boolean doInBackground(AutoplayActivity... params) {
         LogHelper.v(TAG, "doInBackground");
-        mInitializing = false;
         Boolean rc = false;
         while (rc == false) {
             ++mCount;
@@ -81,12 +78,15 @@ public class LoadingAsyncTask extends AsyncTask<AutoplayActivity, Void, Boolean>
     protected void onPostExecute(Boolean success) {
         LogHelper.v(TAG, "onPostExecute: success="+success);
         super.onPostExecute(success);
+        mLoadingNow = false;
         mCircleProgressView.stopSpinning();
         mCircleProgressView.setVisibility(View.INVISIBLE);
-        mActivity.setAutoPlayVisibility(View.VISIBLE, "onPostExecute");
-        if (mOldState == AutoplayActivity.AutoplayState.PLAYING) {
-            mCircularSeekBar.setVisibility(View.VISIBLE);
-        }
+        mActivity.getHandler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mActivity.setAutoPlayVisibility(View.VISIBLE, "onPostExecute");
+            }
+        }, 1000);
     }
 
 }
