@@ -15,6 +15,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
     private GestureDetector mGestureDetector;
     private AppCompatButton mAutoPlay;
     private Drawable mPressedButton;
+    private boolean mDoLongPress;
 
     public OnSwipeTouchListener(Context c) {
         LogHelper.v(TAG, "OnSwipeTouchListener");
@@ -40,7 +41,10 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
                 }
                 case MotionEvent.ACTION_UP: {
                     LogHelper.v(TAG, "onTouch - ACTION_UP");
-                    mAutoPlay.setVisibility(View.INVISIBLE);
+                    if (!mDoLongPress) {
+                        mAutoPlay.setVisibility(View.INVISIBLE);
+                    }
+                    mDoLongPress = false;
                     break;
                 }
             }
@@ -76,6 +80,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
         @Override
         public void onLongPress(MotionEvent e) {
             LogHelper.v(TAG, "onLongPress");
+            mDoLongPress = true;
             onLongClick();
             super.onLongPress(e);
         }

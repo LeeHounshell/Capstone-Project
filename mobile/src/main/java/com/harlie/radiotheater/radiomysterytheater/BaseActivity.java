@@ -1018,16 +1018,16 @@ public class BaseActivity extends AppCompatActivity {
 
         int state = playInfoBundle.getInt(KEY_AUTOPLAY_STATE);
         if (state == 1) {
-            setAutoplayState(AutoplayState.LOADING);
+            setAutoplayState(AutoplayState.LOADING, "restorePlayInfoFromBundle - LOADING");
         }
         else if (state == 2) {
-            setAutoplayState(AutoplayState.PLAYING);
+            setAutoplayState(AutoplayState.PLAYING, "restorePlayInfoFromBundle - PLAYING");
         }
         else if (state == 3) {
-            setAutoplayState(AutoplayState.PAUSED);
+            setAutoplayState(AutoplayState.PAUSED, "restorePlayInfoFromBundle - PAUSED");
         }
         else {
-            setAutoplayState(AutoplayState.READY2PLAY);
+            setAutoplayState(AutoplayState.READY2PLAY, "restorePlayInfoFromBundle - READY2PLAY");
         }
         showCurrentInfo();
     }
@@ -1067,8 +1067,8 @@ public class BaseActivity extends AppCompatActivity {
                 + ", mAutoplayState=" + state);
     }
 
-    protected void setAutoplayState(AutoplayState autoplayState) {
-        LogHelper.v(TAG, "setAutoplayState: "+autoplayState);
+    protected void setAutoplayState(AutoplayState autoplayState, String log) {
+        LogHelper.v(TAG, "setAutoplayState: "+autoplayState+", "+log);
         this.mAutoplayState = autoplayState;
     }
 
