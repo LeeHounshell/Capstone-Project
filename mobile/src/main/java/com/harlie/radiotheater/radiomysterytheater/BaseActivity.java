@@ -901,11 +901,15 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     public void setCircleViewValue(float value) {
-        if (mCircleView != null) {
-            mCircleView.setValue(value);
-            LogHelper.w(TAG, "setCircleViewValue: value=" + value);
-            if (value == mCircleView.getMaxValue()) {
-                hideCircleView();
+        if (value != 0) {
+            mAutoplayState = AutoplayState.PLAYING;
+            LoadingAsyncTask.mLoadingNow = false;
+            if (mCircleView != null) {
+                mCircleView.setValue(value);
+                LogHelper.w(TAG, "setCircleViewValue: value=" + value);
+                if (value == mCircleView.getMaxValue()) {
+                    hideCircleView();
+                }
             }
         }
     }
@@ -1065,9 +1069,6 @@ public class BaseActivity extends AppCompatActivity {
 
     protected void setAutoplayState(AutoplayState autoplayState) {
         LogHelper.v(TAG, "setAutoplayState: "+autoplayState);
-        if (this.mAutoplayState == AutoplayState.LOADING && autoplayState != AutoplayState.LOADING) {
-            LoadingAsyncTask.mDoneLoading = true;
-        }
         this.mAutoplayState = autoplayState;
     }
 

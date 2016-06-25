@@ -34,17 +34,6 @@ public class LoadingAsyncTask extends AsyncTask<AutoplayActivity, Void, Boolean>
         this.mCircularSeekBar = circularSeekBar;
         mCount = 0;
         mDoneLoading = false;
-        mActivity.setAutoPlayVisibility(View.INVISIBLE, "LoadingAsyncTask");
-        mCircularSeekBar.setVisibility(View.INVISIBLE);
-        mCircleProgressView.setVisibility(View.INVISIBLE);
-        // get the buttons to disappear before the progress view appears.
-        mAutoPlay.getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                mAutoPlay.setVisibility(View.INVISIBLE);
-                mCircularSeekBar.setVisibility(View.INVISIBLE);
-            }
-        });
     }
 
     @Override
@@ -84,7 +73,7 @@ public class LoadingAsyncTask extends AsyncTask<AutoplayActivity, Void, Boolean>
         mActivity.getHandler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                mActivity.setAutoPlayVisibility(View.VISIBLE, "onPostExecute");
+                mActivity.managePlaybackControls(View.VISIBLE, "onPostExecute");
             }
         }, 1000);
     }

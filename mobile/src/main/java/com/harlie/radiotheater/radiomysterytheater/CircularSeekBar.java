@@ -529,13 +529,15 @@ public class CircularSeekBar extends View {
         float y = event.getY();
         boolean up = false;
         switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
+            case MotionEvent.ACTION_DOWN: {
                 moved(x, y, up);
                 break;
-            case MotionEvent.ACTION_MOVE:
+            }
+            case MotionEvent.ACTION_MOVE: {
                 moved(x, y, up);
                 break;
-            case MotionEvent.ACTION_UP:
+            }
+            case MotionEvent.ACTION_UP: {
                 up = true;
                 moved(x, y, up);
                 processingTouchEvents = false;
@@ -544,6 +546,7 @@ public class CircularSeekBar extends View {
                     mListener.onProgressChange(this, this.getProgress());
                 }
                 break;
+            }
         }
         return true;
     }
