@@ -1,4 +1,5 @@
 // from: http://stackoverflow.com/questions/19538747/how-to-use-both-ontouch-and-onclick-for-an-imagebutton
+// modified by Lee Hounshell
 
 package com.harlie.radiotheater.radiomysterytheater.utils;
 
