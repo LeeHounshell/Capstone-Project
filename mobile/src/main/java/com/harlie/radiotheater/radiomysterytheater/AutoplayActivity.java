@@ -825,6 +825,9 @@ public class AutoplayActivity extends BaseActivity
     protected void onResume() {
         LogHelper.d(TAG, "onResume");
         super.onResume();
+        if (sLoadedOK) {
+            enableButtons();
+        }
         IntentFilter intentFilter = new IntentFilter("android.intent.action.MAIN");
 
         mReceiver = new BroadcastReceiver() {

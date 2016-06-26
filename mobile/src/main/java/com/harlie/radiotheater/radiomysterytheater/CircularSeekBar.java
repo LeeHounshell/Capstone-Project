@@ -461,7 +461,7 @@ public class CircularSeekBar extends View {
                 int newAngle = (int) ((newPercent * 360.0) / 100.0);
                 this.setAngle(newAngle);
                 this.setProgressPercent((int) newPercent);
-                LogHelper.v(TAG, "newPercent=" + newPercent + ", newAngle=" + newAngle + ", maxProgress=" + maxProgress + ", progress=" + progress);
+                //LogHelper.v(TAG, "newPercent=" + newPercent + ", newAngle=" + newAngle + ", maxProgress=" + maxProgress + ", progress=" + progress);
             }
             invalidate();
             CALLED_FROM_ANGLE = false;
@@ -581,7 +581,7 @@ public class CircularSeekBar extends View {
             setAngle(Math.round(degrees));
             invalidate();
 
-            LogHelper.v(TAG, "moved: progress="+getProgress()+", X="+markPointX+", Y="+markPointY);
+            //LogHelper.v(TAG, "moved: progress="+getProgress()+", X="+markPointX+", Y="+markPointY);
             needToPostProgressChange = true;
         }
         else {
