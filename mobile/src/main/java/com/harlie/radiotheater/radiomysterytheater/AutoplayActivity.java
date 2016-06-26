@@ -308,10 +308,16 @@ public class AutoplayActivity extends BaseActivity
             };
 
     private void enableButtons() {
-        mAutoPlay.setVisibility(View.VISIBLE);
-        mAutoPlay.setEnabled(true);
-        mFabActionButton.setVisibility(View.VISIBLE);
-        mFabActionButton.setEnabled(true);
+        LogHelper.v(TAG, "enableButtons");
+        getHandler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mAutoPlay.setVisibility(View.VISIBLE);
+                mAutoPlay.setEnabled(true);
+                mFabActionButton.setVisibility(View.VISIBLE);
+                mFabActionButton.setEnabled(true);
+            }
+        }, 1000);
     }
 
     private void do_UpdateControls() {
@@ -493,9 +499,10 @@ public class AutoplayActivity extends BaseActivity
                         LogHelper.v(TAG, "put back the Autoplay button.");
                         mCurrentPosition = 0;
                         setAutoplayState(AutoplayState.READY2PLAY, "onLongClick");
-                        mAutoPlay.setBackgroundDrawable(buttonImage);
-                        mAutoPlay.setVisibility(View.VISIBLE);
-                        mAutoPlay.invalidate();
+                        if (buttonImage != null) {
+                            mAutoPlay.setBackgroundDrawable(buttonImage);
+                        }
+                        enableButtons();
                         managePlaybackControls(ControlsState.ENABLED_SHOW_PAUSE, "onLongClick");
                     }
                 });
@@ -505,7 +512,7 @@ public class AutoplayActivity extends BaseActivity
         mFabActionButton = (FloatingActionButton) findViewById(R.id.fab);
         if (mFabActionButton != null) {
             final AutoplayActivity activity = this;
-            mFabActionButton.setOnTouchListener(new OnSwipeTouchListener(this) {
+            mFabActionButton.setOnTouchListener(new OnSwipeTouchListener(this, mHandler, mFabActionButton) {
 
                 @Override
                 public void onClick() {
@@ -758,7 +765,7 @@ public class AutoplayActivity extends BaseActivity
                         new Runnable() {
                             @Override
                             public void run() {
-                                LogHelper.v(TAG, "post mUpdateProgressTask");
+                                //LogHelper.v(TAG, "post mUpdateProgressTask");
                                 sSeekUpdateRunning = true;
                                 mHandler.post(mUpdateProgressTask);
                             }
