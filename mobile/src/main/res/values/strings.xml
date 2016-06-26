@@ -12,12 +12,16 @@
         \n\nThank you! to CBS Corporation for providing these full-cast radio dramas to the public.
         All episodes can be downloaded for free from <b>http://www.cbsrmt.com</b>
         \n\nThis is my Capstone Project for the <b>Udacity Android Nanodegree</b> program.
-        I hope you like it.
-        \n\n
+        I hope you like it.\n
+        \n
         CREDITS:\n
-                - Circle Progress View by Jakob Grabner\n
-                - Circular Seekbar by Raghav Sood\n
-                - ButterKnife by Jake Warton
+                    - DAZ Studio used to create the Haunted-House\n
+                    - ButterKnife by Jake Warton\n
+                    - Circle Progress View by Jakob Grabner\n
+                    - Modified Circular Seekbar by Raghav Sood\n
+                    - StackOverflow.com - an awesome resource!\n
+                    - Android Studio / Google + Udacity\n
+        \n
     </string>
 
     <string name="e_g_marshall">E. G. Marshall</string>
