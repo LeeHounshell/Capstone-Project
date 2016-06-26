@@ -70,24 +70,28 @@ public class BaseActivity extends AppCompatActivity {
     }
     protected AutoplayState mAutoplayState = AutoplayState.READY2PLAY;
 
-    protected String mMediaId;
-    protected long mEpisodeNumber;
-    protected boolean mPurchased;
-    protected boolean mNoAdsForShow;
-    protected boolean mDownloaded;
-    protected boolean mEpisodeHeard;
     protected int mAudioFocusRequstResult;
     protected long mDuration;
-    protected boolean mHaveRealDuration;
     protected long mCurrentPosition;
-    protected boolean mSeeking;
-    protected boolean mPlaying;
-    protected boolean mLoadedOK;
     protected String mAirdate;
     protected String mEpisodeTitle;
     protected String mEpisodeDescription;
     protected String mEpisodeWeblinkUrl;
     protected String mEpisodeDownloadUrl;
+
+    protected String mMediaId;
+    protected long mEpisodeNumber;
+
+    protected static volatile boolean sPurchased;
+    protected static volatile boolean sNoAdsForShow;
+    protected static volatile boolean sDownloaded;
+    protected static volatile boolean sEpisodeHeard;
+    protected static volatile boolean sHaveRealDuration;
+    protected static volatile boolean sSeeking;
+    protected static volatile boolean sPlaying;
+    protected static volatile boolean sLoadedOK;
+    protected static volatile boolean sShowUnit;
+    protected static volatile boolean sCopiedDatabaseSuccess;
 
     protected static final int MIN_EMAIL_LENGTH = 3;
     protected static final int MIN_PASSWORD_LENGTH = 6;
@@ -98,8 +102,6 @@ public class BaseActivity extends AppCompatActivity {
     protected Handler mHandler;
     protected View mRootView;
     protected CircleProgressView mCircleView;
-    protected boolean mShowUnit;
-    protected boolean mCopiedDatabaseSuccess;
 
     private static int mCount;
 
@@ -333,7 +335,7 @@ public class BaseActivity extends AppCompatActivity {
         LogHelper.v(TAG, "---> startAutoplayActivity <---");
         boolean dbMissing = doINeedToCreateADatabase();
         LogHelper.v(TAG, "---> dbMissing="+dbMissing);
-        if (dbMissing && !mCopiedDatabaseSuccess) {
+        if (dbMissing && !sCopiedDatabaseSuccess) {
             LogHelper.v(TAG, "*** first need to build the RadioMysteryTheater database ***");
             String message = getResources().getString(R.string.initializing);
             Toast.makeText(this, message, Toast.LENGTH_LONG).show();
@@ -576,7 +578,7 @@ public class BaseActivity extends AppCompatActivity {
 
                 LogHelper.v(TAG, "*** successfully copied prebuilt SQLite database ***");
                 CircleViewHelper.hideCircleView(this);
-                mCopiedDatabaseSuccess = true;
+                sCopiedDatabaseSuccess = true;
                 startAutoplayActivity();
             }
             catch (Exception any) {
@@ -825,7 +827,7 @@ public class BaseActivity extends AppCompatActivity {
     public void initCircleView(CircleProgressView circleView, CircleViewHelper.CircleViewType what) {
         LogHelper.v(TAG, "initCircleView (CircleProgressView)");
         mCircleView = circleView; // needed to get around a problem with Fragments and findViewById
-        mShowUnit = false;
+        sShowUnit = false;
         if (what == CircleViewHelper.CircleViewType.CREATE_DATABASE) {
             LogHelper.v(TAG, "initCircleView: CREATE_DATABASE");
             mCircleView.setUnit("%");
@@ -850,7 +852,7 @@ public class BaseActivity extends AppCompatActivity {
             @Override
             public void run() {
 
-                mShowUnit = false;
+                sShowUnit = false;
                 mCircleView.setVisibility(View.VISIBLE);
                 LogHelper.w(TAG, "showCircleView: CircleView VISIBLE");
                 mCircleView.setAutoTextSize(true); // enable auto text size, previous values are overwritten
@@ -873,7 +875,7 @@ public class BaseActivity extends AppCompatActivity {
                                         case ANIMATING:
                                         case START_ANIMATING_AFTER_SPINNING:
                                             mCircleView.setTextMode(TextMode.PERCENT); // show percent if not spinning
-                                            mCircleView.setUnitVisible(mShowUnit);
+                                            mCircleView.setUnitVisible(sShowUnit);
                                             break;
                                         case SPINNING:
                                             mCircleView.setTextMode(TextMode.TEXT); // show text while spinning
@@ -966,17 +968,17 @@ public class BaseActivity extends AppCompatActivity {
         LogHelper.v(TAG, "savePlayInfoToBundle");
         playInfoBundle.putString(KEY_MEDIA_ID, mMediaId);
         playInfoBundle.putLong(KEY_EPISODE, mEpisodeNumber);
-        playInfoBundle.putBoolean(KEY_PURCHASED, mPurchased);
-        playInfoBundle.putBoolean(KEY_NOADS, mNoAdsForShow);
-        playInfoBundle.putBoolean(KEY_DOWNLOADED, mDownloaded);
-        playInfoBundle.putBoolean(KEY_HEARD, mEpisodeHeard);
+        playInfoBundle.putBoolean(KEY_PURCHASED, sPurchased);
+        playInfoBundle.putBoolean(KEY_NOADS, sNoAdsForShow);
+        playInfoBundle.putBoolean(KEY_DOWNLOADED, sDownloaded);
+        playInfoBundle.putBoolean(KEY_HEARD, sEpisodeHeard);
         playInfoBundle.putInt(KEY_AUDIO_FOCUS, mAudioFocusRequstResult);
         playInfoBundle.putLong(KEY_DURATION, mDuration);
-        playInfoBundle.putBoolean(KEY_REAL_DURATION, mHaveRealDuration);
+        playInfoBundle.putBoolean(KEY_REAL_DURATION, sHaveRealDuration);
         playInfoBundle.putLong(KEY_CURRENT_POSITION, mCurrentPosition);
-        playInfoBundle.putBoolean(KEY_SEEKING, mSeeking);
-        playInfoBundle.putBoolean(KEY_PLAYING, mPlaying);
-        playInfoBundle.putBoolean(KEY_LOADED_OK, mLoadedOK);
+        playInfoBundle.putBoolean(KEY_SEEKING, sSeeking);
+        playInfoBundle.putBoolean(KEY_PLAYING, sPlaying);
+        playInfoBundle.putBoolean(KEY_LOADED_OK, sLoadedOK);
         playInfoBundle.putString(KEY_AIRDATE, mAirdate);
         playInfoBundle.putString(KEY_TITLE, mEpisodeTitle);
         playInfoBundle.putString(KEY_DESCRIPTION, mEpisodeDescription);
@@ -1007,17 +1009,17 @@ public class BaseActivity extends AppCompatActivity {
         LogHelper.v(TAG, "restorePlayInfoFromBundle");
         mMediaId = playInfoBundle.getString(KEY_MEDIA_ID);
         mEpisodeNumber = playInfoBundle.getLong(KEY_EPISODE);
-        mPurchased = playInfoBundle.getBoolean(KEY_PURCHASED);
-        mNoAdsForShow = playInfoBundle.getBoolean(KEY_NOADS);
-        mDownloaded = playInfoBundle.getBoolean(KEY_DOWNLOADED);
-        mEpisodeHeard = playInfoBundle.getBoolean(KEY_HEARD);
+        sPurchased = playInfoBundle.getBoolean(KEY_PURCHASED);
+        sNoAdsForShow = playInfoBundle.getBoolean(KEY_NOADS);
+        sDownloaded = playInfoBundle.getBoolean(KEY_DOWNLOADED);
+        sEpisodeHeard = playInfoBundle.getBoolean(KEY_HEARD);
         mAudioFocusRequstResult = playInfoBundle.getInt(KEY_AUDIO_FOCUS);
         mDuration = playInfoBundle.getLong(KEY_DURATION);
-        mHaveRealDuration = playInfoBundle.getBoolean(KEY_REAL_DURATION);
+        sHaveRealDuration = playInfoBundle.getBoolean(KEY_REAL_DURATION);
         mCurrentPosition = playInfoBundle.getLong(KEY_CURRENT_POSITION);
-        mSeeking = playInfoBundle.getBoolean(KEY_SEEKING);
-        mPlaying = playInfoBundle.getBoolean(KEY_PLAYING);
-        mLoadedOK = playInfoBundle.getBoolean(KEY_LOADED_OK);
+        sSeeking = playInfoBundle.getBoolean(KEY_SEEKING);
+        sPlaying = playInfoBundle.getBoolean(KEY_PLAYING);
+        sLoadedOK = playInfoBundle.getBoolean(KEY_LOADED_OK);
         mAirdate = playInfoBundle.getString(KEY_AIRDATE);
         mEpisodeTitle = playInfoBundle.getString(KEY_TITLE);
         mEpisodeDescription = playInfoBundle.getString(KEY_DESCRIPTION);
@@ -1068,10 +1070,10 @@ public class BaseActivity extends AppCompatActivity {
                 + ": mEpisodeDescription=" + mEpisodeDescription
                 + ": mEpisodeWeblinkUrl=" + mEpisodeWeblinkUrl
                 + ": mEpisodeDownloadUrl=" + mEpisodeDownloadUrl
-                + ", mPurchased=" + mPurchased
-                + ", mNoAdsForShow=" + mNoAdsForShow
-                + ", mDownloaded=" + mDownloaded
-                + ", mEpisodeHeard=" + mEpisodeHeard
+                + ", sPurchased=" + sPurchased
+                + ", sNoAdsForShow=" + sNoAdsForShow
+                + ", sDownloaded=" + sDownloaded
+                + ", sEpisodeHeard=" + sEpisodeHeard
                 + ", mAutoplayState=" + state);
     }
 

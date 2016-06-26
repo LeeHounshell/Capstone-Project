@@ -9,6 +9,9 @@
         After one episode finishes, the next automatically starts. Press Autoplay again to Pause.
         <b>Voice Search</b> allows you to speak natural language queries into the search engine.
         For help and advanced features, say or type <b>\'help\'</b> into a Search from the main toolbar.
+        Once playback begins, a ring will appear. Use the button on that ring to adjust play position.
+        The ring-seekbar and/or FAB can be removed from Options -> Settings, for impaired users.
+        Also an option to download, and change text size + font selection.
         \n\nThank you! to CBS Corporation for providing these full-cast radio dramas to the public.
         All episodes can be downloaded for free from <b>http://www.cbsrmt.com</b>
         \n\nThis is my Capstone Project for the <b>Udacity Android Nanodegree</b> program.

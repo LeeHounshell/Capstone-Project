@@ -50,7 +50,6 @@ import com.harlie.radiotheater.radiomysterytheater.utils.OnSwipeTouchListener;
 
 import java.util.List;
 import java.util.concurrent.Executors;
-import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -88,11 +87,11 @@ public class AutoplayActivity extends BaseActivity
     private final Handler mHandler = new Handler();
     private BroadcastReceiver mReceiver;
 
-    private volatile boolean mHandleRotationEvent;
-    private volatile boolean mNeed2RestartPlayback;
-    private volatile boolean mLoadingScreenEnabled;
-    private volatile boolean mBeginLoading;
-    private volatile boolean mSeekUpdateRunning;
+    private static volatile boolean sHandleRotationEvent;
+    private static volatile boolean sNeed2RestartPlayback;
+    private static volatile boolean sLoadingScreenEnabled;
+    private static volatile boolean sBeginLoading;
+    private static volatile boolean sSeekUpdateRunning;
 
     private final ScheduledExecutorService mExecutorService =
             Executors.newSingleThreadScheduledExecutor();
@@ -100,11 +99,11 @@ public class AutoplayActivity extends BaseActivity
     private final Runnable mUpdateProgressTask = new Runnable() {
         @Override
         public void run() {
-            if (mCircularSeekBar != null && !mCircularSeekBar.isProcessingTouchEvents() && !mSeeking) {
+            if (mCircularSeekBar != null && !mCircularSeekBar.isProcessingTouchEvents() && !sSeeking) {
                 PlaybackStateCompat lastPlaybackState = mMediaController.getPlaybackState();
                 mCurrentPosition = lastPlaybackState.getPosition();
                 if (lastPlaybackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
-                    if (!mCircularSeekBar.isProcessingTouchEvents() && !mSeeking) {
+                    if (!mCircularSeekBar.isProcessingTouchEvents() && !sSeeking) {
                         LoadingAsyncTask.mDoneLoading = true;
                         // Calculate the elapsed time between the last position update and now and unless
                         // paused, we can assume (delta * speed) + current position is approximately the
@@ -208,9 +207,9 @@ public class AutoplayActivity extends BaseActivity
                     if (mMediaController != null) {
                         LogHelper.v(TAG, "mMediaController.registerCallback(mMediaControllerCallback);");
                         mMediaController.registerCallback(mMediaControllerCallback);
-                        if (mNeed2RestartPlayback) {
-                            LogHelper.v(TAG, "*** NEED TO RESTART PLAYBACK! - mNeed2RestartPlayback = true;");
-                            mNeed2RestartPlayback = false;
+                        if (sNeed2RestartPlayback) {
+                            LogHelper.v(TAG, "*** NEED TO RESTART PLAYBACK! - sNeed2RestartPlayback = true;");
+                            sNeed2RestartPlayback = false;
                             playPauseEpisode();
                         }
                     }
@@ -230,8 +229,8 @@ public class AutoplayActivity extends BaseActivity
                         case PlaybackStateCompat.STATE_PLAYING: {
                             LogHelper.d(TAG, "MediaControllerCompat.Callback onPlaybackStateChanged STATE_PLAYING <<<---------");
                             setAutoplayState(AutoplayState.PLAYING, "onPlaybackChanged - PLAYING");
-                            mSeeking = false;
-                            mBeginLoading = false;
+                            sSeeking = false;
+                            sBeginLoading = false;
                             break;
                         }
                         case PlaybackStateCompat.STATE_BUFFERING: {
@@ -242,8 +241,8 @@ public class AutoplayActivity extends BaseActivity
                         case PlaybackStateCompat.STATE_PAUSED: {
                             LogHelper.d(TAG, "MediaControllerCompat.Callback onPlaybackStateChanged STATE_PAUSED <<<---------");
                             setAutoplayState(AutoplayState.PAUSED, "onPlaybackChanged - PAUSED");
-                            mSeeking = false;
-                            mBeginLoading = false;
+                            sSeeking = false;
+                            sBeginLoading = false;
                             break;
                         }
                         case PlaybackStateCompat.STATE_ERROR:
@@ -251,11 +250,11 @@ public class AutoplayActivity extends BaseActivity
                         case PlaybackStateCompat.STATE_STOPPED: {
                             LogHelper.d(TAG, "MediaControllerCompat.Callback onPlaybackStateChanged STATE_STOPPED <<<---------");
                             setAutoplayState(AutoplayState.READY2PLAY, "onPlaybackChanged - READY2PLAY");
-                            mSeeking = false;
+                            sSeeking = false;
                             break;
                         }
                     }
-                    if (mSeeking) {
+                    if (sSeeking) {
                         LogHelper.v(TAG, "*** ignoring onPlaybackStateChanged until seekTo completes");
                         getHandler().post(new Runnable() {
                             @Override
@@ -333,8 +332,8 @@ public class AutoplayActivity extends BaseActivity
      */
     protected void updateControls() {
         LogHelper.v(TAG, "updateControls");
-        if (mBeginLoading) {
-            LogHelper.v(TAG, "mBeginLoading - skipping updateControls");
+        if (sBeginLoading) {
+            LogHelper.v(TAG, "sBeginLoading - skipping updateControls");
             return;
         }
         switch (mAutoplayState) {
@@ -412,7 +411,7 @@ public class AutoplayActivity extends BaseActivity
         mMediaId = null;
         mAudioFocusRequstResult = 0;
         mDuration = DEFAULT_DURATION; // one-hour in ms
-        mHaveRealDuration = false;
+        sHaveRealDuration = false;
         mCurrentPosition = 0;
         setAutoplayState(AutoplayState.READY2PLAY, "onCreate");
 
@@ -420,7 +419,7 @@ public class AutoplayActivity extends BaseActivity
 
         if (savedInstanceState != null) {
             LogHelper.v(TAG, "rotation event");
-            mHandleRotationEvent = true;
+            sHandleRotationEvent = true;
         }
 
         /*
@@ -510,7 +509,7 @@ public class AutoplayActivity extends BaseActivity
 
                 @Override
                 public void onClick() {
-                    if (!mCircularSeekBar.isProcessingTouchEvents() && !mSeeking) {
+                    if (!mCircularSeekBar.isProcessingTouchEvents() && !sSeeking) {
                         LogHelper.v(TAG, "onClick - mFabActionButton");
                         Intent episodeListIntent = new Intent(activity, EpisodeListActivity.class);
                         Bundle playInfo = new Bundle();
@@ -551,13 +550,13 @@ public class AutoplayActivity extends BaseActivity
             @Override
             public void onProgressChange(CircularSeekBar view, final int newProgress) {
                 LogHelper.v(TAG, "onProgressChange: newProgress:" + newProgress);
-                mBeginLoading = true;
-                if (!mCircularSeekBar.isProcessingTouchEvents() && !mSeeking) {
+                sBeginLoading = true;
+                if (!mCircularSeekBar.isProcessingTouchEvents() && !sSeeking) {
                     scheduleSeekbarUpdate();
                     getHandler().post(new Runnable() {
                         @Override
                         public void run() {
-                            mSeeking = true;
+                            sSeeking = true;
                             mCurrentPosition = newProgress;
                             managePlaybackControls(ControlsState.SEEKING_POSITION, "setSeekBarChangeListener");
                             mMediaController.getTransportControls().seekTo(newProgress);
@@ -583,13 +582,13 @@ public class AutoplayActivity extends BaseActivity
         mAdView.loadAd(adRequest);
         //#ENDIF
 
-        mLoadingScreenEnabled = true;
+        sLoadingScreenEnabled = true;
     }
 
     private void handleAutoplayClick() {
         LogHelper.v(TAG, "handleAutoplayClick");
         mAutoPlay.setEnabled(false);
-        if (!mCircularSeekBar.isProcessingTouchEvents() && !mSeeking) {
+        if (!mCircularSeekBar.isProcessingTouchEvents() && !sSeeking) {
             LogHelper.v(TAG, "do autoPlay");
             boolean foundEpisode = false;
             AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.toolbar_container);
@@ -599,10 +598,10 @@ public class AutoplayActivity extends BaseActivity
                 // found the next episode to listen to
                 appBarLayout.setExpanded(false);
                 mEpisodeNumber = configCursor.getFieldEpisodeNumber();
-                mPurchased = configCursor.getFieldPurchasedAccess();
-                mNoAdsForShow = configCursor.getFieldPurchasedNoads();
-                mDownloaded = configCursor.getFieldEpisodeDownloaded();
-                mEpisodeHeard = configCursor.getFieldEpisodeHeard();
+                sPurchased = configCursor.getFieldPurchasedAccess();
+                sNoAdsForShow = configCursor.getFieldPurchasedNoads();
+                sDownloaded = configCursor.getFieldEpisodeDownloaded();
+                sEpisodeHeard = configCursor.getFieldEpisodeHeard();
                 configCursor.close();
 
                 // get this episode's detail info
@@ -719,12 +718,12 @@ public class AutoplayActivity extends BaseActivity
         mMediaController = new MediaControllerCompat(this, token);
         setSupportMediaController(mMediaController);
         mMediaController.registerCallback(mMediaControllerCallback);
-        if (mHandleRotationEvent) {
+        if (sHandleRotationEvent) {
             LogHelper.v(TAG, "*** RESTORE PLAYBACK STATE AFTER ROTATION ***");
             getHandler().post(new Runnable() {
                 @Override
                 public void run() {
-                    if (mAutoplayState != AutoplayState.READY2PLAY || mSeeking || mPlaying) {
+                    if (mAutoplayState != AutoplayState.READY2PLAY || sSeeking || sPlaying) {
                         LogHelper.v(TAG, "RESTORE PLAYBACK - EPISODE: "+mEpisodeTitle);
                         MediaControllerCompat.TransportControls controls = mMediaController.getTransportControls();
                         controls.play();
@@ -734,7 +733,7 @@ public class AutoplayActivity extends BaseActivity
                     else {
                         showCurrentInfo();
                     }
-                    if (mSeeking) {
+                    if (sSeeking) {
                         LogHelper.v(TAG, "RESTORE PLAYBACK - SEEKING TO: "+mCurrentPosition);
                         mMediaController.getTransportControls().seekTo(mCurrentPosition);
                     }
@@ -746,13 +745,13 @@ public class AutoplayActivity extends BaseActivity
     private void stopSeekbarUpdate() {
         LogHelper.v(TAG, "stopSeekbarUpdate");
         if (mScheduleFuture != null) {
-            mSeekUpdateRunning = false;
+            sSeekUpdateRunning = false;
             mScheduleFuture.cancel(false);
         }
     }
 
     private void scheduleSeekbarUpdate() {
-        if (! mSeekUpdateRunning) {
+        if (!sSeekUpdateRunning) {
             LogHelper.v(TAG, "scheduleSeekbarUpdate");
             if (!mExecutorService.isShutdown()) {
                 mScheduleFuture = mExecutorService.scheduleAtFixedRate(
@@ -760,7 +759,7 @@ public class AutoplayActivity extends BaseActivity
                             @Override
                             public void run() {
                                 LogHelper.v(TAG, "post mUpdateProgressTask");
-                                mSeekUpdateRunning = true;
+                                sSeekUpdateRunning = true;
                                 mHandler.post(mUpdateProgressTask);
                             }
                         }, PROGRESS_UPDATE_INITIAL_INTERVAL,
@@ -779,18 +778,18 @@ public class AutoplayActivity extends BaseActivity
         if (metadata == null) {
             return;
         }
-        if (! mHaveRealDuration) {
+        if (!sHaveRealDuration) {
             mDuration = (int) metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
         }
-        LogHelper.v(TAG, "===> EPISODE DURATION="+mDuration/1000+", mHaveRealDuration="+mHaveRealDuration);
+        LogHelper.v(TAG, "===> EPISODE DURATION="+mDuration/1000+", sHaveRealDuration="+ sHaveRealDuration);
         mCircularSeekBar.setMaxProgress((int) mDuration);
         managePlaybackControls(ControlsState.ENABLED_SHOW_PAUSE, "updateDuration");
     }
 
     protected void loadingScreen() {
-        LogHelper.d(TAG, "loadingScreen: enabled="+mLoadingScreenEnabled);
-        if (mLoadingScreenEnabled && !LoadingAsyncTask.mLoadingNow && mAutoplayState == AutoplayState.READY2PLAY) {
-            mBeginLoading = true;
+        LogHelper.d(TAG, "loadingScreen: enabled="+ sLoadingScreenEnabled);
+        if (sLoadingScreenEnabled && !LoadingAsyncTask.mLoadingNow && mAutoplayState == AutoplayState.READY2PLAY) {
+            sBeginLoading = true;
             managePlaybackControls(ControlsState.DISABLED_SHOW_PAUSE, "loadingScreen");
             LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
             setAutoplayState(AutoplayState.LOADING, "loadingScreen");
@@ -806,7 +805,7 @@ public class AutoplayActivity extends BaseActivity
         super.setCircleViewValue(value);
         mCurrentPosition = (long) value;
         if (value != 0) {
-            mBeginLoading = false;
+            sBeginLoading = false;
             LoadingAsyncTask.mDoneLoading = true;
             managePlaybackControls(value == mCircleView.getMaxValue() ? ControlsState.DISABLED_SHOW_PAUSE : ControlsState.ENABLED_SHOW_PAUSE, "setCircleViewValue - PLAYING");
         }
@@ -836,7 +835,7 @@ public class AutoplayActivity extends BaseActivity
                         @Override
                         public void run() {
                             LogHelper.v(TAG, "*** RECEIVED BROADCAST: LOAD_OK");
-                            mLoadedOK = true;
+                            sLoadedOK = true;
                             enableButtons();
                             managePlaybackControls(ControlsState.ENABLED, "onReceive");
                         }
@@ -859,7 +858,7 @@ public class AutoplayActivity extends BaseActivity
                         public void run() {
                             LogHelper.v(TAG, "*** RECEIVED BROADCAST: DURATION");
                             mDuration = Long.valueOf(message.substring(duration.length(), message.length()));
-                            mHaveRealDuration = true;
+                            sHaveRealDuration = true;
                             mCircularSeekBar.setMaxProgress((int) mDuration);
                             LogHelper.v(TAG, "*** REVISED EPISODE DURATION="+mDuration);
                             do_UpdateControls();
@@ -886,8 +885,8 @@ public class AutoplayActivity extends BaseActivity
         LogHelper.d(TAG, "onStart");
         super.onStart();
         if (mAutoplayState == AutoplayState.PLAYING) {
-            LogHelper.v(TAG, "*** we need to keep playing from where we left off.. mNeed2RestartPlayback = true;");
-            mNeed2RestartPlayback = true;
+            LogHelper.v(TAG, "*** we need to keep playing from where we left off.. sNeed2RestartPlayback = true;");
+            sNeed2RestartPlayback = true;
         }
         LogHelper.d(TAG, "---> mMediaBrowser.connect();");
         mMediaBrowser.connect();
@@ -937,7 +936,7 @@ public class AutoplayActivity extends BaseActivity
             mAutoPlay.setEnabled(false);
             mFabActionButton.setEnabled(false);
         }
-        else if (mBeginLoading || LoadingAsyncTask.mLoadingNow || mAudioFocusRequstResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+        else if (sBeginLoading || LoadingAsyncTask.mLoadingNow || mAudioFocusRequstResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             LogHelper.v(TAG, "manage - WAIT UNTIL FINISHED");
             mAutoPlay.setEnabled(false);
             mFabActionButton.setEnabled(false);
