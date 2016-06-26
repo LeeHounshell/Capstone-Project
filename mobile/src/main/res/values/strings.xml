@@ -15,12 +15,15 @@
         I hope you like it.\n
         \n
         CREDITS:\n
+                    - Firebase for backend processing\n
                     - DAZ Studio used to create the Haunted-House\n
                     - ButterKnife by Jake Warton\n
                     - Circle Progress View by Jakob Grabner\n
                     - Modified Circular Seekbar by Raghav Sood\n
                     - StackOverflow.com - an awesome resource!\n
                     - Android Studio / Google + Udacity\n
+                    - Wikipedia for the photo of E. G. Marshall\n
+                    - www.cbsrmt.com - they made this possible\n
         \n
     </string>
 
