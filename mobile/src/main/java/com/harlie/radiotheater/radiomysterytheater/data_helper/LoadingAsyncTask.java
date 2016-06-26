@@ -73,7 +73,7 @@ public class LoadingAsyncTask extends AsyncTask<AutoplayActivity, Void, Boolean>
         mActivity.getHandler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                mActivity.managePlaybackControls(View.VISIBLE, "onPostExecute");
+                mActivity.managePlaybackControls(AutoplayActivity.ControlsState.ENABLED, "onPostExecute");
             }
         }, 1000);
     }

@@ -4,6 +4,7 @@ package com.harlie.radiotheater.radiomysterytheater.utils;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.os.Handler;
 import android.support.v7.widget.AppCompatButton;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -13,9 +14,11 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
     private final static String TAG = "LEE: <" + OnSwipeTouchListener.class.getSimpleName() + ">";
 
     private GestureDetector mGestureDetector;
-    private AppCompatButton mAutoPlay;
+    private AppCompatButton mButton;
+    private Handler mHandler;
+    private Drawable mNotPressedButton;
     private Drawable mPressedButton;
-    private boolean mDoLongPress;
+    private boolean onLongPress;
 
     public OnSwipeTouchListener(Context c) {
         LogHelper.v(TAG, "OnSwipeTouchListener");
@@ -23,11 +26,12 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
         mGestureDetector = new GestureDetector(c, new GestureListener());
     }
 
-    public OnSwipeTouchListener(Context c, AppCompatButton autoPlay, Drawable pressed) {
-        LogHelper.v(TAG, "OnSwipeTouchListener - AUTOPLAY");
-        mAutoPlay = autoPlay;
+    public OnSwipeTouchListener(Context context, Handler handler, AppCompatButton button, Drawable pressed) {
+        LogHelper.v(TAG, "OnSwipeTouchListener - BUTTON");
+        mHandler = handler;
+        mButton = button;
         mPressedButton = pressed;
-        mGestureDetector = new GestureDetector(c, new GestureListener());
+        mGestureDetector = new GestureDetector(context, new GestureListener());
     }
 
     public boolean onTouch(final View view, final MotionEvent motionEvent) {
@@ -35,16 +39,28 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
         if (mPressedButton != null) {
             switch (motionEvent.getAction()) {
                 case MotionEvent.ACTION_DOWN: {
-                    LogHelper.v(TAG, "onTouch - ACTION_DOWN");
-                    mAutoPlay.setBackgroundDrawable(mPressedButton);
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            LogHelper.v(TAG, "onTouch - ACTION_DOWN");
+                            mNotPressedButton = mButton.getCompoundDrawables()[0]; // get original button image, as of right now.
+                            mButton.setBackgroundDrawable(mPressedButton);
+                        }
+                    });
+                    onLongPress = false;
                     break;
                 }
                 case MotionEvent.ACTION_UP: {
-                    LogHelper.v(TAG, "onTouch - ACTION_UP");
-                    if (!mDoLongPress) {
-                        mAutoPlay.setVisibility(View.INVISIBLE);
-                    }
-                    mDoLongPress = false;
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            LogHelper.v(TAG, "onTouch - ACTION_UP");
+                            if (onLongPress) {
+                                // put back the original button image.. onLongClick can change it
+                                onLongClick(mNotPressedButton);
+                            }
+                        }
+                    });
                     break;
                 }
             }
@@ -80,8 +96,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
         @Override
         public void onLongPress(MotionEvent e) {
             LogHelper.v(TAG, "onLongPress");
-            mDoLongPress = true;
-            onLongClick();
+            onLongPress = true;
             super.onLongPress(e);
         }
 
@@ -134,7 +149,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
     public void onDoubleClick() {
     }
 
-    public void onLongClick() {
+    public void onLongClick(Drawable image) {
     }
 
 }

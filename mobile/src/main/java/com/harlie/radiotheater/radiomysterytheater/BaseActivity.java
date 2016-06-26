@@ -81,6 +81,8 @@ public class BaseActivity extends AppCompatActivity {
     protected boolean mHaveRealDuration;
     protected long mCurrentPosition;
     protected boolean mSeeking;
+    protected boolean mPlaying;
+    protected boolean mLoadedOK;
     protected String mAirdate;
     protected String mEpisodeTitle;
     protected String mEpisodeDescription;
@@ -937,6 +939,8 @@ public class BaseActivity extends AppCompatActivity {
     private static final String KEY_REAL_DURATION       = "realDuration";
     private static final String KEY_CURRENT_POSITION    = "position";
     private static final String KEY_SEEKING             = "seeking";
+    private static final String KEY_PLAYING             = "playing";
+    private static final String KEY_LOADED_OK           = "loaded_ok";
     private static final String KEY_AIRDATE             = "airdate";
     private static final String KEY_TITLE               = "title";
     private static final String KEY_DESCRIPTION         = "description";
@@ -971,6 +975,8 @@ public class BaseActivity extends AppCompatActivity {
         playInfoBundle.putBoolean(KEY_REAL_DURATION, mHaveRealDuration);
         playInfoBundle.putLong(KEY_CURRENT_POSITION, mCurrentPosition);
         playInfoBundle.putBoolean(KEY_SEEKING, mSeeking);
+        playInfoBundle.putBoolean(KEY_PLAYING, mPlaying);
+        playInfoBundle.putBoolean(KEY_LOADED_OK, mLoadedOK);
         playInfoBundle.putString(KEY_AIRDATE, mAirdate);
         playInfoBundle.putString(KEY_TITLE, mEpisodeTitle);
         playInfoBundle.putString(KEY_DESCRIPTION, mEpisodeDescription);
@@ -1010,6 +1016,8 @@ public class BaseActivity extends AppCompatActivity {
         mHaveRealDuration = playInfoBundle.getBoolean(KEY_REAL_DURATION);
         mCurrentPosition = playInfoBundle.getLong(KEY_CURRENT_POSITION);
         mSeeking = playInfoBundle.getBoolean(KEY_SEEKING);
+        mPlaying = playInfoBundle.getBoolean(KEY_PLAYING);
+        mLoadedOK = playInfoBundle.getBoolean(KEY_LOADED_OK);
         mAirdate = playInfoBundle.getString(KEY_AIRDATE);
         mEpisodeTitle = playInfoBundle.getString(KEY_TITLE);
         mEpisodeDescription = playInfoBundle.getString(KEY_DESCRIPTION);
