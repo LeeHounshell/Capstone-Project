@@ -642,7 +642,7 @@ public class AutoplayActivity extends BaseActivity
                 getHandler().post(new Runnable() {
                     @Override
                     public void run() {
-                        getHorizontalScrollingText().setText("         Airdate: "+ RadioTheaterContract.airDate(mAirdate)+" Episode #"+mEpisodeNumber+": "+mEpisodeTitle+" - "+mEpisodeDescription);
+                        getHorizontalScrollingText().setText("         Airdate: "+ RadioTheaterContract.airDate(mAirdate)+" ... Episode #"+mEpisodeNumber+" ... "+mEpisodeTitle+" ... "+mEpisodeDescription);
                         getHorizontalScrollingText().setEnabled(true);
                         getHorizontalScrollingText().setSelected(true);
                     }

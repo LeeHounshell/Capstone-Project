@@ -36,7 +36,7 @@ public class RadioTheaterContract {
 
     public static String airDate(String episodeAirDate) {
         DateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        DateFormat outputFormat = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
+        DateFormat outputFormat = new SimpleDateFormat("EEEE', 'MMMM d', ' yyyy", Locale.getDefault());
         Date date = null;
         try {
             date = inputFormat.parse(episodeAirDate);
