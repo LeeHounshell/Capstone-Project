@@ -21,8 +21,12 @@ import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
 public class RadioTheaterContract {
     private final static String TAG = "LEE: <" + RadioTheaterContract.class.getSimpleName() + ">";
@@ -30,29 +34,18 @@ public class RadioTheaterContract {
     // Reference the AUTHORITY generated from 'generate-data-provider.sh'
     public static final String CONTENT_AUTHORITY = RadioTheaterProvider.AUTHORITY;
 
-    // To make it easy to query for the exact date, we normalize all dates that go into
-    // the database to the start of the the Julian day at UTC.
-    public static long normalizeDate(long episodeAirDate) {
-        // normalize the start date to the beginning of the (UTC) day
-        Time time = new Time();
-        time.set(episodeAirDate);
-        int julianDay = Time.getJulianDay(episodeAirDate, time.gmtoff);
-        return time.setJulianDay(julianDay);
-    }
-
-    public static String airDate(long episodeAirDate) {
-        if (episodeAirDate != 0) {
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(episodeAirDate);
-            if (calendar.get(Calendar.YEAR) > 1900 && calendar.get(Calendar.YEAR) < 2100) {
-                SimpleDateFormat dt1 = new SimpleDateFormat("yyyy-MM-dd");
-                String airDate = dt1.format(calendar.getTime());
-                return airDate;
-            } else {
-                LogHelper.w(TAG, "invalid air date! - calendar=" + calendar);
-            }
+    public static String airDate(String episodeAirDate) {
+        DateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        DateFormat outputFormat = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
+        Date date = null;
+        try {
+            date = inputFormat.parse(episodeAirDate);
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
-        return "";
+        String outputDateStr = outputFormat.format(date);
+        LogHelper.v(TAG, "airdate="+episodeAirDate+", formatted="+outputDateStr);
+        return outputDateStr;
     }
 
     /* Inner class that defines the table contents of the configuration table */

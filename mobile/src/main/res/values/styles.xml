@@ -15,6 +15,12 @@
         <item name="android:windowSharedElementExitTransition">@android:transition/move</item>
     </style>
 
+    <style name="AppTheme.Splash" parent ="AppTheme">
+        <item name="android:windowBackground">@drawable/radio_theater_spash</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
+
     <style name="Toolbar" parent="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
         <item name="popupTheme">@style/ThemeOverlay.AppCompat.Light</item>
     </style>

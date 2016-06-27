@@ -48,6 +48,7 @@ import com.google.android.gms.ads.MobileAds;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadingAsyncTask;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.OnSwipeTouchListener;
@@ -549,21 +550,20 @@ public class AutoplayActivity extends BaseActivity
         // create a new View for the seek-bar and add it into the main_frame
         FrameLayout theFrame = (FrameLayout) findViewById(R.id.main_frame);
         mCircularSeekBar = new CircularSeekBar(this);
+        getCircularSeekBar().setEnabled(false);
+        getCircularSeekBar().setVisibility(View.INVISIBLE);
         getCircularSeekBar().setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
         getCircularSeekBar().setBarWidth(5);
+        getCircularSeekBar().setMaxProgress((int) mDuration);
+        getCircularSeekBar().setProgress(0);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             getCircularSeekBar().setBackgroundColor(getResources().getColor(R.color.transparent, null));
         }
         else {
             getCircularSeekBar().setBackgroundColor(getResources().getColor(R.color.transparent));
         }
-        getCircularSeekBar().setMaxProgress((int) mDuration);
-        getCircularSeekBar().setProgress(0);
-        getCircularSeekBar().setVisibility(View.INVISIBLE);
-        getCircularSeekBar().setEnabled(true);
-        getCircularSeekBar().showSeekBar();
-        theFrame.addView(getCircularSeekBar());
         getCircularSeekBar().invalidate();
+        theFrame.addView(getCircularSeekBar());
 
         getCircularSeekBar().setSeekBarChangeListener(new CircularSeekBar.OnSeekChangeListener() {
 
@@ -642,7 +642,7 @@ public class AutoplayActivity extends BaseActivity
                 getHandler().post(new Runnable() {
                     @Override
                     public void run() {
-                        getHorizontalScrollingText().setText(mAirdate+" Episode #"+mEpisodeNumber+": "+mEpisodeTitle+" - "+mEpisodeDescription);
+                        getHorizontalScrollingText().setText("         Airdate: "+ RadioTheaterContract.airDate(mAirdate)+" Episode #"+mEpisodeNumber+": "+mEpisodeTitle+" - "+mEpisodeDescription);
                         getHorizontalScrollingText().setEnabled(true);
                         getHorizontalScrollingText().setSelected(true);
                     }
@@ -1023,7 +1023,7 @@ public class AutoplayActivity extends BaseActivity
                 }
                 case LOADING: {
                     LogHelper.v(TAG, "manage - LOADING");
-                    getCircularSeekBar().setVisibility(View.INVISIBLE);
+                    getCircularSeekBar().setVisibility(sLoadedOK ? View.VISIBLE : View.INVISIBLE);
                     getAutoPlay().setEnabled(false);
                     getFabActionButton().setEnabled(false);
                     break;
@@ -1058,7 +1058,7 @@ public class AutoplayActivity extends BaseActivity
                 if (mAutoplayState == AutoplayState.PLAYING && mCurrentPosition > 0) {
                     Drawable pauseButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_pause_button_selector, null);
                     getAutoPlay().setBackground(pauseButton);
-                    getCircularSeekBar().setVisibility(View.VISIBLE);
+                    getCircularSeekBar().setVisibility(sLoadedOK ? View.VISIBLE : View.INVISIBLE);
                 }
                 else if (mCurrentPosition > 0){
                     Drawable resumeButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_resume_button_selector, null);
@@ -1078,7 +1078,7 @@ public class AutoplayActivity extends BaseActivity
                 if (mAutoplayState == AutoplayState.PLAYING) {
                     Drawable pauseButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_pause_button_selector, null);
                     getAutoPlay().setBackground(pauseButton);
-                    getCircularSeekBar().setVisibility(View.VISIBLE);
+                    getCircularSeekBar().setVisibility(sLoadedOK ? View.VISIBLE : View.INVISIBLE);
                 }
                 else {
                     Drawable resumeButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_resume_button_selector, null);
@@ -1093,7 +1093,7 @@ public class AutoplayActivity extends BaseActivity
                 if (mAutoplayState == AutoplayState.PLAYING && mCurrentPosition > 0) {
                     Drawable pauseButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_pause_disabled_button_selector, null);
                     getAutoPlay().setBackground(pauseButton);
-                    getCircularSeekBar().setVisibility(View.VISIBLE);
+                    getCircularSeekBar().setVisibility(sLoadedOK ? View.VISIBLE : View.INVISIBLE);
                 }
                 else if (mCurrentPosition > 0){
                     Drawable resumeButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_resume_button_selector, null);
@@ -1113,7 +1113,7 @@ public class AutoplayActivity extends BaseActivity
                 Drawable pauseButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_pause_disabled_button_selector, null);
                 getAutoPlay().setBackground(pauseButton);
                 if (mAutoplayState == AutoplayState.PLAYING) {
-                    getCircularSeekBar().setVisibility(View.VISIBLE);
+                    getCircularSeekBar().setVisibility(sLoadedOK ? View.VISIBLE : View.INVISIBLE);
                 }
                 else {
                     getCircularSeekBar().setVisibility(View.INVISIBLE);

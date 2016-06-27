@@ -353,6 +353,12 @@ public class BaseActivity extends AppCompatActivity {
             if (getEmail() != null) {
                 userLoginSuccess();
             }
+            // save authentication to Shared Prefs
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("authentication", getEmail());
+            editor.apply();
+
             Intent autoplayIntent = new Intent(this, AutoplayActivity.class);
             // close existing activity stack regardless of what's in there and create new root
             autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
