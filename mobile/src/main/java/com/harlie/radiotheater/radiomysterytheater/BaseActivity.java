@@ -392,22 +392,6 @@ public class BaseActivity extends AppCompatActivity {
         input.close();
     }
 
-    public Handler getHandler() {
-        return mHandler;
-    }
-
-    public FirebaseAuth getAuth() {
-        return mAuth;
-    }
-
-    public Firebase getFirebase() {
-        return mFirebase;
-    }
-
-    public DatabaseReference getDatabase() {
-        return mDatabase;
-    }
-
     //--------------------------------------------------------------------------------
     // SQLite Database Related
     //--------------------------------------------------------------------------------
@@ -548,7 +532,7 @@ public class BaseActivity extends AppCompatActivity {
     // this kicks off a series of AsyncTasks to load SQL tables from Firebase
     protected void loadSqliteDatabase() {
         LogHelper.v(TAG, "*** loadSqliteDatabase ***");
-        mCircleView = (CircleProgressView) mRootView.findViewById(R.id.circle_view);
+        mCircleView = (CircleProgressView) getRootView().findViewById(R.id.circle_view);
 
         //if (! ((isExistingTable("EPISODES")) && (isExistingTable("ACTORS")) && (isExistingTable("WRITERS")))) {
         //    LoadRadioTheaterTablesAsyncTask.setTesting(true); // load some dummy data instead of JSON
@@ -556,7 +540,7 @@ public class BaseActivity extends AppCompatActivity {
 
         if (COPY_PACKAGED_SQLITE_DATABASE) {
             mCount = 0;
-            CircleViewHelper.showCircleView(this, mCircleView, CircleViewHelper.CircleViewType.CREATE_DATABASE);
+            CircleViewHelper.showCircleView(this, getCircleView(), CircleViewHelper.CircleViewType.CREATE_DATABASE);
             CircleViewHelper.setCircleViewMaximum((float) TOTAL_SIZE_TO_COPY_IN_BYTES, this);
             CircleViewHelper.setCircleViewValue((float) mCount, this);
             String DB_NAME = RadioTheaterHelper.DATABASE_FILE_NAME;
@@ -636,7 +620,7 @@ public class BaseActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
-                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, mCircleView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS);
+                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, getCircleView(), dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS);
                 asyncTask.execute();
                 LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
             }
@@ -659,7 +643,7 @@ public class BaseActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
-                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, mCircleView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.ACTORS);
+                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, getCircleView(), dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.ACTORS);
                 asyncTask.execute();
                 LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
             }
@@ -682,7 +666,7 @@ public class BaseActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
-                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, mCircleView, dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.EPISODES);
+                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, getCircleView(), dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.EPISODES);
                 asyncTask.execute();
                 LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
             }
@@ -830,56 +814,56 @@ public class BaseActivity extends AppCompatActivity {
         sShowUnit = false;
         if (what == CircleViewHelper.CircleViewType.CREATE_DATABASE) {
             LogHelper.v(TAG, "initCircleView: CREATE_DATABASE");
-            mCircleView.setUnit("%");
-            mCircleView.setUnitVisible(true);
-            mCircleView.setTextMode(TextMode.PERCENT); // Shows current percent of the current value from the max value
+            getCircleView().setUnit("%");
+            getCircleView().setUnitVisible(true);
+            getCircleView().setTextMode(TextMode.PERCENT); // Shows current percent of the current value from the max value
         }
         else if (what == CircleViewHelper.CircleViewType.PLAY_EPISODE) {
             LogHelper.v(TAG, "initCircleView: PLAY_EPISODE");
-            mCircleView.setUnit("");
-            mCircleView.setUnitVisible(false);
-            mCircleView.setTextMode(TextMode.TEXT);
+            getCircleView().setUnit("");
+            getCircleView().setUnitVisible(false);
+            getCircleView().setTextMode(TextMode.TEXT);
         }
     }
 
     public void showCircleView() {
         LogHelper.v(TAG, "showCircleView");
-        if (mCircleView == null) {
+        if (getCircleView() == null) {
             LogHelper.w(TAG, "showCircleView: CircleProgressView issue");
             return;
         }
-        mCircleView.post(new Runnable() {
+        getCircleView().post(new Runnable() {
             @Override
             public void run() {
 
                 sShowUnit = false;
-                mCircleView.setVisibility(View.VISIBLE);
+                getCircleView().setVisibility(View.VISIBLE);
                 LogHelper.w(TAG, "showCircleView: CircleView VISIBLE");
-                mCircleView.setAutoTextSize(true); // enable auto text size, previous values are overwritten
-                mCircleView.setUnitScale(0.9f); // if you want the calculated text sizes to be bigger/smaller
-                mCircleView.setTextScale(0.9f); // if you want the calculated text sizes to be bigger/smaller
-                mCircleView.setTextColor(Color.RED);
-                mCircleView.setText("Loading.."); //shows the given text in the circle view
-                mCircleView.setTextMode(TextMode.TEXT); // Set text mode to text to show text
-                mCircleView.spin(); // start spinning
-                mCircleView.setShowTextWhileSpinning(true); // Show/hide text in spinning mode
+                getCircleView().setAutoTextSize(true); // enable auto text size, previous values are overwritten
+                getCircleView().setUnitScale(0.9f); // if you want the calculated text sizes to be bigger/smaller
+                getCircleView().setTextScale(0.9f); // if you want the calculated text sizes to be bigger/smaller
+                getCircleView().setTextColor(Color.RED);
+                getCircleView().setText("Loading.."); //shows the given text in the circle view
+                getCircleView().setTextMode(TextMode.TEXT); // Set text mode to text to show text
+                getCircleView().spin(); // start spinning
+                getCircleView().setShowTextWhileSpinning(true); // Show/hide text in spinning mode
 
-                mCircleView.setOnAnimationStateChangedListener(
+                getCircleView().setOnAnimationStateChangedListener(
 
                         new AnimationStateChangedListener() {
                             @Override
                             public void onAnimationStateChanged(AnimationState _animationState) {
-                                if (mCircleView != null) {
+                                if (getCircleView() != null) {
                                     switch (_animationState) {
                                         case IDLE:
                                         case ANIMATING:
                                         case START_ANIMATING_AFTER_SPINNING:
-                                            mCircleView.setTextMode(TextMode.PERCENT); // show percent if not spinning
-                                            mCircleView.setUnitVisible(sShowUnit);
+                                            getCircleView().setTextMode(TextMode.PERCENT); // show percent if not spinning
+                                            getCircleView().setUnitVisible(sShowUnit);
                                             break;
                                         case SPINNING:
-                                            mCircleView.setTextMode(TextMode.TEXT); // show text while spinning
-                                            mCircleView.setUnitVisible(false);
+                                            getCircleView().setTextMode(TextMode.TEXT); // show text while spinning
+                                            getCircleView().setUnitVisible(false);
                                         case END_SPINNING:
                                             break;
                                         case END_SPINNING_START_ANIMATING:
@@ -898,9 +882,9 @@ public class BaseActivity extends AppCompatActivity {
 
     public void setCircleViewMaximum(float value) {
         LogHelper.w(TAG, "setCircleViewMaximum: MAX value=" + value);
-        if (mCircleView != null) {
-            mCircleView.setMaxValue(value);
-            mCircleView.setValue(0);
+        if (getCircleView() != null) {
+            getCircleView().setMaxValue(value);
+            getCircleView().setValue(0);
         }
     }
 
@@ -908,10 +892,10 @@ public class BaseActivity extends AppCompatActivity {
         if (value != 0) {
             mAutoplayState = AutoplayState.PLAYING;
             LoadingAsyncTask.mLoadingNow = false;
-            if (mCircleView != null) {
-                mCircleView.setValue(value);
+            if (getCircleView() != null) {
+                getCircleView().setValue(value);
                 LogHelper.w(TAG, "setCircleViewValue: value=" + value);
-                if (value == mCircleView.getMaxValue()) {
+                if (value == getCircleView().getMaxValue()) {
                     hideCircleView();
                 }
             }
@@ -919,11 +903,67 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     public void hideCircleView() {
-        if (mCircleView != null) {
-            mCircleView.stopSpinning();
-            mCircleView.setVisibility(View.INVISIBLE);
+        if (getCircleView() != null) {
+            getCircleView().stopSpinning();
+            getCircleView().setVisibility(View.INVISIBLE);
             LogHelper.w(TAG, "hideCircleView: CircleView HIDDEN");
         }
+    }
+
+    //--------------------------------------------------------------------------------
+    // Getters
+    //--------------------------------------------------------------------------------
+
+    public Handler getHandler() {
+        return mHandler;
+    }
+
+    public FirebaseAuth getAuth() {
+        return mAuth;
+    }
+
+    public Firebase getFirebase() {
+        return mFirebase;
+    }
+
+    public DatabaseReference getDatabase() {
+        return mDatabase;
+    }
+
+    public String getAirdate() {
+        return mAirdate;
+    }
+
+    public String getEpisodeTitle() {
+        return mEpisodeTitle;
+    }
+
+    public String getEpisodeDescription() {
+        return mEpisodeDescription;
+    }
+
+    public String getEpisodeWeblinkUrl() {
+        return mEpisodeWeblinkUrl;
+    }
+
+    public String getEpisodeDownloadUrl() {
+        return mEpisodeDownloadUrl;
+    }
+
+    public String getMediaId() {
+        return mMediaId;
+    }
+
+    public CircleProgressView getCircleView() {
+        return mCircleView;
+    }
+
+    public View getRootView() {
+        return mRootView;
+    }
+
+    public AutoplayState getAutoplayState() {
+        return mAutoplayState;
     }
 
     //--------------------------------------------------------------------------------
@@ -966,7 +1006,7 @@ public class BaseActivity extends AppCompatActivity {
 
     protected void savePlayInfoToBundle(Bundle playInfoBundle) {
         LogHelper.v(TAG, "savePlayInfoToBundle");
-        playInfoBundle.putString(KEY_MEDIA_ID, mMediaId);
+        playInfoBundle.putString(KEY_MEDIA_ID, getMediaId());
         playInfoBundle.putLong(KEY_EPISODE, mEpisodeNumber);
         playInfoBundle.putBoolean(KEY_PURCHASED, sPurchased);
         playInfoBundle.putBoolean(KEY_NOADS, sNoAdsForShow);
@@ -979,13 +1019,13 @@ public class BaseActivity extends AppCompatActivity {
         playInfoBundle.putBoolean(KEY_SEEKING, sSeeking);
         playInfoBundle.putBoolean(KEY_PLAYING, sPlaying);
         playInfoBundle.putBoolean(KEY_LOADED_OK, sLoadedOK);
-        playInfoBundle.putString(KEY_AIRDATE, mAirdate);
-        playInfoBundle.putString(KEY_TITLE, mEpisodeTitle);
-        playInfoBundle.putString(KEY_DESCRIPTION, mEpisodeDescription);
-        playInfoBundle.putString(KEY_WEBLINK, mEpisodeWeblinkUrl);
-        playInfoBundle.putString(KEY_DOWNLOAD_URL, mEpisodeDownloadUrl);
+        playInfoBundle.putString(KEY_AIRDATE, getAirdate());
+        playInfoBundle.putString(KEY_TITLE, getEpisodeTitle());
+        playInfoBundle.putString(KEY_DESCRIPTION, getEpisodeDescription());
+        playInfoBundle.putString(KEY_WEBLINK, getEpisodeWeblinkUrl());
+        playInfoBundle.putString(KEY_DOWNLOAD_URL, getEpisodeDownloadUrl());
 
-        switch (mAutoplayState) {
+        switch (getAutoplayState()) {
             case READY2PLAY: {
                 playInfoBundle.putInt(KEY_AUTOPLAY_STATE, 0);
                 break;
@@ -1044,7 +1084,7 @@ public class BaseActivity extends AppCompatActivity {
 
     protected void showCurrentInfo() {
         String state = "unknown";
-        switch (mAutoplayState) {
+        switch (getAutoplayState()) {
             case READY2PLAY: {
                 state = "READY to PLAY";
                 break;
@@ -1063,13 +1103,12 @@ public class BaseActivity extends AppCompatActivity {
             }
         }
         LogHelper.v(TAG, "===> EPISODE INFO"
-                + ": mEpisodeTitle=" + mEpisodeTitle
+                + ": mEpisodeTitle=" + getEpisodeTitle()
                 + ": mEpisodeNumber=" + mEpisodeNumber
-                + ": mEpisodeDownloadUrl=" + mEpisodeDownloadUrl
-                + ": mAirdate=" + mAirdate
-                + ": mEpisodeDescription=" + mEpisodeDescription
-                + ": mEpisodeWeblinkUrl=" + mEpisodeWeblinkUrl
-                + ": mEpisodeDownloadUrl=" + mEpisodeDownloadUrl
+                + ": mAirdate=" + getAirdate()
+                + ": mEpisodeDescription=" + getEpisodeDescription()
+                + ": mEpisodeWeblinkUrl=" + getEpisodeWeblinkUrl()
+                + ": mEpisodeDownloadUrl=" + getEpisodeDownloadUrl()
                 + ", sPurchased=" + sPurchased
                 + ", sNoAdsForShow=" + sNoAdsForShow
                 + ", sDownloaded=" + sDownloaded

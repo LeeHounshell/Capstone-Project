@@ -32,6 +32,8 @@
 
         <include layout="@layout/banner_advert" />
 
+        <include layout="@layout/horizontal_scrolltext" />
+
     </FrameLayout>
 
 </android.support.v4.widget.NestedScrollView>

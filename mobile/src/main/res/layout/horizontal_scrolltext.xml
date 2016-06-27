@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<com.harlie.radiotheater.radiomysterytheater.utils.ScrollingTextView
+    android:id="@+id/horizontal_scrolling_text"
+    style="?android:attr/textAppearanceMedium"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:layout_marginBottom="@dimen/scrolling_text_margin_bottom"
+    android:ellipsize="marquee"
+    android:gravity="bottom"
+    android:marqueeRepeatLimit="marquee_forever"
+    android:scrollHorizontally="true"
+    android:visibility="invisible"
+    android:lines="1"
+    android:text="@string/app_description"
+    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+    android:textColor="@color/white"
+    android:textSize="@dimen/scrolling_text_size"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+</com.harlie.radiotheater.radiomysterytheater.utils.ScrollingTextView>
