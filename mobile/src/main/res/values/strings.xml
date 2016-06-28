@@ -40,7 +40,7 @@
     <string name="title_activity_about">About</string>
     <string name="up">Up</string>
 
-    <!-- Strings related to Autoplay -->
+    <!-- Strings related to Autoplay and messages -->
     <string name="title_activity_autoplay">AutoplayActivity</string>
     <string name="autoplay_next">Autoplay next episode</string>
     <string name="episodes_count">1399</string>
@@ -59,6 +59,8 @@
     <string name="duration">duration:</string>
     <string name="play">play:</string>
     <string name="noplay">noplay:</string>
+    <string name="complete">complete:</string>
+    <string name="initialization">initialization</string>
 
     <!-- Strings related to RadioTheaterService -->
     <string name="casting_to_device">Casting to %1$s</string>

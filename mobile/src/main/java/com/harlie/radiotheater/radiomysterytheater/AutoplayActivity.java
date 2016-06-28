@@ -20,7 +20,6 @@ import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.media.MediaBrowserCompat;
-import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -306,7 +305,6 @@ public class AutoplayActivity extends BaseActivity
                     LogHelper.d(TAG, "onMetadataChanged");
                     LogHelper.d(TAG, "MediaControllerCompat.Callback onMetadataChanged metadata="+metadata+" <<<---------");
                     if (metadata != null) {
-                        updateMediaDescription(metadata.getDescription());
                         updateDuration(metadata);
                     }
                     do_UpdateControls();
@@ -730,7 +728,7 @@ public class AutoplayActivity extends BaseActivity
         LogHelper.v(TAG, "onOptionsItemSelected");
         switch (item.getItemId()) {
             case R.id.search: {
-                // FIXME:
+                // FIXME: voice search
                 return true;
             }
             case R.id.settings: {
@@ -818,11 +816,6 @@ public class AutoplayActivity extends BaseActivity
         }
     }
 
-    private void updateMediaDescription(MediaDescriptionCompat description) {
-        LogHelper.d(TAG, "updateMediaDescription: description="+description);
-        // FIXME: update description
-    }
-
     private void updateDuration(MediaMetadataCompat metadata) {
         LogHelper.d(TAG, "updateDuration");
         if (metadata == null) {
@@ -880,17 +873,23 @@ public class AutoplayActivity extends BaseActivity
 
             @Override
             public void onReceive(Context context, Intent intent) {
-                final String message = intent.getStringExtra("initialization"); // get control message, for example: did metadata load ok? or play:id
-                LogHelper.v(TAG, "*** RECEIVED BROADCAST: "+message);
+                String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
+                final String message = intent.getStringExtra(initialization); // get any control messages, for example: did metadata load ok? or play:id etc..
+                LogHelper.v(TAG, "*** RECEIVED BROADCAST CONTROL: "+message);
+                if (message == null) {
+                    LogHelper.e(TAG, "*** *** *** FAILED TO RECEIVE MESSAGE! - CRITICAL ERROR");
+                    return;
+                }
 
-                final String load_fail = getResources().getString(R.string.error_no_metadata);
-                final String load_ok = getResources().getString(R.string.metadata_loaded);
+                final String KEY_LOAD_FAIL = getResources().getString(R.string.error_no_metadata);
+                final String KEY_LOAD_OK = getResources().getString(R.string.metadata_loaded);
                 final String KEY_DURATION = getResources().getString(R.string.duration);
                 final String KEY_NOPLAY = getResources().getString(R.string.noplay);
                 final String KEY_PLAY = getResources().getString(R.string.play);
+                final String KEY_COMPLETION = getResources().getString(R.string.complete);
 
-                if (message.equals(load_ok)) {
-                    LogHelper.v(TAG, load_ok);
+                if (message.equals(KEY_LOAD_OK)) {
+                    LogHelper.v(TAG, KEY_LOAD_OK);
                     getHandler().post(new Runnable() {
                         @Override
                         public void run() {
@@ -901,8 +900,8 @@ public class AutoplayActivity extends BaseActivity
                         }
                     });
                 }
-                else if (message.equals(load_fail)) {
-                    LogHelper.v(TAG, load_fail);
+                else if (message.equals(KEY_LOAD_FAIL)) {
+                    LogHelper.v(TAG, KEY_LOAD_FAIL);
                     getHandler().post(new Runnable() {
                         @Override
                         public void run() {
@@ -941,13 +940,21 @@ public class AutoplayActivity extends BaseActivity
                         }
                     });
                 }
+                else if (message.length() > KEY_COMPLETION.length() && message.substring(0, KEY_COMPLETION.length()).equals(KEY_COMPLETION)) {
+                    String episodeIndex = message.substring(KEY_COMPLETION.length(), message.length());
+                    LogHelper.v(TAG,  "*** RECEIVED BROADCAST: COMPLETED PLAY EPISODE "+episodeIndex);
+                    // FIXME: mark SQLite config episode as "HEARD"
+                    // FIXME: update SQLite config PLAY-COUNT for episode"
+                    // FIXME: send Config record to Firebase for Episode Heard
+                    // FIXME: send Config record to Firebase for Episode Play Count
+                    // FIXME: send Analytics record to Firebase for Episode+Heard+Count
+                }
                 else {
                     LogHelper.v(TAG, "*** UNKNOWN MESSAGE VIA INTENT: "+message);
                 }
             }
         };
         this.registerReceiver(getReceiver(), intentFilter);
-
     }
 
     @Override

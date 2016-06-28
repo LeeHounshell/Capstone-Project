@@ -195,9 +195,6 @@ public class PlaybackManager implements Playback.Callback {
     /**
      * Implementation of the Playback.Callback interface
      */
-    // FIXME: mark SQLite episode as "HEARD"
-    // FIXME: send Config record to Firebase for Episode Heard
-    // FIXME: send Analytics record to Firebase for Episode Heard
     @Override
     public void onCompletion() {
         LogHelper.v(TAG, "onCompletion");

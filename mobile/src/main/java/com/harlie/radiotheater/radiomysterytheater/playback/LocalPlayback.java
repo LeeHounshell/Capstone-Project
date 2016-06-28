@@ -181,28 +181,41 @@ public class LocalPlayback
 
     //-------- RADIO THEATER --------
     private void notifyEpisodePlaying() {
+        String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
         String play = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.play);
         String message = play + getCurrentEpisode();
         LogHelper.v(TAG, "notifyEpisodePlaying: message="+message);
-        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra("initialization", message);
+        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
         RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
     }
 
     //-------- RADIO THEATER --------
     private void notifyEpisodeDuration() {
+        String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
         String duration = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.duration);
         String message = duration + String.valueOf(mMediaPlayer.getDuration());
         LogHelper.v(TAG, "notifyEpisodeDuration: message="+message);
-        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra("initialization", message);
+        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
+        RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
+    }
+
+    //-------- RADIO THEATER --------
+    private void notifyEpisodeComplete() {
+        String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
+        String complete = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.complete);
+        String message = complete + getCurrentEpisode();
+        LogHelper.v(TAG, "notifyEpisodeComplete: message="+message);
+        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
         RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
     }
 
     //-------- RADIO THEATER --------
     private void notifyIfUnableToPlay() {
+        String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
         String noplay = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.noplay);
         String message = noplay + getCurrentEpisode();
         LogHelper.v(TAG, "notifyIfUnableToPlay: message="+message);
-        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra("initialization", message);
+        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
         RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
     }
 
@@ -217,10 +230,7 @@ public class LocalPlayback
     //-------- RADIO THEATER --------
     @Override
     public void play(QueueItem item) {
-        LogHelper.v(TAG, "play ---> *** RADIO MYSTERY THEATER: PLAY EPISODE" +item.getDescription()+", mediaId="+item.getDescription().getMediaId());
-        // MODIFIED - see QueueManager.java - if not requested-playback, then query local SQLite to see if this episode has been listened to already.
-        //                                    then replace the current item with the "next appropriate" Episode to listen to.
-        //                                    and send Intent to AutoplayActivity so that the Scrolling Marquee will update for the new Episode.
+        LogHelper.v(TAG, "play ---> *** RADIO MYSTERY THEATER: PLAY EPISODE" +item.getDescription().getTitle()+", mediaId="+item.getDescription().getMediaId());
         mPlayOnFocusGain = true;
         tryToGetAudioFocus();
         registerAudioNoisyReceiver();
@@ -466,28 +476,20 @@ public class LocalPlayback
     }
 
     /**
-     * Called when media player is done playing current song.
+     * Called when media player is done playing current episode.
      *
      * @see OnCompletionListener
      */
     @Override
     public void onCompletion(MediaPlayer player) {
         LogHelper.v(TAG, "onCompletion");
-        // The media player finished playing the current song, so we go ahead
+        notifyEpisodeComplete(); // RADIO THEATER Notification
+        // The media player finished playing the current episode, so we go ahead
         // and start the next.
         if (mCallback != null) {
             mCallback.onCompletion();
         }
-
-        // FIXME:
-
-        // Update SQLite Config to reflect Episode played.
-        // Update SQLite Config play-count for this Episode.
-
-        // Update Firebase Config to reflect Episode played.
-        // Update Firebase Config play-count for this Episode.
-
-        // Update Google Analytics to report playback
+        mCurrentPosition = 0;
     }
 
     /**
@@ -501,7 +503,7 @@ public class LocalPlayback
         // The media player is done preparing. That means we can start playing if we
         // have audio focus.
         configMediaPlayerState();
-        notifyEpisodeDuration();
+        notifyEpisodeDuration(); // RADIO THEATER Notification
     }
 
     /**

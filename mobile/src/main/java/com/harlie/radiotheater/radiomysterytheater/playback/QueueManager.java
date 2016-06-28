@@ -163,9 +163,10 @@ public class QueueManager {
     //-------- RADIO THEATER --------
     private void notifyIfUnableToPlay() {
         LogHelper.v(TAG, "notifyIfUnableToPlay");
+        String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
         String noplay = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.noplay);
         String message = noplay+getCurrentIndex();
-        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra("initialization", message);
+        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
         RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
     }
 
