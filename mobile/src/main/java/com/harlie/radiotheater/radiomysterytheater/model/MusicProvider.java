@@ -133,7 +133,12 @@ public class MusicProvider {
      */
     public Iterable<MediaMetadataCompat> searchMusicBySongTitle(String query) {
         LogHelper.v(TAG, "searchMusicBySongTitle: query="+query);
-        return searchMusic(MediaMetadataCompat.METADATA_KEY_TITLE, query);
+        Iterable<MediaMetadataCompat> iter = searchMusic(MediaMetadataCompat.METADATA_KEY_TITLE, query);
+        if (iter == null) {
+            LogHelper.v(TAG, "searchMusicBySongTitle: *** RADIO THEATER - search found nothing. query="+query);
+            iter = Collections.emptyList();
+        }
+        return iter;
     }
 
     /**
