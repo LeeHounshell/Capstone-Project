@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Configuration;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -607,7 +608,9 @@ public class AutoplayActivity extends BaseActivity
         if (!getCircularSeekBar().isProcessingTouchEvents() && !sSeeking) {
             LogHelper.v(TAG, "do autoPlay");
             final AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.toolbar_container);
-            appBarLayout.setExpanded(false);
+            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                appBarLayout.setExpanded(false);
+            }
             ConfigEpisodesCursor configCursor = getCursorForNextAvailableEpisode();
             if (getEpisodeData(configCursor)) {
                 playPauseEpisode();
@@ -618,8 +621,8 @@ public class AutoplayActivity extends BaseActivity
                     @Override
                     public void run() {
                         LogHelper.v(TAG, "popup alert - ALL EPISODES ARE HEARD!");
-                        heardAllEpisodes();
                         appBarLayout.setExpanded(true);
+                        heardAllEpisodes();
                     }
                 });
             }
@@ -870,17 +873,22 @@ public class AutoplayActivity extends BaseActivity
         }
         IntentFilter intentFilter = new IntentFilter("android.intent.action.MAIN");
 
+        //--------------------------------------------------------------------------------
+        // AUTOPLAY MESSAGE RECEIVER
+        //--------------------------------------------------------------------------------
         mRadioReceiver = new BroadcastReceiver() {
 
             @Override
             public void onReceive(Context context, Intent intent) {
                 final String message = intent.getStringExtra("initialization"); // get control message, for example: did metadata load ok? or play:id
                 LogHelper.v(TAG, "*** RECEIVED BROADCAST: "+message);
+
                 final String load_fail = getResources().getString(R.string.error_no_metadata);
                 final String load_ok = getResources().getString(R.string.metadata_loaded);
-                final String duration = getResources().getString(R.string.duration);
-                final String noplay = getResources().getString(R.string.noplay);
-                final String play = getResources().getString(R.string.play);
+                final String KEY_DURATION = getResources().getString(R.string.duration);
+                final String KEY_NOPLAY = getResources().getString(R.string.noplay);
+                final String KEY_PLAY = getResources().getString(R.string.play);
+
                 if (message.equals(load_ok)) {
                     LogHelper.v(TAG, load_ok);
                     getHandler().post(new Runnable() {
@@ -903,13 +911,13 @@ public class AutoplayActivity extends BaseActivity
                         }
                     });
                 }
-                else if (message.length() > duration.length() && message.substring(0, duration.length()).equals(duration)) {
-                    LogHelper.v(TAG, duration);
+                else if (message.length() > KEY_DURATION.length() && message.substring(0, KEY_DURATION.length()).equals(KEY_DURATION)) {
+                    LogHelper.v(TAG, KEY_DURATION);
                     getHandler().post(new Runnable() {
                         @Override
                         public void run() {
-                            LogHelper.v(TAG, "*** RECEIVED BROADCAST: DURATION");
-                            mDuration = Long.valueOf(message.substring(duration.length(), message.length()));
+                            LogHelper.v(TAG, "*** RECEIVED BROADCAST: EPISODE DURATION");
+                            mDuration = Long.valueOf(message.substring(KEY_DURATION.length(), message.length()));
                             sHaveRealDuration = true;
                             getCircularSeekBar().setMaxProgress((int) mDuration);
                             LogHelper.v(TAG, "*** REVISED EPISODE DURATION="+mDuration);
@@ -917,18 +925,18 @@ public class AutoplayActivity extends BaseActivity
                         }
                     });
                 }
-                else if (message.length() > play.length() && message.substring(0, play.length()).equals(play)) {
-                    String episodeIndex = message.substring(play.length(), message.length());
+                else if (message.length() > KEY_PLAY.length() && message.substring(0, KEY_PLAY.length()).equals(KEY_PLAY)) {
+                    String episodeIndex = message.substring(KEY_PLAY.length(), message.length());
                     LogHelper.v(TAG,  "*** RECEIVED BROADCAST: NOW PLAYING EPISODE "+episodeIndex);
                     getEpisodeInfoFor(Long.parseLong(episodeIndex));
                 }
-                else if (message.length() > noplay.length() && message.substring(0, noplay.length()).equals(noplay)) {
-                    String episodeIndex = message.substring(noplay.length(), message.length());
+                else if (message.length() > KEY_NOPLAY.length() && message.substring(0, KEY_NOPLAY.length()).equals(KEY_NOPLAY)) {
+                    String episodeIndex = message.substring(KEY_NOPLAY.length(), message.length());
                     LogHelper.v(TAG,  "*** RECEIVED BROADCAST: UNABLE TO PLAY EPISODE "+episodeIndex);
                     getHandler().post(new Runnable() {
                         @Override
                         public void run() {
-                            LogHelper.v(TAG, "*** RECEIVED BROADCAST: NOPLAY");
+                            LogHelper.v(TAG, "*** RECEIVED BROADCAST: NOT ABLE TO PLAY");
                             problemWithPlayback();
                         }
                     });
@@ -939,6 +947,7 @@ public class AutoplayActivity extends BaseActivity
             }
         };
         this.registerReceiver(getReceiver(), intentFilter);
+
     }
 
     @Override

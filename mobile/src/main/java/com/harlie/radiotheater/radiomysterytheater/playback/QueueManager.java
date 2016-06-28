@@ -189,10 +189,6 @@ public class QueueManager {
             LogHelper.v(TAG, "getCurrentMusic: - not currently playable - sCurrentIndex="+sCurrentIndex+" - return null");
             return null;
         }
-        // send Intent to AutoplayActivity so that the Scrolling Marquee will update for the new Episode.
-        String message = "play:"+String.valueOf(sCurrentIndex);
-        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra("initialization", message);
-        RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
         LogHelper.v(TAG, "getCurrentMusic: sCurrentIndex="+sCurrentIndex+", size="+mPlayingQueue.size());
         if (mPlayingQueue.size() == 1) {
             LogHelper.v(TAG, "*** THE PLAYING QUEUE HAS A SINGLE ITEM ***");
@@ -208,6 +204,7 @@ public class QueueManager {
     //-------- RADIO THEATER --------
     public String setCurrentIndexFromEpisodeId() {
         int episodeId = getNextAvailableEpisode();
+        LocalPlayback.setCurrentEpisode(episodeId);
         LogHelper.v(TAG, "---> setCurrentIndexFromEpisodeId: episodeId="+episodeId);
         String title = getTitleAndDownloadUrlForEpisode(episodeId); // this also sets mDownloadUrl - needed below or else NPE
         Iterable<MediaMetadataCompat> title_list = mMusicProvider.searchMusicBySongTitle(title);

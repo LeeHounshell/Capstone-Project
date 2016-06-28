@@ -179,9 +179,44 @@ public class LocalPlayback
         }
     }
 
+    //-------- RADIO THEATER --------
+    private void notifyEpisodePlaying() {
+        String play = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.play);
+        String message = play + getCurrentEpisode();
+        LogHelper.v(TAG, "notifyEpisodePlaying: message="+message);
+        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra("initialization", message);
+        RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
+    }
+
+    //-------- RADIO THEATER --------
+    private void notifyEpisodeDuration() {
+        String duration = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.duration);
+        String message = duration + String.valueOf(mMediaPlayer.getDuration());
+        LogHelper.v(TAG, "notifyEpisodeDuration: message="+message);
+        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra("initialization", message);
+        RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
+    }
+
+    //-------- RADIO THEATER --------
+    private void notifyIfUnableToPlay() {
+        String noplay = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.noplay);
+        String message = noplay + getCurrentEpisode();
+        LogHelper.v(TAG, "notifyIfUnableToPlay: message="+message);
+        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra("initialization", message);
+        RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
+    }
+
+    static int sCurrentEpisode;
+    static void setCurrentEpisode(int currentEpisode) {
+        sCurrentEpisode = currentEpisode;
+    }
+    static int getCurrentEpisode() {
+        return sCurrentEpisode;
+    }
+
+    //-------- RADIO THEATER --------
     @Override
     public void play(QueueItem item) {
-        //-------- RADIO THEATER --------
         LogHelper.v(TAG, "play ---> *** RADIO MYSTERY THEATER: PLAY EPISODE" +item.getDescription()+", mediaId="+item.getDescription().getMediaId());
         // MODIFIED - see QueueManager.java - if not requested-playback, then query local SQLite to see if this episode has been listened to already.
         //                                    then replace the current item with the "next appropriate" Episode to listen to.
@@ -194,11 +229,13 @@ public class LocalPlayback
         if (mediaHasChanged) {
             mCurrentPosition = 0;
             mCurrentMediaId = mediaId;
+            notifyEpisodePlaying();
         }
 
         if (mState == PlaybackStateCompat.STATE_PAUSED && !mediaHasChanged && mMediaPlayer != null) {
             configMediaPlayerState();
-        } else {
+        }
+        else {
             mState = PlaybackStateCompat.STATE_STOPPED;
             relaxResources(false); // release everything except MediaPlayer
             MediaMetadataCompat track = mMusicProvider.getMusic(MediaIDHelper.extractMusicIDFromMediaID(item.getDescription().getMediaId()));
@@ -233,10 +270,12 @@ public class LocalPlayback
                     mCallback.onPlaybackStatusChanged(mState);
                 }
 
-            } catch (IOException ex) {
+            }
+            catch (IOException ex) {
                 LogHelper.e(TAG, ex, "Exception playing song");
                 if (mCallback != null) {
                     mCallback.onError(ex.getMessage());
+                    notifyIfUnableToPlay();
                 }
             }
         }
@@ -462,10 +501,7 @@ public class LocalPlayback
         // The media player is done preparing. That means we can start playing if we
         // have audio focus.
         configMediaPlayerState();
-        String duration = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.duration);
-        String message = duration+String.valueOf(mMediaPlayer.getDuration());
-        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra("initialization", message);
-        RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
+        notifyEpisodeDuration();
     }
 
     /**
