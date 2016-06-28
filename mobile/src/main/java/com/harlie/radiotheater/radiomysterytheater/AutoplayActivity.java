@@ -422,12 +422,7 @@ public class AutoplayActivity extends BaseActivity
     protected void onCreate(Bundle savedInstanceState) {
         LogHelper.v(TAG, "onCreate");
 
-        mMediaId = null;
-        mAudioFocusRequstResult = 0;
-        mDuration = DEFAULT_DURATION; // one-hour in ms
-        sHaveRealDuration = false;
-        mCurrentPosition = 0;
-        setAutoplayState(AutoplayState.READY2PLAY, "onCreate");
+        initializeForEpisode("onCreate: initializing..");
 
         super.onCreate(savedInstanceState);
 
@@ -606,24 +601,23 @@ public class AutoplayActivity extends BaseActivity
         if (!getCircularSeekBar().isProcessingTouchEvents() && !sSeeking) {
             LogHelper.v(TAG, "do autoPlay");
             final AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.toolbar_container);
-            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                appBarLayout.setExpanded(false);
-            }
-            ConfigEpisodesCursor configCursor = getCursorForNextAvailableEpisode();
-            if (getEpisodeData(configCursor)) {
-                playPauseEpisode();
-            }
-            else {
-                LogHelper.v(TAG, "*** NO MORE EPISODES? ***");
-                getHandler().post(new Runnable() {
-                    @Override
-                    public void run() {
+            getHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                        appBarLayout.setExpanded(false);
+                    }
+                    ConfigEpisodesCursor configCursor = getCursorForNextAvailableEpisode();
+                    if (getEpisodeData(configCursor)) {
+                        playPauseEpisode();
+                    }
+                    else {
                         LogHelper.v(TAG, "popup alert - ALL EPISODES ARE HEARD!");
                         appBarLayout.setExpanded(true);
                         heardAllEpisodes();
                     }
-                });
-            }
+                }
+            });
         }
         else {
             LogHelper.v(TAG, "isProcessingTouchEvents or seeking - onClick ignored");
@@ -944,6 +938,10 @@ public class AutoplayActivity extends BaseActivity
                     String episodeIndex = message.substring(KEY_COMPLETION.length(), message.length());
                     LogHelper.v(TAG,  "*** RECEIVED BROADCAST: COMPLETED PLAY EPISODE "+episodeIndex);
                     markEpisodeAsHeardAndIncrementPlayCount(getEpisodeNumber(), episodeIndex, mDuration);
+                    MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
+                    controls.stop();
+                    initializeForEpisode("playback completed for episode "+episodeIndex);
+                    handleAutoplayClick();
                 }
                 else {
                     LogHelper.v(TAG, "*** UNKNOWN MESSAGE VIA INTENT: "+message);
@@ -951,6 +949,18 @@ public class AutoplayActivity extends BaseActivity
             }
         };
         this.registerReceiver(getReceiver(), intentFilter);
+    }
+
+    private void initializeForEpisode(String detailMessage) {
+        mMediaId = null;
+        mAudioFocusRequstResult = 0;
+        mDuration = DEFAULT_DURATION; // one-hour in ms
+        sHaveRealDuration = false;
+        mCurrentPosition = 0;
+        setAutoplayState(AutoplayState.READY2PLAY, detailMessage);
+        mEpisodeDownloadUrl = null;
+        mEpisodeTitle = null;
+        mEpisodeDescription = null;
     }
 
     @Override
@@ -1153,7 +1163,7 @@ public class AutoplayActivity extends BaseActivity
                     getCircularSeekBar().setVisibility(View.INVISIBLE);
                 }
                 getAutoPlay().setEnabled(false);
-                getFabActionButton().setEnabled(false);
+                getFabActionButton().setEnabled(true);
                 break;
             }
             case DISABLED_SHOW_PAUSE: {
@@ -1166,7 +1176,7 @@ public class AutoplayActivity extends BaseActivity
                     getCircularSeekBar().setVisibility(View.INVISIBLE);
                 }
                 getAutoPlay().setEnabled(false);
-                getFabActionButton().setEnabled(false);
+                getFabActionButton().setEnabled(true);
                 break;
             }
         }

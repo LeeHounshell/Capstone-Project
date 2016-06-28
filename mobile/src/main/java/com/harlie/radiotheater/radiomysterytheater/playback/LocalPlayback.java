@@ -483,13 +483,14 @@ public class LocalPlayback
     @Override
     public void onCompletion(MediaPlayer player) {
         LogHelper.v(TAG, "onCompletion");
-        notifyEpisodeComplete(); // RADIO THEATER Notification
         // The media player finished playing the current episode, so we go ahead
         // and start the next.
         if (mCallback != null) {
             mCallback.onCompletion();
         }
         mCurrentPosition = 0;
+        stop(false); // the next PLAY REQUEST will automatically come from Autoplay
+        notifyEpisodeComplete(); // RADIO THEATER Notification
     }
 
     /**
