@@ -884,6 +884,7 @@ public class AutoplayActivity extends BaseActivity
                 final String load_fail = getResources().getString(R.string.error_no_metadata);
                 final String load_ok = getResources().getString(R.string.metadata_loaded);
                 final String duration = getResources().getString(R.string.duration);
+                final String noplay = getResources().getString(R.string.noplay);
                 final String play = getResources().getString(R.string.play);
                 if (message.equals(load_ok)) {
                     LogHelper.v(TAG, load_ok);
@@ -922,9 +923,20 @@ public class AutoplayActivity extends BaseActivity
                     });
                 }
                 else if (message.length() > play.length() && message.substring(0, play.length()).equals(play)) {
-                    String episodeIndex = message.substring(5, message.length());
+                    String episodeIndex = message.substring(play.length(), message.length());
                     LogHelper.v(TAG,  "*** RECEIVED BROADCAST: NOW PLAYING EPISODE "+episodeIndex);
                     getEpisodeInfoFor(Long.parseLong(episodeIndex));
+                }
+                else if (message.length() > noplay.length() && message.substring(0, noplay.length()).equals(noplay)) {
+                    String episodeIndex = message.substring(noplay.length(), message.length());
+                    LogHelper.v(TAG,  "*** RECEIVED BROADCAST: UNABLE TO PLAY EPISODE "+episodeIndex);
+                    getHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            LogHelper.v(TAG, "*** RECEIVED BROADCAST: NOPLAY");
+                            problemWithPlayback();
+                        }
+                    });
                 }
                 else {
                     LogHelper.v(TAG, "*** UNKNOWN MESSAGE VIA INTENT: "+message);

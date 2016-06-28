@@ -161,6 +161,15 @@ public class QueueManager {
     }
 
     //-------- RADIO THEATER --------
+    private void notifyIfUnableToPlay() {
+        LogHelper.v(TAG, "notifyIfUnableToPlay");
+        String noplay = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.noplay);
+        String message = noplay+getCurrentIndex();
+        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra("initialization", message);
+        RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
+    }
+
+    //-------- RADIO THEATER --------
     public void setOrderedQueue() {
         LogHelper.v(TAG, "setOrderedQueue");
         String mediaId = setCurrentIndexFromEpisodeId();
@@ -168,7 +177,8 @@ public class QueueManager {
             setCurrentQueue(mResources.getString(R.string.next_queue_title), getPlayingQueue(mediaId, mMusicProvider));
         }
         else {
-            LogHelper.e(TAG, "unable to determine next mediaId to use");
+            LogHelper.e(TAG, "unable to determine next mediaId - mediaId="+mediaId);
+            notifyIfUnableToPlay();
         }
     }
 
@@ -176,7 +186,7 @@ public class QueueManager {
     public MediaSessionCompat.QueueItem getCurrentMusic() {
         setCurrentIndexFromEpisodeId();
         if (!isIndexPlayable(sCurrentIndex, mPlayingQueue)) {
-            LogHelper.v(TAG, "getCurrentMusic: - not playable - return null");
+            LogHelper.v(TAG, "getCurrentMusic: - not currently playable - sCurrentIndex="+sCurrentIndex+" - return null");
             return null;
         }
         // send Intent to AutoplayActivity so that the Scrolling Marquee will update for the new Episode.
