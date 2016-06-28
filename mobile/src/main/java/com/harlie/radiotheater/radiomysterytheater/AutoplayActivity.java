@@ -237,6 +237,7 @@ public class AutoplayActivity extends BaseActivity
                     switch (state.getState()) {
                         case PlaybackStateCompat.STATE_PLAYING: {
                             LogHelper.d(TAG, "MediaControllerCompat.Callback onPlaybackStateChanged STATE_PLAYING <<<---------");
+                            // when the RadioTheaterService starts up the next Episode, the 'Scrolling Text' will update via an Intent
                             setAutoplayState(AutoplayState.PLAYING, "onPlaybackChanged - PLAYING");
                             sSeeking = false;
                             sBeginLoading = false;
@@ -610,48 +611,22 @@ public class AutoplayActivity extends BaseActivity
         getAutoPlay().setEnabled(false);
         if (!getCircularSeekBar().isProcessingTouchEvents() && !sSeeking) {
             LogHelper.v(TAG, "do autoPlay");
-            boolean foundEpisode = false;
-            AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.toolbar_container);
-
+            final AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.toolbar_container);
+            appBarLayout.setExpanded(false);
             ConfigEpisodesCursor configCursor = getCursorForNextAvailableEpisode();
-            if (configCursor != null && configCursor.moveToNext()) {
-                // found the next episode to listen to
-                appBarLayout.setExpanded(false);
-                mEpisodeNumber = configCursor.getFieldEpisodeNumber();
-                sPurchased = configCursor.getFieldPurchasedAccess();
-                sNoAdsForShow = configCursor.getFieldPurchasedNoads();
-                sDownloaded = configCursor.getFieldEpisodeDownloaded();
-                sEpisodeHeard = configCursor.getFieldEpisodeHeard();
-                configCursor.close();
-
-                // get this episode's detail info
-                EpisodesCursor episodesCursor = getEpisodesCursor(mEpisodeNumber);
-                if (episodesCursor != null && episodesCursor.moveToNext()) {
-                    mEpisodeNumber = episodesCursor.getFieldEpisodeNumber();
-                    mAirdate = episodesCursor.getFieldAirdate();
-                    mEpisodeTitle = episodesCursor.getFieldEpisodeTitle();
-                    mEpisodeDescription = episodesCursor.getFieldEpisodeDescription();
-                    mEpisodeWeblinkUrl = Uri.parse(episodesCursor.getFieldWeblinkUrl()).getEncodedPath();
-                    mEpisodeDownloadUrl = Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString();
-                    episodesCursor.close();
-                    foundEpisode = true;
-                    playPauseEpisode();
-                }
+            if (getEpisodeData(configCursor)) {
+                playPauseEpisode();
             }
-            if (foundEpisode) {
+            else {
+                LogHelper.v(TAG, "*** NO MORE EPISODES? ***");
                 getHandler().post(new Runnable() {
                     @Override
                     public void run() {
-                        getHorizontalScrollingText().setText("         Airdate: "+ RadioTheaterContract.airDate(mAirdate)+" ... Episode #"+mEpisodeNumber+" ... "+mEpisodeTitle+" ... "+mEpisodeDescription);
-                        getHorizontalScrollingText().setEnabled(true);
-                        getHorizontalScrollingText().setSelected(true);
+                        LogHelper.v(TAG, "popup alert - ALL EPISODES ARE HEARD!");
+                        heardAllEpisodes();
+                        appBarLayout.setExpanded(true);
                     }
                 });
-            }
-            else {
-                LogHelper.v(TAG, "popup alert - ALL EPISODES ARE HEARD!");
-                heardAllEpisodes();
-                appBarLayout.setExpanded(true);
             }
         }
         else {
@@ -686,8 +661,7 @@ public class AutoplayActivity extends BaseActivity
                     LogHelper.v(TAG, "setup for auto-playing..");
                     loadingScreen();
                     mMediaId = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.genre);
-                    Uri mediaUri = Uri.parse(mEpisodeDownloadUrl);
-                    LogHelper.d(TAG, "*** INITIALIZE PLAYBACK *** state=" + lastPlaybackState.getState() + ", mMediaId=" + mMediaId + ", mediaUri=" + mediaUri);
+                    LogHelper.d(TAG, "*** INITIALIZE PLAYBACK *** state=" + lastPlaybackState.getState() + ", mMediaId=" + mMediaId + ", mEpisodeDownloadUrl=" + mEpisodeDownloadUrl);
                     String id = String.valueOf(mEpisodeDownloadUrl.hashCode());
                     String episodeMediaId = MediaIDHelper.createMediaID(id, MediaIDHelper.MEDIA_ID_MUSICS_BY_GENRE, mMediaId);
                     Bundle bundle = new Bundle();
@@ -701,6 +675,48 @@ public class AutoplayActivity extends BaseActivity
                 }
             }
         }
+    }
+
+    private boolean getEpisodeData(ConfigEpisodesCursor configCursor) {
+        LogHelper.v(TAG, "getEpisodeData");
+        boolean foundEpisode = false;
+        if (configCursor != null && configCursor.moveToNext()) {
+            // found the next episode to listen to
+            mEpisodeNumber = configCursor.getFieldEpisodeNumber();
+            sPurchased = configCursor.getFieldPurchasedAccess();
+            sNoAdsForShow = configCursor.getFieldPurchasedNoads();
+            sDownloaded = configCursor.getFieldEpisodeDownloaded();
+            sEpisodeHeard = configCursor.getFieldEpisodeHeard();
+            configCursor.close();
+            foundEpisode = getEpisodeInfoFor(mEpisodeNumber);
+        }
+        return foundEpisode;
+    }
+
+    private boolean getEpisodeInfoFor(long episodeId) {
+        LogHelper.v(TAG, "getEpisodeInfoFor: "+episodeId);
+        // get this episode's detail info
+        boolean foundEpisode = false;
+        EpisodesCursor episodesCursor = getEpisodesCursor(episodeId);
+        if (episodesCursor != null && episodesCursor.moveToNext()) {
+            mEpisodeNumber = episodesCursor.getFieldEpisodeNumber();
+            mAirdate = episodesCursor.getFieldAirdate();
+            mEpisodeTitle = episodesCursor.getFieldEpisodeTitle();
+            mEpisodeDescription = episodesCursor.getFieldEpisodeDescription();
+            mEpisodeWeblinkUrl = Uri.parse(episodesCursor.getFieldWeblinkUrl()).getEncodedPath();
+            mEpisodeDownloadUrl = Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString();
+            episodesCursor.close();
+            foundEpisode = true;
+            getHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    getHorizontalScrollingText().setText("         ... Airdate: "+ RadioTheaterContract.airDate(mAirdate)+" ... Episode #"+mEpisodeNumber+" ... "+mEpisodeTitle+" ... "+mEpisodeDescription);
+                    getHorizontalScrollingText().setEnabled(true);
+                    getHorizontalScrollingText().setSelected(true);
+                }
+            });
+        }
+        return foundEpisode;
     }
 
     @Override
@@ -748,6 +764,12 @@ public class AutoplayActivity extends BaseActivity
         mRadioMediaController = new MediaControllerCompat(this, token);
         setSupportMediaController(getRadioMediaController());
         getRadioMediaController().registerCallback(mMediaControllerCallback);
+        if (mEpisodeNumber == 0) {
+            ConfigEpisodesCursor configCursor = getCursorForNextAvailableEpisode();
+            if (getEpisodeData(configCursor)) {
+                LogHelper.v(TAG, "*** SQL SEARCH LOCATED NEXT EPISODE: "+mEpisodeNumber);
+            }
+        }
         if (sHandleRotationEvent) {
             LogHelper.v(TAG, "*** RESTORE PLAYBACK STATE AFTER ROTATION ***");
             getHandler().post(new Runnable() {
@@ -857,11 +879,12 @@ public class AutoplayActivity extends BaseActivity
 
             @Override
             public void onReceive(Context context, Intent intent) {
-                final String message = intent.getStringExtra("initialization"); // did metadata load ok?
+                final String message = intent.getStringExtra("initialization"); // get control message, for example: did metadata load ok? or play:id
                 LogHelper.v(TAG, "*** RECEIVED BROADCAST: "+message);
-                String load_fail = getResources().getString(R.string.error_no_metadata);
-                String load_ok = getResources().getString(R.string.metadata_loaded);
+                final String load_fail = getResources().getString(R.string.error_no_metadata);
+                final String load_ok = getResources().getString(R.string.metadata_loaded);
                 final String duration = getResources().getString(R.string.duration);
+                final String play = getResources().getString(R.string.play);
                 if (message.equals(load_ok)) {
                     LogHelper.v(TAG, load_ok);
                     getHandler().post(new Runnable() {
@@ -884,7 +907,7 @@ public class AutoplayActivity extends BaseActivity
                         }
                     });
                 }
-                else if (message.substring(0, duration.length()).equals(duration)) {
+                else if (message.length() > duration.length() && message.substring(0, duration.length()).equals(duration)) {
                     LogHelper.v(TAG, duration);
                     getHandler().post(new Runnable() {
                         @Override
@@ -897,6 +920,11 @@ public class AutoplayActivity extends BaseActivity
                             do_UpdateControls();
                         }
                     });
+                }
+                else if (message.length() > play.length() && message.substring(0, play.length()).equals(play)) {
+                    String episodeIndex = message.substring(5, message.length());
+                    LogHelper.v(TAG,  "*** RECEIVED BROADCAST: NOW PLAYING EPISODE "+episodeIndex);
+                    getEpisodeInfoFor(Long.parseLong(episodeIndex));
                 }
                 else {
                     LogHelper.v(TAG, "*** UNKNOWN MESSAGE VIA INTENT: "+message);

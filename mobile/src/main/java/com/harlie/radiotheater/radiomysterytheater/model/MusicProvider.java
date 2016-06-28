@@ -133,9 +133,9 @@ public class MusicProvider {
      */
     public Iterable<MediaMetadataCompat> searchMusicBySongTitle(String query) {
         LogHelper.v(TAG, "searchMusicBySongTitle: query="+query);
-        Iterable<MediaMetadataCompat> iter = searchMusic(MediaMetadataCompat.METADATA_KEY_TITLE, query);
+        Iterable<MediaMetadataCompat> iter = searchMusic(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, query);
         if (iter == null) {
-            LogHelper.v(TAG, "searchMusicBySongTitle: *** RADIO THEATER - search found nothing. query="+query);
+            LogHelper.v(TAG, "searchMusicBySongTitle: *** RADIO THEATER - search returned null Iterable. query="+query);
             iter = Collections.emptyList();
         }
         return iter;
@@ -265,7 +265,7 @@ public class MusicProvider {
         for (MutableMediaMetadata m : mMusicListById.values()) {
             String genre = m.metadata.getString(MediaMetadataCompat.METADATA_KEY_GENRE);
             List<MediaMetadataCompat> list = newMusicListByGenre.get(genre);
-            //LogHelper.v(TAG, "buildListsByGenre: genre="+genre+", meta="+m.metadata);
+            LogHelper.v(TAG, "==========> buildListsByGenre: genre="+genre+", mediaId="+m.metadata.getDescription().getMediaId()+", title="+m.metadata.getDescription().getTitle());
             if (list == null) {
                 list = new ArrayList<>();
                 newMusicListByGenre.put(genre, list);

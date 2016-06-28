@@ -102,6 +102,8 @@ public class RadioTheaterService
 {
     private final static String TAG = "LEE: <" + RadioTheaterService.class.getSimpleName() + ">";
 
+    private static QueueManager sQueueManager;
+
     // Extra on MediaSession that contains the Cast device name currently connected to
     public static final String EXTRA_CONNECTED_CAST = "com.harlie.radiotheater.radiomysterytheater.CAST_NAME";
     // The action of the incoming Intent indicating that it contains a command
@@ -212,6 +214,7 @@ public class RadioTheaterService
                         mSession.setQueueTitle(title);
                     }
                 });
+        sQueueManager = queueManager;
 
         LocalPlayback playback = new LocalPlayback(this, mMusicProvider);
         mPlaybackManager = new PlaybackManager(this, getResources(), mMusicProvider, queueManager,
@@ -291,6 +294,7 @@ public class RadioTheaterService
         VideoCastManager.getInstance().removeVideoCastConsumer(mCastConsumer);
         mDelayedStopHandler.removeCallbacksAndMessages(null);
         mSession.release();
+        sQueueManager = null;
     }
 
     @Override
@@ -418,4 +422,9 @@ public class RadioTheaterService
             }
         }
     }
+
+    public static QueueManager getQueueManager() {
+        return sQueueManager;
+    }
+
 }

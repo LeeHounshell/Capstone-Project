@@ -38,13 +38,9 @@ import com.harlie.radiotheater.radiomysterytheater.data.episodeswriters.Episodes
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 import com.harlie.radiotheater.radiomysterytheater.utils.BitmapHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
-import com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-
-import static com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper.MEDIA_ID_MUSICS_BY_GENRE;
-import static com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper.createMediaID;
 
 /**
  * Utility class to get a list of Episodes's based on a server-side JSON configuration.
@@ -57,16 +53,24 @@ public class RemoteJSONSource implements MusicProviderSource {
 
     private String mMediaId;
 
+    private static volatile boolean sLoadedMediaMetaData = false;
+
     @Override
     public Iterator<MediaMetadataCompat> iterator() {
         mMediaId = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.genre);
         ArrayList<MediaMetadataCompat> tracks = new ArrayList<>();
-        EpisodesCursor episodesCursor = getEpisodes();
-        if (episodesCursor != null) {
-            while (episodesCursor.moveToNext()) {
-                tracks.add(buildFromEpisodesCursor(episodesCursor));
+        if (!sLoadedMediaMetaData) {
+            sLoadedMediaMetaData = true;
+            EpisodesCursor episodesCursor = getEpisodes();
+            if (episodesCursor != null) {
+                while (episodesCursor.moveToNext()) {
+                    tracks.add(buildFromEpisodesCursor(episodesCursor));
+                }
+                episodesCursor.close();
             }
-            episodesCursor.close();
+        }
+        else {
+            LogHelper.v(TAG, "*** ALREADY LOADED THE MEDIA-META-DATA!!! ***");
         }
         return tracks.iterator();
     }

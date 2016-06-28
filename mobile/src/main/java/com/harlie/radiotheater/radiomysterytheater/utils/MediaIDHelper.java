@@ -90,9 +90,11 @@ public class MediaIDHelper {
      * @return musicID
      */
     public static String extractMusicIDFromMediaID(@NonNull String mediaID) {
-        int pos = mediaID.indexOf(LEAF_SEPARATOR);
-        if (pos >= 0) {
-            return mediaID.substring(pos+1);
+        if (mediaID != null) {
+            int pos = mediaID.indexOf(LEAF_SEPARATOR);
+            if (pos >= 0) {
+                return mediaID.substring(pos + 1);
+            }
         }
         return null;
     }

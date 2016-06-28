@@ -57,6 +57,7 @@
     <string name="no_metadata">Missing Episode Metadata</string>
     <string name="metadata_loading_problem">Unable to load Episode information. Something went wrong.</string>
     <string name="duration">duration:</string>
+    <string name="play">play:</string>
 
     <!-- Strings related to RadioTheaterService -->
     <string name="casting_to_device">Casting to %1$s</string>
@@ -68,6 +69,7 @@
     <string name="browse_musics_by_genre_subtitle">%1$s episodes</string>
     <string name="search_queue_title">Search results</string>
     <string name="random_queue_title">Random episode</string>
+    <string name="next_queue_title">Next episode</string>
 
     <!-- Strings related to Episodes -->
     <string name="title_episode_detail">Episode Detail</string>

@@ -181,7 +181,11 @@ public class LocalPlayback
 
     @Override
     public void play(QueueItem item) {
-        LogHelper.v(TAG, "play: item="+item.getDescription()+", mediaId="+item.getDescription().getMediaId());
+        //-------- RADIO THEATER --------
+        LogHelper.v(TAG, "play ---> *** RADIO MYSTERY THEATER: PLAY EPISODE" +item.getDescription()+", mediaId="+item.getDescription().getMediaId());
+        // MODIFIED - see QueueManager.java - if not requested-playback, then query local SQLite to see if this episode has been listened to already.
+        //                                    then replace the current item with the "next appropriate" Episode to listen to.
+        //                                    and send Intent to AutoplayActivity so that the Scrolling Marquee will update for the new Episode.
         mPlayOnFocusGain = true;
         tryToGetAudioFocus();
         registerAudioNoisyReceiver();
@@ -435,6 +439,16 @@ public class LocalPlayback
         if (mCallback != null) {
             mCallback.onCompletion();
         }
+
+        // FIXME:
+
+        // Update SQLite Config to reflect Episode played.
+        // Update SQLite Config play-count for this Episode.
+
+        // Update Firebase Config to reflect Episode played.
+        // Update Firebase Config play-count for this Episode.
+
+        // Update Google Analytics to report playback
     }
 
     /**

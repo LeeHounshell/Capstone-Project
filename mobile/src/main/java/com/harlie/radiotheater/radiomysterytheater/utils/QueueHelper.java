@@ -47,8 +47,7 @@ public class QueueHelper {
 
         // extract the browsing hierarchy from the media ID:
         String[] hierarchy = MediaIDHelper.getHierarchy(mediaId);
-
-        if (hierarchy.length != 2) {
+        if (hierarchy.length < 2) {
             LogHelper.e(TAG, "could not build a playing queue for this mediaId: ", mediaId);
             return null;
         }
@@ -112,7 +111,6 @@ public class QueueHelper {
         return convertToQueue(result, MEDIA_ID_MUSICS_BY_SEARCH, query);
     }
 
-
     public static int getMusicIndexOnQueue(Iterable<MediaSessionCompat.QueueItem> queue, String mediaId)
     {
         LogHelper.v(TAG, "getMusicIndexOnQueue: mediaId="+mediaId);
@@ -131,22 +129,27 @@ public class QueueHelper {
     public static int getMusicIndexOnQueue(Iterable<MediaSessionCompat.QueueItem> queue, long queueId)
     {
         LogHelper.v(TAG, "getMusicIndexOnQueue: queueId="+queueId);
-        int index = 0;
-        for (MediaSessionCompat.QueueItem item : queue) {
-            if (queueId == item.getQueueId()) {
-                return index;
+        if (queue != null) {
+            int index = 0;
+            for (MediaSessionCompat.QueueItem item : queue) {
+                if (queueId == item.getQueueId()) {
+                    return index;
+                }
+                index++;
             }
-            index++;
         }
         return -1;
     }
 
-    private static List<MediaSessionCompat.QueueItem> convertToQueue(Iterable<MediaMetadataCompat> tracks, String... categories)
+    public static List<MediaSessionCompat.QueueItem> convertToQueue(Iterable<MediaMetadataCompat> tracks, String... categories)
     {
         LogHelper.v(TAG, "convertToQueue");
         List<MediaSessionCompat.QueueItem> queue = new ArrayList<>();
         int count = 0;
         for (MediaMetadataCompat track : tracks) {
+            if (track == null) {
+                continue;
+            }
 
             // We create a hierarchy-aware mediaID, so we know what the queue is about by looking
             // at the QueueItem media IDs.

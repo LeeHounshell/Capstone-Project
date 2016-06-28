@@ -111,7 +111,6 @@ public class PlaybackManager implements Playback.Callback {
         updatePlaybackState(withError);
     }
 
-
     /**
      * Update the current media player state, optionally showing an error message.
      *
@@ -196,6 +195,9 @@ public class PlaybackManager implements Playback.Callback {
     /**
      * Implementation of the Playback.Callback interface
      */
+    // FIXME: mark SQLite episode as "HEARD"
+    // FIXME: send Config record to Firebase for Episode Heard
+    // FIXME: send Analytics record to Firebase for Episode Heard
     @Override
     public void onCompletion() {
         LogHelper.v(TAG, "onCompletion");
@@ -279,7 +281,7 @@ public class PlaybackManager implements Playback.Callback {
         public void onPlay() {
             LogHelper.v(TAG, "play");
             if (mQueueManager.getCurrentMusic() == null) {
-                mQueueManager.setRandomQueue();
+                mQueueManager.setOrderedQueue();
             }
             handlePlayRequest();
         }
@@ -300,7 +302,7 @@ public class PlaybackManager implements Playback.Callback {
 
         @Override
         public void onPlayFromMediaId(String mediaId, Bundle extras) {
-            LogHelper.v(TAG, "onPlayFromMediaId mediaId:", mediaId, "  extras=", extras);
+            LogHelper.v(TAG, "=========> onPlayFromMediaId mediaId="+mediaId+", extras="+extras);
             mQueueManager.setQueueFromMusic(mediaId);
             handlePlayRequest();
         }
@@ -382,7 +384,6 @@ public class PlaybackManager implements Playback.Callback {
             mQueueManager.updateMetadata();
         }
     }
-
 
     public interface PlaybackServiceCallback {
         void onPlaybackStart();
