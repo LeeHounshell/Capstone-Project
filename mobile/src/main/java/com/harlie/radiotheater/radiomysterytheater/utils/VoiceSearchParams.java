@@ -18,7 +18,7 @@
 // THIS CODE IS REPURPOSED FROM THE GOOGLE UNIVERSAL-MEDIA-PLAYER SAMPLE
 //
 
-package com.harlie.radiotheater.radiomysterytheater;
+package com.harlie.radiotheater.radiomysterytheater.utils;
 
 import android.os.Build;
 import android.os.Bundle;

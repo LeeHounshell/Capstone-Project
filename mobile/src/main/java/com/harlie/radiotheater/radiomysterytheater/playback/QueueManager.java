@@ -20,7 +20,6 @@
 
 package com.harlie.radiotheater.radiomysterytheater.playback;
 
-import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -29,7 +28,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 
-import com.harlie.radiotheater.radiomysterytheater.AlbumArtCache;
+import com.harlie.radiotheater.radiomysterytheater.utils.AlbumArtCache;
 import com.harlie.radiotheater.radiomysterytheater.R;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesColumns;
@@ -52,7 +51,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import static com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper.MEDIA_ID_MUSICS_BY_GENRE;
-import static com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper.extractMusicIDFromMediaID;
 import static com.harlie.radiotheater.radiomysterytheater.utils.QueueHelper.*;
 
 /**

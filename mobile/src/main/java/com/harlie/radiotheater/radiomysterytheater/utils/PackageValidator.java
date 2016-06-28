@@ -18,7 +18,7 @@
 // THIS CODE IS REPURPOSED FROM THE GOOGLE UNIVERSAL-MEDIA-PLAYER SAMPLE
 //
 
-package com.harlie.radiotheater.radiomysterytheater;
+package com.harlie.radiotheater.radiomysterytheater.utils;
 
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -27,7 +27,7 @@ import android.content.res.XmlResourceParser;
 import android.os.Process;
 import android.util.Base64;
 
-import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
+import com.harlie.radiotheater.radiomysterytheater.R;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -82,9 +82,11 @@ public class PackageValidator {
                         infos = new ArrayList<>();
                         validCertificates.put(certificate, infos);
                     }
+/*
                     LogHelper.v(TAG, "Adding allowed caller: ", info.name,
                         " package=", info.packageName, " release=", info.release,
                         " certificate=", certificate);
+*/
                     infos.add(info);
                 }
                 eventType = parser.next();

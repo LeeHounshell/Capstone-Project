@@ -33,6 +33,7 @@ import com.harlie.radiotheater.radiomysterytheater.playback.PlaybackManager;
 import com.harlie.radiotheater.radiomysterytheater.playback.QueueManager;
 import com.harlie.radiotheater.radiomysterytheater.utils.CarHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
+import com.harlie.radiotheater.radiomysterytheater.utils.PackageValidator;
 import com.harlie.radiotheater.radiomysterytheater.utils.WearHelper;
 
 import java.lang.ref.WeakReference;

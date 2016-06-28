@@ -24,7 +24,6 @@ import android.os.Bundle;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 
-import com.harlie.radiotheater.radiomysterytheater.VoiceSearchParams;
 import com.harlie.radiotheater.radiomysterytheater.model.MusicProvider;
 
 import java.util.ArrayList;

@@ -18,14 +18,11 @@
 // THIS CODE IS REPURPOSED FROM THE GOOGLE UNIVERSAL-MEDIA-PLAYER SAMPLE
 //
 
-package com.harlie.radiotheater.radiomysterytheater;
+package com.harlie.radiotheater.radiomysterytheater.utils;
 
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.util.LruCache;
-
-import com.harlie.radiotheater.radiomysterytheater.utils.BitmapHelper;
-import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import java.io.IOException;
 

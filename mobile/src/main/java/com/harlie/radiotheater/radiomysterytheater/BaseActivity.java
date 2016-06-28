@@ -26,6 +26,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.api.model.StringList;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -1135,8 +1136,22 @@ public class BaseActivity extends AppCompatActivity {
 
     public void markEpisodeAsHeardAndIncrementPlayCount(long episodeNumber, String episodeIndex, long duration) {
         LogHelper.v(TAG, "markEpisodeAsHeardAndIncrementPlayCount: episodeNumber="+episodeNumber+", episodeIndex="+episodeIndex+", duration="+duration);
-        // FIXME: mark SQLite config episode as "HEARD"
-        // FIXME: update SQLite config PLAY-COUNT for episode"
+        boolean matchError = false;
+        if (! String.valueOf(episodeNumber).equals(episodeIndex)) {
+            LogHelper.e(TAG, "The episodeNumber="+episodeNumber+" and episodeIndex "+episodeIndex+" DONT MATCH");
+            matchError = true;
+        }
+        // mark SQLite config episode as "HEARD" and increment "PLAY COUNT"
+        ConfigEpisodesContentValues existing = getConfigForEpisode(episodeIndex);
+        if (existing != null) {
+            ContentValues configEpisode = existing.values();
+            configEpisode.put(ConfigEpisodesEntry.FIELD_EPISODE_HEARD, true);
+            long listenCount = configEpisode.getAsLong(ConfigEpisodesColumns.FIELD_LISTEN_COUNT);
+            ++listenCount;
+            configEpisode.put(ConfigEpisodesEntry.FIELD_LISTEN_COUNT, listenCount);
+            updateConfigEntryValues(episodeIndex, configEpisode);
+            LogHelper.d(TAG, "new LISTEN-COUNT="+listenCount+" FOR EPISODE "+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
+        }
         // FIXME: send Config record to Firebase for Episode Heard
         // FIXME: send Config record to Firebase for Episode Play Count
         // FIXME: send Analytics record to Firebase for Episode+Heard+Count
