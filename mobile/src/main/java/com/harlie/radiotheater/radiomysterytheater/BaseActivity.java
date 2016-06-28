@@ -942,7 +942,12 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     public String getEpisodeTitle() {
+
         return mEpisodeTitle;
+    }
+
+    public long getEpisodeNumber() {
+        return mEpisodeNumber;
     }
 
     public String getEpisodeDescription() {
@@ -1014,7 +1019,7 @@ public class BaseActivity extends AppCompatActivity {
     protected void savePlayInfoToBundle(Bundle playInfoBundle) {
         LogHelper.v(TAG, "savePlayInfoToBundle");
         playInfoBundle.putString(KEY_MEDIA_ID, getMediaId());
-        playInfoBundle.putLong(KEY_EPISODE, mEpisodeNumber);
+        playInfoBundle.putLong(KEY_EPISODE, getEpisodeNumber());
         playInfoBundle.putBoolean(KEY_PURCHASED, sPurchased);
         playInfoBundle.putBoolean(KEY_NOADS, sNoAdsForShow);
         playInfoBundle.putBoolean(KEY_DOWNLOADED, sDownloaded);
@@ -1111,7 +1116,7 @@ public class BaseActivity extends AppCompatActivity {
         }
         LogHelper.v(TAG, "===> EPISODE INFO"
                 + ": mEpisodeTitle=" + getEpisodeTitle()
-                + ": mEpisodeNumber=" + mEpisodeNumber
+                + ": mEpisodeNumber=" + getEpisodeNumber()
                 + ": mAirdate=" + getAirdate()
                 + ": mEpisodeDescription=" + getEpisodeDescription()
                 + ": mEpisodeWeblinkUrl=" + getEpisodeWeblinkUrl()
@@ -1126,6 +1131,15 @@ public class BaseActivity extends AppCompatActivity {
     protected void setAutoplayState(AutoplayState autoplayState, String log) {
         LogHelper.v(TAG, "setAutoplayState: "+autoplayState+", "+log);
         this.mAutoplayState = autoplayState;
+    }
+
+    public void markEpisodeAsHeardAndIncrementPlayCount(long episodeNumber, String episodeIndex, long duration) {
+        LogHelper.v(TAG, "markEpisodeAsHeardAndIncrementPlayCount: episodeNumber="+episodeNumber+", episodeIndex="+episodeIndex+", duration="+duration);
+        // FIXME: mark SQLite config episode as "HEARD"
+        // FIXME: update SQLite config PLAY-COUNT for episode"
+        // FIXME: send Config record to Firebase for Episode Heard
+        // FIXME: send Config record to Firebase for Episode Play Count
+        // FIXME: send Analytics record to Firebase for Episode+Heard+Count
     }
 
 }

@@ -943,11 +943,7 @@ public class AutoplayActivity extends BaseActivity
                 else if (message.length() > KEY_COMPLETION.length() && message.substring(0, KEY_COMPLETION.length()).equals(KEY_COMPLETION)) {
                     String episodeIndex = message.substring(KEY_COMPLETION.length(), message.length());
                     LogHelper.v(TAG,  "*** RECEIVED BROADCAST: COMPLETED PLAY EPISODE "+episodeIndex);
-                    // FIXME: mark SQLite config episode as "HEARD"
-                    // FIXME: update SQLite config PLAY-COUNT for episode"
-                    // FIXME: send Config record to Firebase for Episode Heard
-                    // FIXME: send Config record to Firebase for Episode Play Count
-                    // FIXME: send Analytics record to Firebase for Episode+Heard+Count
+                    markEpisodeAsHeardAndIncrementPlayCount(getEpisodeNumber(), episodeIndex, mDuration);
                 }
                 else {
                     LogHelper.v(TAG, "*** UNKNOWN MESSAGE VIA INTENT: "+message);
