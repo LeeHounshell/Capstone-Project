@@ -5,8 +5,8 @@ import android.support.v7.widget.AppCompatButton;
 import android.view.View;
 
 import com.harlie.radiotheater.radiomysterytheater.AutoplayActivity;
-import com.harlie.radiotheater.radiomysterytheater.CircleViewHelper;
-import com.harlie.radiotheater.radiomysterytheater.CircularSeekBar;
+import com.harlie.radiotheater.radiomysterytheater.utils.CircleViewHelper;
+import com.harlie.radiotheater.radiomysterytheater.utils.CircularSeekBar;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import at.grabner.circleprogress.CircleProgressView;

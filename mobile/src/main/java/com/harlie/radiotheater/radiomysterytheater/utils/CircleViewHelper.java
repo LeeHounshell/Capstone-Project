@@ -1,6 +1,8 @@
-package com.harlie.radiotheater.radiomysterytheater;
+package com.harlie.radiotheater.radiomysterytheater.utils;
 
 import android.os.Handler;
+
+import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
 
 import at.grabner.circleprogress.CircleProgressView;
 

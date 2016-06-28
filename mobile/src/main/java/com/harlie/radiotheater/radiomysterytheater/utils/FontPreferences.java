@@ -1,11 +1,14 @@
-package com.harlie.radiotheater.radiomysterytheater;
+package com.harlie.radiotheater.radiomysterytheater.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import com.harlie.radiotheater.radiomysterytheater.R;
+import com.harlie.radiotheater.radiomysterytheater.utils.FontStyle;
+
 //from: http://stackoverflow.com/questions/4877153/android-application-wide-font-size-preference/12591991#12591991
-class FontPreferences {
+public class FontPreferences {
     //private final static String TAG = "LEE: <" + FontPreferences.class.getSimpleName() + ">";
 
     private final Context context;

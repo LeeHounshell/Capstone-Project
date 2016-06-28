@@ -29,15 +29,11 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.Toolbar;
 import android.telephony.TelephonyManager;
-import android.text.TextUtils;
-import android.text.method.ScrollingMovementMethod;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
-import android.widget.HorizontalScrollView;
-import android.widget.TextView;
 
 //#IFDEF 'FREE'
 import com.google.android.gms.ads.AdRequest;
@@ -49,12 +45,11 @@ import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpi
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadingAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
+import com.harlie.radiotheater.radiomysterytheater.utils.CircularSeekBar;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.OnSwipeTouchListener;
 import com.harlie.radiotheater.radiomysterytheater.utils.ScrollingTextView;
-
-import org.w3c.dom.Text;
 
 import java.util.List;
 import java.util.concurrent.Executors;

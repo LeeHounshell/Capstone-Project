@@ -5,7 +5,7 @@
  *
  * modified by Lee Hounshell to use a transparent center and various other bug fixes 6/20/2016.
  */
-package com.harlie.radiotheater.radiomysterytheater;
+package com.harlie.radiotheater.radiomysterytheater.utils;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -18,7 +18,7 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
-import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
+import com.harlie.radiotheater.radiomysterytheater.R;
 
 /**
  * The Class CircularSeekBar.
