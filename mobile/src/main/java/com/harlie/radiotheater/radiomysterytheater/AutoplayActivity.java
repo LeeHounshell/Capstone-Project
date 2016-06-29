@@ -103,25 +103,27 @@ public class AutoplayActivity extends BaseActivity
     private final Runnable mUpdateProgressTask = new Runnable() {
         @Override
         public void run() {
-            if (getCircularSeekBar() != null && !getCircularSeekBar().isProcessingTouchEvents() && !sSeeking) {
-                PlaybackStateCompat lastPlaybackState = getRadioMediaController().getPlaybackState();
-                mCurrentPosition = lastPlaybackState.getPosition();
-                if (lastPlaybackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
-                    if (!getCircularSeekBar().isProcessingTouchEvents() && !sSeeking) {
-                        LoadingAsyncTask.mDoneLoading = true;
-                        // Calculate the elapsed time between the last position update and now and unless
-                        // paused, we can assume (delta * speed) + current position is approximately the
-                        // latest position. This ensure that we do not repeatedly call the getPlaybackState()
-                        // on MediaControllerCompat.
-                        long timeDelta = SystemClock.elapsedRealtime() - lastPlaybackState.getLastPositionUpdateTime();
-                        mCurrentPosition += (int) timeDelta * lastPlaybackState.getPlaybackSpeed();
-                        getHandler().post(new Runnable() {
-                            @Override
-                            public void run() {
-                                LogHelper.v(TAG, "SEEKBAR setProgress mCurrentPosition="+mCurrentPosition);
-                                getCircularSeekBar().setProgress((int) mCurrentPosition);
-                            }
-                        });
+            if (getRadioMediaController() != null) {
+                if (getCircularSeekBar() != null && !getCircularSeekBar().isProcessingTouchEvents() && !sSeeking) {
+                    PlaybackStateCompat lastPlaybackState = getRadioMediaController().getPlaybackState();
+                    mCurrentPosition = lastPlaybackState.getPosition();
+                    if (lastPlaybackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
+                        if (!getCircularSeekBar().isProcessingTouchEvents() && !sSeeking) {
+                            LoadingAsyncTask.mDoneLoading = true;
+                            // Calculate the elapsed time between the last position update and now and unless
+                            // paused, we can assume (delta * speed) + current position is approximately the
+                            // latest position. This ensure that we do not repeatedly call the getPlaybackState()
+                            // on MediaControllerCompat.
+                            long timeDelta = SystemClock.elapsedRealtime() - lastPlaybackState.getLastPositionUpdateTime();
+                            mCurrentPosition += (int) timeDelta * lastPlaybackState.getPlaybackSpeed();
+                            getHandler().post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    LogHelper.v(TAG, "SEEKBAR setProgress mCurrentPosition="+mCurrentPosition);
+                                    getCircularSeekBar().setProgress((int) mCurrentPosition);
+                                }
+                            });
+                        }
                     }
                 }
             }
@@ -133,7 +135,10 @@ public class AutoplayActivity extends BaseActivity
         new AudioManager.OnAudioFocusChangeListener() {
             public void onAudioFocusChange(int focusChange) {
                 LogHelper.v(TAG, "===> onAudioFocusChange="+focusChange+" <===");
-                MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
+                MediaControllerCompat.TransportControls controls = null;
+                if (getRadioMediaController() != null) {
+                    controls = getRadioMediaController().getTransportControls();
+                }
                 if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
                     LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_GAIN <<---");
                     mAudioFocusRequstResult = AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
@@ -141,19 +146,25 @@ public class AutoplayActivity extends BaseActivity
                 else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
                     LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_LOSS <<---");
                     mAudioFocusRequstResult = 0;
-                    controls.stop();
+                    if (controls != null) {
+                        controls.stop();
+                    }
                     setAutoplayState(AutoplayState.READY2PLAY, "onAudioFocusChange - READY2PLAY");
                     mCurrentPosition = 0;
                 }
                 else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
                     LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_LOSS_TRANSIENT <<---");
                     mAudioFocusRequstResult = 0;
-                    controls.pause();
+                    if (controls != null) {
+                        controls.pause();
+                    }
                 }
                 else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
                     LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK <<---");
                     mAudioFocusRequstResult = 0;
-                    controls.pause();
+                    if (controls != null) {
+                        controls.pause();
+                    }
                 }
             }
         };
@@ -482,8 +493,10 @@ public class AutoplayActivity extends BaseActivity
                     getHandler().post(new Runnable() {
                         @Override
                         public void run() {
-                            mCurrentPosition -= THIRTY_SECONDS;
-                            getRadioMediaController().getTransportControls().seekTo(mCurrentPosition);
+                            if (getRadioMediaController() != null) {
+                                mCurrentPosition -= THIRTY_SECONDS;
+                                getRadioMediaController().getTransportControls().seekTo(mCurrentPosition);
+                            }
                         }
                     });
                 }
@@ -492,8 +505,9 @@ public class AutoplayActivity extends BaseActivity
             @Override
             public void onLongClick(final Drawable buttonImage) {
                 LogHelper.v(TAG, "onLongClick");
+                MediaControllerCompat.TransportControls controls = null;
                 if (getRadioMediaController() != null) {
-                    MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
+                    controls = getRadioMediaController().getTransportControls();
                     controls.stop();
                 }
                 getHandler().post(new Runnable() {
@@ -569,7 +583,9 @@ public class AutoplayActivity extends BaseActivity
                             sSeeking = true;
                             mCurrentPosition = newProgress;
                             managePlaybackControls(ControlsState.SEEKING_POSITION, "setSeekBarChangeListener");
-                            getRadioMediaController().getTransportControls().seekTo(newProgress);
+                            if (getRadioMediaController() != null) {
+                                getRadioMediaController().getTransportControls().seekTo(newProgress);
+                            }
                         }
                     });
                 }
@@ -628,40 +644,49 @@ public class AutoplayActivity extends BaseActivity
         LogHelper.v(TAG, "playPauseEpisode");
         managePlaybackControls(ControlsState.DISABLED_SHOW_PAUSE, "playPauseEpisode");
         showCurrentInfo();
-        MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
-        PlaybackStateCompat lastPlaybackState = getRadioMediaController().getPlaybackState();
-        LogHelper.v(TAG, "playPauseEpisode: lastPlaybackState="+lastPlaybackState.getState());
-        switch (lastPlaybackState.getState()) {
-            case PlaybackStateCompat.STATE_BUFFERING:
-            case PlaybackStateCompat.STATE_PLAYING: {
-                LogHelper.v(TAG, "controls.pause();");
-                controls.pause();
-                setAutoplayState(AutoplayState.PAUSED, "playPauseEpisode - PAUSED");
-                break;
-            }
-            case PlaybackStateCompat.STATE_PAUSED:
-            case PlaybackStateCompat.STATE_STOPPED: {
-                LogHelper.v(TAG, "controls.play();");
-                controls.play();
-                setAutoplayState(AutoplayState.PLAYING, "playPauseEpisode - PLAYING");
-                break;
-            }
-            default: {
-                if (mAutoplayState == AutoplayState.LOADING) {
-                    LogHelper.v(TAG, "setup for auto-playing..");
-                    loadingScreen();
-                    mMediaId = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.genre);
-                    LogHelper.d(TAG, "*** INITIALIZE PLAYBACK *** state=" + lastPlaybackState.getState() + ", mMediaId=" + mMediaId + ", mEpisodeDownloadUrl=" + mEpisodeDownloadUrl);
-                    String id = String.valueOf(mEpisodeDownloadUrl.hashCode());
-                    String episodeMediaId = MediaIDHelper.createMediaID(id, MediaIDHelper.MEDIA_ID_MUSICS_BY_GENRE, mMediaId);
-                    Bundle bundle = new Bundle();
-                    getRadioMediaController().getTransportControls().playFromMediaId(episodeMediaId, bundle);
+        MediaControllerCompat.TransportControls controls = null;
+        PlaybackStateCompat lastPlaybackState = null;
+        if (getRadioMediaController() != null) {
+            controls = getRadioMediaController().getTransportControls();
+            lastPlaybackState = getRadioMediaController().getPlaybackState();
+            LogHelper.v(TAG, "playPauseEpisode: lastPlaybackState=" + lastPlaybackState.getState());
+            switch (lastPlaybackState.getState()) {
+                case PlaybackStateCompat.STATE_BUFFERING:
+                case PlaybackStateCompat.STATE_PLAYING: {
+                    if (controls != null) {
+                        LogHelper.v(TAG, "controls.pause();");
+                        controls.pause();
+                    }
+                    setAutoplayState(AutoplayState.PAUSED, "playPauseEpisode - PAUSED");
+                    break;
                 }
-                else {
-                    LogHelper.v(TAG, "*** START PLAYBACK *** state: " + lastPlaybackState.getState());
-                    LogHelper.v(TAG, "controls.play();");
-                    controls.play();
+                case PlaybackStateCompat.STATE_PAUSED:
+                case PlaybackStateCompat.STATE_STOPPED: {
+                    if (controls != null) {
+                        LogHelper.v(TAG, "controls.play();");
+                        controls.play();
+                    }
                     setAutoplayState(AutoplayState.PLAYING, "playPauseEpisode - PLAYING");
+                    break;
+                }
+                default: {
+                    if (mAutoplayState == AutoplayState.LOADING) {
+                        LogHelper.v(TAG, "setup for auto-playing..");
+                        loadingScreen();
+                        mMediaId = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.genre);
+                        LogHelper.d(TAG, "*** INITIALIZE PLAYBACK *** state=" + lastPlaybackState.getState() + ", mMediaId=" + mMediaId + ", mEpisodeDownloadUrl=" + mEpisodeDownloadUrl);
+                        String id = String.valueOf(mEpisodeDownloadUrl.hashCode());
+                        String episodeMediaId = MediaIDHelper.createMediaID(id, MediaIDHelper.MEDIA_ID_MUSICS_BY_GENRE, mMediaId);
+                        Bundle bundle = new Bundle();
+                        getRadioMediaController().getTransportControls().playFromMediaId(episodeMediaId, bundle);
+                    } else {
+                        LogHelper.v(TAG, "*** START PLAYBACK *** state: " + lastPlaybackState.getState());
+                        if (controls != null) {
+                            LogHelper.v(TAG, "controls.play();");
+                            controls.play();
+                        }
+                        setAutoplayState(AutoplayState.PLAYING, "playPauseEpisode - PLAYING");
+                    }
                 }
             }
         }
@@ -752,8 +777,10 @@ public class AutoplayActivity extends BaseActivity
     {
         LogHelper.v(TAG, "connectToSession");
         mRadioMediaController = new MediaControllerCompat(this, token);
-        setSupportMediaController(getRadioMediaController());
-        getRadioMediaController().registerCallback(mMediaControllerCallback);
+        if (getRadioMediaController() != null) {
+            setSupportMediaController(getRadioMediaController());
+            getRadioMediaController().registerCallback(mMediaControllerCallback);
+        }
         if (mEpisodeNumber == 0) {
             ConfigEpisodesCursor configCursor = getCursorForNextAvailableEpisode();
             if (getEpisodeData(configCursor)) {
@@ -767,8 +794,11 @@ public class AutoplayActivity extends BaseActivity
                 public void run() {
                     if (mAutoplayState != AutoplayState.READY2PLAY || sSeeking || sPlaying) {
                         LogHelper.v(TAG, "RESTORE PLAYBACK - EPISODE: "+mEpisodeTitle);
-                        MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
-                        controls.play();
+                        MediaControllerCompat.TransportControls controls = null;
+                        if (getRadioMediaController() != null) {
+                            controls = getRadioMediaController().getTransportControls();
+                            controls.play();
+                        }
                         scheduleSeekbarUpdate();
                         setAutoplayState(AutoplayState.PLAYING, "playPauseEpisode - PLAYING");
                     }
@@ -777,7 +807,9 @@ public class AutoplayActivity extends BaseActivity
                     }
                     if (sSeeking) {
                         LogHelper.v(TAG, "RESTORE PLAYBACK - SEEKING TO: "+mCurrentPosition);
-                        getRadioMediaController().getTransportControls().seekTo(mCurrentPosition);
+                        if (getRadioMediaController() !=  null) {
+                            getRadioMediaController().getTransportControls().seekTo(mCurrentPosition);
+                        }
                     }
                 }
             });
@@ -881,6 +913,7 @@ public class AutoplayActivity extends BaseActivity
                 final String KEY_NOPLAY = getResources().getString(R.string.noplay);
                 final String KEY_PLAY = getResources().getString(R.string.play);
                 final String KEY_COMPLETION = getResources().getString(R.string.complete);
+                final String KEY_POKE_ME = getResources().getString(R.string.pokeme);
 
                 if (message.equals(KEY_LOAD_OK)) {
                     LogHelper.v(TAG, KEY_LOAD_OK);
@@ -938,9 +971,25 @@ public class AutoplayActivity extends BaseActivity
                     String episodeIndex = message.substring(KEY_COMPLETION.length(), message.length());
                     LogHelper.v(TAG,  "*** RECEIVED BROADCAST: COMPLETED PLAY EPISODE "+episodeIndex);
                     markEpisodeAsHeardAndIncrementPlayCount(getEpisodeNumber(), episodeIndex, mDuration);
-                    MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
-                    controls.stop();
+                    MediaControllerCompat.TransportControls controls = null;
+                    if (getRadioMediaController() != null) {
+                        controls = getRadioMediaController().getTransportControls();
+                        controls.stop();
+                    }
                     initializeForEpisode("playback completed for episode "+episodeIndex);
+                    handleAutoplayClick();
+                }
+                else if (message.length() > KEY_POKE_ME.length() && message.substring(0, KEY_POKE_ME.length()).equals(KEY_POKE_ME)) {
+                    String episodeIndex = message.substring(KEY_POKE_ME.length(), message.length());
+                    LogHelper.v(TAG,  "*** RECEIVED BROADCAST: !!! POKE-ME !!! for EPISODE "+episodeIndex);
+                    if (getRadioMediaController() != null) {
+                        MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
+                        if (controls != null) {
+                            LogHelper.v(TAG, "*** POKE-ME: STOPPING MEDIA CONTROLLER");
+                            controls.stop();
+                        }
+                    }
+                    initializeForEpisode("*** POKE-ME: do handleAutoplayClick for episode "+episodeIndex);
                     handleAutoplayClick();
                 }
                 else {

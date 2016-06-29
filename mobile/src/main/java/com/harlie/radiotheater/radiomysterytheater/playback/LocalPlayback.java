@@ -219,6 +219,17 @@ public class LocalPlayback
         RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
     }
 
+    //-------- RADIO THEATER --------
+    public static void pokeMeWakeMeShakeMe() {
+        LogHelper.v(TAG, "pokeMeWakeMeShakeMe");
+        String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
+        String pokeme = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.pokeme);
+        String message = pokeme + getCurrentEpisode();
+        LogHelper.v(TAG, "pokeMeWakeMeShakeMe: message="+message);
+        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
+        RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
+    }
+
     static int sCurrentEpisode;
     static void setCurrentEpisode(int currentEpisode) {
         sCurrentEpisode = currentEpisode;

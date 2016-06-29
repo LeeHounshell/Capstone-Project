@@ -174,7 +174,8 @@ public class QueueManager {
     public MediaSessionCompat.QueueItem getCurrentMusic() {
         setCurrentIndexFromEpisodeId();
         if (!isIndexPlayable(sCurrentIndex, mPlayingQueue)) {
-            LogHelper.v(TAG, "getCurrentMusic: - not currently playable - sCurrentIndex="+sCurrentIndex+" - return null");
+            LogHelper.w(TAG, "*** --->>> POKE-ME-NEEDED: getCurrentMusic: - not currently playable - sCurrentIndex="+sCurrentIndex+" - return null");
+            LocalPlayback.pokeMeWakeMeShakeMe();
             return null;
         }
         LogHelper.v(TAG, "getCurrentMusic: sCurrentIndex="+sCurrentIndex+", size="+mPlayingQueue.size());

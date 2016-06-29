@@ -56,16 +56,19 @@
     <string name="ok">OK</string>
     <string name="no_metadata">Missing Episode Metadata</string>
     <string name="metadata_loading_problem">Unable to load Episode information.\nSomething went wrong.</string>
+
+    // Autoplay BROADCAST messages
+    <string name="initialization">Radio-Mystery-Theater:</string>
+    <string name="metadata_loaded">loaded.</string>
+    <string name="error_no_metadata">load failed.</string>
     <string name="duration">duration:</string>
     <string name="play">play:</string>
     <string name="noplay">noplay:</string>
     <string name="complete">complete:</string>
-    <string name="initialization">initialization</string>
+    <string name="pokeme">pokeme:</string>
 
     <!-- Strings related to RadioTheaterService -->
     <string name="casting_to_device">Casting to %1$s</string>
-    <string name="metadata_loaded">Successfully loaded metadata.</string>
-    <string name="error_no_metadata">Unable to retrieve metadata.</string>
     <string name="favorite">Favorite</string>
     <string name="browse_genre_subtitle">Episodes by genre</string>
     <string name="browse_genres">Genres</string>
