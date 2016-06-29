@@ -70,6 +70,7 @@ public class QueueManager {
 
     private static volatile int sCurrentIndex;
     private static String sDownloadUrl;
+    private static long sPokeMeTime;
 
     public QueueManager(@NonNull MusicProvider musicProvider,
                         @NonNull Resources resources,
@@ -174,8 +175,12 @@ public class QueueManager {
     public MediaSessionCompat.QueueItem getCurrentMusic() {
         setCurrentIndexFromEpisodeId();
         if (!isIndexPlayable(sCurrentIndex, mPlayingQueue)) {
-            LogHelper.w(TAG, "*** --->>> POKE-ME-NEEDED: getCurrentMusic: - not currently playable - sCurrentIndex="+sCurrentIndex+" - return null");
-            LocalPlayback.pokeMeWakeMeShakeMe();
+            long time = System.currentTimeMillis();
+            if (sPokeMeTime < (time - (30 * 1000))) { // thirty seconds?
+                sPokeMeTime = time;
+                LogHelper.w(TAG, "*** --->>> POKE-ME-NEEDED: getCurrentMusic: - not currently playable - sCurrentIndex=" + sCurrentIndex + " - return null");
+                LocalPlayback.pokeMeWakeMeShakeMe();
+            }
             return null;
         }
         LogHelper.v(TAG, "getCurrentMusic: sCurrentIndex="+sCurrentIndex+", size="+mPlayingQueue.size());
