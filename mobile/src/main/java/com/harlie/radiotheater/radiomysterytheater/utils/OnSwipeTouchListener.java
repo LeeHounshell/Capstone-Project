@@ -22,7 +22,13 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
     private Handler mHandler;
     private Drawable mNotPressedDrawable;
     private Drawable mPressedDrawable;
-    private boolean onLongPress;
+
+    private static volatile boolean onLongClick;
+    private static volatile boolean onDoubleClick;
+    private static volatile boolean onSwipeLeft;
+    private static volatile boolean onSwipeRight;
+    private static volatile boolean onSwipeUp;
+    private static volatile boolean onSwipeDown;
 
     public OnSwipeTouchListener(Context context, Handler handler, AppCompatButton button, Drawable pressed) {
         LogHelper.v(TAG, "OnSwipeTouchListener - BUTTON");
@@ -45,12 +51,18 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
     }
 
     public boolean onTouch(final View view, final MotionEvent motionEvent) {
-        LogHelper.v(TAG, "onTouch");
         boolean rc = mGestureDetectorCompat.onTouchEvent(motionEvent);
         if (mHandler != null) {
             switch (motionEvent.getAction()) {
                 case MotionEvent.ACTION_DOWN: {
-                    onLongPress = false;
+
+                    onLongClick = false;
+                    onDoubleClick = false;
+                    onSwipeLeft = false;
+                    onSwipeRight = false;
+                    onSwipeUp = false;
+                    onSwipeDown = false;
+
                     if (mPressedDrawable != null) {
                         mHandler.post(new Runnable() {
                             @Override
@@ -74,9 +86,29 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
                                 // put back the original button image
                                 mCompatButton.setBackgroundDrawable(mNotPressedDrawable);
                             }
-                            if (onLongPress) {
+                            if (onLongClick) {
                                 LogHelper.v(TAG, "onTouch - onLongClick");
                                 onLongClick(mNotPressedDrawable);
+                            }
+                            else if (onDoubleClick) {
+                                LogHelper.v(TAG, "onTouch - onDoubleClick");
+                                onDoubleClick();
+                            }
+                            else if (onSwipeRight) {
+                                LogHelper.v(TAG, "onTouch - SWIPE - onSwipeRight");
+                                onSwipeRight();
+                            }
+                            else if (onSwipeLeft) {
+                                LogHelper.v(TAG, "onTouch - SWIPE - onSwipeLeft");
+                                onSwipeLeft();
+                            }
+                            else if (onSwipeDown) {
+                                LogHelper.v(TAG, "onTouch - SWIPE - onSwipeDown");
+                                onSwipeDown();
+                            }
+                            else if (onSwipeUp) {
+                                LogHelper.v(TAG, "onTouch - SWIPE - onSwipeUp");
+                                onSwipeUp();
                             }
                             else {
                                 LogHelper.v(TAG, "onTouch - onClick");
@@ -87,7 +119,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
                     break;
                 }
                 case MotionEvent.ACTION_CANCEL: {
-                    onLongPress = false;
+                    onLongClick = false;
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -106,9 +138,10 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
     }
 
     private final class GestureListener extends GestureDetector.SimpleOnGestureListener {
+        private final String TAG = "LEE: <" + GestureListener.class.getSimpleName() + ">";
 
-        private static final int SWIPE_THRESHOLD = 200;
-        private static final int SWIPE_VELOCITY_THRESHOLD = 200;
+        private static final int SWIPE_THRESHOLD = 100;
+        private static final int SWIPE_VELOCITY_THRESHOLD = 100;
 
         @Override
         public boolean onDown(MotionEvent e) {
@@ -117,7 +150,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
         }
 
         @Override
-        public boolean onDoubleTap(MotionEvent e) {
+        public boolean onDoubleTap(MotionEvent e) { // FIXME
             LogHelper.v(TAG, "onDoubleTap");
             onDoubleClick();
             return super.onDoubleTap(e);
@@ -126,7 +159,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
         @Override
         public void onLongPress(MotionEvent e) {
             LogHelper.v(TAG, "onLongPress");
-            onLongPress = true;
+            onLongClick = true;
             super.onLongPress(e);
         }
 
@@ -162,24 +195,37 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
     }
 
     public void onSwipeRight() {
+        LogHelper.v(TAG, "onSwipeRight");
+        onSwipeRight = true;
     }
 
     public void onSwipeLeft() {
+        LogHelper.v(TAG, "onSwipeLeft");
+        onSwipeLeft = true;
     }
 
     public void onSwipeUp() {
+        LogHelper.v(TAG, "onSwipeUp");
+        onSwipeUp = true;
     }
 
     public void onSwipeDown() {
+        LogHelper.v(TAG, "onSwipeDown");
+        onSwipeDown = true;
     }
 
     public void onClick() {
+        LogHelper.v(TAG, "onClick");
     }
 
     public void onDoubleClick() {
+        LogHelper.v(TAG, "onDoubleClick");
+        onDoubleClick = true;
     }
 
     public void onLongClick(Drawable image) {
+        LogHelper.v(TAG, "onLongClick");
+        onLongClick = true;
     }
 
 }

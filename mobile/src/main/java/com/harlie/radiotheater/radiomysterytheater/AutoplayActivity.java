@@ -489,12 +489,12 @@ public class AutoplayActivity extends BaseActivity
             @Override
             public void onDoubleClick() {
                 LogHelper.v(TAG, "onDoubleClick");
-                if (mCurrentPosition > THIRTY_SECONDS) {
+                if (mCurrentPosition > (THIRTY_SECONDS * 2)) {
                     getHandler().post(new Runnable() {
                         @Override
                         public void run() {
                             if (getRadioMediaController() != null) {
-                                mCurrentPosition -= THIRTY_SECONDS;
+                                mCurrentPosition -= (THIRTY_SECONDS * 2); // back up one-minute
                                 getRadioMediaController().getTransportControls().seekTo(mCurrentPosition);
                             }
                         }
@@ -524,6 +524,73 @@ public class AutoplayActivity extends BaseActivity
                     }
                 });
             }
+
+            @Override
+            public void onSwipeRight() {
+                LogHelper.v(TAG, "onSwipeRight");
+                markEpisodeAsHeardAndIncrementPlayCount(getEpisodeNumber(), String.valueOf(getEpisodeNumber()), mCurrentPosition);
+                getHandler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (getRadioMediaController() != null) {
+                            LogHelper.v(TAG, "onSwipeRight: skipToNext");
+                            getRadioMediaController().getTransportControls().skipToNext();
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void onSwipeLeft() {
+                LogHelper.v(TAG, "onSwipeLeft");
+                getHandler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (getRadioMediaController() != null) {
+                            LogHelper.v(TAG, "onSwipeLeft: skipToPrevious");
+                            long episodeNumber = getEpisodeNumber();
+                            long maxEpisodeNumber = Long.valueOf(getResources().getString(R.string.episodes_count));
+                            if (episodeNumber == 1) {
+                                episodeNumber = maxEpisodeNumber;
+                            }
+                            else {
+                                episodeNumber -= 1;
+                            }
+                            markEpisodeAs_NOT_Heard(episodeNumber, String.valueOf(episodeNumber), 0);
+                            getRadioMediaController().getTransportControls().skipToPrevious();
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void onSwipeUp() {
+                LogHelper.v(TAG, "onSwipeUp");
+                getHandler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (getRadioMediaController() != null) {
+                            mCurrentPosition += THIRTY_SECONDS;
+                            getRadioMediaController().getTransportControls().seekTo(mCurrentPosition);
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void onSwipeDown() {
+                LogHelper.v(TAG, "onSwipeDown");
+                getHandler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (getRadioMediaController() != null) {
+                            mCurrentPosition -= THIRTY_SECONDS;
+                            getRadioMediaController().getTransportControls().seekTo(mCurrentPosition);
+                        }
+                    }
+                });
+            }
+
         });
 
         mFabActionButton = (FloatingActionButton) findViewById(R.id.fab);

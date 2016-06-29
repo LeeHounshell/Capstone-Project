@@ -1138,7 +1138,7 @@ public class BaseActivity extends AppCompatActivity {
         LogHelper.v(TAG, "markEpisodeAsHeardAndIncrementPlayCount: episodeNumber="+episodeNumber+", episodeIndex="+episodeIndex+", duration="+duration);
         boolean matchError = false;
         if (! String.valueOf(episodeNumber).equals(episodeIndex)) {
-            LogHelper.e(TAG, "The episodeNumber="+episodeNumber+" and episodeIndex "+episodeIndex+" DONT MATCH");
+            LogHelper.e(TAG, "markEpisodeAsHeardAndIncrementPlayCount: The episodeNumber="+episodeNumber+" and episodeIndex "+episodeIndex+" DONT MATCH");
             matchError = true;
         }
         // mark SQLite config episode as "HEARD" and increment "PLAY COUNT"
@@ -1150,7 +1150,27 @@ public class BaseActivity extends AppCompatActivity {
             ++listenCount;
             configEpisode.put(ConfigEpisodesEntry.FIELD_LISTEN_COUNT, listenCount);
             updateConfigEntryValues(episodeIndex, configEpisode);
-            LogHelper.d(TAG, "new LISTEN-COUNT="+listenCount+" FOR EPISODE "+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
+            LogHelper.d(TAG, "markEpisodeAsHeardAndIncrementPlayCount: new LISTEN-COUNT="+listenCount+" FOR EPISODE "+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
+        }
+        // FIXME: send Config record to Firebase for Episode Heard
+        // FIXME: send Config record to Firebase for Episode Play Count
+        // FIXME: send Analytics record to Firebase for Episode+Heard+Count
+    }
+
+    public void markEpisodeAs_NOT_Heard(long episodeNumber, String episodeIndex, long duration) {
+        LogHelper.v(TAG, "markEpisodeAs_NOT_Heard: episodeNumber="+episodeNumber+", episodeIndex="+episodeIndex+", duration="+duration);
+        boolean matchError = false;
+        if (! String.valueOf(episodeNumber).equals(episodeIndex)) {
+            LogHelper.e(TAG, "markEpisodeAs_NOT_Heard: The episodeNumber="+episodeNumber+" and episodeIndex "+episodeIndex+" DONT MATCH");
+            matchError = true;
+        }
+        // mark SQLite config episode as "HEARD" and increment "PLAY COUNT"
+        ConfigEpisodesContentValues existing = getConfigForEpisode(episodeIndex);
+        if (existing != null) {
+            ContentValues configEpisode = existing.values();
+            configEpisode.put(ConfigEpisodesEntry.FIELD_EPISODE_HEARD, false);
+            updateConfigEntryValues(episodeIndex, configEpisode);
+            LogHelper.d(TAG, "markEpisodeAs_NOT_Heard: FOR EPISODE "+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
         }
         // FIXME: send Config record to Firebase for Episode Heard
         // FIXME: send Config record to Firebase for Episode Play Count

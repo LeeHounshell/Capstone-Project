@@ -131,11 +131,16 @@ public class QueueManager {
 
     public boolean skipQueuePosition(int amount) {
         LogHelper.v(TAG, "skipQueuePosition: amount="+amount);
+        if (mPlayingQueue == null) {
+            LogHelper.v(TAG, "the mPlayingQueue is null - can't backup or advance yet.");
+            return false;
+        }
         int index = sCurrentIndex + amount;
         if (index < 0) {
             // skip backwards before the first song will keep you on the first song
             index = 0;
-        } else {
+        }
+        else if (mPlayingQueue.size() > 0) {
             // skip forwards when in last song will cycle back to start of the queue
             index %= mPlayingQueue.size();
         }
