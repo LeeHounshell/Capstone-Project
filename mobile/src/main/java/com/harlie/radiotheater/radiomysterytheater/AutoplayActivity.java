@@ -1178,7 +1178,7 @@ public class AutoplayActivity extends BaseActivity
             getAutoPlay().setEnabled(false);
             getFabActionButton().setEnabled(false);
         }
-        else if (sBeginLoading || LoadingAsyncTask.mLoadingNow || mAudioFocusRequstResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+        else if (sBeginLoading || LoadingAsyncTask.mLoadingNow) {
             LogHelper.v(TAG, "manage - WAIT UNTIL FINISHED");
             getAutoPlay().setEnabled(false);
             getFabActionButton().setEnabled(false);

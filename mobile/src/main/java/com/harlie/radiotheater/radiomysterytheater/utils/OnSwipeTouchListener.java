@@ -13,8 +13,13 @@ import android.support.v4.view.GestureDetectorCompat ;
 import android.view.MotionEvent;
 import android.view.View;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class OnSwipeTouchListener implements View.OnTouchListener {
     private final static String TAG = "LEE: <" + OnSwipeTouchListener.class.getSimpleName() + ">";
+
+    private final static long THREE_SECONDS = (3 * 1000);
 
     private GestureDetectorCompat mGestureDetectorCompat;
     private AppCompatButton mCompatButton;
@@ -22,6 +27,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
     private Handler mHandler;
     private Drawable mNotPressedDrawable;
     private Drawable mPressedDrawable;
+    private Timer mDownTimer = new Timer();
 
     private static volatile boolean onLongClick;
     private static volatile boolean onDoubleClick;
@@ -29,6 +35,9 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
     private static volatile boolean onSwipeRight;
     private static volatile boolean onSwipeUp;
     private static volatile boolean onSwipeDown;
+
+    private static volatile long sDownPressTime;
+    private static volatile boolean sIgnoreUpPressUntilDown;
 
     public OnSwipeTouchListener(Context context, Handler handler, AppCompatButton button, Drawable pressed) {
         LogHelper.v(TAG, "OnSwipeTouchListener - BUTTON");
@@ -54,15 +63,10 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
         boolean rc = mGestureDetectorCompat.onTouchEvent(motionEvent);
         if (mHandler != null) {
             switch (motionEvent.getAction()) {
+
                 case MotionEvent.ACTION_DOWN: {
-
-                    onLongClick = false;
-                    onDoubleClick = false;
-                    onSwipeLeft = false;
-                    onSwipeRight = false;
-                    onSwipeUp = false;
-                    onSwipeDown = false;
-
+                    sDownPressTime = System.currentTimeMillis();
+                    clearInput();
                     if (mPressedDrawable != null) {
                         mHandler.post(new Runnable() {
                             @Override
@@ -75,66 +79,107 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
                             }
                         });
                     }
+
+                    mDownTimer = new Timer();
+                    mDownTimer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            long time = System.currentTimeMillis();
+                            if (sDownPressTime < (time - THREE_SECONDS)) {
+                                sIgnoreUpPressUntilDown = true;
+                                clearInput();
+                                if (mHandler != null) {
+                                    mHandler.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            onActionUp(); // automatic ACTION_UP after 3 seconds and onClick()
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    }, THREE_SECONDS);
                     break;
                 }
+
                 case MotionEvent.ACTION_UP: {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            LogHelper.v(TAG, "onTouch - ACTION_UP");
-                            if (mCompatButton != null) {
-                                // put back the original button image
-                                mCompatButton.setBackgroundDrawable(mNotPressedDrawable);
-                            }
-                            if (onLongClick) {
-                                LogHelper.v(TAG, "onTouch - onLongClick");
-                                onLongClick(mNotPressedDrawable);
-                            }
-                            else if (onDoubleClick) {
-                                LogHelper.v(TAG, "onTouch - onDoubleClick");
-                                onDoubleClick();
-                            }
-                            else if (onSwipeRight) {
-                                LogHelper.v(TAG, "onTouch - SWIPE - onSwipeRight");
-                                onSwipeRight();
-                            }
-                            else if (onSwipeLeft) {
-                                LogHelper.v(TAG, "onTouch - SWIPE - onSwipeLeft");
-                                onSwipeLeft();
-                            }
-                            else if (onSwipeDown) {
-                                LogHelper.v(TAG, "onTouch - SWIPE - onSwipeDown");
-                                onSwipeDown();
-                            }
-                            else if (onSwipeUp) {
-                                LogHelper.v(TAG, "onTouch - SWIPE - onSwipeUp");
-                                onSwipeUp();
-                            }
-                            else {
-                                LogHelper.v(TAG, "onTouch - onClick");
-                                onClick();
-                            }
+                    mDownTimer.cancel();
+                    if (sIgnoreUpPressUntilDown) {
+                        sIgnoreUpPressUntilDown = false;
+                    }
+                    else {
+                        if (mHandler != null){
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    onActionUp();
+                                }
+                            });
                         }
-                    });
+                    }
                     break;
                 }
+
                 case MotionEvent.ACTION_CANCEL: {
+                    mDownTimer.cancel();
                     onLongClick = false;
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            LogHelper.v(TAG, "onTouch - ACTION_CANCEL");
-                            if (mCompatButton != null) {
-                                // put back the original button image
-                                mCompatButton.setBackgroundDrawable(mNotPressedDrawable);
+                    if (mHandler != null) {
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                LogHelper.v(TAG, "onTouch - ACTION_CANCEL");
+                                if (mCompatButton != null) {
+                                    // put back the original button image
+                                    mCompatButton.setBackgroundDrawable(mNotPressedDrawable);
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
                     break;
                 }
             }
         }
         return rc;
+    }
+
+    private void clearInput() {
+        onLongClick = false;
+        onDoubleClick = false;
+        onSwipeLeft = false;
+        onSwipeRight = false;
+        onSwipeUp = false;
+        onSwipeDown = false;
+    }
+
+    private void onActionUp() {
+        LogHelper.v(TAG, "onTouch - ACTION_UP");
+        if (mCompatButton != null) {
+            // put back the original button image
+            mCompatButton.setBackgroundDrawable(mNotPressedDrawable);
+            mCompatButton.setVisibility(View.VISIBLE);
+        }
+        if (onLongClick) {
+            LogHelper.v(TAG, "onTouch - onLongClick");
+            onLongClick(mNotPressedDrawable);
+        } else if (onDoubleClick) {
+            LogHelper.v(TAG, "onTouch - onDoubleClick");
+            onDoubleClick();
+        } else if (onSwipeRight) {
+            LogHelper.v(TAG, "onTouch - SWIPE - onSwipeRight");
+            onSwipeRight();
+        } else if (onSwipeLeft) {
+            LogHelper.v(TAG, "onTouch - SWIPE - onSwipeLeft");
+            onSwipeLeft();
+        } else if (onSwipeDown) {
+            LogHelper.v(TAG, "onTouch - SWIPE - onSwipeDown");
+            onSwipeDown();
+        } else if (onSwipeUp) {
+            LogHelper.v(TAG, "onTouch - SWIPE - onSwipeUp");
+            onSwipeUp();
+        } else {
+            LogHelper.v(TAG, "onTouch - onClick");
+            onClick();
+        }
     }
 
     private final class GestureListener extends GestureDetector.SimpleOnGestureListener {
