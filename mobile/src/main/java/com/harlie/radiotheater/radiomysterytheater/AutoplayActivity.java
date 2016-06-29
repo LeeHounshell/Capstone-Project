@@ -549,11 +549,7 @@ public class AutoplayActivity extends BaseActivity
                         if (getRadioMediaController() != null) {
                             LogHelper.v(TAG, "onSwipeLeft: skipToPrevious");
                             long episodeNumber = getEpisodeNumber();
-                            long maxEpisodeNumber = Long.valueOf(getResources().getString(R.string.episodes_count));
-                            if (episodeNumber == 1) {
-                                episodeNumber = maxEpisodeNumber;
-                            }
-                            else {
+                            if (episodeNumber >= 1) {
                                 episodeNumber -= 1;
                             }
                             markEpisodeAs_NOT_Heard(episodeNumber, String.valueOf(episodeNumber), 0);
