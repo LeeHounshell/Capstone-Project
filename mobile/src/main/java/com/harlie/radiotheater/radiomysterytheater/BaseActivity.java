@@ -21,6 +21,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import com.firebase.client.Config;
 import com.firebase.client.Firebase;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -42,6 +43,8 @@ import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesSelection;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadingAsyncTask;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
+import com.harlie.radiotheater.radiomysterytheater.firebase.FirebaseConfigEpisode;
 import com.harlie.radiotheater.radiomysterytheater.utils.CircleViewHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.NetworkHelper;
@@ -108,6 +111,7 @@ public class BaseActivity extends AppCompatActivity {
     private static int mCount;
 
     private String email;
+    private String uid;
     private String pass;
     private Boolean isPaid;
 
@@ -212,7 +216,10 @@ public class BaseActivity extends AppCompatActivity {
         }
     }
 
-    protected void changeRadioMysteryTheaterFirebaseAccount(String email, String pass) {
+    //
+    // FIREBASE COMMON USER AUTHENTICATION BLOCK
+    //
+    protected void changeRadioMysteryTheaterFirebaseAccount(final String email, String pass) {
         LogHelper.v(TAG, "changeRadioMysteryTheaterFirebaseAccount - Firebase Login using email="+email+", and password");
         if (mAuth != null && email != null && pass != null && isValid(email, pass)) {
             final BaseActivity activity = this;
@@ -230,6 +237,9 @@ public class BaseActivity extends AppCompatActivity {
                                 success = checkExceptionReason(task, activity);
                             }
                             if (success) {
+                                String uid = mAuth.getCurrentUser().getUid();
+                                setEmail(email);
+                                setUID(uid);
                                 startAutoplayActivity();
                             }
                             else {
@@ -280,7 +290,6 @@ public class BaseActivity extends AppCompatActivity {
 
     protected void userLoginSuccess() {
         LogHelper.v(TAG, "userLoginSuccess");
-        setEmail(getEmail()); // save email to shared pref if it is not already there
         String message = getResources().getString(R.string.successful);
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
@@ -325,6 +334,27 @@ public class BaseActivity extends AppCompatActivity {
         this.email = email;
     }
 
+    public String getUID() {
+        if (uid == null) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            uid = sharedPreferences.getString("userUID", "");
+            if (uid.length() == 0) {
+                uid = null;
+            }
+        }
+        return uid;
+    }
+
+    public void setUID(String uid) {
+        if (uid != null && uid.length() > 0) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("userUID", uid);
+            editor.apply();
+        }
+        this.uid = uid;
+    }
+
     public String getPass() {
         return pass;
     }
@@ -359,6 +389,7 @@ public class BaseActivity extends AppCompatActivity {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putString("authentication", getEmail());
+            editor.putString("uid", getUID());
             editor.apply();
 
             Intent autoplayIntent = new Intent(this, AutoplayActivity.class);
@@ -624,7 +655,7 @@ public class BaseActivity extends AppCompatActivity {
         final BaseActivity activity = this;
         // Attach a listener to read the data initially
         LogHelper.v(TAG, "*** FIREBASE REQUEST *** "+FIREBASE_WRITERS_URL);
-        mDatabase.child(FIREBASE_WRITERS_URL).addListenerForSingleValueEvent(new ValueEventListener() {
+        getDatabase().child(FIREBASE_WRITERS_URL).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
@@ -647,7 +678,7 @@ public class BaseActivity extends AppCompatActivity {
         final BaseActivity activity = this;
         // Attach a listener to read the data initially
         LogHelper.v(TAG, "*** FIREBASE REQUEST *** "+FIREBASE_ACTORS_URL);
-        activity.mDatabase.child(FIREBASE_ACTORS_URL).addListenerForSingleValueEvent(new ValueEventListener() {
+        activity.getDatabase().child(FIREBASE_ACTORS_URL).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
@@ -670,7 +701,7 @@ public class BaseActivity extends AppCompatActivity {
         final BaseActivity activity = this;
         // Attach a listener to read the data initially
         LogHelper.v(TAG, "*** FIREBASE REQUEST *** "+FIREBASE_SHOWS_URL);
-        activity.mDatabase.child(FIREBASE_SHOWS_URL).addListenerForSingleValueEvent(new ValueEventListener() {
+        activity.getDatabase().child(FIREBASE_SHOWS_URL).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
@@ -789,18 +820,41 @@ public class BaseActivity extends AppCompatActivity {
 
     public Uri insertConfigEntryValues(ContentValues configEntryValues) {
         LogHelper.v(TAG, "insertConfigEntryValues");
-        // FIXME: need to "update" Firebase record for this episode and user
         Uri configEntry = ConfigEpisodesEntry.buildConfigEpisodesUri();
         return this.getContentResolver().insert(configEntry, configEntryValues);
     }
 
+    // update local SQLite
     public int updateConfigEntryValues(String episode, ContentValues configEntryValues) {
         LogHelper.v(TAG, "updateConfigEntryValues");
-        // FIXME: need to "update" Firebase record for this episode and user
         Uri configEntry = ConfigEpisodesEntry.buildConfigEpisodesUri();
         String whereClause = ConfigEpisodesEntry.FIELD_EPISODE_NUMBER + "=?";
         String whereCondition[] = new String[]{episode};
-        return this.getContentResolver().update(configEntry, configEntryValues, whereClause, whereCondition);
+        int rc = this.getContentResolver().update(configEntry, configEntryValues, whereClause, whereCondition);
+        return rc;
+    }
+
+    // update Firebase
+    public void updateFirebaseConfigEntryValues(String episode, ContentValues configEntryValues, long duration) {
+        String  email = getEmail();
+        String  episode_number = configEntryValues.getAsString(ConfigEpisodesColumns.FIELD_EPISODE_NUMBER);
+        Boolean purchased_access = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_PURCHASED_ACCESS);
+        Boolean purchased_noads = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_PURCHASED_NOADS);
+        Boolean episode_downloaded = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_EPISODE_DOWNLOADED);
+        Boolean episode_heard = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_EPISODE_HEARD);
+        Long    episode_count = configEntryValues.getAsLong(ConfigEpisodesColumns.FIELD_LISTEN_COUNT);
+        Long    listen_duration = new Long(duration);
+        FirebaseConfigEpisode firebaseConfigEpisode = new FirebaseConfigEpisode(
+                email,
+                episode_number,
+                purchased_access,
+                purchased_noads,
+                episode_downloaded,
+                episode_heard,
+                episode_count,
+                listen_duration
+        );
+        firebaseConfigEpisode.commit(getDatabase(), getUID());
     }
 
     /*
@@ -1141,7 +1195,8 @@ public class BaseActivity extends AppCompatActivity {
             LogHelper.e(TAG, "markEpisodeAsHeardAndIncrementPlayCount: The episodeNumber="+episodeNumber+" and episodeIndex "+episodeIndex+" DONT MATCH");
             matchError = true;
         }
-        // mark SQLite config episode as "HEARD" and increment "PLAY COUNT"
+
+        // UPDATE SQLITE - mark SQLite config episode as "HEARD" and increment "PLAY COUNT" - Also send record to Firebase
         ConfigEpisodesContentValues existing = getConfigForEpisode(episodeIndex);
         if (existing != null) {
             ContentValues configEpisode = existing.values();
@@ -1150,10 +1205,13 @@ public class BaseActivity extends AppCompatActivity {
             ++listenCount;
             configEpisode.put(ConfigEpisodesEntry.FIELD_LISTEN_COUNT, listenCount);
             updateConfigEntryValues(episodeIndex, configEpisode);
-            LogHelper.d(TAG, "markEpisodeAsHeardAndIncrementPlayCount: new LISTEN-COUNT="+listenCount+" FOR EPISODE "+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
+            updateFirebaseConfigEntryValues(episodeIndex, configEpisode, duration);
+            LogHelper.d(TAG, "markEpisodeAsHeardAndIncrementPlayCount: new LISTEN-COUNT="+listenCount+" for Episode "+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
         }
-        // FIXME: send Config record to Firebase for Episode Heard
-        // FIXME: send Config record to Firebase for Episode Play Count
+        else {
+            LogHelper.e(TAG, "*** SQLITE FAILURE - unable to getConfigForEpisode="+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
+        }
+
         // FIXME: send Analytics record to Firebase for Episode+Heard+Count
     }
 
@@ -1164,16 +1222,20 @@ public class BaseActivity extends AppCompatActivity {
             LogHelper.e(TAG, "markEpisodeAs_NOT_Heard: The episodeNumber="+episodeNumber+" and episodeIndex "+episodeIndex+" DONT MATCH");
             matchError = true;
         }
-        // mark SQLite config episode as "HEARD" and increment "PLAY COUNT"
+
+        // UPDATE SQLITE - mark SQLite config episode as "NOT HEARD" - Also send record to Firebase
         ConfigEpisodesContentValues existing = getConfigForEpisode(episodeIndex);
         if (existing != null) {
             ContentValues configEpisode = existing.values();
             configEpisode.put(ConfigEpisodesEntry.FIELD_EPISODE_HEARD, false);
             updateConfigEntryValues(episodeIndex, configEpisode);
-            LogHelper.d(TAG, "markEpisodeAs_NOT_Heard: FOR EPISODE "+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
+            updateFirebaseConfigEntryValues(episodeIndex, configEpisode, duration);
+            LogHelper.d(TAG, "markEpisodeAs_NOT_Heard: for Episode "+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
         }
-        // FIXME: send Config record to Firebase for Episode Heard
-        // FIXME: send Config record to Firebase for Episode Play Count
+        else {
+            LogHelper.e(TAG, "*** SQLITE FAILURE - unable to getConfigForEpisode="+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
+        }
+
         // FIXME: send Analytics record to Firebase for Episode+Heard+Count
     }
 

@@ -139,17 +139,13 @@ dependencies {
 
     compile 'com.google.firebase:firebase-core:9.0.2'
     compile 'com.google.firebase:firebase-database:9.0.2'
-    compile 'com.google.firebase:firebase-crash:9.0.2'
     compile 'com.google.firebase:firebase-auth:9.0.2'
-    compile 'com.google.firebase:firebase-config:9.0.2'
     compile 'com.firebase:firebase-client-android:2.5.2+'
     compile 'com.firebaseui:firebase-ui:0.4.0'
 
     compile 'com.google.android.gms:play-services-cast:9.0.2'
     compile 'com.google.android.gms:play-services-auth:9.0.2'
-    compile 'com.google.android.gms:play-services-gcm:9.0.2'
     compile 'com.google.android.gms:play-services-plus:9.0.2'
-    compile 'com.google.android.gms:play-services-appindexing:9.0.2'
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.android.support:support-v4:23.4.0'
     compile 'com.android.support:recyclerview-v7:23.4.0'
@@ -158,7 +154,6 @@ dependencies {
     compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha1'
 
     freeCompile 'com.google.firebase:firebase-ads:9.0.2'
-    freeCompile 'com.google.android.gms:play-services-ads:9.0.2'
 
     compile 'com.github.jakob-grabner:Circle-Progress-View:v1.2.9'
     compile 'org.immutables:gson:2.2.6'
@@ -168,7 +163,6 @@ dependencies {
 
     compile 'com.google.android.support:wearable:1.4.0'
     compile 'com.android.support:mediarouter-v7:23.4.0'
-    compile 'com.android.support:leanback-v17:23.4.0'
     compile 'com.google.android.libraries.cast.companionlibrary:ccl:2.8.1'
 
     testCompile 'junit:junit:4.12'

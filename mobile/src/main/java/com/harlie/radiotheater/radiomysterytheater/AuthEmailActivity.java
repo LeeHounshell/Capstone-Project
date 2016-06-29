@@ -61,6 +61,7 @@ public class AuthEmailActivity extends BaseActivity
         }
 
         setEmail(null);
+        setUID(null);
         setPass(null);
         boolean found_login_info = true;
         if (intent.hasExtra("email")) {
@@ -97,6 +98,12 @@ public class AuthEmailActivity extends BaseActivity
                         boolean success = task.isSuccessful();
                         if (!success) {
                             success = checkExceptionReason(task, activity);
+                        }
+                        if (success) {
+                            if (getUID() == null) {
+                                String uid = mAuth.getCurrentUser().getUid();
+                                setUID(uid);
+                            }
                         }
                         handleAuthenticationRequestResult(success);
                     }

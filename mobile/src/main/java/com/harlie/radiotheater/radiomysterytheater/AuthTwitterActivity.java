@@ -121,7 +121,6 @@ public class AuthTwitterActivity extends BaseActivity
                             userLoginFailed();
                         }
                         else {
-                            userLoginSuccess();
                             handleAuthenticationRequestResult(success);
                         }
                     }

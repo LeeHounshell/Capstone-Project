@@ -34,6 +34,7 @@ public class AuthenticationActivity extends BaseActivity
         // first see if Authentication is even needed..
         if (getAuth() != null && getAuth().getCurrentUser() != null && getAuth().getCurrentUser().getEmail() != null && ! doINeedToCreateADatabase()) {
             setEmail(getAuth().getCurrentUser().getEmail());
+            setUID(getAuth().getCurrentUser().getUid());
             LogHelper.v(TAG, "--> Firebase: user=" + getAuth().getCurrentUser().getDisplayName() + " already signed in with email="+getEmail());
             startAutoplayActivity();
             return;
