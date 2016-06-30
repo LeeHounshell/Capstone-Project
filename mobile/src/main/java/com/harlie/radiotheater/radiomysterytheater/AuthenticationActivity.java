@@ -71,6 +71,7 @@ public class AuthenticationActivity extends BaseActivity
             authEmailIntent.putExtra("pass", pass);
             authEmailIntent.putExtra("DO_AUTH", true);
             Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
+            trackSignupAttemptWithFirebaseAnalytics("email");
             startActivity(authEmailIntent, bundle);
             finish();
         }
@@ -86,6 +87,7 @@ public class AuthenticationActivity extends BaseActivity
         Intent authGoogleIntent = new Intent(this, AuthGoogleActivity.class);
         authGoogleIntent.putExtra("DO_AUTH", true);
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
+        trackSignupAttemptWithFirebaseAnalytics("google");
         startActivity(authGoogleIntent, bundle);
         finish();
     }
@@ -96,6 +98,7 @@ public class AuthenticationActivity extends BaseActivity
         Intent authTwitterIntent = new Intent(this, AuthTwitterActivity.class);
         authTwitterIntent.putExtra("DO_AUTH", true);
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
+        trackSignupAttemptWithFirebaseAnalytics("twitter");
         startActivity(authTwitterIntent, bundle);
         finish();
     }
@@ -106,6 +109,7 @@ public class AuthenticationActivity extends BaseActivity
         Intent authFacebookIntent = new Intent(this, AuthFacebookActivity.class);
         authFacebookIntent.putExtra("DO_AUTH", true);
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
+        trackSignupAttemptWithFirebaseAnalytics("facebook");
         startActivity(authFacebookIntent, bundle);
         finish();
     }

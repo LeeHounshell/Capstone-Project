@@ -393,6 +393,7 @@ public class AutoplayActivity extends BaseActivity
         alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
+                        trackWithFirebaseAnalytics("ALL-EPISODES", 0, "EVERYTHING HEARD");
                         dialog.dismiss();
                     }
                 });
@@ -408,6 +409,7 @@ public class AutoplayActivity extends BaseActivity
         alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
+                        trackWithFirebaseAnalytics(String.valueOf(mEpisodeNumber), mCurrentPosition, "load metadata failed");
                         dialog.dismiss();
                     }
                 });
@@ -423,6 +425,7 @@ public class AutoplayActivity extends BaseActivity
         alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
+                        trackWithFirebaseAnalytics(String.valueOf(mEpisodeNumber), mCurrentPosition, "playback failed");
                         dialog.dismiss();
                     }
                 });
@@ -598,6 +601,7 @@ public class AutoplayActivity extends BaseActivity
                 public void onClick() {
                     if (!getCircularSeekBar().isProcessingTouchEvents() && !sSeeking) {
                         LogHelper.v(TAG, "onClick - mFabActionButton");
+                        trackWithFirebaseAnalytics(String.valueOf(mEpisodeNumber), mCurrentPosition, "BROWSE PLAYLIST");
                         Intent episodeListIntent = new Intent(activity, EpisodeListActivity.class);
                         Bundle playInfo = new Bundle();
                         savePlayInfoToBundle(playInfo);
@@ -747,6 +751,7 @@ public class AutoplayActivity extends BaseActivity
                         if (controls != null) {
                             LogHelper.v(TAG, "controls.play();");
                             controls.play();
+                            trackWithFirebaseAnalytics(String.valueOf(mEpisodeNumber), 0, "PLAY "+mEpisodeTitle);
                         }
                         setAutoplayState(AutoplayState.PLAYING, "playPauseEpisode - PLAYING");
                     }
@@ -811,6 +816,7 @@ public class AutoplayActivity extends BaseActivity
         switch (item.getItemId()) {
             case R.id.search: {
                 // FIXME: voice search
+                trackSearchWithFirebaseAnalytics();
                 return true;
             }
             case R.id.settings: {
@@ -818,6 +824,7 @@ public class AutoplayActivity extends BaseActivity
                 Bundle playInfo = new Bundle();
                 savePlayInfoToBundle(playInfo);
                 intent.putExtras(playInfo);
+                trackSettingsWithFirebaseAnalytics();
                 startActivity(intent);
                 return true;
             }
@@ -826,6 +833,7 @@ public class AutoplayActivity extends BaseActivity
                 Bundle playInfo = new Bundle();
                 savePlayInfoToBundle(playInfo);
                 intent.putExtras(playInfo);
+                trackAboutWithFirebaseAnalytics();
                 startActivity(intent);
                 return true;
             }

@@ -104,6 +104,7 @@ public class AuthEmailActivity extends BaseActivity
                                 String uid = mAuth.getCurrentUser().getUid();
                                 setUID(uid);
                             }
+                            trackLoginWithFirebaseAnalytics();
                         }
                         handleAuthenticationRequestResult(success);
                     }

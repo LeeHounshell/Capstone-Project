@@ -180,12 +180,7 @@ public class QueueManager {
     public MediaSessionCompat.QueueItem getCurrentMusic() {
         setCurrentIndexFromEpisodeId();
         if (!isIndexPlayable(sCurrentIndex, mPlayingQueue)) {
-            long time = System.currentTimeMillis();
-            if (sPokeMeTime < (time - (30 * 1000))) { // thirty seconds?
-                sPokeMeTime = time;
-                LogHelper.w(TAG, "*** --->>> POKE-ME-NEEDED: getCurrentMusic: - not currently playable - sCurrentIndex=" + sCurrentIndex + " - return null");
-                LocalPlayback.pokeMeWakeMeShakeMe();
-            }
+            possiblePokeMe();
             return null;
         }
         LogHelper.v(TAG, "getCurrentMusic: sCurrentIndex="+sCurrentIndex+", size="+mPlayingQueue.size());
@@ -195,9 +190,20 @@ public class QueueManager {
         }
         else if (mPlayingQueue.size() == 0) {
             LogHelper.v(TAG, "*** THE PLAYING QUEUE IS EMPTY ***");
+            possiblePokeMe();
             return null;
         }
         return mPlayingQueue.get(sCurrentIndex);
+    }
+
+    //-------- RADIO THEATER --------
+    private void possiblePokeMe() {
+        long time = System.currentTimeMillis();
+        if (sPokeMeTime < (time - (19 * 1000))) { // nineteen seconds?
+            sPokeMeTime = time;
+            LogHelper.w(TAG, "*** --->>> POKE-ME-NEEDED: getCurrentMusic: - not currently playable - sCurrentIndex=" + sCurrentIndex + " - return null");
+            LocalPlayback.pokeMeWakeMeShakeMe();
+        }
     }
 
     //-------- RADIO THEATER --------
@@ -209,11 +215,13 @@ public class QueueManager {
         Iterable<MediaMetadataCompat> title_list = mMusicProvider.searchMusicBySongTitle(title);
         if (title_list == null) {
             LogHelper.e(TAG, "could not locate media for title: ", title);
+            possiblePokeMe();
             return null;
         }
         Iterator<MediaMetadataCompat> tracks = title_list.iterator();
         if (! tracks.hasNext()) {
             LogHelper.e(TAG, "no media for title: ", title);
+            possiblePokeMe();
             return null;
         }
         MediaMetadataCompat theMedia = tracks.next();

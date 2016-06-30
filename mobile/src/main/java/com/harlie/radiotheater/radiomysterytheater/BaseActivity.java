@@ -21,13 +21,12 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import com.firebase.client.Config;
 import com.firebase.client.Firebase;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.api.model.StringList;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -43,7 +42,6 @@ import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesSelection;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadingAsyncTask;
-import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 import com.harlie.radiotheater.radiomysterytheater.firebase.FirebaseConfigEpisode;
 import com.harlie.radiotheater.radiomysterytheater.utils.CircleViewHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
@@ -104,6 +102,7 @@ public class BaseActivity extends AppCompatActivity {
     protected FirebaseAuth mAuth;
     protected Firebase mFirebase;
     protected DatabaseReference mDatabase;
+    protected FirebaseAnalytics mFirebaseAnalytics;
     protected Handler mHandler;
     protected View mRootView;
     protected CircleProgressView mCircleView;
@@ -134,6 +133,7 @@ public class BaseActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         mFirebase = new Firebase("https://radio-mystery-theater.firebaseio.com");
         mDatabase = FirebaseDatabase.getInstance().getReference();
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
     }
 
     @Override
@@ -240,6 +240,7 @@ public class BaseActivity extends AppCompatActivity {
                                 String uid = mAuth.getCurrentUser().getUid();
                                 setEmail(email);
                                 setUID(uid);
+                                trackSignupWithFirebaseAnalytics();
                                 startAutoplayActivity();
                             }
                             else {
@@ -1198,10 +1199,11 @@ public class BaseActivity extends AppCompatActivity {
 
         // UPDATE SQLITE - mark SQLite config episode as "HEARD" and increment "PLAY COUNT" - Also send record to Firebase
         ConfigEpisodesContentValues existing = getConfigForEpisode(episodeIndex);
+        long listenCount = 0;
         if (existing != null) {
             ContentValues configEpisode = existing.values();
             configEpisode.put(ConfigEpisodesEntry.FIELD_EPISODE_HEARD, true);
-            long listenCount = configEpisode.getAsLong(ConfigEpisodesColumns.FIELD_LISTEN_COUNT);
+            listenCount = configEpisode.getAsLong(ConfigEpisodesColumns.FIELD_LISTEN_COUNT);
             ++listenCount;
             configEpisode.put(ConfigEpisodesEntry.FIELD_LISTEN_COUNT, listenCount);
             updateConfigEntryValues(episodeIndex, configEpisode);
@@ -1212,7 +1214,8 @@ public class BaseActivity extends AppCompatActivity {
             LogHelper.e(TAG, "*** SQLITE FAILURE - unable to getConfigForEpisode="+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
         }
 
-        // FIXME: send Analytics record to Firebase for Episode+Heard+Count
+        // send Analytics record to Firebase for Episode+Heard+Count
+        trackWithFirebaseAnalytics(episodeIndex, duration, "mark HEARD + playcount="+listenCount);
     }
 
     public void markEpisodeAs_NOT_Heard(long episodeNumber, String episodeIndex, long duration) {
@@ -1236,7 +1239,76 @@ public class BaseActivity extends AppCompatActivity {
             LogHelper.e(TAG, "*** SQLITE FAILURE - unable to getConfigForEpisode="+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
         }
 
-        // FIXME: send Analytics record to Firebase for Episode+Heard+Count
+        // send Analytics record to Firebase for Episode+Heard+Count
+        trackWithFirebaseAnalytics(episodeIndex, duration, "mark NOT HEARD");
+    }
+
+    protected void trackWithFirebaseAnalytics(String episodeIndex, long duration, String comment) {
+        if (mFirebaseAnalytics != null) {
+            LogHelper.v(TAG, "ANALYTICS: trackWithFirebaseAnalytics: episode="+episodeIndex+", duration="+duration+", comment="+comment);
+            Bundle bundle = new Bundle();
+            bundle.putString(FirebaseAnalytics.Param.ITEM_ID, episodeIndex);
+            bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, mEpisodeTitle);
+            bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "audio");
+            bundle.putString("episode", episodeIndex);
+            bundle.putString("user_action", comment);
+            bundle.putLong("listen_duration", duration);
+            mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+        }
+    }
+
+    protected void trackSignupAttemptWithFirebaseAnalytics(String signup_using) {
+        if (mFirebaseAnalytics != null) {
+            LogHelper.v(TAG, "ANALYTICS: trackSignupAttemptWithFirebaseAnalytics signup_using="+signup_using);
+            Bundle bundle = new Bundle();
+            bundle.putString("using", signup_using);
+            mFirebaseAnalytics.logEvent("signup_method", bundle);
+        }
+    }
+
+    protected void trackSignupWithFirebaseAnalytics() {
+        if (mFirebaseAnalytics != null) {
+            LogHelper.v(TAG, "ANALYTICS: trackSignupWithFirebaseAnalytics email="+getEmail());
+            Bundle bundle = new Bundle();
+            bundle.putString("user", getEmail());
+            mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SIGN_UP, bundle);
+        }
+    }
+
+    protected void trackLoginWithFirebaseAnalytics() {
+        if (mFirebaseAnalytics != null) {
+            LogHelper.v(TAG, "ANALYTICS: trackLoginWithFirebaseAnalytics email="+getEmail());
+            Bundle bundle = new Bundle();
+            bundle.putString("user", getEmail());
+            mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN, bundle);
+        }
+    }
+
+    protected void trackSearchWithFirebaseAnalytics() {
+        if (mFirebaseAnalytics != null) {
+            LogHelper.v(TAG, "ANALYTICS: trackSearchWithFirebaseAnalytics email="+getEmail());
+            Bundle bundle = new Bundle();
+            bundle.putString("user", getEmail());
+            mFirebaseAnalytics.logEvent("do_search", bundle);
+        }
+    }
+
+    protected void trackSettingsWithFirebaseAnalytics() {
+        if (mFirebaseAnalytics != null) {
+            LogHelper.v(TAG, "ANALYTICS: trackSettingsWithFirebaseAnalytics email="+getEmail());
+            Bundle bundle = new Bundle();
+            bundle.putString("user", getEmail());
+            mFirebaseAnalytics.logEvent("do_settings", bundle);
+        }
+    }
+
+    protected void trackAboutWithFirebaseAnalytics() {
+        if (mFirebaseAnalytics != null) {
+            LogHelper.v(TAG, "ANALYTICS: trackAboutWithFirebaseAnalytics email="+getEmail());
+            Bundle bundle = new Bundle();
+            bundle.putString("user", getEmail());
+            mFirebaseAnalytics.logEvent("do_about", bundle);
+        }
     }
 
 }
