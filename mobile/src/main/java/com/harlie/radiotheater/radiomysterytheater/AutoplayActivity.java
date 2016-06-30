@@ -36,9 +36,9 @@ import android.view.View;
 import android.widget.FrameLayout;
 
 //#IFDEF 'FREE'
-//import com.google.android.gms.ads.AdRequest;
-//import com.google.android.gms.ads.AdView;
-//import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
 //#ENDIF
 
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
@@ -687,18 +687,18 @@ public class AutoplayActivity extends BaseActivity
 
         // initialize AdMob - note this code uses the Gradle #IFDEF / #ENDIF gradle preprocessor
         //#IFDEF 'FREE'
-        //String banner_ad_unit_id = getResources().getString(R.string.banner_ad_unit_id);
-        //MobileAds.initialize(getApplicationContext(), banner_ad_unit_id);
+        String banner_ad_unit_id = getResources().getString(R.string.banner_ad_unit_id);
+        MobileAds.initialize(getApplicationContext(), banner_ad_unit_id);
 
-        //final TelephonyManager tm =(TelephonyManager)getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
+        final TelephonyManager tm =(TelephonyManager)getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
 
-        //AdView mAdView = (AdView) findViewById(R.id.adView);
-        //AdRequest adRequest = new AdRequest.Builder()
-                //.addTestDevice(AdRequest.DEVICE_ID_EMULATOR)        // All emulators
-                //.addTestDevice(getResources().getString(R.string.test_device1))
-                //.addTestDevice(getResources().getString(R.string.test_device2))
-                //.build();
-        //mAdView.loadAd(adRequest);
+        AdView mAdView = (AdView) findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder()
+                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)        // All emulators
+                .addTestDevice(getResources().getString(R.string.test_device1))
+                .addTestDevice(getResources().getString(R.string.test_device2))
+                .build();
+        mAdView.loadAd(adRequest);
         //#ENDIF
 
         sLoadingScreenEnabled = true;
@@ -1109,7 +1109,7 @@ public class AutoplayActivity extends BaseActivity
                 else if (message.length() > KEY_POKE_ME.length() && message.substring(0, KEY_POKE_ME.length()).equals(KEY_POKE_ME)) {
                     String episodeIndex = message.substring(KEY_POKE_ME.length(), message.length());
                     LogHelper.v(TAG,  "*** RECEIVED BROADCAST: !!! POKE-ME !!! for EPISODE "+episodeIndex);
-                    if (sLoadedOK && getRadioMediaController() != null) {
+                    if (sLoadedOK) {
                         if (getRadioMediaController() != null) {
                             PlaybackStateCompat playbackState = getRadioMediaController().getPlaybackState();
                             if (playbackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
