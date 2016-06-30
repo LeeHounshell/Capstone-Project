@@ -221,12 +221,6 @@ public class QueueManager {
         Iterator<MediaMetadataCompat> tracks = title_list.iterator();
         if (! tracks.hasNext()) {
             LogHelper.e(TAG, "POKE: no media for title: ", title);
-            try {
-                Thread.sleep(5);
-            } catch (Exception e) {
-                LogHelper.w(TAG, "POKE: problem waiting for play e=" + e);
-            }
-            sPokeMeTime = 0; // force POKE
             possiblePokeMe();
             return null;
         }
