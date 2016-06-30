@@ -180,7 +180,7 @@ public class QueueManager {
     public MediaSessionCompat.QueueItem getCurrentMusic() {
         setCurrentIndexFromEpisodeId();
         if (!isIndexPlayable(sCurrentIndex, mPlayingQueue)) {
-            possiblePokeMe();
+            LogHelper.v(TAG, "---> !isIndexPlayable(sCurrentIndex="+sCurrentIndex+", mPlayingQueue)");
             return null;
         }
         LogHelper.v(TAG, "getCurrentMusic: sCurrentIndex="+sCurrentIndex+", size="+mPlayingQueue.size());
@@ -214,13 +214,13 @@ public class QueueManager {
         String title = getTitleAndDownloadUrlForEpisode(episodeId); // this also sets mDownloadUrl - needed below or else NPE
         Iterable<MediaMetadataCompat> title_list = mMusicProvider.searchMusicBySongTitle(title);
         if (title_list == null) {
-            LogHelper.e(TAG, "could not locate media for title: ", title);
+            LogHelper.e(TAG, "POKE: could not locate media for title: ", title);
             possiblePokeMe();
             return null;
         }
         Iterator<MediaMetadataCompat> tracks = title_list.iterator();
         if (! tracks.hasNext()) {
-            LogHelper.e(TAG, "no media for title: ", title);
+            LogHelper.e(TAG, "POKE: no media for title: ", title);
             possiblePokeMe();
             return null;
         }

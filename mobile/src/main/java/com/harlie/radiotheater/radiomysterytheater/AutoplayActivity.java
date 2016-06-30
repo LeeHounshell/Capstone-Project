@@ -96,6 +96,7 @@ public class AutoplayActivity extends BaseActivity
     private static volatile boolean sLoadingScreenEnabled;
     private static volatile boolean sBeginLoading;
     private static volatile boolean sSeekUpdateRunning;
+    private static volatile boolean sAutoplayNextNow;
 
     private final ScheduledExecutorService mExecutorService =
             Executors.newSingleThreadScheduledExecutor();
@@ -136,7 +137,9 @@ public class AutoplayActivity extends BaseActivity
             public void onAudioFocusChange(int focusChange) {
                 LogHelper.v(TAG, "===> onAudioFocusChange="+focusChange+" <===");
                 MediaControllerCompat.TransportControls controls = null;
+                PlaybackStateCompat playbackState = null;
                 if (getRadioMediaController() != null) {
+                    playbackState = getRadioMediaController().getPlaybackState();
                     controls = getRadioMediaController().getTransportControls();
                 }
                 if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
@@ -146,7 +149,7 @@ public class AutoplayActivity extends BaseActivity
                 else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
                     LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_LOSS <<---");
                     mAudioFocusRequstResult = 0;
-                    if (controls != null) {
+                    if (controls != null && playbackState != null && playbackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
                         controls.stop();
                     }
                     setAutoplayState(AutoplayState.READY2PLAY, "onAudioFocusChange - READY2PLAY");
@@ -155,14 +158,16 @@ public class AutoplayActivity extends BaseActivity
                 else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
                     LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_LOSS_TRANSIENT <<---");
                     mAudioFocusRequstResult = 0;
-                    if (controls != null) {
+                    if (controls != null && playbackState != null && playbackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
+                        LogHelper.v(TAG, "AUDIOFOCUS_LOSS_TRANSIENT: controls.pause();");
                         controls.pause();
                     }
                 }
                 else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
                     LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK <<---");
                     mAudioFocusRequstResult = 0;
-                    if (controls != null) {
+                    if (controls != null && playbackState != null && playbackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
+                        LogHelper.v(TAG, "AUDIOFOCUS_LOSS_CAN_DUCK: controls.pause();");
                         controls.pause();
                     }
                 }
@@ -247,6 +252,17 @@ public class AutoplayActivity extends BaseActivity
                             setAutoplayState(AutoplayState.PLAYING, "onPlaybackChanged - PLAYING");
                             sSeeking = false;
                             sBeginLoading = false;
+                            break;
+                        }
+                        case PlaybackStateCompat.STATE_SKIPPING_TO_NEXT:
+                        case PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS: {
+                            LogHelper.d(TAG, "MediaControllerCompat.Callback onPlaybackStateChanged STATE_SKIPPING <<<---------");
+                            getHandler().post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    getAutoPlay().setVisibility(View.INVISIBLE);
+                                }
+                            });
                             break;
                         }
                         case PlaybackStateCompat.STATE_BUFFERING: {
@@ -490,7 +506,7 @@ public class AutoplayActivity extends BaseActivity
             }
 
             @Override
-            public void onDoubleClick() {
+            public void onDoubleClick() { // FIXME
                 LogHelper.v(TAG, "onDoubleClick");
                 if (mCurrentPosition > (THIRTY_SECONDS * 2)) {
                     getHandler().post(new Runnable() {
@@ -508,10 +524,12 @@ public class AutoplayActivity extends BaseActivity
             @Override
             public void onLongClick(final Drawable buttonImage) {
                 LogHelper.v(TAG, "onLongClick");
-                MediaControllerCompat.TransportControls controls = null;
                 if (getRadioMediaController() != null) {
-                    controls = getRadioMediaController().getTransportControls();
-                    controls.stop();
+                    PlaybackStateCompat playbackState = getRadioMediaController().getPlaybackState();
+                    if (playbackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
+                        MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
+                        controls.stop();
+                    }
                 }
                 getHandler().post(new Runnable() {
                     @Override
@@ -563,7 +581,7 @@ public class AutoplayActivity extends BaseActivity
             }
 
             @Override
-            public void onSwipeUp() {
+            public void onSwipeUp() { // FIXME
                 LogHelper.v(TAG, "onSwipeUp");
                 getHandler().post(new Runnable() {
                     @Override
@@ -577,7 +595,7 @@ public class AutoplayActivity extends BaseActivity
             }
 
             @Override
-            public void onSwipeDown() {
+            public void onSwipeDown() { // FIXME
                 LogHelper.v(TAG, "onSwipeDown");
                 getHandler().post(new Runnable() {
                     @Override
@@ -718,27 +736,40 @@ public class AutoplayActivity extends BaseActivity
             lastPlaybackState = getRadioMediaController().getPlaybackState();
             LogHelper.v(TAG, "playPauseEpisode: lastPlaybackState=" + lastPlaybackState.getState());
             switch (lastPlaybackState.getState()) {
-                case PlaybackStateCompat.STATE_BUFFERING:
-                case PlaybackStateCompat.STATE_PLAYING: {
+                case PlaybackStateCompat.STATE_BUFFERING: {
+                    LogHelper.v(TAG, "STATE_BUFFERING");
                     if (controls != null) {
-                        LogHelper.v(TAG, "controls.pause();");
+                        LogHelper.v(TAG, "STATE_BUFFERING - kickstart? do controls.play();");
+                        controls.play();
+                    }
+                    break;
+                }
+                case PlaybackStateCompat.STATE_PLAYING: {
+                    LogHelper.v(TAG, "STATE_PLAYING");
+                    if (controls != null) {
+                        LogHelper.v(TAG, "STATE_PLAYING - so do controls.pause();");
                         controls.pause();
                     }
                     setAutoplayState(AutoplayState.PAUSED, "playPauseEpisode - PAUSED");
                     break;
                 }
-                case PlaybackStateCompat.STATE_PAUSED:
+                case PlaybackStateCompat.STATE_PAUSED: {
+                    LogHelper.v(TAG, "STATE_PAUSED");
+                    break;
+                }
                 case PlaybackStateCompat.STATE_STOPPED: {
-                    if (controls != null) {
-                        LogHelper.v(TAG, "controls.play();");
-                        controls.play();
-                    }
-                    setAutoplayState(AutoplayState.PLAYING, "playPauseEpisode - PLAYING");
+                    LogHelper.v(TAG, "STATE_STOPPED");
+//                    if (controls != null) {
+//                        LogHelper.v(TAG, "playPauseEpisode: controls.play();");
+//                        controls.play();
+//                    }
+//                    setAutoplayState(AutoplayState.PLAYING, "playPauseEpisode - PLAYING");
                     break;
                 }
                 default: {
+                    LogHelper.v(TAG, "STATE DEFAULT");
                     if (mAutoplayState == AutoplayState.LOADING) {
-                        LogHelper.v(TAG, "setup for auto-playing..");
+                        LogHelper.v(TAG, "playPauseEpisode: setup for auto-playing..");
                         loadingScreen();
                         mMediaId = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.genre);
                         LogHelper.d(TAG, "*** INITIALIZE PLAYBACK *** state=" + lastPlaybackState.getState() + ", mMediaId=" + mMediaId + ", mEpisodeDownloadUrl=" + mEpisodeDownloadUrl);
@@ -749,7 +780,7 @@ public class AutoplayActivity extends BaseActivity
                     } else {
                         LogHelper.v(TAG, "*** START PLAYBACK *** state: " + lastPlaybackState.getState());
                         if (controls != null) {
-                            LogHelper.v(TAG, "controls.play();");
+                            LogHelper.v(TAG, "playPauseEpisode: controls.play();");
                             controls.play();
                             trackWithFirebaseAnalytics(String.valueOf(mEpisodeNumber), 0, "PLAY "+mEpisodeTitle);
                         }
@@ -973,6 +1004,7 @@ public class AutoplayActivity extends BaseActivity
                 String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
                 final String message = intent.getStringExtra(initialization); // get any control messages, for example: did metadata load ok? or play:id etc..
                 LogHelper.v(TAG, "*** RECEIVED BROADCAST CONTROL: "+message);
+
                 if (message == null) {
                     LogHelper.e(TAG, "*** *** *** FAILED TO RECEIVE MESSAGE! - CRITICAL ERROR");
                     return;
@@ -993,6 +1025,7 @@ public class AutoplayActivity extends BaseActivity
                         public void run() {
                             LogHelper.v(TAG, "*** RECEIVED BROADCAST: LOAD_OK");
                             sLoadedOK = true;
+                            sAutoplayNextNow = false;
                             enableButtons();
                             managePlaybackControls(ControlsState.ENABLED, "onReceive");
                         }
@@ -1004,6 +1037,7 @@ public class AutoplayActivity extends BaseActivity
                         @Override
                         public void run() {
                             LogHelper.v(TAG, "*** RECEIVED BROADCAST: LOAD_FAIL");
+                            sAutoplayNextNow = false;
                             problemLoadingMetadata();
                         }
                     });
@@ -1014,6 +1048,7 @@ public class AutoplayActivity extends BaseActivity
                         @Override
                         public void run() {
                             LogHelper.v(TAG, "*** RECEIVED BROADCAST: EPISODE DURATION");
+                            sAutoplayNextNow = false;
                             mDuration = Long.valueOf(message.substring(KEY_DURATION.length(), message.length()));
                             sHaveRealDuration = true;
                             getCircularSeekBar().setMaxProgress((int) mDuration);
@@ -1025,6 +1060,7 @@ public class AutoplayActivity extends BaseActivity
                 else if (message.length() > KEY_PLAY.length() && message.substring(0, KEY_PLAY.length()).equals(KEY_PLAY)) {
                     String episodeIndex = message.substring(KEY_PLAY.length(), message.length());
                     LogHelper.v(TAG,  "*** RECEIVED BROADCAST: NOW PLAYING EPISODE "+episodeIndex);
+                    sAutoplayNextNow = false;
                     getEpisodeInfoFor(Long.parseLong(episodeIndex));
                 }
                 else if (message.length() > KEY_NOPLAY.length() && message.substring(0, KEY_NOPLAY.length()).equals(KEY_NOPLAY)) {
@@ -1034,6 +1070,7 @@ public class AutoplayActivity extends BaseActivity
                         @Override
                         public void run() {
                             LogHelper.v(TAG, "*** RECEIVED BROADCAST: NOT ABLE TO PLAY");
+                            sAutoplayNextNow = false;
                             problemWithPlayback();
                         }
                     });
@@ -1041,27 +1078,43 @@ public class AutoplayActivity extends BaseActivity
                 else if (message.length() > KEY_COMPLETION.length() && message.substring(0, KEY_COMPLETION.length()).equals(KEY_COMPLETION)) {
                     String episodeIndex = message.substring(KEY_COMPLETION.length(), message.length());
                     LogHelper.v(TAG,  "*** RECEIVED BROADCAST: COMPLETED PLAY EPISODE "+episodeIndex);
+                    sAutoplayNextNow = true;
                     markEpisodeAsHeardAndIncrementPlayCount(getEpisodeNumber(), episodeIndex, mDuration);
-                    MediaControllerCompat.TransportControls controls = null;
-                    if (getRadioMediaController() != null) {
-                        controls = getRadioMediaController().getTransportControls();
-                        controls.stop();
-                    }
+
+// should already be stopped
+//                    MediaControllerCompat.TransportControls controls = null;
+//                    if (getRadioMediaController() != null) {
+//                        controls = getRadioMediaController().getTransportControls();
+//                        controls.stop();
+//                    }
+
                     initializeForEpisode("playback completed for episode "+episodeIndex);
                     handleAutoplayClick();
                 }
                 else if (message.length() > KEY_POKE_ME.length() && message.substring(0, KEY_POKE_ME.length()).equals(KEY_POKE_ME)) {
                     String episodeIndex = message.substring(KEY_POKE_ME.length(), message.length());
                     LogHelper.v(TAG,  "*** RECEIVED BROADCAST: !!! POKE-ME !!! for EPISODE "+episodeIndex);
-                    if (getRadioMediaController() != null) {
-                        MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
-                        if (controls != null) {
-                            LogHelper.v(TAG, "*** POKE-ME: STOPPING MEDIA CONTROLLER");
-                            controls.stop();
+                    if (sLoadedOK && getRadioMediaController() != null) {
+                        if (getRadioMediaController() != null) {
+                            PlaybackStateCompat playbackState = getRadioMediaController().getPlaybackState();
+                            if (playbackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
+                                MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
+                                LogHelper.v(TAG, "*** POKE-ME: STOPPING MEDIA CONTROLLER");
+                                controls.stop();
+                                try {
+                                    Thread.sleep(2);
+                                } catch (Exception e) {
+                                    LogHelper.w(TAG, "POKE: problem waiting for play e=" + e);
+                                }
+                            }
                         }
+                        enableButtons();
+                        initializeForEpisode("*** POKE-ME: do handleAutoplayClick for episode " + episodeIndex);
+                        handleAutoplayClick();
                     }
-                    initializeForEpisode("*** POKE-ME: do handleAutoplayClick for episode "+episodeIndex);
-                    handleAutoplayClick();
+                    else {
+                        LogHelper.w(TAG, "*** IGNORED POKE-ME");
+                    }
                 }
                 else {
                     LogHelper.v(TAG, "*** UNKNOWN MESSAGE VIA INTENT: "+message);
@@ -1228,6 +1281,10 @@ public class AutoplayActivity extends BaseActivity
             else if (controlState == ControlsState.ENABLED_SHOW_PAUSE) {
                 controlState = ControlsState.DISABLED_SHOW_PAUSE;
             }
+            getAutoPlay().setVisibility(View.INVISIBLE);
+        }
+        else {
+            getAutoPlay().setVisibility((sAutoplayNextNow) ? View.INVISIBLE : View.VISIBLE);
         }
         LogHelper.d(TAG, "showExpectedControls: controlState="+ controlState);
         switch (controlState) {
@@ -1258,8 +1315,13 @@ public class AutoplayActivity extends BaseActivity
                     getCircularSeekBar().setVisibility(sLoadedOK ? View.VISIBLE : View.INVISIBLE);
                 }
                 else {
-                    Drawable resumeButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_resume_button_selector, null);
-                    getAutoPlay().setBackground(resumeButton);
+                    if (getRadioMediaController() != null) {
+                        PlaybackStateCompat playbackState = getRadioMediaController().getPlaybackState();
+                        if (playbackState.getState() == PlaybackStateCompat.STATE_PAUSED) {
+                            Drawable resumeButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_resume_button_selector, null);
+                            getAutoPlay().setBackground(resumeButton);
+                        }
+                    }
                     getCircularSeekBar().setVisibility(View.INVISIBLE);
                 }
                 getAutoPlay().setEnabled(true);
@@ -1273,8 +1335,13 @@ public class AutoplayActivity extends BaseActivity
                     getCircularSeekBar().setVisibility(sLoadedOK ? View.VISIBLE : View.INVISIBLE);
                 }
                 else if (mCurrentPosition > 0){
-                    Drawable resumeButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_resume_button_selector, null);
-                    getAutoPlay().setBackground(resumeButton);
+                    if (getRadioMediaController() != null) {
+                        PlaybackStateCompat playbackState = getRadioMediaController().getPlaybackState();
+                        if (playbackState.getState() == PlaybackStateCompat.STATE_PAUSED) {
+                            Drawable resumeButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_resume_button_selector, null);
+                            getAutoPlay().setBackground(resumeButton);
+                        }
+                    }
                     getCircularSeekBar().setVisibility(View.INVISIBLE);
                 }
                 else {

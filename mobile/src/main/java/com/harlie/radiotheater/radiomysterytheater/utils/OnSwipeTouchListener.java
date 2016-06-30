@@ -156,7 +156,6 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
         if (mCompatButton != null) {
             // put back the original button image
             mCompatButton.setBackgroundDrawable(mNotPressedDrawable);
-            mCompatButton.setVisibility(View.VISIBLE);
         }
         if (onLongClick) {
             LogHelper.v(TAG, "onTouch - onLongClick");
