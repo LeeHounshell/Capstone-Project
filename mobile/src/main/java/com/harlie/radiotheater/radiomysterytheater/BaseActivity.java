@@ -17,6 +17,7 @@ import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.text.format.DateFormat;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -50,6 +51,8 @@ import com.harlie.radiotheater.radiomysterytheater.utils.NetworkHelper;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 import at.grabner.circleprogress.AnimationState;
 import at.grabner.circleprogress.AnimationStateChangedListener;
@@ -1254,6 +1257,7 @@ public class BaseActivity extends AppCompatActivity {
             bundle.putString("user_action", comment);
             bundle.putLong("listen_duration", duration);
             mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+            logToFirebase(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
         }
     }
 
@@ -1272,6 +1276,7 @@ public class BaseActivity extends AppCompatActivity {
             Bundle bundle = new Bundle();
             bundle.putString("user", getEmail());
             mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SIGN_UP, bundle);
+            logToFirebase(FirebaseAnalytics.Event.SIGN_UP, bundle);
         }
     }
 
@@ -1281,6 +1286,7 @@ public class BaseActivity extends AppCompatActivity {
             Bundle bundle = new Bundle();
             bundle.putString("user", getEmail());
             mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN, bundle);
+            logToFirebase(FirebaseAnalytics.Event.LOGIN, bundle);
         }
     }
 
@@ -1290,6 +1296,7 @@ public class BaseActivity extends AppCompatActivity {
             Bundle bundle = new Bundle();
             bundle.putString("user", getEmail());
             mFirebaseAnalytics.logEvent("do_search", bundle);
+            logToFirebase("do_search", bundle);
         }
     }
 
@@ -1299,6 +1306,7 @@ public class BaseActivity extends AppCompatActivity {
             Bundle bundle = new Bundle();
             bundle.putString("user", getEmail());
             mFirebaseAnalytics.logEvent("do_settings", bundle);
+            logToFirebase("do_settings", bundle);
         }
     }
 
@@ -1308,7 +1316,43 @@ public class BaseActivity extends AppCompatActivity {
             Bundle bundle = new Bundle();
             bundle.putString("user", getEmail());
             mFirebaseAnalytics.logEvent("do_about", bundle);
+            logToFirebase("do_about", bundle);
         }
+    }
+
+    protected void logToFirebase(String action, Bundle bundle) {
+        String detail = "";
+        if (bundle != null) {
+            detail = "{";
+            for (String key : bundle.keySet()) {
+                detail += " " + key + " => " + bundle.get(key) + ";";
+            }
+            detail += " }";
+        }
+        String logValue = action + " " + detail;
+        LogHelper.v(TAG, "ANALYTICS: logToFirebase - logValue="+logValue);
+        final String key = date_key();
+        if (getDatabase() != null && key != null) {
+            LogHelper.v(TAG, "commit: key=" + key);
+            getDatabase().child("log").child(getUID()).child(key).setValue(logValue, new DatabaseReference.CompletionListener() {
+                @Override
+                public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                    if (databaseError != null) {
+                        LogHelper.v(TAG, "logToFirebase: onComplete - databaseError=" + databaseError.getMessage());
+                    }
+                    if (databaseReference != null) {
+                        LogHelper.v(TAG, "logToFirebase: onComplete - databaseReference key=" + databaseReference.getKey());
+                    }
+                    if (databaseError == null && databaseReference != null) {
+                        LogHelper.v(TAG, "logToFirebase: key="+key+" - SUCCESS!");
+                    }
+                }
+            });
+        }
+    }
+
+    public String date_key() {
+        return new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new java.util.Date());
     }
 
 }
