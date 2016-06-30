@@ -240,6 +240,7 @@ public class AutoplayActivity extends BaseActivity
                 }
             };
 
+    public static long sKickstartTime;
     // Callback that ensures that we are showing the controls
     private final MediaControllerCompat.Callback mMediaControllerCallback =
             new MediaControllerCompat.Callback() {
@@ -269,7 +270,11 @@ public class AutoplayActivity extends BaseActivity
                         case PlaybackStateCompat.STATE_BUFFERING: {
                             LogHelper.d(TAG, "MediaControllerCompat.Callback onPlaybackStateChanged STATE_BUFFERING <<<---------");
                             setAutoplayState(AutoplayState.LOADING, "onPlaybackChanged - BUFFERING - LOADING");
-                            sOkKickstart = true;
+                            long time = System.currentTimeMillis();
+                            if (sKickstartTime < (time - THIRTY_SECONDS)) {
+                                sOkKickstart = true;
+                                sKickstartTime = time;
+                            }
                             break;
                         }
                         case PlaybackStateCompat.STATE_PAUSED: {
@@ -744,6 +749,7 @@ public class AutoplayActivity extends BaseActivity
                         sOkKickstart = false;
                         LogHelper.v(TAG, "STATE_BUFFERING - kickstart? do controls.play();");
                         controls.play();
+                        setAutoplayState(AutoplayState.LOADING, "playPauseEpisode - BUFFERING");
                     }
                     break;
                 }
@@ -752,21 +758,26 @@ public class AutoplayActivity extends BaseActivity
                     if (controls != null) {
                         LogHelper.v(TAG, "STATE_PLAYING - so do controls.pause();");
                         controls.pause();
+                        setAutoplayState(AutoplayState.PAUSED, "playPauseEpisode - PAUSED");
                     }
-                    setAutoplayState(AutoplayState.PAUSED, "playPauseEpisode - PAUSED");
                     break;
                 }
                 case PlaybackStateCompat.STATE_PAUSED: {
                     LogHelper.v(TAG, "STATE_PAUSED");
+                    if (controls != null) {
+                        LogHelper.v(TAG, "playPauseEpisode: controls.play();");
+                        controls.play();
+                        setAutoplayState(AutoplayState.PLAYING, "playPauseEpisode - PLAYING");
+                    }
                     break;
                 }
                 case PlaybackStateCompat.STATE_STOPPED: {
                     LogHelper.v(TAG, "STATE_STOPPED");
-//                    if (controls != null) {
-//                        LogHelper.v(TAG, "playPauseEpisode: controls.play();");
-//                        controls.play();
-//                    }
-//                    setAutoplayState(AutoplayState.PLAYING, "playPauseEpisode - PLAYING");
+                    if (controls != null) {
+                        LogHelper.v(TAG, "playPauseEpisode: controls.play();");
+                        controls.play();
+                        setAutoplayState(AutoplayState.PLAYING, "playPauseEpisode - PLAYING");
+                    }
                     break;
                 }
                 default: {
@@ -785,9 +796,9 @@ public class AutoplayActivity extends BaseActivity
                         if (controls != null) {
                             LogHelper.v(TAG, "playPauseEpisode: controls.play();");
                             controls.play();
+                            setAutoplayState(AutoplayState.PLAYING, "playPauseEpisode - PLAYING");
                             trackWithFirebaseAnalytics(String.valueOf(mEpisodeNumber), 0, "PLAY "+mEpisodeTitle);
                         }
-                        setAutoplayState(AutoplayState.PLAYING, "playPauseEpisode - PLAYING");
                     }
                 }
             }
@@ -903,9 +914,9 @@ public class AutoplayActivity extends BaseActivity
                         if (getRadioMediaController() != null) {
                             controls = getRadioMediaController().getTransportControls();
                             controls.play();
+                            setAutoplayState(AutoplayState.PLAYING, "playPauseEpisode - PLAYING");
                         }
                         scheduleSeekbarUpdate();
-                        setAutoplayState(AutoplayState.PLAYING, "playPauseEpisode - PLAYING");
                     }
                     else {
                         showCurrentInfo();
