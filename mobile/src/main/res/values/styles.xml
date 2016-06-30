@@ -15,11 +15,18 @@
         <item name="android:windowSharedElementExitTransition">@android:transition/move</item>
     </style>
 
+    <style name="SettingsFragmentStyle">
+        <item name="android:textColorSecondary">@color/primary_text</item>
+        <item name="android:textColor">#ffffff</item>
+        <item name="android:textSize">25sp</item>
+        <item name="android:layout_margin">8dp</item>
+        <item name="android:background">@color/accent</item>
+    </style>
+
     <style name="AppTheme.Splash" parent ="AppTheme">
         <item name="android:windowBackground">@drawable/radio_theater_spash</item>
         <item name="android:windowNoTitle">true</item>
     </style>
-
 
     <style name="Toolbar" parent="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
         <item name="popupTheme">@style/ThemeOverlay.AppCompat.Light</item>
