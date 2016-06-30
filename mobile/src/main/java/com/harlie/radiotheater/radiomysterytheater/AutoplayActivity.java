@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.preference.PreferenceActivity;
 import android.support.annotation.NonNull;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -870,6 +871,8 @@ public class AutoplayActivity extends BaseActivity
                 Bundle playInfo = new Bundle();
                 savePlayInfoToBundle(playInfo);
                 intent.putExtras(playInfo);
+                intent.putExtra( PreferenceActivity.EXTRA_SHOW_FRAGMENT, SettingsActivity.GeneralPreferenceFragment.class.getName() );
+                intent.putExtra( PreferenceActivity.EXTRA_NO_HEADERS, true );
                 trackSettingsWithFirebaseAnalytics();
                 startActivity(intent);
                 return true;
@@ -1095,14 +1098,6 @@ public class AutoplayActivity extends BaseActivity
                     LogHelper.v(TAG,  "*** RECEIVED BROADCAST: COMPLETED PLAY EPISODE "+episodeIndex);
                     sAutoplayNextNow = true;
                     markEpisodeAsHeardAndIncrementPlayCount(getEpisodeNumber(), episodeIndex, mDuration);
-
-// should already be stopped
-//                    MediaControllerCompat.TransportControls controls = null;
-//                    if (getRadioMediaController() != null) {
-//                        controls = getRadioMediaController().getTransportControls();
-//                        controls.stop();
-//                    }
-
                     initializeForEpisode("playback completed for episode "+episodeIndex);
                     handleAutoplayClick();
                 }
