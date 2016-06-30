@@ -1,8 +1,8 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    compileSdkVersion 24
+    buildToolsVersion "24.0.0"
 
     ext.addDependency = {
         task, flavor, dependency ->
@@ -37,7 +37,7 @@ android {
     defaultConfig {
         applicationId "com.harlie.radiotheater.radiomysterytheater"
         minSdkVersion 21
-        targetSdkVersion 23
+        targetSdkVersion 24
         versionCode 1
         versionName "1.0"
     }

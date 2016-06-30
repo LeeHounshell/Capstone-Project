@@ -42,8 +42,8 @@
     <application
         android:name=".RadioTheaterApplication"
         android:allowBackup="true"
-        android:banner="@drawable/banner_tv"
         android:fullBackupContent="@xml/mybackupscheme"
+        android:banner="@drawable/banner_tv"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
@@ -196,6 +196,21 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.harlie.radiotheater.radiomysterytheater.EpisodeListActivity" />
+            <intent-filter
+                android:label="@string/filter_title_viewradiotheater">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- Accepts URIs that begin with "http://www.harlie.com/radiotheater” -->
+                <data android:scheme="http"
+                    android:host="www.harlie.com"
+                    android:pathPrefix="/radiotheater" />
+                <!-- note that the leading "/" is required for pathPrefix-->
+                <!-- Accepts URIs that begin with "harlie://radiotheater” -->
+                <data android:scheme="harlie"
+                    android:host="radiotheater" />
+            </intent-filter>
+
         </activity>
 
         <activity

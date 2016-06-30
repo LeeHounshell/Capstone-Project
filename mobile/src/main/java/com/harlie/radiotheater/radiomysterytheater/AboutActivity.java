@@ -59,7 +59,7 @@ public class AboutActivity extends BaseActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         // get the image view
-        ImageView imageView = (ImageView) findViewById(R.id.LeeHounshellImage);
+        final ImageView imageView = (ImageView) findViewById(R.id.LeeHounshellImage);
 
         // set the ontouch listener
         if (imageView != null) {
@@ -80,6 +80,7 @@ public class AboutActivity extends BaseActivity {
                                     break;
                                 }
                                 case MotionEvent.ACTION_UP:
+                                    imageView.performClick();
                                 case MotionEvent.ACTION_CANCEL: {
                                     LogHelper.v(TAG, "view Linked-In");
                                     ImageView view = (ImageView) v;

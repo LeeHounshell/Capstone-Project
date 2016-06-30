@@ -115,7 +115,7 @@ android {
     }
 
     lintOptions {
-        disable 'InconsistentLayout','InvalidPackage','GradleDependency','GradleDynamicVersion'
+        disable 'InconsistentLayout','InvalidPackage','GradleDependency','GradleDynamicVersion','PackageManagerGetSignatures','Recycle','StaticFieldLeak','UnusedResources','IconLocation','IconDensities','AlwaysShowAction','ClickableViewAccessibility','SetTextI18n'
     }
 
     dexOptions {

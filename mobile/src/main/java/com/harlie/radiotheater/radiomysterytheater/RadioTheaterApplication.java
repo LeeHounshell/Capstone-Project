@@ -48,6 +48,13 @@ public class RadioTheaterApplication extends android.support.multidex.MultiDexAp
         Fabric.with(this, new Crashlytics());
     }
 
+    // no concept for onDestroy exists for Android - if it did, I would clear any static variables here
+    public void onDestroy() {
+        LogHelper.v(TAG, "onDestroy");
+        applicationContext = null;
+        sInstance = null;
+    }
+
     public static synchronized RadioTheaterApplication getInstance() {
         LogHelper.v(TAG, "getInstance");
         return RadioTheaterApplication.sInstance;

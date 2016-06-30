@@ -513,7 +513,7 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     public Boolean isPaidEpisode(String episode) {
-        Boolean isPaid = new Boolean(true);
+        Boolean isPaid = true;
         //
         // FIXME: if (existing == null)
         //            need to query Firebase record for this user to see if they paid already..
@@ -848,7 +848,6 @@ public class BaseActivity extends AppCompatActivity {
         Boolean episode_downloaded = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_EPISODE_DOWNLOADED);
         Boolean episode_heard = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_EPISODE_HEARD);
         Long    episode_count = configEntryValues.getAsLong(ConfigEpisodesColumns.FIELD_LISTEN_COUNT);
-        Long    listen_duration = new Long(duration);
         FirebaseConfigEpisode firebaseConfigEpisode = new FirebaseConfigEpisode(
                 email,
                 episode_number,
@@ -857,7 +856,7 @@ public class BaseActivity extends AppCompatActivity {
                 episode_downloaded,
                 episode_heard,
                 episode_count,
-                listen_duration
+                duration
         );
         firebaseConfigEpisode.commit(getDatabase(), getUID());
     }

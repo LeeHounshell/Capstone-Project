@@ -549,6 +549,7 @@ public class AutoplayActivity extends BaseActivity
                         }
                         enableButtons();
                         managePlaybackControls(ControlsState.ENABLED_SHOW_PAUSE, "onLongClick");
+                        getAutoPlay().setVisibility((sAutoplayNextNow) ? View.INVISIBLE : View.VISIBLE);
                     }
                 });
             }
