@@ -19,17 +19,16 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <!--
-     Because of the custom authentication flow implemented for Email and Google,
+         Because of the custom authentication flow implemented for Email and Google,
          there are some permissions i don't need now that are normally required:
              "android.permission.GET_ACCOUNTS"
              "android.permission.USE_CREDENTIALS"
              "android.permission.READ_PROFILE"
              "android.permission.READ_CONTACTS"
 
-         Also,
-         set android.software.leanback to false,
+         Also, once the TV version is ready..
+         set android.software.leanback and android.hardware.touchscreen to false,
          so the APK will be available to both TV and regular devices.
-    -->
 
     <uses-feature
         android:name="android.software.leanback"
@@ -38,6 +37,7 @@
     <uses-feature
         android:name="android.hardware.touchscreen"
         android:required="false" />
+    -->
 
     <application
         android:name=".RadioTheaterApplication"

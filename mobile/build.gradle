@@ -19,8 +19,8 @@ apply plugin: 'io.fabric'
 apply from: '../preprocessor.gradle'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    compileSdkVersion 24
+    buildToolsVersion "24.0.0"
 
     ext.addDependency = {
         task, flavor, dependency ->
@@ -54,11 +54,12 @@ android {
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 23
+        targetSdkVersion 24
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         manifestPlaceholders = ["FABRIC_API_KEY": "ec24cad1b54e4429a75f75d2f7f8e49d4fb0fcfb"]
+        multiDexEnabled true
     }
 
     buildTypes {
@@ -114,11 +115,12 @@ android {
     }
 
     lintOptions {
-        disable 'InconsistentLayout'
+        disable 'InconsistentLayout','InvalidPackage','GradleDependency','GradleDynamicVersion'
     }
 
     dexOptions {
         javaMaxHeapSize "4g"
+        preDexLibraries false
     }
 
     compileOptions {
@@ -137,23 +139,23 @@ dependencies {
         transitive = true;
     }
 
-    compile 'com.google.firebase:firebase-core:9.0.2'
-    compile 'com.google.firebase:firebase-database:9.0.2'
-    compile 'com.google.firebase:firebase-auth:9.0.2'
+    compile 'com.google.firebase:firebase-core:9.2.0'
+    compile 'com.google.firebase:firebase-database:9.2.0'
+    compile 'com.google.firebase:firebase-auth:9.2.0'
     compile 'com.firebase:firebase-client-android:2.5.2+'
     compile 'com.firebaseui:firebase-ui:0.4.0'
 
-    compile 'com.google.android.gms:play-services-cast:9.0.2'
-    compile 'com.google.android.gms:play-services-auth:9.0.2'
-    compile 'com.google.android.gms:play-services-plus:9.0.2'
-    compile 'com.android.support:appcompat-v7:23.4.0'
-    compile 'com.android.support:support-v4:23.4.0'
-    compile 'com.android.support:recyclerview-v7:23.4.0'
-    compile 'com.android.support:design:23.4.0'
-    compile 'com.android.support:support-annotations:23.4.0'
-    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha1'
+    compile 'com.google.android.gms:play-services-cast:9.2.0'
+    compile 'com.google.android.gms:play-services-auth:9.2.0'
+    compile 'com.google.android.gms:play-services-plus:9.2.0'
+    compile 'com.android.support:appcompat-v7:24.0.0'
+    compile 'com.android.support:support-v4:24.0.0'
+    compile 'com.android.support:recyclerview-v7:24.0.0'
+    compile 'com.android.support:design:24.0.0'
+    compile 'com.android.support:support-annotations:24.0.0'
+    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha3'
 
-    freeCompile 'com.google.firebase:firebase-ads:9.0.2'
+    freeCompile 'com.google.firebase:firebase-ads:9.2.0'
 
     compile 'com.github.jakob-grabner:Circle-Progress-View:v1.2.9'
     compile 'org.immutables:gson:2.2.6'
@@ -162,15 +164,19 @@ dependencies {
     apt 'com.jakewharton:butterknife-compiler:8.0.1'
 
     compile 'com.google.android.support:wearable:1.4.0'
-    compile 'com.android.support:mediarouter-v7:23.4.0'
+    compile 'com.android.support:mediarouter-v7:24.0.0'
     compile 'com.google.android.libraries.cast.companionlibrary:ccl:2.8.1'
 
     testCompile 'junit:junit:4.12'
-    androidTestCompile 'com.android.support:support-v4:23.4.0'
     androidTestCompile 'com.android.support.test:runner:0.5'
+    androidTestCompile 'com.android.support.test:rules:0.5'
     androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
 
     compile 'com.android.support:multidex:1.0.1'
+
+    configurations.all {
+        resolutionStrategy.force 'com.android.support:support-annotations:23.1.1'
+    }
 }
 
 apply plugin: 'com.google.gms.google-services'

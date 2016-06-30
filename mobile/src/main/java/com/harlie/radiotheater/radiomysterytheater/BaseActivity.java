@@ -53,6 +53,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Locale;
 
 import at.grabner.circleprogress.AnimationState;
 import at.grabner.circleprogress.AnimationStateChangedListener;
@@ -457,25 +458,25 @@ public class BaseActivity extends AppCompatActivity {
         Uri CONTENT_URI = null;
         String whereClause = null;
         String whereArgs[] = null;
-        if (tableName.toUpperCase().equals("EPISODES")) {
+        if (tableName.toUpperCase(Locale.getDefault()).equals("EPISODES")) {
             CONTENT_URI = EpisodesEntry.buildEpisodeUri(rowId);
             tableName = EpisodesEntry.TABLE_NAME;
             whereClause = EpisodesEntry.FIELD_EPISODE_NUMBER + "=?";
             whereArgs = new String[]{Long.toString(rowId)};
         }
-        else if (tableName.toUpperCase().equals("ACTORS")) {
+        else if (tableName.toUpperCase(Locale.getDefault()).equals("ACTORS")) {
             CONTENT_URI = ActorsEntry.buildActorUri(rowId);
             tableName = ActorsEntry.TABLE_NAME;
             whereClause = ActorsEntry.FIELD_ACTOR_ID + "=?";
             whereArgs = new String[]{Long.toString(rowId)};
         }
-        else if (tableName.toUpperCase().equals("WRITERS")) {
+        else if (tableName.toUpperCase(Locale.getDefault()).equals("WRITERS")) {
             CONTENT_URI = WritersEntry.buildWriterUri(rowId);
             tableName = WritersEntry.TABLE_NAME;
             whereClause = WritersEntry.FIELD_WRITER_ID + "=?";
             whereArgs = new String[]{Long.toString(rowId)};
         }
-        else if (tableName.toUpperCase().equals("CONFIGURATION")) {
+        else if (tableName.toUpperCase(Locale.getDefault()).equals("CONFIGURATION")) {
             if (getEmail() == null || getEmail().length() == 0) {
                 CONTENT_URI = null;
                 whereClause = null;
@@ -520,16 +521,16 @@ public class BaseActivity extends AppCompatActivity {
         //
         // NOTE: the code below uses the #IFDEF gradle preprocessor
         //#IFDEF 'FREE'
-        isPaid = new Boolean(false);
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-        isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
-        if (!isPaid) {
-            ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
-            if (existing != null) {
-                ContentValues configEpisode = existing.values();
-                isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
-            }
-        }
+        //isPaid = new Boolean(false);
+        //SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+        //isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
+        //if (!isPaid) {
+            //ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
+            //if (existing != null) {
+                //ContentValues configEpisode = existing.values();
+                //isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
+            //}
+        //}
         //#ENDIF
         return isPaid;
     }
@@ -594,13 +595,13 @@ public class BaseActivity extends AppCompatActivity {
                 String outFileName = DB_OUTPUT_PATH + DB_NAME;
 
                 //#IFDEF 'PAID'
-                //copyFileFromAssets("paid/" + DB_NAME, outFileName);
-                //copyFileFromAssets("paid/" + DB_NAME + "-journal", outFileName + "-journal");
+                copyFileFromAssets("paid/" + DB_NAME, outFileName);
+                copyFileFromAssets("paid/" + DB_NAME + "-journal", outFileName + "-journal");
                 //#ENDIF
 
                 //#IFDEF 'FREE'
-                copyFileFromAssets("free/" + DB_NAME, outFileName);
-                copyFileFromAssets("free/" + DB_NAME + "-journal", outFileName + "-journal");
+                //copyFileFromAssets("free/" + DB_NAME, outFileName);
+                //copyFileFromAssets("free/" + DB_NAME + "-journal", outFileName + "-journal");
                 //#ENDIF
 
                 LogHelper.v(TAG, "*** successfully copied prebuilt SQLite database ***");
@@ -793,13 +794,13 @@ public class BaseActivity extends AppCompatActivity {
                 record.putFieldEpisodeNumber(episodeNumber);
 
                 //#IFDEF 'PAID'
-                //boolean purchased = true;
-                //boolean noAdsForShow = true;
+                boolean purchased = true;
+                boolean noAdsForShow = true;
                 //#ENDIF
 
                 //#IFDEF 'FREE'
-                boolean purchased = cursor.getFieldPurchasedAccess();
-                boolean noAdsForShow = cursor.getFieldPurchasedNoads();
+                //boolean purchased = cursor.getFieldPurchasedAccess();
+                //boolean noAdsForShow = cursor.getFieldPurchasedNoads();
                 //#ENDIF
 
                 record.putFieldPurchasedAccess(purchased);
@@ -1352,7 +1353,7 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     public String date_key() {
-        return new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new java.util.Date());
+        return new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.getDefault()).format(new java.util.Date());
     }
 
 }
