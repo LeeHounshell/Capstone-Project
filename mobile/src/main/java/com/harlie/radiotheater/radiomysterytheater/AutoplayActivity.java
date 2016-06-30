@@ -97,6 +97,7 @@ public class AutoplayActivity extends BaseActivity
     private static volatile boolean sBeginLoading;
     private static volatile boolean sSeekUpdateRunning;
     private static volatile boolean sAutoplayNextNow;
+    private static volatile boolean sOkKickstart;
 
     private final ScheduledExecutorService mExecutorService =
             Executors.newSingleThreadScheduledExecutor();
@@ -267,7 +268,8 @@ public class AutoplayActivity extends BaseActivity
                         }
                         case PlaybackStateCompat.STATE_BUFFERING: {
                             LogHelper.d(TAG, "MediaControllerCompat.Callback onPlaybackStateChanged STATE_BUFFERING <<<---------");
-                            setAutoplayState(AutoplayState.LOADING, "onPlaybackChanged - LOADING");
+                            setAutoplayState(AutoplayState.LOADING, "onPlaybackChanged - BUFFERING - LOADING");
+                            sOkKickstart = true;
                             break;
                         }
                         case PlaybackStateCompat.STATE_PAUSED: {
@@ -738,7 +740,8 @@ public class AutoplayActivity extends BaseActivity
             switch (lastPlaybackState.getState()) {
                 case PlaybackStateCompat.STATE_BUFFERING: {
                     LogHelper.v(TAG, "STATE_BUFFERING");
-                    if (controls != null) {
+                    if (sOkKickstart && controls != null) {
+                        sOkKickstart = false;
                         LogHelper.v(TAG, "STATE_BUFFERING - kickstart? do controls.play();");
                         controls.play();
                     }
