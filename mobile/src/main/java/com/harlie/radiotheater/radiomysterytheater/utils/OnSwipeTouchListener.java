@@ -121,20 +121,20 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
                 }
 
                 case MotionEvent.ACTION_CANCEL: {
-                    mDownTimer.cancel();
-                    onLongClick = false;
-                    if (mHandler != null) {
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                LogHelper.v(TAG, "onTouch - ACTION_CANCEL");
-                                if (mCompatButton != null) {
-                                    // put back the original button image
-                                    mCompatButton.setBackgroundDrawable(mNotPressedDrawable);
-                                }
-                            }
-                        });
-                    }
+//                    mDownTimer.cancel();
+//                    onLongClick = false;
+//                    if (mHandler != null) {
+//                        mHandler.post(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                LogHelper.v(TAG, "onTouch - ACTION_CANCEL");
+//                                if (mCompatButton != null) {
+//                                    // put back the original button image
+//                                    mCompatButton.setBackgroundDrawable(mNotPressedDrawable);
+//                                }
+//                            }
+//                        });
+//                    }
                     break;
                 }
             }

@@ -174,7 +174,8 @@
 
         <activity
             android:name=".AutoplayActivity"
-            android:label="@string/title_activity_autoplay">
+            android:label="@string/title_activity_autoplay"
+            android:launchMode="singleTop" >
 
             <!-- Use this intent filter to get voice searches, like "Episodes about Time Travel" -->
             <intent-filter>

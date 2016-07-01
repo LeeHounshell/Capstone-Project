@@ -215,6 +215,10 @@ public class QueueManager {
         Iterable<MediaMetadataCompat> title_list = mMusicProvider.searchMusicBySongTitle(title);
         if (title_list == null) {
             LogHelper.e(TAG, "POKE: could not locate media for title: ", title);
+            try {
+                Thread.sleep(13);
+            } catch (Exception e) {};
+            sPokeMeTime = 0; // force POKE
             possiblePokeMe();
             return null;
         }

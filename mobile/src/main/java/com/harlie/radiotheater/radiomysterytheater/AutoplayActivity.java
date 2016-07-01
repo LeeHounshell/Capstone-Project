@@ -103,6 +103,257 @@ public class AutoplayActivity extends BaseActivity
     private final ScheduledExecutorService mExecutorService =
             Executors.newSingleThreadScheduledExecutor();
 
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        LogHelper.v(TAG, "onCreate");
+
+        initializeForEpisode("onCreate: initializing..");
+
+        super.onCreate(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            LogHelper.v(TAG, "rotation event");
+            sHandleRotationEvent = true;
+        }
+
+        /*
+         * FUTURE: TV support
+         *
+        UiModeManager uiModeManager = (UiModeManager) getSystemService(UI_MODE_SERVICE);
+        if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
+            LogHelper.d(TAG, "Running on a TV Device");
+            Intent tvIntent = new Intent(this, TvPlaybackActivity.class);
+            startActivity(tvIntent);
+            finish();
+            return;
+        }
+        */
+
+        setContentView(R.layout.activity_autoplay);
+        configureToolbarTitleBehavior();
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        if (toolbar != null) {
+            setSupportActionBar(toolbar);
+            ActionBar actionBar = getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.setDisplayShowTitleEnabled(false);
+            }
+        }
+
+        // Connect a media browser just to get the media session token. There are other ways
+        // this can be done, for example by sharing the session token directly.
+        mRadioMediaBrowser = new MediaBrowserCompat(this,
+                new ComponentName(this, RadioTheaterService.class), mConnectionCallback, null);
+
+        mAutoPlay = (AppCompatButton) findViewById(R.id.autoplay);
+        getAutoPlay().setVisibility(View.INVISIBLE);
+        getAutoPlay().setEnabled(false);
+        //final Drawable pressedButton = ResourcesCompat.getDrawable(getResources(), R.drawable.big_button_pressed, null);
+        final Drawable pressedButton = (mAutoplayState == AutoplayState.PLAYING)
+                ? ResourcesCompat.getDrawable(getResources(), R.drawable.pause_disabled, null)
+                : ResourcesCompat.getDrawable(getResources(), R.drawable.autoplay_disabled, null);
+
+        getAutoPlay().setOnTouchListener(new OnSwipeTouchListener(this, getHandler(), getAutoPlay(), pressedButton) {
+
+            @Override
+            public void onClick() {
+                LogHelper.v(TAG, "onClick");
+                handleAutoplayClick();
+            }
+
+            @Override
+            public void onDoubleClick() { // FIXME
+                LogHelper.v(TAG, "onDoubleClick");
+                if (mCurrentPosition > (THIRTY_SECONDS * 2)) {
+                    getHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (getRadioMediaController() != null) {
+                                mCurrentPosition -= (THIRTY_SECONDS * 2); // back up one-minute
+                                getRadioMediaController().getTransportControls().seekTo(mCurrentPosition);
+                            }
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onLongClick(final Drawable buttonImage) {
+                LogHelper.v(TAG, "onLongClick");
+                if (getRadioMediaController() != null) {
+                    PlaybackStateCompat playbackState = getRadioMediaController().getPlaybackState();
+                    if (playbackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
+                        MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
+                        controls.stop();
+                    }
+                }
+                getHandler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        LogHelper.v(TAG, "put back the Autoplay button.");
+                        mCurrentPosition = 0;
+                        setAutoplayState(AutoplayState.READY2PLAY, "onLongClick");
+                        if (buttonImage != null) {
+                            getAutoPlay().setBackgroundDrawable(buttonImage);
+                        }
+                        enableButtons();
+                        managePlaybackControls(ControlsState.ENABLED_SHOW_PAUSE, "onLongClick");
+                        getAutoPlay().setVisibility((sAutoplayNextNow) ? View.INVISIBLE : View.VISIBLE);
+                    }
+                });
+            }
+
+            @Override
+            public void onSwipeRight() {
+                LogHelper.v(TAG, "onSwipeRight");
+                markEpisodeAsHeardAndIncrementPlayCount(getEpisodeNumber(), String.valueOf(getEpisodeNumber()), mCurrentPosition);
+                getHandler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (getRadioMediaController() != null) {
+                            LogHelper.v(TAG, "onSwipeRight: skipToNext");
+                            getRadioMediaController().getTransportControls().skipToNext();
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void onSwipeLeft() {
+                LogHelper.v(TAG, "onSwipeLeft");
+                getHandler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (getRadioMediaController() != null) {
+                            LogHelper.v(TAG, "onSwipeLeft: skipToPrevious");
+                            long episodeNumber = getEpisodeNumber();
+                            if (episodeNumber >= 1) {
+                                episodeNumber -= 1;
+                            }
+                            markEpisodeAs_NOT_Heard(episodeNumber, String.valueOf(episodeNumber), 0);
+                            getRadioMediaController().getTransportControls().skipToPrevious();
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void onSwipeUp() { // FIXME
+                LogHelper.v(TAG, "onSwipeUp");
+                getHandler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (getRadioMediaController() != null) {
+                            mCurrentPosition += THIRTY_SECONDS;
+                            getRadioMediaController().getTransportControls().seekTo(mCurrentPosition);
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void onSwipeDown() { // FIXME
+                LogHelper.v(TAG, "onSwipeDown");
+                getHandler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (getRadioMediaController() != null) {
+                            mCurrentPosition -= THIRTY_SECONDS;
+                            getRadioMediaController().getTransportControls().seekTo(mCurrentPosition);
+                        }
+                    }
+                });
+            }
+
+        });
+
+        mFabActionButton = (FloatingActionButton) findViewById(R.id.fab);
+        if (getFabActionButton() != null) {
+            final AutoplayActivity activity = this;
+            getFabActionButton().setOnTouchListener(new OnSwipeTouchListener(this, getHandler(), getFabActionButton()) {
+
+                @Override
+                public void onClick() {
+                    if (!getCircularSeekBar().isProcessingTouchEvents() && !sSeeking) {
+                        LogHelper.v(TAG, "onClick - mFabActionButton");
+                        trackWithFirebaseAnalytics(String.valueOf(mEpisodeNumber), mCurrentPosition, "BROWSE PLAYLIST");
+                        Intent episodeListIntent = new Intent(activity, EpisodeListActivity.class);
+                        Bundle playInfo = new Bundle();
+                        savePlayInfoToBundle(playInfo);
+                        episodeListIntent.putExtras(playInfo);
+                        startActivity(episodeListIntent);
+                    }
+                    else {
+                        LogHelper.v(TAG, "isProcessingTouchEvents or seeking - onClick ignored");
+                    }
+                }
+            });
+        }
+
+        mCircleView = (CircleProgressView) findViewById(R.id.autoplay_circle_view);
+        mHorizontalScrollingText = (ScrollingTextView) findViewById(R.id.horizontal_scrolling_text);
+
+        // create a new View for the seek-bar and add it into the main_frame
+        FrameLayout theFrame = (FrameLayout) findViewById(R.id.main_frame);
+        mCircularSeekBar = new CircularSeekBar(this);
+        getCircularSeekBar().setEnabled(false);
+        getCircularSeekBar().setVisibility(View.INVISIBLE);
+        getCircularSeekBar().setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        getCircularSeekBar().setBarWidth(5);
+        getCircularSeekBar().setMaxProgress((int) mDuration);
+        getCircularSeekBar().setProgress(0);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getCircularSeekBar().setBackgroundColor(getResources().getColor(R.color.transparent, null));
+        }
+        else {
+            getCircularSeekBar().setBackgroundColor(getResources().getColor(R.color.transparent));
+        }
+        getCircularSeekBar().invalidate();
+        theFrame.addView(getCircularSeekBar());
+
+        getCircularSeekBar().setSeekBarChangeListener(new CircularSeekBar.OnSeekChangeListener() {
+
+            @Override
+            public void onProgressChange(CircularSeekBar view, final int newProgress) {
+                LogHelper.v(TAG, "onProgressChange: newProgress:" + newProgress);
+                sBeginLoading = true;
+                if (!getCircularSeekBar().isProcessingTouchEvents() && !sSeeking) {
+                    scheduleSeekbarUpdate();
+                    getHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            sSeeking = true;
+                            mCurrentPosition = newProgress;
+                            managePlaybackControls(ControlsState.SEEKING_POSITION, "setSeekBarChangeListener");
+                            if (getRadioMediaController() != null) {
+                                getRadioMediaController().getTransportControls().seekTo(newProgress);
+                            }
+                        }
+                    });
+                }
+            }
+        });
+
+        // initialize AdMob - note this code uses the Gradle #IFDEF / #ENDIF gradle preprocessor
+        //#IFDEF 'FREE'
+        String banner_ad_unit_id = getResources().getString(R.string.banner_ad_unit_id);
+        MobileAds.initialize(getApplicationContext(), banner_ad_unit_id);
+
+        final TelephonyManager tm =(TelephonyManager)getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
+
+        AdView mAdView = (AdView) findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder()
+                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)        // All emulators
+                .addTestDevice(getResources().getString(R.string.test_device1))
+                .addTestDevice(getResources().getString(R.string.test_device2))
+                .build();
+        mAdView.loadAd(adRequest);
+        //#ENDIF
+
+        sLoadingScreenEnabled = true;
+    }
+
     private final Runnable mUpdateProgressTask = new Runnable() {
         @Override
         public void run() {
@@ -454,255 +705,6 @@ public class AutoplayActivity extends BaseActivity
                     }
                 });
         alertDialog.show();
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        LogHelper.v(TAG, "onCreate");
-
-        initializeForEpisode("onCreate: initializing..");
-
-        super.onCreate(savedInstanceState);
-
-        if (savedInstanceState != null) {
-            LogHelper.v(TAG, "rotation event");
-            sHandleRotationEvent = true;
-        }
-
-        /*
-         * FUTURE: TV support
-         *
-        UiModeManager uiModeManager = (UiModeManager) getSystemService(UI_MODE_SERVICE);
-        if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
-            LogHelper.d(TAG, "Running on a TV Device");
-            Intent tvIntent = new Intent(this, TvPlaybackActivity.class);
-            startActivity(tvIntent);
-            finish();
-            return;
-        }
-        */
-
-        setContentView(R.layout.activity_autoplay);
-        configureToolbarTitleBehavior();
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        if (toolbar != null) {
-            setSupportActionBar(toolbar);
-            ActionBar actionBar = getSupportActionBar();
-            if (actionBar != null) {
-                actionBar.setDisplayShowTitleEnabled(false);
-            }
-        }
-
-        // Connect a media browser just to get the media session token. There are other ways
-        // this can be done, for example by sharing the session token directly.
-        mRadioMediaBrowser = new MediaBrowserCompat(this,
-                new ComponentName(this, RadioTheaterService.class), mConnectionCallback, null);
-
-        mAutoPlay = (AppCompatButton) findViewById(R.id.autoplay);
-        getAutoPlay().setVisibility(View.INVISIBLE);
-        getAutoPlay().setEnabled(false);
-        //final Drawable pressedButton = ResourcesCompat.getDrawable(getResources(), R.drawable.big_button_pressed, null);
-        final Drawable pressedButton = (mAutoplayState == AutoplayState.PLAYING)
-                ? ResourcesCompat.getDrawable(getResources(), R.drawable.pause_disabled, null)
-                : ResourcesCompat.getDrawable(getResources(), R.drawable.autoplay_disabled, null);
-        getAutoPlay().setOnTouchListener(new OnSwipeTouchListener(this, getHandler(), getAutoPlay(), pressedButton) {
-
-            @Override
-            public void onClick() {
-                LogHelper.v(TAG, "onClick");
-                handleAutoplayClick();
-            }
-
-            @Override
-            public void onDoubleClick() { // FIXME
-                LogHelper.v(TAG, "onDoubleClick");
-                if (mCurrentPosition > (THIRTY_SECONDS * 2)) {
-                    getHandler().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (getRadioMediaController() != null) {
-                                mCurrentPosition -= (THIRTY_SECONDS * 2); // back up one-minute
-                                getRadioMediaController().getTransportControls().seekTo(mCurrentPosition);
-                            }
-                        }
-                    });
-                }
-            }
-
-            @Override
-            public void onLongClick(final Drawable buttonImage) {
-                LogHelper.v(TAG, "onLongClick");
-                if (getRadioMediaController() != null) {
-                    PlaybackStateCompat playbackState = getRadioMediaController().getPlaybackState();
-                    if (playbackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
-                        MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
-                        controls.stop();
-                    }
-                }
-                getHandler().post(new Runnable() {
-                    @Override
-                    public void run() {
-                        LogHelper.v(TAG, "put back the Autoplay button.");
-                        mCurrentPosition = 0;
-                        setAutoplayState(AutoplayState.READY2PLAY, "onLongClick");
-                        if (buttonImage != null) {
-                            getAutoPlay().setBackgroundDrawable(buttonImage);
-                        }
-                        enableButtons();
-                        managePlaybackControls(ControlsState.ENABLED_SHOW_PAUSE, "onLongClick");
-                        getAutoPlay().setVisibility((sAutoplayNextNow) ? View.INVISIBLE : View.VISIBLE);
-                    }
-                });
-            }
-
-            @Override
-            public void onSwipeRight() {
-                LogHelper.v(TAG, "onSwipeRight");
-                markEpisodeAsHeardAndIncrementPlayCount(getEpisodeNumber(), String.valueOf(getEpisodeNumber()), mCurrentPosition);
-                getHandler().post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (getRadioMediaController() != null) {
-                            LogHelper.v(TAG, "onSwipeRight: skipToNext");
-                            getRadioMediaController().getTransportControls().skipToNext();
-                        }
-                    }
-                });
-            }
-
-            @Override
-            public void onSwipeLeft() {
-                LogHelper.v(TAG, "onSwipeLeft");
-                getHandler().post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (getRadioMediaController() != null) {
-                            LogHelper.v(TAG, "onSwipeLeft: skipToPrevious");
-                            long episodeNumber = getEpisodeNumber();
-                            if (episodeNumber >= 1) {
-                                episodeNumber -= 1;
-                            }
-                            markEpisodeAs_NOT_Heard(episodeNumber, String.valueOf(episodeNumber), 0);
-                            getRadioMediaController().getTransportControls().skipToPrevious();
-                        }
-                    }
-                });
-            }
-
-            @Override
-            public void onSwipeUp() { // FIXME
-                LogHelper.v(TAG, "onSwipeUp");
-                getHandler().post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (getRadioMediaController() != null) {
-                            mCurrentPosition += THIRTY_SECONDS;
-                            getRadioMediaController().getTransportControls().seekTo(mCurrentPosition);
-                        }
-                    }
-                });
-            }
-
-            @Override
-            public void onSwipeDown() { // FIXME
-                LogHelper.v(TAG, "onSwipeDown");
-                getHandler().post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (getRadioMediaController() != null) {
-                            mCurrentPosition -= THIRTY_SECONDS;
-                            getRadioMediaController().getTransportControls().seekTo(mCurrentPosition);
-                        }
-                    }
-                });
-            }
-
-        });
-
-        mFabActionButton = (FloatingActionButton) findViewById(R.id.fab);
-        if (getFabActionButton() != null) {
-            final AutoplayActivity activity = this;
-            getFabActionButton().setOnTouchListener(new OnSwipeTouchListener(this, getHandler(), getFabActionButton()) {
-
-                @Override
-                public void onClick() {
-                    if (!getCircularSeekBar().isProcessingTouchEvents() && !sSeeking) {
-                        LogHelper.v(TAG, "onClick - mFabActionButton");
-                        trackWithFirebaseAnalytics(String.valueOf(mEpisodeNumber), mCurrentPosition, "BROWSE PLAYLIST");
-                        Intent episodeListIntent = new Intent(activity, EpisodeListActivity.class);
-                        Bundle playInfo = new Bundle();
-                        savePlayInfoToBundle(playInfo);
-                        episodeListIntent.putExtras(playInfo);
-                        startActivity(episodeListIntent);
-                    }
-                    else {
-                        LogHelper.v(TAG, "isProcessingTouchEvents or seeking - onClick ignored");
-                    }
-                }
-            });
-        }
-
-        mCircleView = (CircleProgressView) findViewById(R.id.autoplay_circle_view);
-        mHorizontalScrollingText = (ScrollingTextView) findViewById(R.id.horizontal_scrolling_text);
-
-        // create a new View for the seek-bar and add it into the main_frame
-        FrameLayout theFrame = (FrameLayout) findViewById(R.id.main_frame);
-        mCircularSeekBar = new CircularSeekBar(this);
-        getCircularSeekBar().setEnabled(false);
-        getCircularSeekBar().setVisibility(View.INVISIBLE);
-        getCircularSeekBar().setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-        getCircularSeekBar().setBarWidth(5);
-        getCircularSeekBar().setMaxProgress((int) mDuration);
-        getCircularSeekBar().setProgress(0);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            getCircularSeekBar().setBackgroundColor(getResources().getColor(R.color.transparent, null));
-        }
-        else {
-            getCircularSeekBar().setBackgroundColor(getResources().getColor(R.color.transparent));
-        }
-        getCircularSeekBar().invalidate();
-        theFrame.addView(getCircularSeekBar());
-
-        getCircularSeekBar().setSeekBarChangeListener(new CircularSeekBar.OnSeekChangeListener() {
-
-            @Override
-            public void onProgressChange(CircularSeekBar view, final int newProgress) {
-                LogHelper.v(TAG, "onProgressChange: newProgress:" + newProgress);
-                sBeginLoading = true;
-                if (!getCircularSeekBar().isProcessingTouchEvents() && !sSeeking) {
-                    scheduleSeekbarUpdate();
-                    getHandler().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            sSeeking = true;
-                            mCurrentPosition = newProgress;
-                            managePlaybackControls(ControlsState.SEEKING_POSITION, "setSeekBarChangeListener");
-                            if (getRadioMediaController() != null) {
-                                getRadioMediaController().getTransportControls().seekTo(newProgress);
-                            }
-                        }
-                    });
-                }
-            }
-        });
-
-        // initialize AdMob - note this code uses the Gradle #IFDEF / #ENDIF gradle preprocessor
-        //#IFDEF 'FREE'
-        String banner_ad_unit_id = getResources().getString(R.string.banner_ad_unit_id);
-        MobileAds.initialize(getApplicationContext(), banner_ad_unit_id);
-
-        final TelephonyManager tm =(TelephonyManager)getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
-
-        AdView mAdView = (AdView) findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder()
-                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)        // All emulators
-                .addTestDevice(getResources().getString(R.string.test_device1))
-                .addTestDevice(getResources().getString(R.string.test_device2))
-                .build();
-        mAdView.loadAd(adRequest);
-        //#ENDIF
-
-        sLoadingScreenEnabled = true;
     }
 
     private void handleAutoplayClick() {
@@ -1123,7 +1125,9 @@ public class AutoplayActivity extends BaseActivity
                         handleAutoplayClick();
                     }
                     else {
-                        LogHelper.w(TAG, "*** IGNORED POKE-ME");
+                        LogHelper.w(TAG, "*** REINITIALIZE POKE-ME");
+                        startAutoplayActivity();
+                        finish();
                     }
                 }
                 else {
@@ -1284,25 +1288,21 @@ public class AutoplayActivity extends BaseActivity
     }
 
     private void showExpectedControls(ControlsState controlState) {
-        if (LoadingAsyncTask.mLoadingNow) {
-            if (controlState == ControlsState.ENABLED) {
-                controlState = ControlsState.DISABLED;
-            }
-            else if (controlState == ControlsState.ENABLED_SHOW_PAUSE) {
-                controlState = ControlsState.DISABLED_SHOW_PAUSE;
-            }
-            getAutoPlay().setVisibility(View.INVISIBLE);
+        int visibility = View.INVISIBLE;
+        if (LoadingAsyncTask.mLoadingNow || ! sLoadedOK || sAutoplayNextNow ) {
+            getAutoPlay().setVisibility(visibility);
+            getCircularSeekBar().setVisibility(visibility);
+            return;
         }
-        else {
-            getAutoPlay().setVisibility((sAutoplayNextNow) ? View.INVISIBLE : View.VISIBLE);
-        }
+        visibility = View.VISIBLE;
+        getAutoPlay().setVisibility(visibility);
         LogHelper.d(TAG, "showExpectedControls: controlState="+ controlState);
         switch (controlState) {
             case ENABLED: {
                 if (mAutoplayState == AutoplayState.PLAYING && mCurrentPosition > 0) {
                     Drawable pauseButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_pause_button_selector, null);
                     getAutoPlay().setBackground(pauseButton);
-                    getCircularSeekBar().setVisibility(sLoadedOK ? View.VISIBLE : View.INVISIBLE);
+                    getCircularSeekBar().setVisibility(visibility);
                 }
                 else if (mCurrentPosition > 0){
                     Drawable resumeButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_resume_button_selector, null);
@@ -1322,7 +1322,7 @@ public class AutoplayActivity extends BaseActivity
                 if (mAutoplayState == AutoplayState.PLAYING) {
                     Drawable pauseButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_pause_button_selector, null);
                     getAutoPlay().setBackground(pauseButton);
-                    getCircularSeekBar().setVisibility(sLoadedOK ? View.VISIBLE : View.INVISIBLE);
+                    getCircularSeekBar().setVisibility(visibility);
                 }
                 else {
                     if (getRadioMediaController() != null) {
@@ -1342,7 +1342,7 @@ public class AutoplayActivity extends BaseActivity
                 if (mAutoplayState == AutoplayState.PLAYING && mCurrentPosition > 0) {
                     Drawable pauseButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_pause_disabled_button_selector, null);
                     getAutoPlay().setBackground(pauseButton);
-                    getCircularSeekBar().setVisibility(sLoadedOK ? View.VISIBLE : View.INVISIBLE);
+                    getCircularSeekBar().setVisibility(visibility);
                 }
                 else if (mCurrentPosition > 0){
                     if (getRadioMediaController() != null) {
@@ -1367,7 +1367,7 @@ public class AutoplayActivity extends BaseActivity
                 Drawable pauseButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_pause_disabled_button_selector, null);
                 getAutoPlay().setBackground(pauseButton);
                 if (mAutoplayState == AutoplayState.PLAYING) {
-                    getCircularSeekBar().setVisibility(sLoadedOK ? View.VISIBLE : View.INVISIBLE);
+                    getCircularSeekBar().setVisibility(visibility);
                 }
                 else {
                     getCircularSeekBar().setVisibility(View.INVISIBLE);
