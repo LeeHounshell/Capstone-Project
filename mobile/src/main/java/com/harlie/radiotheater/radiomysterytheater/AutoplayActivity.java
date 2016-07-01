@@ -191,15 +191,21 @@ public class AutoplayActivity extends BaseActivity
                 getHandler().post(new Runnable() {
                     @Override
                     public void run() {
-                        LogHelper.v(TAG, "put back the Autoplay button.");
                         mCurrentPosition = 0;
-                        setAutoplayState(AutoplayState.READY2PLAY, "onLongClick");
-                        if (buttonImage != null) {
-                            getAutoPlay().setBackgroundDrawable(buttonImage);
-                        }
                         enableButtons();
+                        setAutoplayState(AutoplayState.READY2PLAY, "onLongClick");
+                        if (buttonImage != null) { // put back the button?
+                            getAutoPlay().setBackgroundDrawable(buttonImage);  // FIXME: race condition here
+                        }
+                        if (getRadioMediaController() != null) {
+                            PlaybackStateCompat playbackState = getRadioMediaController().getPlaybackState();
+                            if (playbackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
+                                LogHelper.v(TAG, "onLongClick: *** STOP PLAYING ***");
+                                MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
+                                controls.stop();
+                            }
+                        }
                         managePlaybackControls(ControlsState.ENABLED_SHOW_PAUSE, "onLongClick");
-                        getAutoPlay().setVisibility((sAutoplayNextNow) ? View.INVISIBLE : View.VISIBLE);
                     }
                 });
             }
@@ -514,7 +520,7 @@ public class AutoplayActivity extends BaseActivity
                             getHandler().post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    getAutoPlay().setVisibility(View.INVISIBLE);
+                                    sAutoplayNextNow = true;
                                 }
                             });
                             break;
@@ -709,7 +715,6 @@ public class AutoplayActivity extends BaseActivity
 
     private void handleAutoplayClick() {
         LogHelper.v(TAG, "handleAutoplayClick");
-        getAutoPlay().setEnabled(false);
         if (!getCircularSeekBar().isProcessingTouchEvents() && !sSeeking) {
             LogHelper.v(TAG, "do autoPlay");
             final AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.toolbar_container);
@@ -1250,13 +1255,9 @@ public class AutoplayActivity extends BaseActivity
             LogHelper.v(TAG, "manage - SEEKING_POSITION");
             Drawable pauseButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_pause_disabled_button_selector, null);
             getAutoPlay().setBackground(pauseButton);
-            getAutoPlay().setEnabled(false);
-            getFabActionButton().setEnabled(false);
         }
         else if (sBeginLoading || LoadingAsyncTask.mLoadingNow) {
             LogHelper.v(TAG, "manage - WAIT UNTIL FINISHED");
-            getAutoPlay().setEnabled(false);
-            getFabActionButton().setEnabled(false);
         }
         else {
             switch (mAutoplayState) {
@@ -1268,8 +1269,6 @@ public class AutoplayActivity extends BaseActivity
                 case LOADING: {
                     LogHelper.v(TAG, "manage - LOADING");
                     getCircularSeekBar().setVisibility(sLoadedOK ? View.VISIBLE : View.INVISIBLE);
-                    getAutoPlay().setEnabled(false);
-                    getFabActionButton().setEnabled(false);
                     break;
                 }
                 case PLAYING: {
@@ -1359,8 +1358,6 @@ public class AutoplayActivity extends BaseActivity
                     getAutoPlay().setBackground(autoplayButton);
                     getCircularSeekBar().setVisibility(View.INVISIBLE);
                 }
-                getAutoPlay().setEnabled(false);
-                getFabActionButton().setEnabled(true);
                 break;
             }
             case DISABLED_SHOW_PAUSE: {
@@ -1372,8 +1369,6 @@ public class AutoplayActivity extends BaseActivity
                 else {
                     getCircularSeekBar().setVisibility(View.INVISIBLE);
                 }
-                getAutoPlay().setEnabled(false);
-                getFabActionButton().setEnabled(true);
                 break;
             }
         }

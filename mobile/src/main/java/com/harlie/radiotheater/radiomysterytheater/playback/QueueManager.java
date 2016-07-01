@@ -26,6 +26,7 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 
 import com.harlie.radiotheater.radiomysterytheater.utils.AlbumArtCache;
@@ -190,6 +191,7 @@ public class QueueManager {
         }
         else if (mPlayingQueue.size() == 0) {
             LogHelper.v(TAG, "*** THE PLAYING QUEUE IS EMPTY ***");
+            waitabit();
             possiblePokeMe();
             return null;
         }
@@ -215,16 +217,14 @@ public class QueueManager {
         Iterable<MediaMetadataCompat> title_list = mMusicProvider.searchMusicBySongTitle(title);
         if (title_list == null) {
             LogHelper.e(TAG, "POKE: could not locate media for title: ", title);
-            try {
-                Thread.sleep(13);
-            } catch (Exception e) {};
-            sPokeMeTime = 0; // force POKE
+            waitabit();
             possiblePokeMe();
             return null;
         }
         Iterator<MediaMetadataCompat> tracks = title_list.iterator();
         if (! tracks.hasNext()) {
             LogHelper.e(TAG, "POKE: no media for title: ", title);
+            waitabit();
             possiblePokeMe();
             return null;
         }
@@ -240,6 +240,13 @@ public class QueueManager {
         sCurrentIndex = QueueHelper.getMusicIndexOnQueue(all_queued, episodeMediaId);
         LogHelper.v(TAG, "getCurrentMusic: sCurrentIndex="+sCurrentIndex);
         return episodeMediaId;
+    }
+
+    private void waitabit() {
+        try {
+            Thread.sleep(31);
+        } catch (Exception e) {}
+        ;
     }
 
     //-------- RADIO THEATER --------

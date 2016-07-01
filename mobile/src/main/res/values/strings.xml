@@ -4,7 +4,7 @@
     <string name="app_id">FAEC6D3F</string>
     <string name="app_description">
         This app provides an easy, quality listening experience for the CBS Radio Mystery Theater.
-        There are <b>1399</b> one-hour \'Radio Mystery Theatre\' episodes for you to listen to.\n\n
+        There are <b>1399</b> ~one-hour \'Radio Mystery Theatre\' episodes for you to listen to.\n\n
         <b>Autoplay</b> will begin with the oldest unheard episode and keep playing.
         After one episode finishes, the next automatically starts. Press Autoplay again to Pause.
         Swipe right for next episode, left for previous episode.
@@ -122,6 +122,5 @@
         <item>FontStyle.Medium</item>
         <item>FontStyle.Large</item>
     </string-array>
-
 
 </resources>
