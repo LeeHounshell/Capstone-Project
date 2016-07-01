@@ -48,13 +48,14 @@ public class EpisodeDetailFragment extends FragmentBase {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.episode_detail, container, false);
 
         // Show the dummy content as text in a TextView.
         if (mItem != null) {
-            ((TextView) rootView.findViewById(R.id.episode_detail)).setText(mItem.details);
+            ((TextView) rootView.findViewById(R.id.episode_number)).setText(String.valueOf(mItem.getEpisodeNumber()));
+            ((TextView) rootView.findViewById(R.id.episode_title)).setText(mItem.getTitle());
+            ((TextView) rootView.findViewById(R.id.episode_description)).setText(mItem.getDescription());
         }
 
         return rootView;

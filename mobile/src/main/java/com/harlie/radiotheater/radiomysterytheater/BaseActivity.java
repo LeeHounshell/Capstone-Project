@@ -1076,7 +1076,7 @@ public class BaseActivity extends AppCompatActivity {
         restorePlayInfoFromBundle(savedInstanceState);
     }
 
-    protected void savePlayInfoToBundle(Bundle playInfoBundle) {
+    public void savePlayInfoToBundle(Bundle playInfoBundle) {
         LogHelper.v(TAG, "savePlayInfoToBundle");
         playInfoBundle.putString(KEY_MEDIA_ID, getMediaId());
         playInfoBundle.putLong(KEY_EPISODE, getEpisodeNumber());

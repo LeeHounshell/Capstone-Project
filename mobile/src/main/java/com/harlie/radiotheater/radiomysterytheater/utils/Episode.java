@@ -3,6 +3,7 @@ package com.harlie.radiotheater.radiomysterytheater.utils;
 public class Episode {
     private String mTitle;
     private String mDescription;
+    private int mEpisodeNumber;
     private int mRating;
     private boolean mHeard;
     private boolean mDownloaded;
@@ -24,6 +25,10 @@ public class Episode {
 
     public String getDescription() {
         return mDescription;
+    }
+
+    public int getEpisodeNumber() {
+        return mEpisodeNumber;
     }
 
     public int getRating() {

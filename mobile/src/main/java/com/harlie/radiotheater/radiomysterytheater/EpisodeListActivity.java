@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import com.harlie.radiotheater.radiomysterytheater.dummy.DummyContent;
 import com.harlie.radiotheater.radiomysterytheater.utils.EpisodeViewHolder;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
+import com.harlie.radiotheater.radiomysterytheater.utils.RecyclerViewAdapter;
 
 import java.util.List;
 
@@ -84,59 +85,11 @@ public class EpisodeListActivity extends BaseActivity {
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
-        recyclerView.setAdapter(new RecyclerViewAdapter(DummyContent.ITEMS));
+        recyclerView.setAdapter(new RecyclerViewAdapter(DummyContent.ITEMS, this));
     }
 
-    public class RecyclerViewAdapter
-            extends RecyclerView.Adapter<EpisodeViewHolder> {
-
-        private final List<DummyContent.DummyItem> mValues;
-
-        public RecyclerViewAdapter(List<DummyContent.DummyItem> items) {
-            mValues = items;
-        }
-
-        @Override
-        public EpisodeViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.episode_list_content, parent, false);
-            return new EpisodeViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(final EpisodeViewHolder holder, int position) {
-            holder.mItem = mValues.get(position);
-            holder.mEpisodeTitle.setText(mValues.get(position).episode_title);
-            holder.mEpisodeDescription.setText(mValues.get(position).episode_description);
-
-            holder.mView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (mTwoPane) {
-                        Bundle arguments = new Bundle();
-                        arguments.putString(EpisodeDetailFragment.ARG_ITEM_ID, holder.mItem.episode_title);
-                        EpisodeDetailFragment fragment = new EpisodeDetailFragment();
-                        fragment.setArguments(arguments);
-                        getSupportFragmentManager().beginTransaction()
-                                .replace(R.id.episode_detail_container, fragment)
-                                .commit();
-                    } else {
-                        Context context = v.getContext();
-                        Intent intent = new Intent(context, EpisodeDetailActivity.class);
-                        intent.putExtra(EpisodeDetailFragment.ARG_ITEM_ID, holder.mItem.episode_title);
-                        Bundle playInfo = new Bundle();
-                        savePlayInfoToBundle(playInfo);
-                        intent.putExtras(playInfo);
-                        context.startActivity(intent);
-                    }
-                }
-            });
-        }
-
-        @Override
-        public int getItemCount() {
-            return mValues.size();
-        }
-
+    public boolean isTwoPane() {
+        return mTwoPane;
     }
+
 }
