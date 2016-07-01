@@ -88,6 +88,7 @@ public class AuthGoogleActivity
                 .build();
 
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+        signInIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
 
@@ -129,6 +130,7 @@ public class AuthGoogleActivity
                     // ok, now do the login invisibly with email to avoid extra app manifest permissions
                     LogHelper.v(TAG, "GOOGLE: name=" + personName + ", id=" + personId + ", email=" + getEmail() + ", url=" + personPhoto);
                     Intent authEmailIntent = new Intent(this, AuthEmailActivity.class);
+                    authEmailIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                     authEmailIntent.putExtra("name", personName);
                     authEmailIntent.putExtra("email", personEmail);
                     authEmailIntent.putExtra("pass", personPass);

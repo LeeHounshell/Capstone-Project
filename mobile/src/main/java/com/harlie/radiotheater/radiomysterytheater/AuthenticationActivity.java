@@ -67,6 +67,7 @@ public class AuthenticationActivity extends BaseActivity
         if (getAuth() != null && email != null && pass != null && isValid(email, pass)) {
             LogHelper.v(TAG, "authenticateEmail - Firebase Auth using Email");
             Intent authEmailIntent = new Intent(this, AuthEmailActivity.class);
+            authEmailIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
             authEmailIntent.putExtra("email", email);
             authEmailIntent.putExtra("pass", pass);
             authEmailIntent.putExtra("DO_AUTH", true);
@@ -85,6 +86,7 @@ public class AuthenticationActivity extends BaseActivity
     void authenticateGoogle() {
         LogHelper.v(TAG, "authenticateGoogle - Firebase Auth using Google");
         Intent authGoogleIntent = new Intent(this, AuthGoogleActivity.class);
+        authGoogleIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         authGoogleIntent.putExtra("DO_AUTH", true);
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
         trackSignupAttemptWithFirebaseAnalytics("google");
@@ -96,6 +98,7 @@ public class AuthenticationActivity extends BaseActivity
     void authenticateTwitter() {
         LogHelper.v(TAG, "authenticateTwitter - Firebase Auth using Twitter");
         Intent authTwitterIntent = new Intent(this, AuthTwitterActivity.class);
+        authTwitterIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         authTwitterIntent.putExtra("DO_AUTH", true);
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
         trackSignupAttemptWithFirebaseAnalytics("twitter");
@@ -107,6 +110,7 @@ public class AuthenticationActivity extends BaseActivity
     void authenticateFacebook() {
         LogHelper.v(TAG, "authenticateFacebook - Firebase Auth using Facebook");
         Intent authFacebookIntent = new Intent(this, AuthFacebookActivity.class);
+        authFacebookIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         authFacebookIntent.putExtra("DO_AUTH", true);
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
         trackSignupAttemptWithFirebaseAnalytics("facebook");

@@ -27,6 +27,7 @@ public class SplashActivity extends AppCompatActivity
         else {
             LogHelper.v(TAG, "Need to Authenticate.");
             Intent intent = new Intent(this, AuthenticationActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
             startActivity(intent);
         }
         finish();

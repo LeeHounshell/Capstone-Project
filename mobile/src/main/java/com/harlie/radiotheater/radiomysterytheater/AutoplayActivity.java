@@ -124,6 +124,7 @@ public class AutoplayActivity extends BaseActivity
         if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
             LogHelper.d(TAG, "Running on a TV Device");
             Intent tvIntent = new Intent(this, TvPlaybackActivity.class);
+            tvIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION");
             startActivity(tvIntent);
             finish();
             return;
@@ -140,6 +141,8 @@ public class AutoplayActivity extends BaseActivity
                 actionBar.setDisplayShowTitleEnabled(false);
             }
         }
+
+        OnSwipeTouchListener.reset();
 
         // Connect a media browser just to get the media session token. There are other ways
         // this can be done, for example by sharing the session token directly.
@@ -878,8 +881,8 @@ public class AutoplayActivity extends BaseActivity
                 Bundle playInfo = new Bundle();
                 savePlayInfoToBundle(playInfo);
                 intent.putExtras(playInfo);
-                intent.putExtra( PreferenceActivity.EXTRA_SHOW_FRAGMENT, SettingsActivity.GeneralPreferenceFragment.class.getName() );
-                intent.putExtra( PreferenceActivity.EXTRA_NO_HEADERS, true );
+                intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT, SettingsActivity.GeneralPreferenceFragment.class.getName());
+                intent.putExtra(PreferenceActivity.EXTRA_NO_HEADERS, true);
                 trackSettingsWithFirebaseAnalytics();
                 startActivity(intent);
                 return true;

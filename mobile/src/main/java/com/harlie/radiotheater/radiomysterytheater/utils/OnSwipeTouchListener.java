@@ -39,6 +39,13 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
     private static volatile long sDownPressTime;
     private static volatile boolean sIgnoreUpPressUntilDown;
 
+    public static void reset() {
+        LogHelper.v(TAG, "reset");
+        sDownPressTime = 0;
+        sIgnoreUpPressUntilDown = false;
+        clearInput();
+    }
+
     public OnSwipeTouchListener(Context context, Handler handler, AppCompatButton button, Drawable pressed) {
         LogHelper.v(TAG, "OnSwipeTouchListener - BUTTON");
         mHandler = handler;
@@ -142,7 +149,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
         return rc;
     }
 
-    private void clearInput() {
+    private static void clearInput() {
         onLongClick = false;
         onDoubleClick = false;
         onSwipeLeft = false;

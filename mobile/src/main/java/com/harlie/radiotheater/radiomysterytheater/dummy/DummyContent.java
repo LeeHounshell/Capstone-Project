@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Helper class for providing sample content for user interfaces created by
+ * Helper class for providing sample episode_description for user interfaces created by
  * Android template wizards.
  * <p>
  * TODO: Replace all uses of this class before publishing your app.
@@ -34,7 +34,7 @@ public class DummyContent {
 
     private static void addItem(DummyItem item) {
         ITEMS.add(item);
-        ITEM_MAP.put(item.id, item);
+        ITEM_MAP.put(item.episode_title, item);
     }
 
     private static DummyItem createDummyItem(int position) {
@@ -51,22 +51,26 @@ public class DummyContent {
     }
 
     /**
-     * A dummy item representing a piece of content.
+     * A dummy item representing a piece of episode_description.
      */
     public static class DummyItem {
-        public final String id;
-        public final String content;
+        public final String episode_title;
+        public final String episode_description;
         public final String details;
 
+        public String getDetails() {
+            return details;
+        }
+
         public DummyItem(String id, String content, String details) {
-            this.id = id;
-            this.content = content;
+            this.episode_title = id;
+            this.episode_description = content;
             this.details = details;
         }
 
         @Override
         public String toString() {
-            return content;
+            return episode_description;
         }
     }
 }

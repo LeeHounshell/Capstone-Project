@@ -310,6 +310,7 @@ public class BaseActivity extends AppCompatActivity {
         Intent authenticationIntent = new Intent(this, AuthenticationActivity.class);
         // close existing activity stack regardless of what's in there and create new root
         authenticationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        authenticationIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         Bundle playInfo = new Bundle();
         savePlayInfoToBundle(playInfo);
         authenticationIntent.putExtras(playInfo);
@@ -507,8 +508,8 @@ public class BaseActivity extends AppCompatActivity {
         else {
             LogHelper.v(TAG, "SQL: found "+cursor.getCount()+" records in table "+tableName);
             success = true;
+            cursor.close();
         }
-        cursor.close();
         return success;
     }
 
