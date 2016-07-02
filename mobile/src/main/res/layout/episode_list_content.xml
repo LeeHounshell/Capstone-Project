@@ -85,6 +85,7 @@
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="2dp"
+        android:layout_marginTop="@dimen/list_item_margin"
         android:src="@drawable/line_separator"
         android:scaleType="centerCrop" />
 

@@ -11,6 +11,8 @@
     <color name="divider">#B6B6B6</color>
     <color name="light_blue">#ffadd8e6</color>
     <color name="forest_green">#ff228b22</color>
+    <color name="dusk_yellow">#ffc6c610</color>
+    <color name="light_grey">#ffd3d3d3</color>
     <color name="transparent">#00000000</color>
 
     <color name="buttonColor">#ff228b22</color>

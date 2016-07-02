@@ -96,6 +96,23 @@
     <string name="initializing">Initializing. please wait</string>
     <string name="loading">loading..</string>
 
+    <!-- Strings related to Detail View -->
+    <string name="actor1">Actor One</string>
+    <string name="actor2">Actor Two</string>
+    <string name="actor3">Actor Three</string>
+    <string name="actor4">Actor Four</string>
+    <string name="actor5">Actor Five</string>
+    <string name="actor6">Actor Six</string>
+    <string name="writer">Writer</string>
+
+    <string name="actor1_name">Actor One Name</string>
+    <string name="actor2_name">Actor Two Name</string>
+    <string name="actor3_name">Actor Three Name</string>
+    <string name="actor4_name">Actor Four Name</string>
+    <string name="actor5_name">Actor Five Name</string>
+    <string name="actor6_name">Actor Six Name</string>
+    <string name="writer_name">Writer Name</string>
+
     <!-- Strings related to Settings -->
     <string name="title_font_settings">Font Settings</string>
     <string name="action_more">More</string>

@@ -1,9 +1,13 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.RatingBar;
 import android.widget.TextView;
 
 import com.harlie.radiotheater.radiomysterytheater.dummy.DummyContent;
@@ -54,11 +58,58 @@ public class EpisodeDetailFragment extends FragmentBase {
         // Show the dummy content as text in a TextView.
         if (mItem != null) {
             ((TextView) rootView.findViewById(R.id.episode_number)).setText("#"+String.valueOf(mItem.getEpisodeNumber()));
-            ((TextView) rootView.findViewById(R.id.episode_title)).setText(mItem.getTitle());
             ((TextView) rootView.findViewById(R.id.episode_airdate)).setText(mItem.getAirdate());
+            ((TextView) rootView.findViewById(R.id.episode_title)).setText(mItem.getTitle());
             ((TextView) rootView.findViewById(R.id.episode_description)).setText(mItem.getDescription());
-        }
+            ((RatingBar) rootView.findViewById(R.id.episode_rating)).setNumStars((int) mItem.getRating());
 
+            String actor1 = mItem.getActor1();
+            loadPortrait(rootView, actor1, R.id.actor1, R.id.actor1_name);
+            String actor2 = mItem.getActor2();
+            loadPortrait(rootView, actor2, R.id.actor2, R.id.actor2_name);
+            String actor3 = mItem.getActor3();
+            loadPortrait(rootView, actor3, R.id.actor3, R.id.actor3_name);
+            String actor4 = mItem.getActor4();
+            loadPortrait(rootView, actor4, R.id.actor4, R.id.actor4_name);
+            String actor5 = mItem.getActor5();
+            loadPortrait(rootView, actor5, R.id.actor5, R.id.actor5_name);
+            String actor6 = mItem.getActor6();
+            loadPortrait(rootView, actor6, R.id.actor6, R.id.actor6_name);
+            String writer = mItem.getWriter();
+            loadPortrait(rootView, writer, R.id.writer, R.id.writer_name);
+        }
         return rootView;
     }
+
+    private void loadPortrait(View rootView, String person, int personImageResource, int personNameResource) {
+        if (person != null) {
+            String person_name = makeFullName(person);
+            int portraitResourceId = getResources().getIdentifier("com.harlie.radiotheater.radiomysterytheater:drawable/" + person, null, null);
+            Bitmap bitmap;
+            if (portraitResourceId > 0) {
+                bitmap = BitmapFactory.decodeResource(getResources(), portraitResourceId);
+            } else {
+                bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.unknown);
+            }
+            ((ImageView) rootView.findViewById(personImageResource)).setImageBitmap(bitmap);
+            ((ImageView) rootView.findViewById(personImageResource)).setVisibility(View.VISIBLE);
+            ((TextView) rootView.findViewById(personNameResource)).setText(person_name);
+            ((TextView) rootView.findViewById(personNameResource)).setVisibility(View.VISIBLE);
+        }
+    }
+
+    private String makeFullName(String staffMember) {
+        String fullName = "";
+        if (staffMember.contains(".jpg") || staffMember.contains(".png")) {
+            staffMember = staffMember.substring(0, staffMember.length() - 4); // drop the suffix
+        }
+        String[] names = staffMember.split("_");
+        for (int i = names.length; i > 0; --i) {
+            String part = names[i - 1];
+            part = part.substring(0, 1).toUpperCase() + part.substring(1).toLowerCase();
+            fullName = fullName + " " + part;
+        }
+        return fullName;
+    }
+
 }

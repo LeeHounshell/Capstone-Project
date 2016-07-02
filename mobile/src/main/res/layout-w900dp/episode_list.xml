@@ -29,6 +29,16 @@
         android:layout_marginEnd="5dp"
         app:layoutManager="LinearLayoutManager"
         style="@style/EpisodeListViewStyle"
+        android:layout_weight="1"
+        android:divider="#FFF"
+        android:fadeScrollbars="false"
+        android:fastScrollEnabled="true"
+        android:scrollX="0px"
+        android:scrollY="0px"
+        android:scrollbarAlwaysDrawVerticalTrack="true"
+        android:scrollbarSize="50dp"
+        android:scrollbarStyle="outsideOverlay"
+        android:scrollbars="vertical"
         tools:context="com.harlie.radiotheater.radiomysterytheater.EpisodeListActivity"
         tools:listitem="@layout/episode_list_content" />
 

@@ -48,6 +48,12 @@ public class RadioTheaterContract {
         return outputDateStr;
     }
 
+    public static String airDateShort(String episodeAirDate) {
+        String airdateTmp = airDate(episodeAirDate);
+        airdateTmp = airdateTmp.substring(airdateTmp.indexOf(',') + 1);
+        return airdateTmp;
+    }
+
     /* Inner class that defines the table contents of the configuration table */
     public static final class ConfigurationEntry extends ConfigurationColumns {
 

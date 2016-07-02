@@ -24,6 +24,8 @@
     <dimen name="app_bar_height">200dp</dimen>
     <dimen name="item_width">200dp</dimen>
     <dimen name="text_margin">16dp</dimen>
+    <dimen name="image_margin">32dp</dimen>
+    <dimen name="list_item_margin">8dp</dimen>
     <dimen name="scrolling_text_size">31sp</dimen>
     <dimen name="scrolling_text_margin_bottom">16sp</dimen>
 
