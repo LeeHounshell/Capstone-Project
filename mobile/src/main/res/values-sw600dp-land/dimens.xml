@@ -2,4 +2,9 @@
 <resources>
     <dimen name="autoplay_height">222dp</dimen>
     <dimen name="autoplay_width">333dp</dimen>
+    <dimen name="play_now_height">111dp</dimen>
+    <dimen name="play_now_width">166dp</dimen>
+    <dimen name="weblink_height">100dp</dimen>
+    <dimen name="weblink_width">300dp</dimen>
+
 </resources>

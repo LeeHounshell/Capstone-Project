@@ -1,8 +1,11 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.v7.widget.AppCompatButton;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +14,7 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 
 import com.harlie.radiotheater.radiomysterytheater.dummy.DummyContent;
+import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 /**
  * A fragment representing a single Episode detail screen.
@@ -26,6 +30,9 @@ public class EpisodeDetailFragment extends FragmentBase {
      * represents.
      */
     public static final String ARG_ITEM_ID = "item_id";
+
+    private AppCompatButton mPlayNow;
+    private AppCompatButton mWebLink;
 
     /**
      * The dummy content this fragment is presenting.
@@ -77,6 +84,29 @@ public class EpisodeDetailFragment extends FragmentBase {
             loadPortrait(rootView, actor6, R.id.actor6, R.id.actor6_name);
             String writer = mItem.getWriter();
             loadPortrait(rootView, writer, R.id.writer, R.id.writer_name);
+
+            mPlayNow = (AppCompatButton) rootView.findViewById(R.id.play_now);
+            mWebLink = (AppCompatButton) rootView.findViewById(R.id.weblink);
+
+            mPlayNow.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    LogHelper.v(TAG, "onClick - PLAY NOW");
+                }
+            });
+
+            mWebLink.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    String url = "http://" + mItem.getWeblink();
+                    url = url.replace("episode_name-", "episode-"); // FIXME: database bug for weblink
+                    LogHelper.v(TAG, "onClick - WEB LINK - url="+url);
+                    Intent webLinkIntent = new Intent(Intent.ACTION_VIEW);
+                    webLinkIntent.setData(Uri.parse(url));
+                    startActivity(webLinkIntent);
+                }
+            });
+
         }
         return rootView;
     }

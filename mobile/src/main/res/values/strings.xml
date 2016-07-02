@@ -45,6 +45,8 @@
     <!-- Strings related to Autoplay and messages -->
     <string name="title_activity_autoplay">AutoplayActivity</string>
     <string name="autoplay_next">Autoplay next episode</string>
+    <string name="play_now">Play episode</string>
+    <string name="weblink">Web Link</string>
     <string name="episodes_count">1399</string>
     <string name="genre">__RADIO_DRAMA__</string>
     <string name="icon_url">http://harlie.com/radiotheater/logo_icon.png</string>

@@ -9,6 +9,10 @@
 
     <dimen name="autoplay_height">200dp</dimen>
     <dimen name="autoplay_width">300dp</dimen>
+    <dimen name="play_now_height">100dp</dimen>
+    <dimen name="play_now_width">140dp</dimen>
+    <dimen name="weblink_height">80dp</dimen>
+    <dimen name="weblink_width">260dp</dimen>
 
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">32dp</dimen>

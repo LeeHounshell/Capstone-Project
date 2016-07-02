@@ -53,7 +53,7 @@ public class DummyContent {
             String title = "The old ones are hard to kill";
             String airdate = RadioTheaterContract.airDateShort("1974-01-06");
             String description = "An old lady rents a room to a sick boarder. She runs into problems with his strange deathbed confession.";
-            float rating = 3;
+            float rating = 5;
             String actor1 = "dekoven_roger";
             String actor2 = "janney_leon";
             String actor3 = "moorehead_agnes";

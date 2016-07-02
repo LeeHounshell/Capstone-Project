@@ -62,18 +62,33 @@
             android:layout_height="wrap_content"
             android:paddingEnd="@dimen/text_margin"
             android:paddingStart="@dimen/text_margin"
+            android:paddingBottom="@dimen/image_margin"
             android:textColor="@color/primary_text"
             android:textSize="30sp"
             android:textStyle="normal" />
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/play_now"
+            android:layout_width="@dimen/play_now_width"
+            android:layout_height="@dimen/play_now_height"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:background="@drawable/radio_theater_playnow_button_selector"
+            android:contentDescription="@string/play_now"
+            android:elevation="@dimen/button_elevation"
+            android:paddingTop="@dimen/image_margin"
+            android:paddingBottom="@dimen/image_margin"
+            android:visibility="visible"
+            android:theme="@style/RadioTheaterButton" />
 
         <RatingBar
             android:id="@+id/episode_rating"
             android:theme="@style/RatingBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center|bottom"
-            android:layout_marginEnd="8dp"
+            android:layout_gravity="center"
             android:gravity="center"
+            android:layout_marginEnd="8dp"
             android:isIndicator="true"
             android:max="5"
             android:numStars="5"
@@ -324,6 +339,22 @@
         <android.support.v4.widget.Space
             android:layout_width="match_parent"
             android:layout_height="50dp" />
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/weblink"
+            android:layout_width="@dimen/weblink_width"
+            android:layout_height="@dimen/weblink_height"
+            android:layout_gravity="center"
+            android:background="@drawable/radio_theater_weblink_button_selector"
+            android:contentDescription="@string/weblink"
+            android:elevation="@dimen/button_elevation"
+            android:gravity="center"
+            android:visibility="visible"
+            android:theme="@style/RadioTheaterButton" />
+
+        <android.support.v4.widget.Space
+            android:layout_width="match_parent"
+            android:layout_height="123dp" />
 
     </LinearLayout>
 
