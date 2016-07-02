@@ -299,7 +299,7 @@
                         android:id="@+id/the_host"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:src="@drawable/e_g_marshall_small"
+                        android:src="@drawable/e_g_marshall"
                         android:contentDescription="@string/e_g_marshall"
                         android:padding="@dimen/image_margin"
                         android:visibility="visible" />
