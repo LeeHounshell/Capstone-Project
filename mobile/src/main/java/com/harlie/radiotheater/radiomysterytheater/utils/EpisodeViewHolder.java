@@ -14,6 +14,7 @@ public class EpisodeViewHolder extends RecyclerView.ViewHolder {
 
     public final View mView;
     public TextView mEpisodeNumber;
+    public TextView mEpisodeAirdate;
     public TextView mEpisodeTitle;
     public TextView mEpisodeDescription;
     public RatingBar mEpisodeRating;
@@ -29,6 +30,7 @@ public class EpisodeViewHolder extends RecyclerView.ViewHolder {
         Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
         mView = itemView;
         this.mEpisodeNumber = (TextView) itemView.findViewById(R.id.episode_number) ;
+        this.mEpisodeAirdate = (TextView) itemView.findViewById(R.id.episode_airdate) ;
         this.mEpisodeTitle = (TextView) itemView.findViewById(R.id.episode_title) ;
         this.mEpisodeDescription = (TextView) itemView.findViewById(R.id.episode_description) ;
         this.mEpisodeRating = (RatingBar) itemView.findViewById(R.id.episode_rating);

@@ -1,4 +1,5 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -8,6 +9,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingBottom="@dimen/text_margin"
         android:orientation="horizontal">
 
         <TextView
@@ -15,34 +17,62 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="start"
-            android:textSize="19sp"
+            android:paddingStart="@dimen/text_margin"
+            android:paddingEnd="@dimen/text_margin"
+            android:textSize="30sp"
             android:textStyle="normal"
-            android:layout_weight="1"/>
+            android:textColor="@color/dark_red"
+            android:layout_weight="1" />
 
         <TextView
-            android:id="@+id/episode_title"
+            android:id="@+id/episode_airdate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:textSize="33sp"
-            android:textStyle="bold"
-            android:layout_weight="0"/>
+            android:layout_gravity="end"
+            android:gravity="end"
+            android:paddingStart="@dimen/text_margin"
+            android:paddingEnd="@dimen/text_margin"
+            android:textSize="30sp"
+            android:textStyle="normal"
+            android:textColor="@color/dark_red"
+            android:layout_weight="1" />
 
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/episode_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:paddingBottom="@dimen/text_margin"
+        android:textSize="33sp"
+        android:textStyle="bold"
+        android:textColor="@color/primary_text"
+        android:layout_weight="0" />
 
     <TextView
         android:id="@+id/episode_description"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="27sp"
+        android:paddingStart="@dimen/text_margin"
+        android:paddingEnd="@dimen/text_margin"
+        android:textSize="30sp"
+        android:textColor="@color/primary_text"
         android:textStyle="normal" />
 
-    <TextView
+    <RatingBar
         android:id="@+id/episode_rating"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="27sp"
-        android:textStyle="normal" />
+        android:layout_gravity="center|bottom"
+        android:gravity="center"
+        android:layout_marginEnd="8dp"
+        style="?android:attr/ratingBarStyleSmall"
+        android:max="5"
+        android:numStars="5"
+        android:rating="0.0"
+        android:stepSize="0.0"
+        android:isIndicator="true" />
 
     <LinearLayout
         android:layout_width="wrap_content"

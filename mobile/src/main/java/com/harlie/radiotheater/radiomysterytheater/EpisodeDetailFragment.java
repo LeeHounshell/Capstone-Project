@@ -53,8 +53,9 @@ public class EpisodeDetailFragment extends FragmentBase {
 
         // Show the dummy content as text in a TextView.
         if (mItem != null) {
-            ((TextView) rootView.findViewById(R.id.episode_number)).setText(String.valueOf(mItem.getEpisodeNumber()));
+            ((TextView) rootView.findViewById(R.id.episode_number)).setText("#"+String.valueOf(mItem.getEpisodeNumber()));
             ((TextView) rootView.findViewById(R.id.episode_title)).setText(mItem.getTitle());
+            ((TextView) rootView.findViewById(R.id.episode_airdate)).setText(mItem.getAirdate());
             ((TextView) rootView.findViewById(R.id.episode_description)).setText(mItem.getDescription());
         }
 

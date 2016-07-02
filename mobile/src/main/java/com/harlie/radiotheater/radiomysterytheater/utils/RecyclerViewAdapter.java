@@ -2,12 +2,14 @@ package com.harlie.radiotheater.radiomysterytheater.utils;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
 import com.harlie.radiotheater.radiomysterytheater.EpisodeDetailActivity;
@@ -42,6 +44,15 @@ public class RecyclerViewAdapter
     public EpisodeViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.episode_list_content, parent, false);
+        TextView episode_description = (TextView) view.findViewById(R.id.episode_description);
+        if (! EpisodeListActivity.isTwoPane()
+                || parent.getContext().getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+        {
+            episode_description.setVisibility(View.VISIBLE);
+        }
+        else {
+            episode_description.setVisibility(View.GONE);
+        }
         return new EpisodeViewHolder(view);
     }
 

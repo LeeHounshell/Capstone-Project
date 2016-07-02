@@ -36,6 +36,13 @@
         <item name="popupTheme">@style/ThemeOverlay.AppCompat.Light</item>
     </style>
 
+    <style name="EpisodeListViewStyle" parent="AppTheme">
+        <item name="android:cacheColorHint">@android:color/transparent</item>
+        <item name="android:dividerHeight">0px</item>
+        <item name="android:layout_marginTop">5dp</item>
+        <item name="android:layout_margin">2dp</item>
+    </style>
+
     <style name="RadioTheaterButton" parent="AppTheme">
         <item name="colorControlHighlight">@color/buttonColorPressed</item>
         <item name="colorButtonNormal">@color/buttonColor</item>

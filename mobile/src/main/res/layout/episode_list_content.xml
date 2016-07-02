@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/list_layout"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:paddingTop="@dimen/text_margin"
+    android:layout_marginStart="5dp"
+    android:layout_marginEnd="5dp"
     android:orientation="vertical">
 
     <LinearLayout
@@ -13,23 +17,23 @@
         <TextView
             android:id="@+id/episode_number"
             android:layout_gravity="start"
-            android:textColor="@color/white"
+            android:textColor="@color/dark_red"
             android:textSize="19sp"
             android:textStyle="normal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/text_margin"
+            android:layout_margin="3dp"
             android:textAppearance="?attr/textAppearanceListItem" />
 
         <TextView
             android:id="@+id/episode_title"
             android:layout_gravity="center_horizontal"
-            android:textColor="@color/primary_text"
+            android:textColor="@color/primary_dark"
             android:textSize="27sp"
             android:textStyle="bold"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/text_margin"
+            android:layout_margin="3dp"
             android:textAppearance="?attr/textAppearanceListItem" />
 
     </LinearLayout>
@@ -37,13 +41,14 @@
     <TextView
         android:id="@+id/episode_description"
         android:layout_gravity="start"
-        android:textColor="@color/secondary_text"
+        android:textColor="@color/primary_text"
         android:textSize="24sp"
         android:textStyle="normal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/text_margin"
-        android:textAppearance="?attr/textAppearanceListItem" />
+        android:layout_margin="3dp"
+        android:textAppearance="?attr/textAppearanceListItem"
+        android:visibility="gone" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -59,7 +64,9 @@
             android:id="@+id/episode_rating"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="end|bottom"
+            android:layout_gravity="center|bottom"
+            android:gravity="center"
+            android:layout_marginEnd="8dp"
             style="?android:attr/ratingBarStyleSmall"
             android:max="5"
             android:numStars="5"
@@ -68,6 +75,17 @@
             android:isIndicator="true"
             android:layout_weight="0" />
 
+        <android.support.v4.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
     </LinearLayout>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:src="@drawable/line_separator"
+        android:scaleType="centerCrop" />
 
 </LinearLayout>

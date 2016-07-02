@@ -34,7 +34,7 @@ public class EpisodeListActivity extends BaseActivity {
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
      */
-    private boolean mTwoPane;
+    private static boolean mTwoPane;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,7 +88,7 @@ public class EpisodeListActivity extends BaseActivity {
         recyclerView.setAdapter(new RecyclerViewAdapter(DummyContent.ITEMS, this));
     }
 
-    public boolean isTwoPane() {
+    public static boolean isTwoPane() {
         return mTwoPane;
     }
 

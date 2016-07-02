@@ -1,5 +1,7 @@
 package com.harlie.radiotheater.radiomysterytheater.dummy;
 
+import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,10 +49,12 @@ public class DummyContent {
     private static DummyItem createDummyItem(int episode) {
         if (episode % 3 == 1) {
             String title = "The old ones are hard to kill";
+            String airdate = RadioTheaterContract.airDate("1974-01-06");
             String description = "An old lady rents a room to a sick boarder. She runs into problems with his strange deathbed confession.";
             int rating = 3;
             return new DummyItem(
                     title,
+                    airdate,
                     description,
                     episode,
                     rating,
@@ -60,10 +64,12 @@ public class DummyContent {
         else
         if (episode % 3 == 2) {
             String title = "The Return of the Moresbys";
+            String airdate = RadioTheaterContract.airDate("1974-01-07");
             String description = "A husband kills his wife for donating all their money. Now, he is certain that she has been reincarnated in the form of a cat to wreak revenge on him.";
             int rating = 3;
             return new DummyItem(
                     title,
+                    airdate,
                     description,
                     episode,
                     rating,
@@ -73,10 +79,12 @@ public class DummyContent {
         else {
         /* if (episode % 3 == 0) */
             String title = "The Bullet";
+            String airdate = RadioTheaterContract.airDate("1974-01-08");
             String description = "An accident kills a man but he is made to return to Earth to trade places with the fated victim.";
             int rating = 3;
             return new DummyItem(
                     title,
+                    airdate,
                     description,
                     episode, // episodeNumber
                     rating,
@@ -91,14 +99,16 @@ public class DummyContent {
     public static class DummyItem {
 
         public String episode_title;
+        public String episode_airdate;
         public String episode_description;
         public int episode_number;
         public int episode_rating;
         public boolean episode_heard;
         public boolean episode_downloaded;
 
-        public DummyItem(String title, String description, int episodeNumber, int rating, boolean heard, boolean downloaded) {
+        public DummyItem(String title, String airdate, String description, int episodeNumber, int rating, boolean heard, boolean downloaded) {
             setTitle(title);
+            setAirdate(airdate);
             setDescription(description);
             setEpisodeNumber(episodeNumber);
             setRating(rating);
@@ -108,7 +118,7 @@ public class DummyContent {
 
         @Override
         public String toString() {
-            return episode_number + "  " + episode_title + ": " + episode_description + " ... Rated " + episode_rating + "\n\n";
+            return episode_number + " " + episode_airdate + "  " + episode_title + ": " + episode_description + " ... Rated " + episode_rating + "\n\n";
         }
 
         public String getDummyEpisodeDetail() {
@@ -118,6 +128,10 @@ public class DummyContent {
 
         public String getTitle() {
             return episode_title;
+        }
+
+        public String getAirdate() {
+            return episode_airdate;
         }
 
         public boolean isDownloaded() {
@@ -142,6 +156,10 @@ public class DummyContent {
 
         public void setTitle(String episode_title) {
             this.episode_title = episode_title;
+        }
+
+        public void setAirdate(String episode_airdate) {
+            this.episode_airdate = episode_airdate;
         }
 
         public void setDescription(String episode_description) {
