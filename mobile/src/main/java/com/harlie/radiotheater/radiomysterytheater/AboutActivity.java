@@ -150,5 +150,18 @@ public class AboutActivity extends BaseActivity {
         startActivity(intent);
     }
 
+    @Override
+    public void onBackPressed() {
+        LogHelper.v(TAG, "onBackPressed");
+        super.onBackPressed();
+        Intent autoplayIntent = new Intent(this, AutoplayActivity.class);
+        // close existing activity stack regardless of what's in there and create new root
+        autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        Bundle playInfo = new Bundle();
+        savePlayInfoToBundle(playInfo);
+        autoplayIntent.putExtras(playInfo);
+        startActivity(autoplayIntent);
+    }
+
 }
 

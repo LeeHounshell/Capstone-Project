@@ -4,6 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".AutoplayActivity">
 
+<!--
+
+FIXME: because of time-limitations, the voice-search and play-now functionality will be built last, time permitting.
+
     <item
         android:id="@+id/search"
         android:icon="@drawable/ic_search_white_24dp"
@@ -11,6 +15,7 @@
         android:orderInCategory="100"
         app:showAsAction="always"
         />
+-->
 
     <item
         android:id="@+id/action_more"

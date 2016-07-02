@@ -17,7 +17,6 @@ import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.text.format.DateFormat;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -52,7 +51,6 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Locale;
 
 import at.grabner.circleprogress.AnimationState;
@@ -89,6 +87,18 @@ public class BaseActivity extends AppCompatActivity {
     protected String mMediaId;
     protected long mEpisodeNumber;
 
+    public static volatile long sKickstartTime;
+
+    private static volatile boolean sOnRestoreInstanceComplete;
+
+    protected static volatile boolean sHandleRotationEvent;
+    protected static volatile boolean sNeed2RestartPlayback;
+    protected static volatile boolean sLoadingScreenEnabled;
+    protected static volatile boolean sBeginLoading;
+    protected static volatile boolean sSeekUpdateRunning;
+    protected static volatile boolean sAutoplayNextNow;
+    protected static volatile boolean sOkKickstart;
+
     protected static volatile boolean sPurchased;
     protected static volatile boolean sNoAdsForShow;
     protected static volatile boolean sDownloaded;
@@ -121,16 +131,38 @@ public class BaseActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         LogHelper.v(TAG, "onCreate");
+        sOnRestoreInstanceComplete = false;
+
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
             onRestoreInstanceState(savedInstanceState);
         }
         else {
+            sHandleRotationEvent = false;
+            sNeed2RestartPlayback = false;
+            sLoadingScreenEnabled = false;
+            sBeginLoading = false;
+            sSeekUpdateRunning = false;
+            sAutoplayNextNow = false;
+            sOkKickstart = false;
+
+            sPurchased = false;
+            sNoAdsForShow = false;
+            sDownloaded = false;
+            sEpisodeHeard = false;
+            sHaveRealDuration = false;
+            sSeeking = false;
+            sPlaying = false;
+            sLoadedOK = false;
+            sShowUnit = false;
+            sCopiedDatabaseSuccess = false;
+
             Bundle playInfo = getIntent().getExtras();
             if (playInfo != null) {
                 restorePlayInfoFromBundle(playInfo);
             }
         }
+
         mRootView = findViewById(android.R.id.content);
         mHandler = new Handler();
         Firebase.setAndroidContext(this);
@@ -1038,29 +1070,46 @@ public class BaseActivity extends AppCompatActivity {
         return mAutoplayState;
     }
 
+    public static boolean isPlaying() {
+        return sPlaying;
+    }
+
+    public static boolean isLoadedOK() {
+        return sLoadedOK;
+    }
+
     //--------------------------------------------------------------------------------
     // Autoplay related
     //--------------------------------------------------------------------------------
 
-    private static final String KEY_MEDIA_ID            = "mediaId";
-    private static final String KEY_EPISODE             = "episodeNumber";
-    private static final String KEY_PURCHASED           = "purchased";
-    private static final String KEY_NOADS               = "noads";
-    private static final String KEY_DOWNLOADED          = "downloaded";
-    private static final String KEY_HEARD               = "heard";
-    private static final String KEY_AUDIO_FOCUS         = "audioFocus";
-    private static final String KEY_DURATION            = "duration";
-    private static final String KEY_REAL_DURATION       = "realDuration";
-    private static final String KEY_CURRENT_POSITION    = "position";
-    private static final String KEY_SEEKING             = "seeking";
-    private static final String KEY_PLAYING             = "playing";
-    private static final String KEY_LOADED_OK           = "loaded_ok";
-    private static final String KEY_AIRDATE             = "airdate";
-    private static final String KEY_TITLE               = "title";
-    private static final String KEY_DESCRIPTION         = "description";
-    private static final String KEY_WEBLINK             = "weblink";
-    private static final String KEY_DOWNLOAD_URL        = "downloadUrl";
-    private static final String KEY_AUTOPLAY_STATE      = "autoplayState";
+    private static final String KEY_HANDLE_ROTATION_EVENT   = "rotationEvent";
+    private static final String KEY_NEED_RESTART_PLAYBACK   = "restartPlayback";
+    private static final String KEY_LOADING_SCREEN_ENABLED  = "loadingEnabled";
+    private static final String KEY_BEGIN_LOADING           = "beginLoading";
+    private static final String KEY_SEEK_UPDATE_RUNNING     = "seekUpdateRunning";
+    private static final String KEY_AUTOPLAY_NEXT_NOW       = "autoplayNextNow";
+    private static final String KEY_KICKSTART_OK            = "kickstartOk";
+    private static final String KEY_KICKSTART_TIME          = "kickstartTime";
+
+    private static final String KEY_MEDIA_ID                = "mediaId";
+    private static final String KEY_EPISODE                 = "episodeNumber";
+    private static final String KEY_PURCHASED               = "purchased";
+    private static final String KEY_NOADS                   = "noads";
+    private static final String KEY_DOWNLOADED              = "downloaded";
+    private static final String KEY_HEARD                   = "heard";
+    private static final String KEY_AUDIO_FOCUS             = "audioFocus";
+    private static final String KEY_DURATION                = "duration";
+    private static final String KEY_REAL_DURATION           = "realDuration";
+    private static final String KEY_CURRENT_POSITION        = "position";
+    private static final String KEY_SEEKING                 = "seeking";
+    private static final String KEY_PLAYING                 = "playing";
+    private static final String KEY_LOADED_OK               = "loaded_ok";
+    private static final String KEY_AIRDATE                 = "airdate";
+    private static final String KEY_TITLE                   = "title";
+    private static final String KEY_DESCRIPTION             = "description";
+    private static final String KEY_WEBLINK                 = "weblink";
+    private static final String KEY_DOWNLOAD_URL            = "downloadUrl";
+    private static final String KEY_AUTOPLAY_STATE          = "autoplayState";
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -1073,11 +1122,25 @@ public class BaseActivity extends AppCompatActivity {
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         LogHelper.v(TAG, "onRestoreInstanceState");
         super.onRestoreInstanceState(savedInstanceState);
-        restorePlayInfoFromBundle(savedInstanceState);
+        this.restorePlayInfoFromBundle(savedInstanceState);
     }
 
     public void savePlayInfoToBundle(Bundle playInfoBundle) {
         LogHelper.v(TAG, "savePlayInfoToBundle");
+
+        playInfoBundle.putBoolean(KEY_HANDLE_ROTATION_EVENT   , sHandleRotationEvent);
+        playInfoBundle.putBoolean(KEY_NEED_RESTART_PLAYBACK   , sNeed2RestartPlayback);
+        playInfoBundle.putBoolean(KEY_LOADING_SCREEN_ENABLED  , sLoadingScreenEnabled);
+        playInfoBundle.putBoolean(KEY_BEGIN_LOADING           , sBeginLoading);
+        playInfoBundle.putBoolean(KEY_SEEK_UPDATE_RUNNING     , sSeekUpdateRunning);
+        playInfoBundle.putBoolean(KEY_AUTOPLAY_NEXT_NOW       , sAutoplayNextNow);
+        playInfoBundle.putBoolean(KEY_KICKSTART_OK            , sOkKickstart);
+        playInfoBundle.putLong   (KEY_KICKSTART_TIME          , sKickstartTime);
+
+        LogHelper.v(TAG, "APP-STATE (Autoplay): saveAutoplayInfoToBundle: sHandleRotationEvent="+sHandleRotationEvent+", sNeed2RestartPlayback="+sNeed2RestartPlayback
+                +", sLoadingScreenEnabled="+sLoadingScreenEnabled+", sBeginLoading="+sBeginLoading+", sSeekUpdateRunning="+sSeekUpdateRunning
+                +", sAutoplayNextNow="+sAutoplayNextNow+", sOkKickstart="+sOkKickstart+", sKickstartTime="+sKickstartTime+" <<<=========");
+
         playInfoBundle.putString(KEY_MEDIA_ID, getMediaId());
         playInfoBundle.putLong(KEY_EPISODE, getEpisodeNumber());
         playInfoBundle.putBoolean(KEY_PURCHASED, sPurchased);
@@ -1115,43 +1178,71 @@ public class BaseActivity extends AppCompatActivity {
                 break;
             }
         }
+
+        LogHelper.v(TAG, "APP-STATE (Base): savePlayInfoToBundle: mMediaId="+mMediaId+", mEpisodeNumber="+mEpisodeNumber
+                +", sPurchased="+sPurchased+", sNoAdsForShow="+sNoAdsForShow+", sDownloaded="+sDownloaded+", sEpisodeHeard="+sEpisodeHeard
+                +", mAudioFocusRequestResult="+mAudioFocusRequstResult+", mDuration="+mDuration+", sHaveRealDuration="+sHaveRealDuration
+                +", mCurrentPosition="+mCurrentPosition+", sSeeking="+sSeeking+", sPlaying="+sPlaying+", sLoadedOK="+sLoadedOK
+                +", mAirdate="+mAirdate+", mEpisodeTitle="+mEpisodeTitle+", mEpisodeDescription="+mEpisodeDescription
+                +", mEpisodeWeblinkUrl="+mEpisodeWeblinkUrl+", mEpisodeDownloadUrl="+mEpisodeDownloadUrl+", mAutoplayState="+mAutoplayState+" <<<=========");
     }
 
     protected void restorePlayInfoFromBundle(Bundle playInfoBundle) {
-        LogHelper.v(TAG, "restorePlayInfoFromBundle");
-        mMediaId = playInfoBundle.getString(KEY_MEDIA_ID);
-        mEpisodeNumber = playInfoBundle.getLong(KEY_EPISODE);
-        sPurchased = playInfoBundle.getBoolean(KEY_PURCHASED);
-        sNoAdsForShow = playInfoBundle.getBoolean(KEY_NOADS);
-        sDownloaded = playInfoBundle.getBoolean(KEY_DOWNLOADED);
-        sEpisodeHeard = playInfoBundle.getBoolean(KEY_HEARD);
-        mAudioFocusRequstResult = playInfoBundle.getInt(KEY_AUDIO_FOCUS);
-        mDuration = playInfoBundle.getLong(KEY_DURATION);
-        sHaveRealDuration = playInfoBundle.getBoolean(KEY_REAL_DURATION);
-        mCurrentPosition = playInfoBundle.getLong(KEY_CURRENT_POSITION);
-        sSeeking = playInfoBundle.getBoolean(KEY_SEEKING);
-        sPlaying = playInfoBundle.getBoolean(KEY_PLAYING);
-        sLoadedOK = playInfoBundle.getBoolean(KEY_LOADED_OK);
-        mAirdate = playInfoBundle.getString(KEY_AIRDATE);
-        mEpisodeTitle = playInfoBundle.getString(KEY_TITLE);
-        mEpisodeDescription = playInfoBundle.getString(KEY_DESCRIPTION);
-        mEpisodeWeblinkUrl = playInfoBundle.getString(KEY_WEBLINK);
-        mEpisodeDownloadUrl = playInfoBundle.getString(KEY_DOWNLOAD_URL);
+        if (!sOnRestoreInstanceComplete) {
+            sOnRestoreInstanceComplete = true;
 
-        int state = playInfoBundle.getInt(KEY_AUTOPLAY_STATE);
-        if (state == 1) {
-            setAutoplayState(AutoplayState.LOADING, "restorePlayInfoFromBundle - LOADING");
+            sHandleRotationEvent = playInfoBundle.getBoolean(KEY_HANDLE_ROTATION_EVENT);
+            sNeed2RestartPlayback = playInfoBundle.getBoolean(KEY_NEED_RESTART_PLAYBACK);
+            sLoadingScreenEnabled = playInfoBundle.getBoolean(KEY_LOADING_SCREEN_ENABLED);
+            sBeginLoading = playInfoBundle.getBoolean(KEY_BEGIN_LOADING);
+            sSeekUpdateRunning = playInfoBundle.getBoolean(KEY_SEEK_UPDATE_RUNNING);
+            sAutoplayNextNow = playInfoBundle.getBoolean(KEY_AUTOPLAY_NEXT_NOW);
+            sOkKickstart = playInfoBundle.getBoolean(KEY_KICKSTART_OK);
+            sKickstartTime = playInfoBundle.getLong(KEY_KICKSTART_TIME);
+
+            LogHelper.v(TAG, "APP-STATE (Autoplay): restoreAutoplayInfoFromBundle: sHandleRotationEvent="+sHandleRotationEvent+", sNeed2RestartPlayback="+sNeed2RestartPlayback
+                    +", sLoadingScreenEnabled="+sLoadingScreenEnabled+", sBeginLoading="+sBeginLoading+", sSeekUpdateRunning="+sSeekUpdateRunning
+                    +", sAutoplayNextNow="+sAutoplayNextNow+", sOkKickstart="+sOkKickstart+", sKickstartTime="+sKickstartTime+" <<<=========");
+
+            mMediaId = playInfoBundle.getString(KEY_MEDIA_ID);
+            mEpisodeNumber = playInfoBundle.getLong(KEY_EPISODE);
+            sPurchased = playInfoBundle.getBoolean(KEY_PURCHASED);
+            sNoAdsForShow = playInfoBundle.getBoolean(KEY_NOADS);
+            sDownloaded = playInfoBundle.getBoolean(KEY_DOWNLOADED);
+            sEpisodeHeard = playInfoBundle.getBoolean(KEY_HEARD);
+            mAudioFocusRequstResult = playInfoBundle.getInt(KEY_AUDIO_FOCUS);
+            mDuration = playInfoBundle.getLong(KEY_DURATION);
+            sHaveRealDuration = playInfoBundle.getBoolean(KEY_REAL_DURATION);
+            mCurrentPosition = playInfoBundle.getLong(KEY_CURRENT_POSITION);
+            sSeeking = playInfoBundle.getBoolean(KEY_SEEKING);
+            sPlaying = playInfoBundle.getBoolean(KEY_PLAYING);
+            sLoadedOK = playInfoBundle.getBoolean(KEY_LOADED_OK);
+            mAirdate = playInfoBundle.getString(KEY_AIRDATE);
+            mEpisodeTitle = playInfoBundle.getString(KEY_TITLE);
+            mEpisodeDescription = playInfoBundle.getString(KEY_DESCRIPTION);
+            mEpisodeWeblinkUrl = playInfoBundle.getString(KEY_WEBLINK);
+            mEpisodeDownloadUrl = playInfoBundle.getString(KEY_DOWNLOAD_URL);
+
+            int state = playInfoBundle.getInt(KEY_AUTOPLAY_STATE);
+            if (state == 1) {
+                setAutoplayState(AutoplayState.LOADING, "restorePlayInfoFromBundle - LOADING");
+            } else if (state == 2) {
+                setAutoplayState(AutoplayState.PLAYING, "restorePlayInfoFromBundle - PLAYING");
+            } else if (state == 3) {
+                setAutoplayState(AutoplayState.PAUSED, "restorePlayInfoFromBundle - PAUSED");
+            } else {
+                setAutoplayState(AutoplayState.READY2PLAY, "restorePlayInfoFromBundle - READY2PLAY");
+            }
+
+            LogHelper.v(TAG, "APP-STATE (Base): restorePlayInfoFromBundle: mMediaId="+mMediaId+", mEpisodeNumber="+mEpisodeNumber
+                    +", sPurchased="+sPurchased+", sNoAdsForShow="+sNoAdsForShow+", sDownloaded="+sDownloaded+", sEpisodeHeard="+sEpisodeHeard
+                    +", mAudioFocusRequestResult="+mAudioFocusRequstResult+", mDuration="+mDuration+", sHaveRealDuration="+sHaveRealDuration
+                    +", mCurrentPosition="+mCurrentPosition+", sSeeking="+sSeeking+", sPlaying="+sPlaying+", sLoadedOK="+sLoadedOK
+                    +", mAirdate="+mAirdate+", mEpisodeTitle="+mEpisodeTitle+", mEpisodeDescription="+mEpisodeDescription
+                    +", mEpisodeWeblinkUrl="+mEpisodeWeblinkUrl+", mEpisodeDownloadUrl="+mEpisodeDownloadUrl+", mAutoplayState="+mAutoplayState+" <<<=========");
+
+            showCurrentInfo();
         }
-        else if (state == 2) {
-            setAutoplayState(AutoplayState.PLAYING, "restorePlayInfoFromBundle - PLAYING");
-        }
-        else if (state == 3) {
-            setAutoplayState(AutoplayState.PAUSED, "restorePlayInfoFromBundle - PAUSED");
-        }
-        else {
-            setAutoplayState(AutoplayState.READY2PLAY, "restorePlayInfoFromBundle - READY2PLAY");
-        }
-        showCurrentInfo();
     }
 
     protected void showCurrentInfo() {

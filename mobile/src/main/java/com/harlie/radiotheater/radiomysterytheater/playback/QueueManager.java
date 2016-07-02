@@ -26,9 +26,9 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.media.MediaMetadataCompat;
-import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 
+import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
 import com.harlie.radiotheater.radiomysterytheater.utils.AlbumArtCache;
 import com.harlie.radiotheater.radiomysterytheater.R;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
@@ -223,9 +223,15 @@ public class QueueManager {
         }
         Iterator<MediaMetadataCompat> tracks = title_list.iterator();
         if (! tracks.hasNext()) {
-            LogHelper.e(TAG, "POKE: no media for title: ", title);
-            waitabit();
-            possiblePokeMe();
+            if (BaseActivity.isLoadedOK()) {
+                if (BaseActivity.isPlaying()) { // well, it is supposed to be playing
+                    LogHelper.e(TAG, "DO A POKE: no media for title: ", title);
+                    possiblePokeMe();
+                }
+            }
+            else {
+                LogHelper.e(TAG, "LOADING MEDIA META-DATA? - found no media for title: ", title);
+            }
             return null;
         }
         MediaMetadataCompat theMedia = tracks.next();

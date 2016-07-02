@@ -78,7 +78,7 @@
             android:elevation="@dimen/button_elevation"
             android:paddingTop="@dimen/image_margin"
             android:paddingBottom="@dimen/image_margin"
-            android:visibility="visible"
+            android:visibility="gone"
             android:theme="@style/RadioTheaterButton" />
 
         <RatingBar

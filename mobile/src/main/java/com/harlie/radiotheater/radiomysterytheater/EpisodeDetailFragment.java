@@ -92,6 +92,8 @@ public class EpisodeDetailFragment extends FragmentBase {
                 @Override
                 public void onClick(View view) {
                     LogHelper.v(TAG, "onClick - PLAY NOW");
+                    // FIXME: this 'play_now' button needs to send a message for a specific QueueItem to play.
+                    // FIXME: because of time-limitations, this feature and voice-search will be built last, time permitting.
                 }
             });
 

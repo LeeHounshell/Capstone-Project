@@ -60,8 +60,7 @@ import java.util.concurrent.TimeUnit;
 
 import at.grabner.circleprogress.CircleProgressView;
 
-public class AutoplayActivity extends BaseActivity
-{
+public class AutoplayActivity extends BaseActivity {
     private final static String TAG = "LEE: <" + AutoplayActivity.class.getSimpleName() + ">";
 
     public enum ControlsState {
@@ -92,14 +91,6 @@ public class AutoplayActivity extends BaseActivity
     private BroadcastReceiver mRadioReceiver;
     private final Handler mHandler = new Handler();
 
-    private static volatile boolean sHandleRotationEvent;
-    private static volatile boolean sNeed2RestartPlayback;
-    private static volatile boolean sLoadingScreenEnabled;
-    private static volatile boolean sBeginLoading;
-    private static volatile boolean sSeekUpdateRunning;
-    private static volatile boolean sAutoplayNextNow;
-    private static volatile boolean sOkKickstart;
-
     private final ScheduledExecutorService mExecutorService =
             Executors.newSingleThreadScheduledExecutor();
 
@@ -115,6 +106,7 @@ public class AutoplayActivity extends BaseActivity
         if (savedInstanceState != null) {
             LogHelper.v(TAG, "rotation event");
             sHandleRotationEvent = true;
+            onRestoreInstanceState(savedInstanceState);
         }
 
         /*
@@ -363,6 +355,18 @@ public class AutoplayActivity extends BaseActivity
         sLoadingScreenEnabled = true;
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        LogHelper.v(TAG, "onSaveInstanceState");
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        LogHelper.v(TAG, "onRestoreInstanceState");
+        super.onRestoreInstanceState(savedInstanceState);
+    }
+
     private final Runnable mUpdateProgressTask = new Runnable() {
         @Override
         public void run() {
@@ -441,12 +445,26 @@ public class AutoplayActivity extends BaseActivity
             new MediaBrowserCompat.SubscriptionCallback() {
                 @Override
                 public void onChildrenLoaded(@NonNull String parentId,
-                                             @NonNull List<MediaBrowserCompat.MediaItem> children) {
-                    if (children == null || children.isEmpty()) {
-                        LogHelper.w(TAG, "onChildrenLoaded: NO CHILDREN!");
-                        return;
-                    }
+                                             @NonNull List<MediaBrowserCompat.MediaItem> children)
+                {
                     LogHelper.d(TAG, "********* onChildrenLoaded, parentId=" + parentId + "  count=" + children.size());
+                    if (children == null || children.isEmpty()) {
+                        LogHelper.w(TAG, "onChildrenLoaded: NO CHILDREN - EXPECTED");
+                        if (mAutoplayState == AutoplayState.PLAYING) {
+                            LogHelper.v(TAG, "onChildrenLoaded: try to poke the player.");
+                            getHandler().post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    MediaControllerCompat.TransportControls controls = null;
+                                    if (getRadioMediaController() != null) {
+                                        LogHelper.w(TAG, "onChildrenLoaded (Runnable): NO CHILDREN - POSSIBLY RE-START PLAYBACK");
+                                        controls = getRadioMediaController().getTransportControls();
+                                        controls.play();
+                                    }
+                                }
+                            });
+                        }
+                    }
                 }
 
                 @Override
@@ -501,7 +519,6 @@ public class AutoplayActivity extends BaseActivity
                 }
             };
 
-    public static long sKickstartTime;
     // Callback that ensures that we are showing the controls
     private final MediaControllerCompat.Callback mMediaControllerCallback =
             new MediaControllerCompat.Callback() {
@@ -871,11 +888,15 @@ public class AutoplayActivity extends BaseActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         LogHelper.v(TAG, "onOptionsItemSelected");
         switch (item.getItemId()) {
+/*
             case R.id.search: {
                 // FIXME: voice search
+                // FIXME: this 'search' button needs to build a new playlist and then submit that to be the new active playlist.
+                // FIXME: because of time-limitations, this feature and 'play now' functionality will be built last, time permitting.
                 trackSearchWithFirebaseAnalytics();
                 return true;
             }
+*/
             case R.id.settings: {
                 Intent intent = new Intent(this, SettingsActivity.class);
                 Bundle playInfo = new Bundle();
@@ -885,6 +906,7 @@ public class AutoplayActivity extends BaseActivity
                 intent.putExtra(PreferenceActivity.EXTRA_NO_HEADERS, true);
                 trackSettingsWithFirebaseAnalytics();
                 startActivity(intent);
+                // FIXME: need to make Settings pass back the playInfo Bundle somehow.
                 return true;
             }
             case R.id.about: {
@@ -919,6 +941,7 @@ public class AutoplayActivity extends BaseActivity
         }
         if (sHandleRotationEvent) {
             LogHelper.v(TAG, "*** RESTORE PLAYBACK STATE AFTER ROTATION ***");
+/* FIXME - ROTATION REPLAY BROKEN
             getHandler().post(new Runnable() {
                 @Override
                 public void run() {
@@ -943,6 +966,7 @@ public class AutoplayActivity extends BaseActivity
                     }
                 }
             });
+*/
         }
     }
 
