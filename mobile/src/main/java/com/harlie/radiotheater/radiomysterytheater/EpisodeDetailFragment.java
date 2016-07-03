@@ -49,6 +49,7 @@ public class EpisodeDetailFragment extends FragmentBase {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        LogHelper.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
 
         if (getArguments().containsKey(ARG_ITEM_ID)) {
@@ -65,6 +66,7 @@ public class EpisodeDetailFragment extends FragmentBase {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        LogHelper.v(TAG, "onCreateView");
         View rootView = inflater.inflate(R.layout.episode_detail, container, false);
 
         // Show the dummy content as text in a TextView.
@@ -119,6 +121,7 @@ public class EpisodeDetailFragment extends FragmentBase {
     }
 
     private void loadPortrait(View rootView, String person, int personImageResource, int personNameResource) {
+        LogHelper.v(TAG, "loadPortrait");
         if (person != null) {
             String person_name = makeFullName(person);
             int portraitResourceId = getResources().getIdentifier("com.harlie.radiotheater.radiomysterytheater:drawable/" + person, null, null);
@@ -136,6 +139,7 @@ public class EpisodeDetailFragment extends FragmentBase {
     }
 
     private String makeFullName(String staffMember) {
+        LogHelper.v(TAG, "makeFullName");
         String fullName = "";
         if (staffMember.contains(".jpg") || staffMember.contains(".png")) {
             staffMember = staffMember.substring(0, staffMember.length() - 4); // drop the suffix

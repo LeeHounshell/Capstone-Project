@@ -60,7 +60,7 @@ public class RemoteJSONSource implements MusicProviderSource {
         mMediaId = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.genre);
         ArrayList<MediaMetadataCompat> tracks = new ArrayList<>();
         if (!sLoadedMediaMetaData) {
-            //sLoadedMediaMetaData = true; // FIXME: determine properly if Meta-Data needs to be (re)loaded.
+            sLoadedMediaMetaData = true; // FIXME: determine properly if Meta-Data needs to be (re)loaded.
             EpisodesCursor episodesCursor = getEpisodes();
             if (episodesCursor != null) {
                 while (episodesCursor.moveToNext()) {
@@ -144,7 +144,7 @@ public class RemoteJSONSource implements MusicProviderSource {
         String id = String.valueOf(episodeDownloadUrl.hashCode());
         //String episodeMediaId = MediaIDHelper.createMediaID(id, MediaIDHelper.MEDIA_ID_ROOT, mMediaId);
 
-        LogHelper.d(TAG, "found episode: #"+episodeNumber+" '"+episodeTitle+"' by "+episodeWriter+" with id="+id);
+        //LogHelper.d(TAG, "found episode: #"+episodeNumber+" '"+episodeTitle+"' by "+episodeWriter+" with id="+id);
 
         // Adding the episode source to the MediaMetadata (and consequently using it in the
         // mediaSession.setMetadata) is not a good idea for a real world player app, because

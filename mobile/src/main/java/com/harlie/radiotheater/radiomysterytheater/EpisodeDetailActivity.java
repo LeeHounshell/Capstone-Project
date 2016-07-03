@@ -21,6 +21,7 @@ public class EpisodeDetailActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        LogHelper.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_episode_detail);
         configureToolbarTitleBehavior();
@@ -84,6 +85,7 @@ public class EpisodeDetailActivity extends BaseActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        LogHelper.v(TAG, "onOptionsItemSelected");
         int id = item.getItemId();
         if (id == android.R.id.home) {
             // This ID represents the Home or Up button. In the case of this
@@ -97,4 +99,5 @@ public class EpisodeDetailActivity extends BaseActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+
 }

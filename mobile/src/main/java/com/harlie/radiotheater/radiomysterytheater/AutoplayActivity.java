@@ -105,7 +105,6 @@ public class AutoplayActivity extends BaseActivity {
 
         if (savedInstanceState != null) {
             LogHelper.v(TAG, "rotation event");
-            sHandleRotationEvent = true;
             onRestoreInstanceState(savedInstanceState);
         }
 
@@ -180,6 +179,7 @@ public class AutoplayActivity extends BaseActivity {
                     PlaybackStateCompat playbackState = getRadioMediaController().getPlaybackState();
                     if (playbackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
                         MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
+                        LogHelper.v(TAG, "*** onLongClick - controls.stop()");
                         controls.stop();
                     }
                 }
@@ -195,8 +195,8 @@ public class AutoplayActivity extends BaseActivity {
                         if (getRadioMediaController() != null) {
                             PlaybackStateCompat playbackState = getRadioMediaController().getPlaybackState();
                             if (playbackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
-                                LogHelper.v(TAG, "onLongClick: *** STOP PLAYING ***");
                                 MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
+                                LogHelper.v(TAG, "onLongClick: *** STOP PLAYING *** - controls.stop()");
                                 controls.stop();
                             }
                         }
@@ -416,6 +416,7 @@ public class AutoplayActivity extends BaseActivity {
                     LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_LOSS <<---");
                     mAudioFocusRequstResult = 0;
                     if (controls != null && playbackState != null && playbackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
+                        LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_LOSS <<--- do controls.stop()");
                         controls.stop();
                     }
                     setAutoplayState(AutoplayState.READY2PLAY, "onAudioFocusChange - READY2PLAY");
@@ -450,20 +451,20 @@ public class AutoplayActivity extends BaseActivity {
                     LogHelper.d(TAG, "********* onChildrenLoaded, parentId=" + parentId + "  count=" + children.size());
                     if (children == null || children.isEmpty()) {
                         LogHelper.w(TAG, "onChildrenLoaded: NO CHILDREN - EXPECTED");
-                        if (mAutoplayState == AutoplayState.PLAYING) {
-                            LogHelper.v(TAG, "onChildrenLoaded: try to poke the player.");
-                            getHandler().post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    MediaControllerCompat.TransportControls controls = null;
-                                    if (getRadioMediaController() != null) {
-                                        LogHelper.w(TAG, "onChildrenLoaded (Runnable): NO CHILDREN - POSSIBLY RE-START PLAYBACK");
-                                        controls = getRadioMediaController().getTransportControls();
-                                        controls.play();
-                                    }
-                                }
-                            });
-                        }
+//                        if (mAutoplayState == AutoplayState.PLAYING) {
+//                            LogHelper.v(TAG, "onChildrenLoaded: try to poke the player.");
+//                            getHandler().post(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    MediaControllerCompat.TransportControls controls = null;
+//                                    if (getRadioMediaController() != null) {
+//                                        LogHelper.w(TAG, "onChildrenLoaded (Runnable): NO CHILDREN - POSSIBLY RE-START PLAYBACK");
+//                                        controls = getRadioMediaController().getTransportControls();
+//                                        controls.play();
+//                                    }
+//                                }
+//                            });
+//                        }
                     }
                 }
 
@@ -1146,7 +1147,7 @@ public class AutoplayActivity extends BaseActivity {
                             PlaybackStateCompat playbackState = getRadioMediaController().getPlaybackState();
                             if (playbackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
                                 MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
-                                LogHelper.v(TAG, "*** POKE-ME: STOPPING MEDIA CONTROLLER");
+                                LogHelper.v(TAG, "*** POKE-ME: STOPPING MEDIA CONTROLLER - controls.stop()");
                                 controls.stop();
                                 try {
                                     Thread.sleep(2);

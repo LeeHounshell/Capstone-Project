@@ -2,9 +2,12 @@ package com.harlie.radiotheater.radiomysterytheater;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -26,7 +29,9 @@ import java.util.List;
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class EpisodeListActivity extends BaseActivity {
+public class EpisodeListActivity extends BaseActivity
+    implements LoaderManager.LoaderCallbacks<Cursor>
+{
     private final static String TAG = "LEE: <" + EpisodeListActivity.class.getSimpleName() + ">";
 
     /**
@@ -37,6 +42,7 @@ public class EpisodeListActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        LogHelper.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_episode_list);
 
@@ -84,6 +90,7 @@ public class EpisodeListActivity extends BaseActivity {
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
+        LogHelper.v(TAG, "setupRecyclerView");
         // Only compile the dummy content if Debug.
 
         //#IFDEF 'DEBUG'
@@ -93,6 +100,26 @@ public class EpisodeListActivity extends BaseActivity {
 
     public static boolean isTwoPane() {
         return mTwoPane;
+    }
+
+    //--------------------------------------------------------------------------------
+    // Loader callbacks
+    //--------------------------------------------------------------------------------
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        LogHelper.v(TAG, "onCreateLoader");
+        return null;
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        LogHelper.v(TAG, "onLoadFinished");
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        LogHelper.v(TAG, "onLoaderReset");
     }
 
 }

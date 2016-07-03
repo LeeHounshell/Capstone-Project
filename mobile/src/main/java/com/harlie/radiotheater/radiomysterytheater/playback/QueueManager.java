@@ -195,13 +195,13 @@ public class QueueManager {
     }
 
     //-------- RADIO THEATER --------
-    private void possiblePokeMe() {
-        long time = System.currentTimeMillis();
-        if (sPokeMeTime < (time - (19 * 1000))) { // nineteen seconds?
-            sPokeMeTime = time;
-            LogHelper.w(TAG, "*** --->>> POKE-ME-NEEDED: getCurrentMusic: - not currently playable - sCurrentIndex=" + sCurrentIndex + " - return null");
-            LocalPlayback.pokeMeWakeMeShakeMe();
-        }
+    private void possiblePokeMe() { // FIXME or remove
+//        long time = System.currentTimeMillis();
+//        if (sPokeMeTime < (time - (19 * 1000))) { // nineteen seconds?
+//            sPokeMeTime = time;
+//            LogHelper.w(TAG, "*** --->>> POKE-ME-NEEDED: getCurrentMusic: - not currently playable - sCurrentIndex=" + sCurrentIndex + " - return null");
+//            LocalPlayback.pokeMeWakeMeShakeMe();
+//        }
     }
 
     //-------- RADIO THEATER --------

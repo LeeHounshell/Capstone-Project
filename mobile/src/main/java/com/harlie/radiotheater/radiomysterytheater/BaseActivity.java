@@ -135,6 +135,7 @@ public class BaseActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
+            sHandleRotationEvent = true;
             onRestoreInstanceState(savedInstanceState);
         }
         else {
