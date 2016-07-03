@@ -17,7 +17,7 @@ import com.harlie.radiotheater.radiomysterytheater.EpisodeDetailFragment;
 import com.harlie.radiotheater.radiomysterytheater.EpisodeListActivity;
 import com.harlie.radiotheater.radiomysterytheater.R;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
-import com.harlie.radiotheater.radiomysterytheater.dummy.DummyContent;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.EpisodeRecyclerViewItem;
 
 import java.text.DecimalFormat;
 import java.util.List;
@@ -28,9 +28,9 @@ public class RecyclerViewAdapter
 
     private final Context mContext;
     private Cursor mDataCursor;
-    private List<DummyContent.DummyItem> mValues;
+    private List<EpisodeRecyclerViewItem> mValues;
 
-    public RecyclerViewAdapter(List<DummyContent.DummyItem> items, Context context) {
+    public RecyclerViewAdapter(List<EpisodeRecyclerViewItem> items, Context context) {
         mValues = items;
         mContext = context;
     }
@@ -71,9 +71,9 @@ public class RecyclerViewAdapter
             public void onClick(View v) {
                 if (mContext instanceof EpisodeListActivity) {
                     EpisodeListActivity episodeListActivity = (EpisodeListActivity) mContext;
-                    if (episodeListActivity.isTwoPane()) {
+                    if (EpisodeListActivity.isTwoPane()) {
                         Bundle arguments = new Bundle();
-                        arguments.putString(EpisodeDetailFragment.ARG_ITEM_ID, holder.mItem.episode_title);
+                        arguments.putString(EpisodeDetailFragment.ARG_ITEM_ID, holder.mItem.getTitle());
                         EpisodeDetailFragment fragment = new EpisodeDetailFragment();
                         fragment.setArguments(arguments);
                         episodeListActivity.getSupportFragmentManager().beginTransaction()
@@ -82,7 +82,7 @@ public class RecyclerViewAdapter
                     } else {
                         Context context = v.getContext();
                         Intent intent = new Intent(context, EpisodeDetailActivity.class);
-                        intent.putExtra(EpisodeDetailFragment.ARG_ITEM_ID, holder.mItem.episode_title);
+                        intent.putExtra(EpisodeDetailFragment.ARG_ITEM_ID, holder.mItem.getTitle());
                         Bundle playInfo = new Bundle();
                         episodeListActivity.savePlayInfoToBundle(playInfo);
                         intent.putExtras(playInfo);

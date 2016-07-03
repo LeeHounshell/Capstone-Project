@@ -1,5 +1,6 @@
 package com.harlie.radiotheater.radiomysterytheater.dummy;
 
+import com.harlie.radiotheater.radiomysterytheater.data_helper.EpisodeRecyclerViewItem;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 
 import java.util.ArrayList;
@@ -25,28 +26,28 @@ public class DummyContent {
     /**
      * An array of sample (dummy) items.
      */
-    public static final List<DummyItem> ITEMS = new ArrayList<DummyItem>();
+    public static final List<EpisodeRecyclerViewItem> ITEMS = new ArrayList<EpisodeRecyclerViewItem>();
 
     /**
      * A map of sample (dummy) items, by ID.
      */
-    public static final Map<String, DummyItem> ITEM_MAP = new HashMap<String, DummyItem>();
+    public static final Map<String, EpisodeRecyclerViewItem> ITEM_MAP = new HashMap<String, EpisodeRecyclerViewItem>();
 
     private static final int COUNT = 1399;
 
     static {
         // Add some sample items.
         for (int i = 1; i <= COUNT; i++) {
-            addItem(createDummyItem(i));
+            addItem(createEpisodeRecyclerViewItem(i));
         }
     }
 
-    private static void addItem(DummyItem item) {
+    private static void addItem(EpisodeRecyclerViewItem item) {
         ITEMS.add(item);
         ITEM_MAP.put(item.episode_title, item);
     }
 
-    private static DummyItem createDummyItem(int episode) {
+    private static EpisodeRecyclerViewItem createEpisodeRecyclerViewItem(int episode) {
         if (episode % 3 == 1) {
             String weblink = "www.cbsrmt.com\\/episode_name-1-the-old-ones-are-hard-to-kill.html";
             String download = "www.cbsrmt.com\\/mp3\\/CBS Radio Mystery Theater 74-01-06 e0001 The Old Ones Are Hard to Kill.mp3";
@@ -62,7 +63,7 @@ public class DummyContent {
             String actor6 = null;
             String writer = "slesar_henry";
 
-            return new DummyItem(
+            return new EpisodeRecyclerViewItem(
                     title,
                     airdate,
                     description,
@@ -96,7 +97,7 @@ public class DummyContent {
             String actor6 = null;
             String writer = "slesar_henry";
 
-            return new DummyItem(
+            return new EpisodeRecyclerViewItem(
                     title,
                     airdate,
                     description,
@@ -130,7 +131,7 @@ public class DummyContent {
             String actor6 = "ocko_dan";
             String writer = "dann_sam";
 
-            return new DummyItem(
+            return new EpisodeRecyclerViewItem(
                     title,
                     airdate,
                     description,
@@ -147,188 +148,6 @@ public class DummyContent {
                     writer,
                     weblink,
                     download);
-        }
-    }
-
-    /**
-     * A dummy item representing a piece of episode_description.
-     */
-    public static class DummyItem {
-
-        public String episode_title;
-        public String episode_airdate;
-        public String episode_description;
-        public int episode_number;
-        public float episode_rating;
-        public boolean episode_heard;
-        public boolean episode_downloaded;
-        public String actor1;
-        public String actor2;
-        public String actor3;
-        public String actor4;
-        public String actor5;
-        public String actor6;
-        public String writer;
-        public String weblink;
-        public String download;
-
-        public DummyItem(String title, String airdate, String description, int episodeNumber, float rating, boolean heard, boolean downloaded,
-                         String actor1, String actor2, String actor3, String actor4, String actor5, String actor6, String writer, String weblink, String download)
-        {
-            setTitle(title);
-            setAirdate(airdate);
-            setDescription(description);
-            setEpisodeNumber(episodeNumber);
-            setRating(rating);
-            setHeard(heard);
-            setDownloaded(downloaded);
-            setActor1(actor1);
-            setActor2(actor2);
-            setActor3(actor3);
-            setActor4(actor4);
-            setActor5(actor5);
-            setActor6(actor6);
-            setWriter(writer);
-            setWeblink(weblink);
-            setDownload(download);
-        }
-
-        @Override
-        public String toString() {
-            return episode_number + " " + episode_airdate + "  " + episode_title + ": " + episode_description + " ... Rated " + episode_rating + " stars.\n\n";
-        }
-
-        public String getDummyEpisodeDetail() {
-            String dummyDetail = toString();
-            return dummyDetail + dummyDetail + dummyDetail;
-        }
-
-        public String getTitle() {
-            return episode_title;
-        }
-
-        public void setTitle(String episode_title) {
-            this.episode_title = episode_title;
-        }
-
-        public String getAirdate() {
-            return episode_airdate;
-        }
-
-        public void setAirdate(String episode_airdate) {
-            this.episode_airdate = episode_airdate;
-        }
-
-        public boolean isDownloaded() {
-            return episode_downloaded;
-        }
-
-        public void setDownloaded(boolean episode_downloaded) {
-            this.episode_downloaded = episode_downloaded;
-        }
-
-        public boolean isHeard() {
-            return episode_heard;
-        }
-
-        public void setHeard(boolean episode_heard) {
-            this.episode_heard = episode_heard;
-        }
-
-        public float getRating() {
-            return episode_rating;
-        }
-
-        public void setRating(float episode_rating) {
-            this.episode_rating = episode_rating;
-        }
-
-        public int getEpisodeNumber() {
-            return episode_number;
-        }
-
-        public void setEpisodeNumber(int episode_number) {
-            this.episode_number = episode_number;
-        }
-
-        public String getDescription() {
-            return episode_description;
-        }
-
-        public void setDescription(String episode_description) {
-            this.episode_description = episode_description;
-        }
-
-        public String getActor1() {
-            return actor1;
-        }
-
-        public void setActor1(String actor1) {
-            this.actor1 = actor1;
-        }
-
-        public String getActor2() {
-            return actor2;
-        }
-
-        public void setActor2(String actor2) {
-            this.actor2 = actor2;
-        }
-
-        public String getActor3() {
-            return actor3;
-        }
-
-        public void setActor3(String actor3) {
-            this.actor3 = actor3;
-        }
-
-        public String getActor4() {
-            return actor4;
-        }
-
-        public void setActor4(String actor4) {
-            this.actor4 = actor4;
-        }
-
-        public String getActor5() {
-            return actor5;
-        }
-
-        public void setActor5(String actor5) {
-            this.actor5 = actor5;
-        }
-
-        public String getActor6() {
-            return actor6;
-        }
-
-        public void setActor6(String actor6) {
-            this.actor6 = actor6;
-        }
-
-        public String getWriter() {
-            return writer;
-        }
-
-        public void setWriter(String writer) {
-            this.writer = writer;
-        }
-
-        public String getWeblink() {
-            return weblink;
-        }
-
-        public void setWeblink(String weblink) {
-            this.weblink = weblink;
-        }
-
-        public String getDownload() {
-            return download;
-        }
-
-        public void setDownload(String download) {
-            this.download = download;
         }
     }
 

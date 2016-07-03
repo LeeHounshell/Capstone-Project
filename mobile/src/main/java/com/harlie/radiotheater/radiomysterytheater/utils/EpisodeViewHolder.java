@@ -8,7 +8,7 @@ import android.widget.TextView;
 
 import com.harlie.radiotheater.radiomysterytheater.R;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
-import com.harlie.radiotheater.radiomysterytheater.dummy.DummyContent;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.EpisodeRecyclerViewItem;
 
 public class EpisodeViewHolder extends RecyclerView.ViewHolder {
 
@@ -18,7 +18,8 @@ public class EpisodeViewHolder extends RecyclerView.ViewHolder {
     public TextView mEpisodeTitle;
     public TextView mEpisodeDescription;
     public RatingBar mEpisodeRating;
-    public DummyContent.DummyItem mItem;
+
+    public EpisodeRecyclerViewItem mItem;
 
     public int mTextTitleColor;
     public int mTextDescriptionColor;

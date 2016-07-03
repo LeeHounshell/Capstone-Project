@@ -174,8 +174,8 @@
 
         <activity
             android:name=".AutoplayActivity"
-            android:label="@string/title_activity_autoplay"
-            android:launchMode="singleTop" >
+            android:launchMode="singleTop"
+            android:label="@string/title_activity_autoplay" >
 
             <!-- Use this intent filter to get voice searches, like "Episodes about Time Travel" -->
             <intent-filter>
@@ -187,13 +187,11 @@
 
         <activity
             android:name=".EpisodeListActivity"
-            android:launchMode="singleTop"
             android:label="@string/app_name">
         </activity>
 
         <activity
             android:name=".EpisodeDetailActivity"
-            android:launchMode="singleTop"
             android:label="@string/title_episode_detail"
             android:parentActivityName=".EpisodeListActivity">
             <meta-data
@@ -218,7 +216,6 @@
 
         <activity
             android:name=".SettingsActivity"
-            android:launchMode="singleTop"
             android:label="@string/title_activity_settings"
             android:parentActivityName=".AutoplayActivity">
             <meta-data
@@ -228,7 +225,6 @@
 
         <activity
             android:name=".AboutActivity"
-            android:launchMode="singleTop"
             android:label="@string/title_activity_about"
             android:parentActivityName=".AutoplayActivity"
             android:theme="@style/AppTheme">

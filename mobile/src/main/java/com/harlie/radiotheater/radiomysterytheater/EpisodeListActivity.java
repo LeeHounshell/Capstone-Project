@@ -13,7 +13,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.harlie.radiotheater.radiomysterytheater.dummy.DummyContent;
-import com.harlie.radiotheater.radiomysterytheater.utils.EpisodeViewHolder;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.RecyclerViewAdapter;
 
@@ -62,7 +61,7 @@ public class EpisodeListActivity extends BaseActivity {
                     LogHelper.v(TAG, "CLICK - fab");
                     Intent autoplayIntent = new Intent(activity, AutoplayActivity.class);
                     // close existing activity stack regardless of what's in there and create new root
-                    autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    //autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                     Bundle playInfo = new Bundle();
                     savePlayInfoToBundle(playInfo);
                     autoplayIntent.putExtras(playInfo);
@@ -85,7 +84,11 @@ public class EpisodeListActivity extends BaseActivity {
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
+        // Only compile the dummy content if Debug.
+
+        //#IFDEF 'DEBUG'
         recyclerView.setAdapter(new RecyclerViewAdapter(DummyContent.ITEMS, this));
+        //#ENDIF
     }
 
     public static boolean isTwoPane() {

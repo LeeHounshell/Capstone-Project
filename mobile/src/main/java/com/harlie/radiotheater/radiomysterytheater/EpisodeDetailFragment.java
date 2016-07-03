@@ -13,6 +13,7 @@ import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.harlie.radiotheater.radiomysterytheater.data_helper.EpisodeRecyclerViewItem;
 import com.harlie.radiotheater.radiomysterytheater.dummy.DummyContent;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
@@ -37,7 +38,7 @@ public class EpisodeDetailFragment extends FragmentBase {
     /**
      * The dummy content this fragment is presenting.
      */
-    private DummyContent.DummyItem mItem;
+    private EpisodeRecyclerViewItem mItem;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -54,7 +55,11 @@ public class EpisodeDetailFragment extends FragmentBase {
             // Load the dummy content specified by the fragment
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
+            // Only compile the dummy content if Debug.
+
+            //#IFDEF 'DEBUG'
             mItem = DummyContent.ITEM_MAP.get(getArguments().getString(ARG_ITEM_ID));
+            //#ENDIF
         }
     }
 

@@ -60,7 +60,7 @@ public class RemoteJSONSource implements MusicProviderSource {
         mMediaId = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.genre);
         ArrayList<MediaMetadataCompat> tracks = new ArrayList<>();
         if (!sLoadedMediaMetaData) {
-            sLoadedMediaMetaData = true;
+            //sLoadedMediaMetaData = true; // FIXME: determine properly if Meta-Data needs to be (re)loaded.
             EpisodesCursor episodesCursor = getEpisodes();
             if (episodesCursor != null) {
                 while (episodesCursor.moveToNext()) {

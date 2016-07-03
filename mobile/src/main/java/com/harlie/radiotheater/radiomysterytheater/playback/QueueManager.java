@@ -180,10 +180,6 @@ public class QueueManager {
     //-------- RADIO THEATER --------
     public MediaSessionCompat.QueueItem getCurrentMusic() {
         setCurrentIndexFromEpisodeId();
-        if (!isIndexPlayable(sCurrentIndex, mPlayingQueue)) {
-            LogHelper.v(TAG, "---> !isIndexPlayable(sCurrentIndex="+sCurrentIndex+", mPlayingQueue)");
-            return null;
-        }
         LogHelper.v(TAG, "getCurrentMusic: sCurrentIndex="+sCurrentIndex+", size="+mPlayingQueue.size());
         if (mPlayingQueue.size() == 1) {
             LogHelper.v(TAG, "*** THE PLAYING QUEUE HAS A SINGLE ITEM ***");
