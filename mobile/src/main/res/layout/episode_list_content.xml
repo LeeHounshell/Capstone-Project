@@ -25,16 +25,7 @@
             android:layout_margin="3dp"
             android:textAppearance="?attr/textAppearanceListItem" />
 
-        <TextView
-            android:id="@+id/episode_title"
-            android:layout_gravity="center_horizontal"
-            android:textColor="@color/list_episode_title_color"
-            android:textSize="27sp"
-            android:textStyle="bold"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="3dp"
-            android:textAppearance="?attr/textAppearanceListItem" />
+        <include layout="@layout/list_episode_title" />
 
     </LinearLayout>
 
@@ -62,23 +53,20 @@
 
         <RatingBar
             android:id="@+id/episode_rating"
+            android:theme="@style/RatingBar"
+            style="?android:attr/ratingBarStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center|bottom"
-            android:gravity="center"
+            android:layout_gravity="end|bottom"
+            android:gravity="end"
             android:layout_marginEnd="8dp"
-            style="?android:attr/ratingBarStyleSmall"
+            android:isIndicator="true"
             android:max="5"
             android:numStars="5"
+            android:paddingBottom="@dimen/text_margin"
+            android:paddingTop="@dimen/text_margin"
             android:rating="0.0"
-            android:stepSize="0.0"
-            android:isIndicator="true"
-            android:layout_weight="0" />
-
-        <android.support.v4.widget.Space
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1" />
+            android:stepSize="0.0" />
 
     </LinearLayout>
 

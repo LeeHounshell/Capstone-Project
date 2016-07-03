@@ -7,12 +7,7 @@
     <color name="accent">#009688</color>
     <color name="primary_text">#212121</color>
     <color name="secondary_text">#727272</color>
-    <color name="icons">#FFFFFF</color>
-    <color name="divider">#B6B6B6</color>
     <color name="light_blue">#ffadd8e6</color>
-    <color name="forest_green">#ff228b22</color>
-    <color name="light_green">#ff90ee90</color>
-    <color name="green_yellow">#ffadff2f</color>
     <color name="light_grey">#ffd3d3d3</color>
     <color name="transparent">#00000000</color>
     <color name="dark_red">#ff222222</color>
@@ -22,11 +17,5 @@
     <color name="list_episode_description_color">#ff212121</color>
 
     <color name="buttonColor">#ff228b22</color>
-    <color name="sliderColor">#ffff0000</color>
     <color name="buttonColorPressed">#ffadd8e6</color>
-
-    <color name="tv_branding">#ffff5722</color>
-    <color name="tv_branding_dark">#ffbf360c</color>
-    <color name="tv_branding_accent">#00B8D4</color>
-    <color name="bt_accent">#00B8D4</color>
 </resources>

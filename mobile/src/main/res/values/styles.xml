@@ -52,8 +52,8 @@
     </style>
 
     <style name="RatingBar" parent="AppTheme">
-        <item name="colorControlNormal">@color/green_yellow</item>
-        <item name="colorControlActivated">@color/light_grey</item>
+        <item name="colorControlNormal">@color/transparent</item>
+        <item name="colorControlActivated">@color/primary_dark</item>
     </style>
 
     <style name="RadioTheaterButton" parent="AppTheme">
@@ -115,7 +115,7 @@
              - progress bar
              - floating action button background (Play/Pause in media apps)
          -->
-        <item name="colorAccent">@color/bt_accent</item>
+        <item name="colorAccent">@color/accent</item>
     </style>
 
     <style name="WearTheme" parent="AppTheme">
