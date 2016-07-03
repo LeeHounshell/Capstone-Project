@@ -1,6 +1,9 @@
 package com.harlie.radiotheater.radiomysterytheater.data_helper;
 
-import android.support.v7.widget.RecyclerView;
+import android.database.Cursor;
+import android.net.Uri;
+
+import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
 
 public class EpisodeRecyclerViewItem {
 
@@ -9,6 +12,7 @@ public class EpisodeRecyclerViewItem {
     public String episode_description;
     public int episode_number;
     public float episode_rating;
+    public boolean have_detail;
     public boolean episode_heard;
     public boolean episode_downloaded;
     public String actor1;
@@ -29,6 +33,7 @@ public class EpisodeRecyclerViewItem {
         setDescription(description);
         setEpisodeNumber(episodeNumber);
         setRating(rating);
+        have_detail = true;
         setHeard(heard);
         setDownloaded(downloaded);
         setActor1(actor1);
@@ -40,6 +45,39 @@ public class EpisodeRecyclerViewItem {
         setWriter(writer);
         setWeblink(weblink);
         setDownload(download);
+    }
+
+    public EpisodeRecyclerViewItem(String title, String airdate, String description, int episodeNumber, Float rating, String weblink, String download) {
+        setTitle(title);
+        setAirdate(airdate);
+        setDescription(description);
+        setEpisodeNumber(episodeNumber);
+        setRating(rating);
+        have_detail = false;
+        setHeard(false);
+        setDownloaded(false);
+        setActor1(null);
+        setActor2(null);
+        setActor3(null);
+        setActor4(null);
+        setActor5(null);
+        setActor6(null);
+        setWriter(null);
+        setWeblink(weblink);
+        setDownload(download);
+    }
+
+    public static EpisodeRecyclerViewItem fromCursor(Cursor cursor) {
+        EpisodesCursor episodesCursor = new EpisodesCursor(cursor);
+
+        return new EpisodeRecyclerViewItem(
+                episodesCursor.getFieldEpisodeTitle(),
+                episodesCursor.getFieldAirdate(),
+                episodesCursor.getFieldEpisodeDescription(),
+                (int) episodesCursor.getFieldEpisodeNumber(),
+                episodesCursor.getFieldRating(),
+                Uri.parse(episodesCursor.getFieldWeblinkUrl()).getEncodedPath(),
+                Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString());
     }
 
     @Override

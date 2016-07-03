@@ -11,9 +11,15 @@
     <color name="divider">#B6B6B6</color>
     <color name="light_blue">#ffadd8e6</color>
     <color name="forest_green">#ff228b22</color>
+    <color name="light_green">#ff90ee90</color>
     <color name="green_yellow">#ffadff2f</color>
     <color name="light_grey">#ffd3d3d3</color>
     <color name="transparent">#00000000</color>
+    <color name="dark_red">#ff222222</color>
+
+    <color name="list_episode_number_color">#ff222222</color>
+    <color name="list_episode_title_color">#ff000000</color>
+    <color name="list_episode_description_color">#ff212121</color>
 
     <color name="buttonColor">#ff228b22</color>
     <color name="sliderColor">#ffff0000</color>

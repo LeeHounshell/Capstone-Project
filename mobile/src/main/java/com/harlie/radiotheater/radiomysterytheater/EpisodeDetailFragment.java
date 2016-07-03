@@ -14,7 +14,6 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 
 import com.harlie.radiotheater.radiomysterytheater.data_helper.EpisodeRecyclerViewItem;
-import com.harlie.radiotheater.radiomysterytheater.dummy.DummyContent;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 /**
@@ -30,7 +29,7 @@ public class EpisodeDetailFragment extends FragmentBase {
      * The fragment argument representing the item ID that this fragment
      * represents.
      */
-    public static final String ARG_ITEM_ID = "item_id";
+    public static final String ARG_EPISODE_ID = "1";
 
     private AppCompatButton mPlayNow;
     private AppCompatButton mWebLink;
@@ -52,15 +51,19 @@ public class EpisodeDetailFragment extends FragmentBase {
         LogHelper.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
 
-        if (getArguments().containsKey(ARG_ITEM_ID)) {
+        if (getArguments().containsKey(ARG_EPISODE_ID)) {
             // Load the dummy content specified by the fragment
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
             // Only compile the dummy content if Debug.
 
-            //#IFDEF 'DEBUG'
-            mItem = DummyContent.ITEM_MAP.get(getArguments().getString(ARG_ITEM_ID));
-            //#ENDIF
+            // --- dummy content disabled ---
+//          //#IFDEF 'DEBUG'
+//          mItem = DummyContent.ITEM_MAP.get(getArguments().getString(ARG_EPISODE_ID));
+//          //#ENDIF
+            // --- dummy content disabled ---
+
+            LogHelper.v(TAG, "FIXME: need to get EpisodeRecyclerViewItem for (RECEIVE) ARG_EPISODE_ID="+ ARG_EPISODE_ID);
         }
     }
 

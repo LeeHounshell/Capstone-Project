@@ -5,37 +5,42 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
+import com.harlie.radiotheater.radiomysterytheater.CursorRecyclerViewAdapter;
 import com.harlie.radiotheater.radiomysterytheater.EpisodeDetailActivity;
 import com.harlie.radiotheater.radiomysterytheater.EpisodeDetailFragment;
 import com.harlie.radiotheater.radiomysterytheater.EpisodeListActivity;
 import com.harlie.radiotheater.radiomysterytheater.R;
-import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.EpisodeRecyclerViewItem;
 
 import java.text.DecimalFormat;
-import java.util.List;
 
 // from: http://stackoverflow.com/questions/32992239/using-a-recyclerview-with-data-from-loadermanager
-public class RecyclerViewAdapter
-        extends RecyclerView.Adapter<EpisodeViewHolder> {
+public class EpisodeRecyclerViewAdapter
+        extends CursorRecyclerViewAdapter<EpisodeViewHolder>
+{
+    private final static String TAG = "LEE: <" + EpisodeRecyclerViewAdapter.class.getSimpleName() + ">";
 
     private final Context mContext;
     private Cursor mDataCursor;
-    private List<EpisodeRecyclerViewItem> mValues;
 
-    public RecyclerViewAdapter(List<EpisodeRecyclerViewItem> items, Context context) {
-        mValues = items;
-        mContext = context;
-    }
+    // --- dummy content disabled ---
+//  private List<EpisodeRecyclerViewItem> mValues;
+//
+//  public EpisodeRecyclerViewAdapter(List<EpisodeRecyclerViewItem> items, Context context) {
+//      super(context, null);
+//      mValues = items;
+//      mContext = context;
+//  }
+    // --- dummy content disabled ---
 
-    public RecyclerViewAdapter(BaseActivity baseActivity, EpisodesCursor cursor) {
+    public EpisodeRecyclerViewAdapter(BaseActivity baseActivity, Cursor cursor) {
+        super(baseActivity, cursor);
         mContext = baseActivity;
         mDataCursor = cursor;
     }
@@ -57,15 +62,33 @@ public class RecyclerViewAdapter
     }
 
     @Override
-    public void onBindViewHolder(final EpisodeViewHolder holder, int position) {
-        holder.mItem = mValues.get(position);
+    public void onBindViewHolder(EpisodeViewHolder holder, Cursor cursor) {
+        holder.mItem = EpisodeRecyclerViewItem.fromCursor(cursor);
         DecimalFormat format = new DecimalFormat("####");
-        int episodeNumber = position + 1;
+        int episodeNumber = holder.mItem.getEpisodeNumber();
         String formattedEpisodeNumber = format.format(episodeNumber);
         holder.mEpisodeNumber.setText(formattedEpisodeNumber);
-        holder.mEpisodeTitle.setText(mValues.get(position).episode_title);
-        holder.mEpisodeDescription.setText(mValues.get(position).episode_description);
+        holder.mEpisodeTitle.setText(holder.mItem.getTitle());
+        holder.mEpisodeDescription.setText(holder.mItem.getDescription());
+        holder.mEpisodeRating.setRating(holder.mItem.getRating());
+        holderSetOnClickListener(holder);
+    }
 
+    // --- dummy content disabled ---
+//    @Override
+//    public void onBindViewHolder(final EpisodeViewHolder holder, int position) {
+//        holder.mItem = mValues.get(position);
+//        DecimalFormat format = new DecimalFormat("####");
+//        int episodeNumber = position + 1;
+//        String formattedEpisodeNumber = format.format(episodeNumber);
+//        holder.mEpisodeNumber.setText(formattedEpisodeNumber);
+//        holder.mEpisodeTitle.setText(mValues.get(position).episode_title);
+//        holder.mEpisodeDescription.setText(mValues.get(position).episode_description);
+//        holderSetOnClickListener(holder);
+//    }
+    // --- dummy content disabled ---
+
+    private void holderSetOnClickListener(final EpisodeViewHolder holder) {
         holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -76,7 +99,8 @@ public class RecyclerViewAdapter
                     {
                         Context context = v.getContext();
                         Intent intent = new Intent(context, EpisodeDetailActivity.class);
-                        intent.putExtra(EpisodeDetailFragment.ARG_ITEM_ID, holder.mItem.getTitle());
+                        intent.putExtra(EpisodeDetailFragment.ARG_EPISODE_ID, String.valueOf(holder.mItem.getEpisodeNumber()));
+                        LogHelper.v(TAG, "-NEW- ARG_EPISODE_ID="+holder.mItem.getEpisodeNumber());
                         Bundle playInfo = new Bundle();
                         episodeListActivity.savePlayInfoToBundle(playInfo);
                         intent.putExtras(playInfo);
@@ -85,7 +109,8 @@ public class RecyclerViewAdapter
                     } else {
 
                         Bundle arguments = new Bundle();
-                        arguments.putString(EpisodeDetailFragment.ARG_ITEM_ID, holder.mItem.getTitle());
+                        arguments.putString(EpisodeDetailFragment.ARG_EPISODE_ID, String.valueOf(holder.mItem.getEpisodeNumber()));
+                        LogHelper.v(TAG, "-NEW- ARG_EPISODE_ID="+holder.mItem.getEpisodeNumber());
                         EpisodeDetailFragment fragment = new EpisodeDetailFragment();
                         fragment.setArguments(arguments);
                         episodeListActivity.getSupportFragmentManager().beginTransaction()
@@ -100,7 +125,16 @@ public class RecyclerViewAdapter
 
     @Override
     public int getItemCount() {
-        return mValues.size();
+        if (mDataCursor != null) {
+            return mDataCursor.getCount();
+        }
+        else {
+            return 0;
+        }
+
+        // --- dummy content disabled ---
+        //      return mValues.size();
+        // --- dummy content disabled ---
     }
 
 }

@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -73,8 +74,9 @@ public class EpisodeDetailActivity extends BaseActivity {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
-            arguments.putString(EpisodeDetailFragment.ARG_ITEM_ID,
-                    getIntent().getStringExtra(EpisodeDetailFragment.ARG_ITEM_ID));
+            String arg_episode_id = getIntent().getStringExtra(EpisodeDetailFragment.ARG_EPISODE_ID);
+            LogHelper.v(TAG, "(SEND) ARG_EPISODE_ID="+EpisodeDetailFragment.ARG_EPISODE_ID);
+            arguments.putString(EpisodeDetailFragment.ARG_EPISODE_ID, arg_episode_id);
             EpisodeDetailFragment fragment = new EpisodeDetailFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()

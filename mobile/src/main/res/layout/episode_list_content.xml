@@ -17,7 +17,7 @@
         <TextView
             android:id="@+id/episode_number"
             android:layout_gravity="start"
-            android:textColor="@color/dark_red"
+            android:textColor="@color/list_episode_number_color"
             android:textSize="19sp"
             android:textStyle="normal"
             android:layout_width="wrap_content"
@@ -28,7 +28,7 @@
         <TextView
             android:id="@+id/episode_title"
             android:layout_gravity="center_horizontal"
-            android:textColor="@color/primary_dark"
+            android:textColor="@color/list_episode_title_color"
             android:textSize="27sp"
             android:textStyle="bold"
             android:layout_width="match_parent"
@@ -41,7 +41,7 @@
     <TextView
         android:id="@+id/episode_description"
         android:layout_gravity="start"
-        android:textColor="@color/primary_text"
+        android:textColor="@color/list_episode_description_color"
         android:textSize="24sp"
         android:textStyle="normal"
         android:layout_width="wrap_content"

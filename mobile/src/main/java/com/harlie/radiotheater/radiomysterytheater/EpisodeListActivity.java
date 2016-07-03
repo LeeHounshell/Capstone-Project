@@ -11,13 +11,14 @@ import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 
-import com.harlie.radiotheater.radiomysterytheater.dummy.DummyContent;
+import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
+import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesSelection;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
-import com.harlie.radiotheater.radiomysterytheater.utils.RecyclerViewAdapter;
+import com.harlie.radiotheater.radiomysterytheater.utils.EpisodeRecyclerViewAdapter;
 
 import java.util.List;
 
@@ -91,11 +92,29 @@ public class EpisodeListActivity extends BaseActivity
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
         LogHelper.v(TAG, "setupRecyclerView");
-        // Only compile the dummy content if Debug.
 
-        //#IFDEF 'DEBUG'
-        recyclerView.setAdapter(new RecyclerViewAdapter(DummyContent.ITEMS, this));
-        //#ENDIF
+        String order_limit = RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER + " ASC";
+
+        Cursor cursor = getContentResolver().query(
+                EpisodesColumns.CONTENT_URI,        // the 'content://' Uri to query
+                null,                               // projection String[] - leaving "columns" null just returns all the columns.
+                null,                               // selection - SQL where
+                null,                               // selection args String[] - values for the "where" clause
+                order_limit);                       // sort order and limit (String)
+
+        if (cursor != null) {
+            recyclerView.setAdapter(new EpisodeRecyclerViewAdapter(this, cursor));
+            LogHelper.v(TAG, "setupRecyclerView: cursor has Count=" + cursor.getCount());
+        }
+        else {
+            LogHelper.e(TAG, "*** FAIL *** SQLite content-resolver query="+EpisodesColumns.CONTENT_URI+", order+limit="+order_limit);
+        }
+
+        // --- dummy content disabled ---
+        //      //#IFDEF 'DEBUG'
+        //      recyclerView.setAdapter(new EpisodeRecyclerViewAdapter(DummyContent.ITEMS, this));
+        //      //#ENDIF
+        // --- dummy content disabled ---
     }
 
     public static boolean isTwoPane() {
