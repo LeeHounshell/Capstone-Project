@@ -71,15 +71,9 @@ public class RecyclerViewAdapter
             public void onClick(View v) {
                 if (mContext instanceof EpisodeListActivity) {
                     EpisodeListActivity episodeListActivity = (EpisodeListActivity) mContext;
-                    if (EpisodeListActivity.isTwoPane()) {
-                        Bundle arguments = new Bundle();
-                        arguments.putString(EpisodeDetailFragment.ARG_ITEM_ID, holder.mItem.getTitle());
-                        EpisodeDetailFragment fragment = new EpisodeDetailFragment();
-                        fragment.setArguments(arguments);
-                        episodeListActivity.getSupportFragmentManager().beginTransaction()
-                                .replace(R.id.episode_detail_container, fragment)
-                                .commit();
-                    } else {
+                    if (! EpisodeListActivity.isTwoPane()
+                            || v.getContext().getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+                    {
                         Context context = v.getContext();
                         Intent intent = new Intent(context, EpisodeDetailActivity.class);
                         intent.putExtra(EpisodeDetailFragment.ARG_ITEM_ID, holder.mItem.getTitle());
@@ -87,6 +81,17 @@ public class RecyclerViewAdapter
                         episodeListActivity.savePlayInfoToBundle(playInfo);
                         intent.putExtras(playInfo);
                         context.startActivity(intent);
+
+                    } else {
+
+                        Bundle arguments = new Bundle();
+                        arguments.putString(EpisodeDetailFragment.ARG_ITEM_ID, holder.mItem.getTitle());
+                        EpisodeDetailFragment fragment = new EpisodeDetailFragment();
+                        fragment.setArguments(arguments);
+                        episodeListActivity.getSupportFragmentManager().beginTransaction()
+                                .replace(R.id.episode_detail_container, fragment)
+                                .commit();
+
                     }
                 }
             }
