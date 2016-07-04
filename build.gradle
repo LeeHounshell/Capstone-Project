@@ -27,6 +27,10 @@ allprojects {
     }
 }
 
+task installRelease {
+    dependsOn = [ "mobile:installPaidRelease", "mobile:installFreeRelease" ]
+}
+
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
