@@ -55,7 +55,7 @@
             android:paddingBottom="@dimen/text_margin"
             android:paddingEnd="@dimen/text_margin"
             android:paddingStart="@dimen/text_margin"
-            android:textColor="@color/primary_text_light"
+            android:textColor="@color/primary_dark"
             android:textSize="33sp"
             android:textStyle="bold" />
 
