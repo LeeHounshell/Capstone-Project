@@ -3,6 +3,7 @@ package com.harlie.radiotheater.radiomysterytheater;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -16,6 +17,10 @@ import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsCursor;
+import com.harlie.radiotheater.radiomysterytheater.data.actorsepisodes.ActorsEpisodesCursor;
+import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersCursor;
+import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.EpisodeRecyclerViewItem;
 import com.harlie.radiotheater.radiomysterytheater.utils.FontPreferences;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
@@ -63,9 +68,72 @@ public class EpisodeDetailFragment extends FragmentBase {
         if (getArguments().containsKey(ARG_EPISODE_ID)) {
             // Load the content specified by the fragment arguments.
             // The ARG_EPISODE_PARCELABLE contains a Parcelable EpisodeRecyclerViewItem.
-            String episodeId = getArguments().getString(ARG_EPISODE_ID);
+            long episodeId = Long.valueOf(getArguments().getString(ARG_EPISODE_ID));
             LogHelper.v(TAG, "onCreate: build EpisodeRecyclerViewItem for (RECEIVE) ARG_EPISODE_ID="+ episodeId);
             mItem = getArguments().getParcelable(ARG_EPISODE_PARCELABLE);
+
+            BaseActivity activity = (BaseActivity) getActivity();
+
+            // Load the actors for this episode
+            ActorsEpisodesCursor actorsEpisodesCursor = activity.getActorsEpisodesCursor(episodeId);
+            int actorNumber = 0;
+            while (actorsEpisodesCursor != null && actorsEpisodesCursor.moveToNext()) {
+                actorNumber += 1;
+                long actorId = actorsEpisodesCursor.getFieldActorId();
+                ActorsCursor actorsCursor = activity.getActorsCursor(actorId);
+                if (actorsCursor != null && actorsCursor.moveToNext()) {
+                    String actorName = actorsCursor.getFieldActorName();
+                    String actorImage = actorsCursor.getFieldActorUrl().replace(".jpg", "");
+                    LogHelper.v(TAG, "onCreate: actorName="+actorName+", actorImage="+actorImage);
+                    switch (actorNumber) {
+                        case 1: {
+                            mItem.setActor1(actorImage);
+                            break;
+                        }
+                        case 2: {
+                            mItem.setActor2(actorImage);
+                            break;
+                        }
+                        case 3: {
+                            mItem.setActor3(actorImage);
+                            break;
+                        }
+                        case 4: {
+                            mItem.setActor4(actorImage);
+                            break;
+                        }
+                        case 5: {
+                            mItem.setActor5(actorImage);
+                            break;
+                        }
+                        case 6: {
+                            mItem.setActor6(actorImage);
+                            break;
+                        }
+                    }
+                    actorsCursor.close();
+                }
+            }
+            if (actorsEpisodesCursor != null) {
+                actorsEpisodesCursor.close();
+            }
+
+            // Load the writers for this episode
+            WritersEpisodesCursor writersEpisodesCursor = activity.getWritersEpisodesCursor(episodeId);
+            while (writersEpisodesCursor != null && writersEpisodesCursor.moveToNext()) {
+                long writerId = writersEpisodesCursor.getFieldWriterId();
+                WritersCursor writersCursor = activity.getWritersCursor(writerId);
+                if (writersCursor != null && writersCursor.moveToNext()) {
+                    String writerName = writersCursor.getFieldWriterName();
+                    String writerImage = writersCursor.getFieldWriterUrl().replace(".jpg", "");
+                    LogHelper.v(TAG, "onCreate: writerName="+writerName+", writerImage="+writerImage);
+                    mItem.setWriter(writerImage);
+                    writersCursor.close();
+                }
+            }
+            if (writersEpisodesCursor != null) {
+                writersEpisodesCursor.close();
+            }
 
             // --- dummy content disabled ---
 //          //#IFDEF 'DEBUG'

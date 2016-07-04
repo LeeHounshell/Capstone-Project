@@ -33,6 +33,12 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.harlie.radiotheater.radiomysterytheater.data.RadioTheaterHelper;
+import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsCursor;
+import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsSelection;
+import com.harlie.radiotheater.radiomysterytheater.data.actorsepisodes.ActorsEpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.actorsepisodes.ActorsEpisodesCursor;
+import com.harlie.radiotheater.radiomysterytheater.data.actorsepisodes.ActorsEpisodesSelection;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesContentValues;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
@@ -40,6 +46,12 @@ import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpi
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesSelection;
+import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersCursor;
+import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersSelection;
+import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesCursor;
+import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesSelection;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadingAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.firebase.FirebaseConfigEpisode;
@@ -794,6 +806,66 @@ public class BaseActivity extends AppCompatActivity {
                 order_limit);                       // sort order and limit (String)
 
         return (cursor != null && cursor.getCount() > 0) ? new EpisodesCursor(cursor) : null;
+    }
+
+    public ActorsCursor getActorsCursor(long actor) {
+        ActorsSelection where = new ActorsSelection();
+        where.fieldActorId(actor);
+        String order_limit = ActorsEntry.FIELD_ACTOR_ID + " ASC LIMIT 1";
+
+        Cursor cursor = getContentResolver().query(
+                ActorsColumns.CONTENT_URI,          // the 'content://' Uri to query
+                null,                               // projection String[] - leaving "columns" null just returns all the columns.
+                where.sel(),                        // selection - SQL where
+                where.args(),                       // selection args String[] - values for the "where" clause
+                order_limit);                       // sort order and limit (String)
+
+        return (cursor != null && cursor.getCount() > 0) ? new ActorsCursor(cursor) : null;
+    }
+
+    public WritersCursor getWritersCursor(long writer) {
+        WritersSelection where = new WritersSelection();
+        where.fieldWriterId(writer);
+        String order_limit = WritersEntry.FIELD_WRITER_ID + " ASC LIMIT 1";
+
+        Cursor cursor = getContentResolver().query(
+                WritersColumns.CONTENT_URI,         // the 'content://' Uri to query
+                null,                               // projection String[] - leaving "columns" null just returns all the columns.
+                where.sel(),                        // selection - SQL where
+                where.args(),                       // selection args String[] - values for the "where" clause
+                order_limit);                       // sort order and limit (String)
+
+        return (cursor != null && cursor.getCount() > 0) ? new WritersCursor(cursor) : null;
+    }
+
+    public ActorsEpisodesCursor getActorsEpisodesCursor(long episode) {
+        ActorsEpisodesSelection where = new ActorsEpisodesSelection();
+        where.fieldEpisodeNumber(episode);
+        String order_limit = ActorsEpisodesEntry.FIELD_EPISODE_NUMBER + " ASC";
+
+        Cursor cursor = getContentResolver().query(
+                ActorsEpisodesColumns.CONTENT_URI,  // the 'content://' Uri to query
+                null,                               // projection String[] - leaving "columns" null just returns all the columns.
+                where.sel(),                        // selection - SQL where
+                where.args(),                       // selection args String[] - values for the "where" clause
+                order_limit);                       // sort order and limit (String)
+
+        return (cursor != null && cursor.getCount() > 0) ? new ActorsEpisodesCursor(cursor) : null;
+    }
+
+    public WritersEpisodesCursor getWritersEpisodesCursor(long episode) {
+        WritersEpisodesSelection where = new WritersEpisodesSelection();
+        where.fieldEpisodeNumber(episode);
+        String order_limit = WritersEpisodesEntry.FIELD_EPISODE_NUMBER + " ASC";
+
+        Cursor cursor = getContentResolver().query(
+                WritersEpisodesColumns.CONTENT_URI, // the 'content://' Uri to query
+                null,                               // projection String[] - leaving "columns" null just returns all the columns.
+                where.sel(),                        // selection - SQL where
+                where.args(),                       // selection args String[] - values for the "where" clause
+                order_limit);                       // sort order and limit (String)
+
+        return (cursor != null && cursor.getCount() > 0) ? new WritersEpisodesCursor(cursor) : null;
     }
 
     public ConfigEpisodesCursor getCursorForNextAvailableEpisode() {
