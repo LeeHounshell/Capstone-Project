@@ -1,18 +1,24 @@
 package com.harlie.radiotheater.radiomysterytheater.data_helper;
 
+import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
+import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
+import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesContentValues;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
+import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 public class EpisodeRecyclerViewItem {
+    private final static String TAG = "LEE: <" + EpisodeRecyclerViewItem.class.getSimpleName() + ">";
 
     public String episode_title;
     public String episode_airdate;
     public String episode_description;
     public int episode_number;
     public float episode_rating;
-    public boolean have_detail;
+    public boolean have_actor_writer_detail;
     public boolean episode_heard;
     public boolean episode_downloaded;
     public String actor1;
@@ -33,7 +39,7 @@ public class EpisodeRecyclerViewItem {
         setDescription(description);
         setEpisodeNumber(episodeNumber);
         setRating(rating);
-        have_detail = true;
+        have_actor_writer_detail = true;
         setHeard(heard);
         setDownloaded(downloaded);
         setActor1(actor1);
@@ -47,15 +53,15 @@ public class EpisodeRecyclerViewItem {
         setDownload(download);
     }
 
-    public EpisodeRecyclerViewItem(String title, String airdate, String description, int episodeNumber, Float rating, String weblink, String download) {
+    public EpisodeRecyclerViewItem(String title, String airdate, String description, int episodeNumber, Float rating, boolean heard, boolean downloaded, String weblink, String download) {
         setTitle(title);
         setAirdate(airdate);
         setDescription(description);
         setEpisodeNumber(episodeNumber);
         setRating(rating);
-        have_detail = false;
-        setHeard(false);
-        setDownloaded(false);
+        setHeard(heard);
+        setDownloaded(downloaded);
+        have_actor_writer_detail = false;
         setActor1(null);
         setActor2(null);
         setActor3(null);
@@ -67,15 +73,34 @@ public class EpisodeRecyclerViewItem {
         setDownload(download);
     }
 
-    public static EpisodeRecyclerViewItem fromCursor(Cursor cursor) {
+    public static EpisodeRecyclerViewItem fromCursor(Cursor cursor, Context context) {
         EpisodesCursor episodesCursor = new EpisodesCursor(cursor);
+        int episodeNumber = (int) episodesCursor.getFieldEpisodeNumber();
+
+        // THE 'HEARD' AND 'DOWNLOADED' FLAGS ARE USED FOR GENERATION OF COLOR-CODED LIST ITEMS
+        boolean heard = false;
+        boolean downloaded = false;
+        if (context instanceof BaseActivity) {
+            BaseActivity activity = (BaseActivity) context;
+            String episode = String.valueOf(episodeNumber);
+            ConfigEpisodesContentValues configEpisodesContentValues = activity.getConfigForEpisode(episode);
+            ContentValues contentValues = configEpisodesContentValues.values();
+            heard = contentValues.getAsBoolean(RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_HEARD);
+            downloaded = contentValues.getAsBoolean(RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_DOWNLOADED);
+            //LogHelper.v(TAG, "awesome!!! found matching config for episode="+episodeNumber+", heard="+heard+", and downloaded="+downloaded);
+        }
+        else {
+            LogHelper.w(TAG, "unable to find matching config for episode="+episodeNumber+", heard="+heard+", and downloaded="+downloaded);
+        }
 
         return new EpisodeRecyclerViewItem(
                 episodesCursor.getFieldEpisodeTitle(),
                 episodesCursor.getFieldAirdate(),
                 episodesCursor.getFieldEpisodeDescription(),
-                (int) episodesCursor.getFieldEpisodeNumber(),
+                episodeNumber,
                 episodesCursor.getFieldRating(),
+                heard,
+                downloaded,
                 Uri.parse(episodesCursor.getFieldWeblinkUrl()).getEncodedPath(),
                 Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString());
     }

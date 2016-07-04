@@ -776,7 +776,7 @@ public class BaseActivity extends AppCompatActivity {
         }
         else {
             LogHelper.v(TAG, "SQL: episode "+episode+" not found");
-            // FIXME: need to query Firebase record for this user
+            // FIXME: need to query Firebase record for this user (maybe - not if used by EpisodeRecyclerViewAdapter)
         }
         return record;
     }

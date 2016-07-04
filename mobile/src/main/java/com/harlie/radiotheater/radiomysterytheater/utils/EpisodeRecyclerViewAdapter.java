@@ -63,7 +63,7 @@ public class EpisodeRecyclerViewAdapter
 
     @Override
     public void onBindViewHolder(EpisodeViewHolder holder, Cursor cursor) {
-        holder.mItem = EpisodeRecyclerViewItem.fromCursor(cursor);
+        holder.mItem = EpisodeRecyclerViewItem.fromCursor(cursor, mContext);
         DecimalFormat format = new DecimalFormat("####");
         int episodeNumber = holder.mItem.getEpisodeNumber();
         String formattedEpisodeNumber = format.format(episodeNumber);
