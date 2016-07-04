@@ -56,6 +56,11 @@
         <item name="colorControlActivated">@color/primary_dark</item>
     </style>
 
+    <style name="RatingBarDetail" parent="AppTheme">
+        <item name="colorControlNormal">@color/yellow</item>
+        <item name="colorControlActivated">@color/transparent</item>
+    </style>
+
     <style name="RadioTheaterButton" parent="AppTheme">
         <item name="colorControlHighlight">@color/buttonColorPressed</item>
         <item name="colorButtonNormal">@color/buttonColor</item>

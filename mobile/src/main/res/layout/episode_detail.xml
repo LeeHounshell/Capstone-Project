@@ -78,12 +78,13 @@
             android:elevation="@dimen/button_elevation"
             android:paddingTop="@dimen/image_margin"
             android:paddingBottom="@dimen/image_margin"
-            android:visibility="gone"
+            android:visibility="visible"
             android:theme="@style/RadioTheaterButton" />
 
         <RatingBar
             android:id="@+id/episode_rating"
-            android:theme="@style/RatingBar"
+            android:theme="@style/RatingBarDetail"
+            style="?android:attr/ratingBarStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
