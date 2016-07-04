@@ -44,6 +44,10 @@
 
     <!-- Strings related to Autoplay and messages -->
     <string name="title_activity_autoplay">AutoplayActivity</string>
+    <string name="episode_number">Episode Number</string>
+    <string name="episode_description">Episode Description</string>
+    <string name="episode_rating">Episode Rating</string>
+    <string name="none"> </string>
     <string name="autoplay_next">Autoplay next episode</string>
     <string name="play_now">Play episode</string>
     <string name="weblink">Web Link</string>

@@ -115,7 +115,11 @@ android {
     }
 
     lintOptions {
-        disable 'InconsistentLayout','InvalidPackage','GradleDependency','GradleDynamicVersion','PackageManagerGetSignatures','Recycle','StaticFieldLeak','UnusedResources','IconLocation','IconDensities','AlwaysShowAction','ClickableViewAccessibility','SetTextI18n'
+        disable 'InconsistentLayout','InvalidPackage','GradleDependency',
+                'GradleDynamicVersion','PackageManagerGetSignatures','Recycle',
+                'StaticFieldLeak','UnusedResources','IconLocation',
+                'IconDensities','AlwaysShowAction','ClickableViewAccessibility',
+                'SetTextI18n', 'UseCompoundDrawables', 'Overdraw'
     }
 
     dexOptions {

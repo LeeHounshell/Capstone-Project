@@ -73,6 +73,8 @@ public class EpisodeRecyclerViewAdapter
         holder.mEpisodeDescription.setText(holder.mItem.getDescription());
         holder.mEpisodeRating.setRating(holder.mItem.getRating());
         holder.setSpecialColors();
+        BaseActivity activity = (BaseActivity) mContext;
+        holder.setFontTypeAndSizes(activity);
         holderSetOnClickListener(holder);
     }
 

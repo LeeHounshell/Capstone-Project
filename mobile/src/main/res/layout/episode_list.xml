@@ -10,7 +10,6 @@
     android:layout_marginEnd="8dp"
     app:layoutManager="LinearLayoutManager"
     style="@style/EpisodeListViewStyle"
-    android:layout_weight="1"
     android:divider="#FFF"
     android:fadeScrollbars="false"
     android:fastScrollEnabled="true"

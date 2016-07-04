@@ -1,16 +1,19 @@
 package com.harlie.radiotheater.radiomysterytheater.utils;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
 import com.harlie.radiotheater.radiomysterytheater.R;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.EpisodeRecyclerViewItem;
 
 public class EpisodeViewHolder extends RecyclerView.ViewHolder {
+    private final static String TAG = "LEE: <" + EpisodeViewHolder.class.getSimpleName() + ">";
 
     public final View mView;
     public TextView mEpisodeNumber;
@@ -44,15 +47,71 @@ public class EpisodeViewHolder extends RecyclerView.ViewHolder {
     public void setSpecialColors() {
         if (mItem != null) {
             if (mView != null && mItem.isHeard()) {
-                int color = mView.getResources().getColor(R.color.grey, null);
+                int color = 0;
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                    color = mView.getResources().getColor(R.color.grey, null);
+                }
+                else {
+                    color = mView.getResources().getColor(R.color.grey);
+                }
                 mView.setBackgroundColor(color);
             }
             if (mEpisodeTitle != null && mItem.isDownloaded()) {
-                int color = mView.getResources().getColor(R.color.green, null);
+                int color = 0;
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                    color = mView.getResources().getColor(R.color.green, null);
+                }
+                else {
+                    color = mView.getResources().getColor(R.color.green);
+                }
                 mEpisodeTitle.setTextColor(color);
             }
         }
     }
+
+    public void setFontTypeAndSizes(BaseActivity activity) {
+        //LogHelper.v(TAG, "setFontTypeAndSizes");
+        FontPreferences fontPreferences = new FontPreferences(activity);
+        String fontname = fontPreferences.getFontName();
+        String fontsize = fontPreferences.getFontSize();
+        LogHelper.v(TAG, "--> USING FONT NAME="+fontname+", SIZE="+fontsize);
+        activity.getTheme().applyStyle(fontPreferences.getFontStyle().getResId(), true);
+
+        int[] attrs = {R.attr.font_small, R.attr.font_medium, R.attr.font_large, R.attr.font_xlarge}; // The attributes to retrieve
+        TypedArray ta = activity.obtainStyledAttributes(fontPreferences.getFontStyle().getResId(), attrs);
+        String str;
+        //noinspection ResourceType
+        float titleTextSize = 0, descriptionTextSize = 0, airdateTextSize = 0, episodeNumberTextSize = 0;
+        //noinspection ResourceType
+        str = ta.getString(3);
+        if (str != null) {
+            titleTextSize = Float.valueOf(str.substring(0, str.length() - 2)); // discard the "sp" part of the style item
+        }
+        //noinspection ResourceType
+        str = ta.getString(2);
+        if (str != null) {
+            descriptionTextSize = Float.valueOf(str.substring(0, str.length() - 2)); // discard the "sp" part of the style item
+        }
+        //noinspection ResourceType
+        str = ta.getString(1);
+        if (str != null) {
+            airdateTextSize = Float.valueOf(str.substring(0, str.length() - 2)); // discard the "sp" part of the style item
+        }
+        //noinspection ResourceType
+        str = ta.getString(1);
+        if (str != null) {
+            episodeNumberTextSize = Float.valueOf(str.substring(0, str.length() - 2)); // discard the "sp" part of the style item
+        }
+        LogHelper.v(TAG, "=========> titleTextSize="+titleTextSize+", descriptionTextSize="+descriptionTextSize+"," +
+                " airdateTextSize="+airdateTextSize+", episodeNumberTextSize="+episodeNumberTextSize);
+        ta.recycle();
+
+        mEpisodeTitle.setTextSize(titleTextSize);
+        mEpisodeDescription.setTextSize(descriptionTextSize);
+        mEpisodeAirdate.setTextSize(airdateTextSize);
+        mEpisodeNumber.setTextSize(episodeNumberTextSize);
+    }
+
 
     @Override
     public String toString() {

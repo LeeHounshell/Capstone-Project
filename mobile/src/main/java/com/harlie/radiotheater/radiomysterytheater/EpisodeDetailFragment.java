@@ -17,6 +17,8 @@ import android.widget.TextView;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.EpisodeRecyclerViewItem;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
+import java.util.Locale;
+
 import static com.harlie.radiotheater.radiomysterytheater.data_helper.EpisodeRecyclerViewItem.CREATOR;
 
 /**
@@ -153,7 +155,7 @@ public class EpisodeDetailFragment extends FragmentBase {
         String[] names = staffMember.split("_");
         for (int i = names.length; i > 0; --i) {
             String part = names[i - 1];
-            part = part.substring(0, 1).toUpperCase() + part.substring(1).toLowerCase();
+            part = part.substring(0, 1).toUpperCase() + part.substring(1).toLowerCase(Locale.getDefault());
             fullName = fullName + " " + part;
         }
         return fullName;
