@@ -2,6 +2,7 @@ package com.harlie.radiotheater.radiomysterytheater;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
@@ -75,8 +76,10 @@ public class EpisodeDetailActivity extends BaseActivity {
             // using a fragment transaction.
             Bundle arguments = new Bundle();
             String arg_episode_id = getIntent().getStringExtra(EpisodeDetailFragment.ARG_EPISODE_ID);
-            LogHelper.v(TAG, "(SEND) ARG_EPISODE_ID="+EpisodeDetailFragment.ARG_EPISODE_ID);
+            Parcelable arg_episode_parcel = getIntent().getParcelableExtra(EpisodeDetailFragment.ARG_EPISODE_PARCELABLE);
+            LogHelper.v(TAG, "(SEND) ARG_EPISODE_PARCELABLE and ARG_EPISODE_ID="+EpisodeDetailFragment.ARG_EPISODE_ID);
             arguments.putString(EpisodeDetailFragment.ARG_EPISODE_ID, arg_episode_id);
+            arguments.putParcelable(EpisodeDetailFragment.ARG_EPISODE_PARCELABLE, arg_episode_parcel);
             EpisodeDetailFragment fragment = new EpisodeDetailFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()

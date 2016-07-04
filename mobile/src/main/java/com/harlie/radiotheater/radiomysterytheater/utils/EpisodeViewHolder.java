@@ -41,6 +41,19 @@ public class EpisodeViewHolder extends RecyclerView.ViewHolder {
         this.mDescriptionBackgroundColor = ResourceHelper.getThemeColor(context, R.color.light_grey, 0xbdbdbd);
     }
 
+    public void setSpecialColors() {
+        if (mItem != null) {
+            if (mView != null && mItem.isHeard()) {
+                int color = mView.getResources().getColor(R.color.grey, null);
+                mView.setBackgroundColor(color);
+            }
+            if (mEpisodeTitle != null && mItem.isDownloaded()) {
+                int color = mView.getResources().getColor(R.color.green, null);
+                mEpisodeTitle.setTextColor(color);
+            }
+        }
+    }
+
     @Override
     public String toString() {
         return super.toString() + " '" + mEpisodeTitle + ": " + mEpisodeDescription.getText() + "'";

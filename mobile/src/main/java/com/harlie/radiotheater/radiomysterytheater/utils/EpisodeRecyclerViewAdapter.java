@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -71,6 +72,7 @@ public class EpisodeRecyclerViewAdapter
         holder.mEpisodeTitle.setText(holder.mItem.getTitle());
         holder.mEpisodeDescription.setText(holder.mItem.getDescription());
         holder.mEpisodeRating.setRating(holder.mItem.getRating());
+        holder.setSpecialColors();
         holderSetOnClickListener(holder);
     }
 
@@ -100,6 +102,7 @@ public class EpisodeRecyclerViewAdapter
                         Context context = v.getContext();
                         Intent intent = new Intent(context, EpisodeDetailActivity.class);
                         intent.putExtra(EpisodeDetailFragment.ARG_EPISODE_ID, String.valueOf(holder.mItem.getEpisodeNumber()));
+                        intent.putExtra(EpisodeDetailFragment.ARG_EPISODE_PARCELABLE, holder.mItem);
                         LogHelper.v(TAG, "-NEW- ARG_EPISODE_ID="+holder.mItem.getEpisodeNumber());
                         Bundle playInfo = new Bundle();
                         episodeListActivity.savePlayInfoToBundle(playInfo);
@@ -110,6 +113,7 @@ public class EpisodeRecyclerViewAdapter
 
                         Bundle arguments = new Bundle();
                         arguments.putString(EpisodeDetailFragment.ARG_EPISODE_ID, String.valueOf(holder.mItem.getEpisodeNumber()));
+                        arguments.putParcelable(EpisodeDetailFragment.ARG_EPISODE_PARCELABLE, holder.mItem);
                         LogHelper.v(TAG, "-NEW- ARG_EPISODE_ID="+holder.mItem.getEpisodeNumber());
                         EpisodeDetailFragment fragment = new EpisodeDetailFragment();
                         fragment.setArguments(arguments);

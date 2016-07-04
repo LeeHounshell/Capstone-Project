@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v7.widget.AppCompatButton;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +16,8 @@ import android.widget.TextView;
 
 import com.harlie.radiotheater.radiomysterytheater.data_helper.EpisodeRecyclerViewItem;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
+
+import static com.harlie.radiotheater.radiomysterytheater.data_helper.EpisodeRecyclerViewItem.CREATOR;
 
 /**
  * A fragment representing a single Episode detail screen.
@@ -29,7 +32,8 @@ public class EpisodeDetailFragment extends FragmentBase {
      * The fragment argument representing the item ID that this fragment
      * represents.
      */
-    public static final String ARG_EPISODE_ID = "1";
+    public static final String ARG_EPISODE_ID = "KEY_EPISODE_ID";
+    public static final String ARG_EPISODE_PARCELABLE = "KEY_EPISODE_PARCELABLE";
 
     private AppCompatButton mPlayNow;
     private AppCompatButton mWebLink;
@@ -52,18 +56,17 @@ public class EpisodeDetailFragment extends FragmentBase {
         super.onCreate(savedInstanceState);
 
         if (getArguments().containsKey(ARG_EPISODE_ID)) {
-            // Load the dummy content specified by the fragment
-            // arguments. In a real-world scenario, use a Loader
-            // to load content from a content provider.
-            // Only compile the dummy content if Debug.
+            // Load the content specified by the fragment arguments.
+            // The ARG_EPISODE_PARCELABLE contains a Parcelable EpisodeRecyclerViewItem.
+            String episodeId = getArguments().getString(ARG_EPISODE_ID);
+            LogHelper.v(TAG, "onCreate: build EpisodeRecyclerViewItem for (RECEIVE) ARG_EPISODE_ID="+ episodeId);
+            mItem = getArguments().getParcelable(ARG_EPISODE_PARCELABLE);
 
             // --- dummy content disabled ---
 //          //#IFDEF 'DEBUG'
 //          mItem = DummyContent.ITEM_MAP.get(getArguments().getString(ARG_EPISODE_ID));
 //          //#ENDIF
             // --- dummy content disabled ---
-
-            LogHelper.v(TAG, "FIXME: need to get EpisodeRecyclerViewItem for (RECEIVE) ARG_EPISODE_ID="+ ARG_EPISODE_ID);
         }
     }
 

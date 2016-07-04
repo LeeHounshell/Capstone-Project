@@ -4,13 +4,15 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesContentValues;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
-public class EpisodeRecyclerViewItem {
+public class EpisodeRecyclerViewItem implements Parcelable {
     private final static String TAG = "LEE: <" + EpisodeRecyclerViewItem.class.getSimpleName() + ">";
 
     public String episode_title;
@@ -242,5 +244,49 @@ public class EpisodeRecyclerViewItem {
     public void setDownload(String download) {
                                            this.download = download;
                                                                     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.episode_title);
+        dest.writeString(this.episode_airdate);
+        dest.writeString(this.episode_description);
+        dest.writeInt(this.episode_number);
+        dest.writeFloat(this.episode_rating);
+        dest.writeByte(this.have_actor_writer_detail ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.episode_heard ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.episode_downloaded ? (byte) 1 : (byte) 0);
+        dest.writeString(this.weblink);
+        dest.writeString(this.download);
+    }
+
+    protected EpisodeRecyclerViewItem(Parcel in) {
+        this.episode_title = in.readString();
+        this.episode_airdate = in.readString();
+        this.episode_description = in.readString();
+        this.episode_number = in.readInt();
+        this.episode_rating = in.readFloat();
+        this.have_actor_writer_detail = in.readByte() != 0;
+        this.episode_heard = in.readByte() != 0;
+        this.episode_downloaded = in.readByte() != 0;
+        this.weblink = in.readString();
+        this.download = in.readString();
+    }
+
+    public static final Parcelable.Creator<EpisodeRecyclerViewItem> CREATOR = new Parcelable.Creator<EpisodeRecyclerViewItem>() {
+        @Override
+        public EpisodeRecyclerViewItem createFromParcel(Parcel source) {
+            return new EpisodeRecyclerViewItem(source);
+        }
+
+        @Override
+        public EpisodeRecyclerViewItem[] newArray(int size) {
+            return new EpisodeRecyclerViewItem[size];
+        }
+    };
 
 }
