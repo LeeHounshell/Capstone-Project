@@ -51,7 +51,7 @@
 
         <provider
             android:name=".data.RadioTheaterProvider"
-            android:authorities="com.harlie.radiotheater.radiomysterytheater.data.radiotheaterprovider"
+            android:authorities="${applicationId}.data.radiotheaterprovider"
             android:exported="false" />
 
         <meta-data
@@ -187,11 +187,13 @@
 
         <activity
             android:name=".EpisodeListActivity"
+            android:launchMode="singleTop"
             android:label="@string/app_name">
         </activity>
 
         <activity
             android:name=".EpisodeDetailActivity"
+            android:launchMode="singleTop"
             android:label="@string/title_episode_detail"
             android:parentActivityName=".EpisodeListActivity">
             <meta-data
