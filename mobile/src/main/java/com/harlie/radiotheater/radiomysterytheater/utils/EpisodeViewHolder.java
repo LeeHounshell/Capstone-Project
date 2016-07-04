@@ -1,6 +1,7 @@
 package com.harlie.radiotheater.radiomysterytheater.utils;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -8,6 +9,7 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 
 import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
+import com.harlie.radiotheater.radiomysterytheater.EpisodeListActivity;
 import com.harlie.radiotheater.radiomysterytheater.R;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.EpisodeRecyclerViewItem;
@@ -69,6 +71,7 @@ public class EpisodeViewHolder extends RecyclerView.ViewHolder {
         }
     }
 
+    static final int LIST_SCALE_AMT = 9;
     public void setFontTypeAndSizes(BaseActivity activity) {
         //LogHelper.v(TAG, "setFontTypeAndSizes");
         FontPreferences fontPreferences = new FontPreferences(activity);
@@ -82,10 +85,20 @@ public class EpisodeViewHolder extends RecyclerView.ViewHolder {
         String str;
         //noinspection ResourceType
         float titleTextSize = 0, descriptionTextSize = 0, airdateTextSize = 0, episodeNumberTextSize = 0;
-        titleTextSize = getTextSize(ta, 3);
-        descriptionTextSize = getTextSize(ta, 2);
-        airdateTextSize = getTextSize(ta, 1);
-        episodeNumberTextSize = getTextSize(ta, 0);
+        if (! EpisodeListActivity.isTwoPane()
+                || activity.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+        {
+            titleTextSize = getTextSize(ta, 2) + LIST_SCALE_AMT + 3;
+            descriptionTextSize = getTextSize(ta, 1) + LIST_SCALE_AMT + 2;
+            airdateTextSize = getTextSize(ta, 1) + LIST_SCALE_AMT + 1;
+            episodeNumberTextSize = getTextSize(ta, 1) + LIST_SCALE_AMT + 1;
+        }
+        else {
+            titleTextSize = getTextSize(ta, 1) + LIST_SCALE_AMT + 2;
+            descriptionTextSize = getTextSize(ta, 0) + LIST_SCALE_AMT + 1;
+            airdateTextSize = getTextSize(ta, 0) + LIST_SCALE_AMT;
+            episodeNumberTextSize = getTextSize(ta, 0) + LIST_SCALE_AMT;
+        }
 
         LogHelper.v(TAG, "=========> titleTextSize="+titleTextSize+", descriptionTextSize="+descriptionTextSize+"," +
                 " airdateTextSize="+airdateTextSize+", episodeNumberTextSize="+episodeNumberTextSize);

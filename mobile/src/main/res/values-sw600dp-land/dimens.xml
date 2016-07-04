@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="autoplay_height">222dp</dimen>
-    <dimen name="autoplay_width">333dp</dimen>
-    <dimen name="play_now_height">111dp</dimen>
-    <dimen name="play_now_width">166dp</dimen>
-    <dimen name="weblink_height">100dp</dimen>
+    <dimen name="autoplay_height">250dp</dimen>
+    <dimen name="autoplay_width">310dp</dimen>
+    <dimen name="play_now_height">200dp</dimen>
+    <dimen name="play_now_width">300dp</dimen>
+    <dimen name="weblink_height">150dp</dimen>
     <dimen name="weblink_width">300dp</dimen>
 
 </resources>

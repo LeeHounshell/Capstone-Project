@@ -1,6 +1,8 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
 import android.content.Intent;
+import android.content.res.Configuration;
+import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -15,6 +17,7 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 
 import com.harlie.radiotheater.radiomysterytheater.data_helper.EpisodeRecyclerViewItem;
+import com.harlie.radiotheater.radiomysterytheater.utils.FontPreferences;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import java.util.Locale;
@@ -125,7 +128,66 @@ public class EpisodeDetailFragment extends FragmentBase {
             });
 
         }
+        setFontTypeAndSizes((BaseActivity) this.getActivity(), rootView);
         return rootView;
+    }
+
+    static final int DETAIL_SCALE_AMT = 13;
+    public void setFontTypeAndSizes(BaseActivity activity, View rootView) {
+        //LogHelper.v(TAG, "setFontTypeAndSizes");
+        FontPreferences fontPreferences = new FontPreferences(activity);
+        String fontname = fontPreferences.getFontName();
+        String fontsize = fontPreferences.getFontSize();
+        LogHelper.v(TAG, "--> USING FONT NAME="+fontname+", SIZE="+fontsize);
+        activity.getTheme().applyStyle(fontPreferences.getFontStyle().getResId(), true);
+
+        int[] attrs = {R.attr.font_small, R.attr.font_medium, R.attr.font_large, R.attr.font_xlarge}; // The attributes to retrieve
+        TypedArray ta = activity.obtainStyledAttributes(fontPreferences.getFontStyle().getResId(), attrs);
+        String str;
+        //noinspection ResourceType
+        float titleTextSize = 0, descriptionTextSize = 0, airdateTextSize = 0, episodeNumberTextSize = 0;
+        if (! EpisodeListActivity.isTwoPane()
+                || activity.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+        {
+            titleTextSize = getTextSize(ta, 3) + DETAIL_SCALE_AMT + 3;
+            descriptionTextSize = getTextSize(ta, 2) + DETAIL_SCALE_AMT + 2;
+            airdateTextSize = getTextSize(ta, 2) + DETAIL_SCALE_AMT + 1;
+            episodeNumberTextSize = getTextSize(ta, 2) + DETAIL_SCALE_AMT + 1;
+        }
+        else {
+            titleTextSize = getTextSize(ta, 3) + DETAIL_SCALE_AMT + 2;
+            descriptionTextSize = getTextSize(ta, 2) + DETAIL_SCALE_AMT + 1;
+            airdateTextSize = getTextSize(ta, 1) + DETAIL_SCALE_AMT;
+            episodeNumberTextSize = getTextSize(ta, 1) + DETAIL_SCALE_AMT;
+        }
+
+        LogHelper.v(TAG, "=========> titleTextSize="+titleTextSize+", descriptionTextSize="+descriptionTextSize+"," +
+                " airdateTextSize="+airdateTextSize+", episodeNumberTextSize="+episodeNumberTextSize);
+
+        ta.recycle();
+
+        if (rootView.findViewById(R.id.episode_title) != null) {
+            ((TextView) rootView.findViewById(R.id.episode_title)).setTextSize(titleTextSize);
+        }
+        if (rootView.findViewById(R.id.episode_description) != null) {
+            ((TextView) rootView.findViewById(R.id.episode_description)).setTextSize(descriptionTextSize);
+        }
+        if (rootView.findViewById(R.id.episode_airdate) != null) {
+            ((TextView) rootView.findViewById(R.id.episode_airdate)).setTextSize(airdateTextSize);
+        }
+        if (rootView.findViewById(R.id.episode_number) != null) {
+            ((TextView) rootView.findViewById(R.id.episode_number)).setTextSize(episodeNumberTextSize);
+        }
+    }
+
+    private float getTextSize(TypedArray ta, int index) {
+        float textSize = 0;
+        String str;//noinspection ResourceType
+        str = ta.getString(index);
+        if (str != null) {
+            textSize = Float.valueOf(str.substring(0, str.length() - 2)); // discard the "sp" part of the style item
+        }
+        return textSize;
     }
 
     private void loadPortrait(View rootView, String person, int personImageResource, int personNameResource) {

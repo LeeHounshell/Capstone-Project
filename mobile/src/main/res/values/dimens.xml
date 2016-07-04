@@ -17,12 +17,12 @@
     <dimen name="auth_signup_height">50dp</dimen>
     <dimen name="auth_google_height">50dp</dimen>
 
-    <dimen name="autoplay_height">130dp</dimen>
+    <dimen name="autoplay_height">100dp</dimen>
     <dimen name="autoplay_width">170dp</dimen>
-    <dimen name="play_now_height">65dp</dimen>
+    <dimen name="play_now_height">70dp</dimen>
     <dimen name="play_now_width">100dp</dimen>
-    <dimen name="weblink_height">50dp</dimen>
-    <dimen name="weblink_width">150dp</dimen>
+    <dimen name="weblink_height">60dp</dimen>
+    <dimen name="weblink_width">100dp</dimen>
 
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="app_bar_height">200dp</dimen>
