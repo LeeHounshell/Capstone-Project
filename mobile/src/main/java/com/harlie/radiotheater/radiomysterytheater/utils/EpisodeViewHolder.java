@@ -82,36 +82,39 @@ public class EpisodeViewHolder extends RecyclerView.ViewHolder {
         String str;
         //noinspection ResourceType
         float titleTextSize = 0, descriptionTextSize = 0, airdateTextSize = 0, episodeNumberTextSize = 0;
-        //noinspection ResourceType
-        str = ta.getString(3);
-        if (str != null) {
-            titleTextSize = Float.valueOf(str.substring(0, str.length() - 2)); // discard the "sp" part of the style item
-        }
-        //noinspection ResourceType
-        str = ta.getString(2);
-        if (str != null) {
-            descriptionTextSize = Float.valueOf(str.substring(0, str.length() - 2)); // discard the "sp" part of the style item
-        }
-        //noinspection ResourceType
-        str = ta.getString(1);
-        if (str != null) {
-            airdateTextSize = Float.valueOf(str.substring(0, str.length() - 2)); // discard the "sp" part of the style item
-        }
-        //noinspection ResourceType
-        str = ta.getString(1);
-        if (str != null) {
-            episodeNumberTextSize = Float.valueOf(str.substring(0, str.length() - 2)); // discard the "sp" part of the style item
-        }
+        titleTextSize = getTextSize(ta, 3);
+        descriptionTextSize = getTextSize(ta, 2);
+        airdateTextSize = getTextSize(ta, 1);
+        episodeNumberTextSize = getTextSize(ta, 0);
+
         LogHelper.v(TAG, "=========> titleTextSize="+titleTextSize+", descriptionTextSize="+descriptionTextSize+"," +
                 " airdateTextSize="+airdateTextSize+", episodeNumberTextSize="+episodeNumberTextSize);
+
         ta.recycle();
 
-        mEpisodeTitle.setTextSize(titleTextSize);
-        mEpisodeDescription.setTextSize(descriptionTextSize);
-        mEpisodeAirdate.setTextSize(airdateTextSize);
-        mEpisodeNumber.setTextSize(episodeNumberTextSize);
+        if (mEpisodeTitle != null) {
+            mEpisodeTitle.setTextSize(titleTextSize);
+        }
+        if (mEpisodeDescription != null) {
+            mEpisodeDescription.setTextSize(descriptionTextSize);
+        }
+        if (mEpisodeAirdate != null) {
+            mEpisodeAirdate.setTextSize(airdateTextSize);
+        }
+        if (mEpisodeNumber != null) {
+            mEpisodeNumber.setTextSize(episodeNumberTextSize);
+        }
     }
 
+    private float getTextSize(TypedArray ta, int index) {
+        float textSize = 0;
+        String str;//noinspection ResourceType
+        str = ta.getString(index);
+        if (str != null) {
+            textSize = Float.valueOf(str.substring(0, str.length() - 2)); // discard the "sp" part of the style item
+        }
+        return textSize;
+    }
 
     @Override
     public String toString() {
