@@ -5,7 +5,10 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.widget.RemoteViews;
 
+import com.harlie.radiotheater.radiomysterytheater.R;
+import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterWidgetService;
 
 // from: http://www.vogella.com/tutorials/AndroidWidgets/article.html
@@ -19,17 +22,7 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
     {
         LogHelper.v(TAG, "onUpdate");
         super.onUpdate(context, appWidgetManager, appWidgetIds);
-
-        // Get all ids
-        ComponentName thisWidget = new ComponentName(context, RadioTheaterWidgetProvider.class);
-        int[] allWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
-
-        // Build the intent to call the service
-        Intent intent = new Intent(context.getApplicationContext(), RadioTheaterWidgetService.class);
-        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, allWidgetIds);
-
-        // Update the widgets via the service!
-        context.startService(intent);
+        notifyWidget(context, appWidgetManager);
 
 // old
 //        for (int widgetId : allWidgetIds)
@@ -53,6 +46,20 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
 //            remoteViews.setOnClickPendingIntent(R.id.autoplay_widget, pendingIntent);
 //            appWidgetManager.updateAppWidget(widgetId, remoteViews);
 //        }
+    }
+
+    public static void notifyWidget(Context context, AppWidgetManager appWidgetManager) {
+        LogHelper.v(TAG, "notifyWidget");
+        // Get all ids
+        ComponentName thisWidget = new ComponentName(context, RadioTheaterWidgetProvider.class);
+        int[] allWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
+
+        // Build the intent to call the service
+        Intent intent = new Intent(context.getApplicationContext(), RadioTheaterWidgetService.class);
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, allWidgetIds);
+
+        // Update the widgets via the service!
+        context.startService(intent);
     }
 
 }
