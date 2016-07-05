@@ -109,17 +109,17 @@ public class RadioTheaterWidgetService extends Service {
 
     private void Autoplay(RemoteViews remoteViews) {
         LogHelper.v(TAG, "WIDGET: <set the widget to Autoplay>");
-        remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.autoplay);
+        remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_autoplay_button_selector);
     }
 
     private void PleaseWait(RemoteViews remoteViews) {
         LogHelper.v(TAG, "WIDGET: <set the widget to Please Wait>");
-        remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.pause_disabled);
+        remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_pause_disabled_button_selector);
     }
 
     private void Pause(RemoteViews remoteViews) {
         LogHelper.v(TAG, "WIDGET: <set the widget to Pause>");
-        remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.pause);
+        remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_pause_button_selector);
     }
 
     @Override
