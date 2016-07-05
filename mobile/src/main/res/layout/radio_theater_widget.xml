@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="8dip"
+    android:background="@color/transparent" >
+
+    <ImageButton
+        android:id="@+id/autoplay_widget"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal|center_vertical"
+        android:background="@drawable/radio_theater_autoplay_button_selector"
+        android:contentDescription="@string/autoplay_next"
+        android:elevation="@dimen/button_elevation"
+        android:theme="@style/RadioTheaterButton" />
+
+</LinearLayout>
+

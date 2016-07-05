@@ -1,6 +1,7 @@
 <resources>
 
     <string name="app_name">Radio Mystery Theater</string>
+    <string name="app_widget_name">Radio Theater Widget</string>
     <string name="app_id">FAEC6D3F</string>
     <string name="app_description">
         This app provides an easy, quality listening experience for the CBS Radio Mystery Theater.

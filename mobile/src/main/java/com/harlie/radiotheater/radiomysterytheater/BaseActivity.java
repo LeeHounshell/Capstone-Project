@@ -567,16 +567,16 @@ public class BaseActivity extends AppCompatActivity {
         //
         // NOTE: the code below uses the #IFDEF gradle preprocessor
         //#IFDEF 'FREE'
-        //isPaid = new Boolean(false);
-        //SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-        //isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
-        //if (!isPaid) {
-            //ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
-            //if (existing != null) {
-                //ContentValues configEpisode = existing.values();
-                //isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
-            //}
-        //}
+        isPaid = new Boolean(false);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+        isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
+        if (!isPaid) {
+            ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
+            if (existing != null) {
+                ContentValues configEpisode = existing.values();
+                isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
+            }
+        }
         //#ENDIF
         return isPaid;
     }
@@ -641,13 +641,13 @@ public class BaseActivity extends AppCompatActivity {
                 String outFileName = DB_OUTPUT_PATH + DB_NAME;
 
                 //#IFDEF 'PAID'
-                copyFileFromAssets("paid/" + DB_NAME, outFileName);
-                copyFileFromAssets("paid/" + DB_NAME + "-journal", outFileName + "-journal");
+                //copyFileFromAssets("paid/" + DB_NAME, outFileName);
+                //copyFileFromAssets("paid/" + DB_NAME + "-journal", outFileName + "-journal");
                 //#ENDIF
 
                 //#IFDEF 'FREE'
-                //copyFileFromAssets("free/" + DB_NAME, outFileName);
-                //copyFileFromAssets("free/" + DB_NAME + "-journal", outFileName + "-journal");
+                copyFileFromAssets("free/" + DB_NAME, outFileName);
+                copyFileFromAssets("free/" + DB_NAME + "-journal", outFileName + "-journal");
                 //#ENDIF
 
                 LogHelper.v(TAG, "*** successfully copied prebuilt SQLite database ***");
@@ -900,13 +900,13 @@ public class BaseActivity extends AppCompatActivity {
                 record.putFieldEpisodeNumber(episodeNumber);
 
                 //#IFDEF 'PAID'
-                boolean purchased = true;
-                boolean noAdsForShow = true;
+                //boolean purchased = true;
+                //boolean noAdsForShow = true;
                 //#ENDIF
 
                 //#IFDEF 'FREE'
-                //boolean purchased = cursor.getFieldPurchasedAccess();
-                //boolean noAdsForShow = cursor.getFieldPurchasedNoads();
+                boolean purchased = cursor.getFieldPurchasedAccess();
+                boolean noAdsForShow = cursor.getFieldPurchasedNoads();
                 //#ENDIF
 
                 record.putFieldPurchasedAccess(purchased);

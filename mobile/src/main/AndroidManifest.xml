@@ -130,6 +130,19 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:icon="@drawable/logo_icon"
+            android:label="@string/app_widget_name"
+            android:name=".utils.RadioTheaterWidgetProvider" >
+            <intent-filter >
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/radio_theater_widget_info" />
+        </receiver>
+
         <activity
             android:name=".SplashActivity"
             android:screenOrientation="unspecified"
