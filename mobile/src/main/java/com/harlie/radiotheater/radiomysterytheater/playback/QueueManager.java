@@ -166,6 +166,14 @@ public class QueueManager {
     }
 
     //-------- RADIO THEATER --------
+    private void waitabit() {
+        try {
+            Thread.sleep(31);
+        } catch (Exception e) {}
+        ;
+    }
+
+    //-------- RADIO THEATER --------
     public void setOrderedQueue() {
         LogHelper.v(TAG, "setOrderedQueue");
         String mediaId = setCurrentIndexFromEpisodeId();
@@ -188,20 +196,9 @@ public class QueueManager {
         else if (mPlayingQueue.size() == 0) {
             LogHelper.v(TAG, "*** THE PLAYING QUEUE IS EMPTY ***");
             waitabit();
-            possiblePokeMe();
             return null;
         }
         return mPlayingQueue.get(sCurrentIndex);
-    }
-
-    //-------- RADIO THEATER --------
-    private void possiblePokeMe() { // FIXME or remove
-//        long time = System.currentTimeMillis();
-//        if (sPokeMeTime < (time - (19 * 1000))) { // nineteen seconds?
-//            sPokeMeTime = time;
-//            LogHelper.w(TAG, "*** --->>> POKE-ME-NEEDED: getCurrentMusic: - not currently playable - sCurrentIndex=" + sCurrentIndex + " - return null");
-//            LocalPlayback.pokeMeWakeMeShakeMe();
-//        }
     }
 
     //-------- RADIO THEATER --------
@@ -212,17 +209,15 @@ public class QueueManager {
         String title = getTitleAndDownloadUrlForEpisode(episodeId); // this also sets mDownloadUrl - needed below or else NPE
         Iterable<MediaMetadataCompat> title_list = mMusicProvider.searchMusicBySongTitle(title);
         if (title_list == null) {
-            LogHelper.e(TAG, "POKE: could not locate media for title: ", title);
+            LogHelper.e(TAG, "FAIL: could not locate media for title: ", title);
             waitabit();
-            possiblePokeMe();
             return null;
         }
         Iterator<MediaMetadataCompat> tracks = title_list.iterator();
         if (! tracks.hasNext()) {
             if (BaseActivity.isLoadedOK()) {
                 if (BaseActivity.isPlaying()) { // well, it is supposed to be playing
-                    LogHelper.e(TAG, "DO A POKE: no media for title: ", title);
-                    possiblePokeMe();
+                    LogHelper.e(TAG, "FAIL: no media for title: ", title);
                 }
             }
             else {
@@ -242,13 +237,6 @@ public class QueueManager {
         sCurrentIndex = QueueHelper.getMusicIndexOnQueue(all_queued, episodeMediaId);
         LogHelper.v(TAG, "getCurrentMusic: sCurrentIndex="+sCurrentIndex);
         return episodeMediaId;
-    }
-
-    private void waitabit() {
-        try {
-            Thread.sleep(31);
-        } catch (Exception e) {}
-        ;
     }
 
     //-------- RADIO THEATER --------

@@ -118,6 +118,7 @@ public class LocalPlayback
         this.mWifiLock = ((WifiManager) context.getSystemService(Context.WIFI_SERVICE))
                 .createWifiLock(WifiManager.WIFI_MODE_FULL, "uAmp_lock");
         this.mState = PlaybackStateCompat.STATE_NONE;
+        sCurrentState = mState;
     }
 
     @Override
@@ -129,6 +130,7 @@ public class LocalPlayback
     public void stop(boolean notifyListeners) {
         LogHelper.v(TAG, "stop: notifyListeners="+notifyListeners);
         mState = PlaybackStateCompat.STATE_STOPPED;
+        sCurrentState = mState;
         if (notifyListeners && mCallback != null) {
             mCallback.onPlaybackStatusChanged(mState);
         }
@@ -144,6 +146,7 @@ public class LocalPlayback
     public void setState(int state) {
         LogHelper.v(TAG, "setState: state="+state);
         this.mState = state;
+        sCurrentState = mState;
     }
 
     @Override
@@ -219,23 +222,21 @@ public class LocalPlayback
         RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
     }
 
-    //-------- RADIO THEATER --------
-    public static void pokeMeWakeMeShakeMe() {
-        LogHelper.v(TAG, "pokeMeWakeMeShakeMe");
-        String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
-        String pokeme = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.pokeme);
-        String message = pokeme + getCurrentEpisode();
-        LogHelper.v(TAG, "pokeMeWakeMeShakeMe: message="+message);
-        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
-        RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
-    }
+    static volatile private int sCurrentEpisode;
+    static volatile private int sCurrentState;
 
-    static int sCurrentEpisode;
     static void setCurrentEpisode(int currentEpisode) {
         sCurrentEpisode = currentEpisode;
     }
-    static int getCurrentEpisode() {
+    static public int getCurrentEpisode() {
         return sCurrentEpisode;
+    }
+
+    static void setCurrentState(int currentState) {
+        sCurrentState = currentState;
+    }
+    static public int getCurrentState() {
+        return sCurrentState;
     }
 
     //-------- RADIO THEATER --------
@@ -258,6 +259,7 @@ public class LocalPlayback
         }
         else {
             mState = PlaybackStateCompat.STATE_STOPPED;
+            sCurrentState = mState;
             relaxResources(false); // release everything except MediaPlayer
             MediaMetadataCompat track = mMusicProvider.getMusic(MediaIDHelper.extractMusicIDFromMediaID(item.getDescription().getMediaId()));
 
@@ -269,6 +271,7 @@ public class LocalPlayback
                 createMediaPlayerIfNeeded();
 
                 mState = PlaybackStateCompat.STATE_BUFFERING;
+                sCurrentState = mState;
 
                 mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
                 //Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
@@ -316,6 +319,7 @@ public class LocalPlayback
             giveUpAudioFocus();
         }
         mState = PlaybackStateCompat.STATE_PAUSED;
+        sCurrentState = mState;
         if (mCallback != null) {
             mCallback.onPlaybackStatusChanged(mState);
         }
@@ -332,6 +336,7 @@ public class LocalPlayback
         } else {
             if (mMediaPlayer.isPlaying()) {
                 mState = PlaybackStateCompat.STATE_BUFFERING;
+                sCurrentState = mState;
             }
             mMediaPlayer.seekTo(position);
             if (mCallback != null) {
@@ -423,9 +428,11 @@ public class LocalPlayback
                     if (mCurrentPosition == mMediaPlayer.getCurrentPosition()) {
                         mMediaPlayer.start();
                         mState = PlaybackStateCompat.STATE_PLAYING;
+                        sCurrentState = mState;
                     } else {
                         mMediaPlayer.seekTo(mCurrentPosition);
                         mState = PlaybackStateCompat.STATE_BUFFERING;
+                        sCurrentState = mState;
                     }
                 }
                 mPlayOnFocusGain = false;
@@ -480,6 +487,7 @@ public class LocalPlayback
         if (mState == PlaybackStateCompat.STATE_BUFFERING) {
             mMediaPlayer.start();
             mState = PlaybackStateCompat.STATE_PLAYING;
+            sCurrentState = mState;
         }
         if (mCallback != null) {
             mCallback.onPlaybackStatusChanged(mState);

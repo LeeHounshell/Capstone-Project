@@ -22,6 +22,7 @@ import com.harlie.radiotheater.radiomysterytheater.data.actorsepisodes.ActorsEpi
 import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.EpisodeRecyclerViewItem;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 import com.harlie.radiotheater.radiomysterytheater.utils.FontPreferences;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
@@ -151,7 +152,8 @@ public class EpisodeDetailFragment extends FragmentBase {
         // Show the dummy content as text in a TextView.
         if (mItem != null) {
             ((TextView) rootView.findViewById(R.id.episode_number)).setText("#"+String.valueOf(mItem.getEpisodeNumber()));
-            ((TextView) rootView.findViewById(R.id.episode_airdate)).setText(mItem.getAirdate());
+            String airdate = RadioTheaterContract.airDateShort(mItem.getAirdate());
+            ((TextView) rootView.findViewById(R.id.episode_airdate)).setText(airdate);
             ((TextView) rootView.findViewById(R.id.episode_title)).setText(mItem.getTitle());
             ((TextView) rootView.findViewById(R.id.episode_description)).setText(mItem.getDescription());
             ((RatingBar) rootView.findViewById(R.id.episode_rating)).setNumStars((int) mItem.getRating());

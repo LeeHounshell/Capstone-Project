@@ -115,6 +115,12 @@
             android:name="com.google.android.libraries.cast.companionlibrary.cast.reconnection.ReconnectionService">
         </service>
 
+        <service
+            android:name=".RadioTheaterWidgetService"
+            android:enabled="true"
+            android:exported="false">
+        </service>
+
         <!--
          A receiver that will receive media buttons and send as intents to the MediaBrowserServiceCompat implementation.
          Required on pre-Lollipop. More information at
@@ -128,6 +134,19 @@
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".utils.RadioTheaterWidgetProvider"
+            android:icon="@drawable/logo_icon"
+            android:label="@string/app_widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/radio_theater_widget_info" />
         </receiver>
 
         <receiver
