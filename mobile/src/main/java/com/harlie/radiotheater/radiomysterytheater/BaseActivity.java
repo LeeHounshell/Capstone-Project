@@ -1419,7 +1419,12 @@ public class BaseActivity extends AppCompatActivity {
             bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, mEpisodeTitle);
             bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "audio");
             bundle.putString("episode", episodeIndex);
-            bundle.putString("user_action", comment);
+            //#IFDEF 'FREE'
+            bundle.putString("user_action", "FREE: "+comment);
+            //#ENDIF
+            //#IFDEF 'PAID'
+            //bundle.putString("user_action", "PAID: "+comment);
+            //#ENDIF
             bundle.putLong("listen_duration", duration);
             mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
             logToFirebase(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
