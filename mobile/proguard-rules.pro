@@ -40,4 +40,9 @@
 -keepnames class javax.servlet.** { *; }
 -keepnames class org.ietf.jgss.** { *; }
 
+# preserve R inner classes and fields
+-keepclassmembers class **.R$* {
+    public static <fields>;
+}
 
+-keep class **.R$*

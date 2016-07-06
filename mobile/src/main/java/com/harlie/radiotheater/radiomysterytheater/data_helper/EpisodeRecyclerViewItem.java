@@ -8,8 +8,17 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
-import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesContentValues;
-import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
+
+//#IFDEF 'PAID'
+import com.harlie.radiotheater.radiomysterytheater.paid.data.configepisodes.ConfigEpisodesContentValues;
+import com.harlie.radiotheater.radiomysterytheater.paid.data.episodes.EpisodesCursor;
+//#ENDIF
+
+//#IFDEF 'TRIAL'
+//import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesContentValues;
+//import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
+//#ENDIF
+
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 public class EpisodeRecyclerViewItem implements Parcelable {

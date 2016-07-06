@@ -1,6 +1,8 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Build;
@@ -60,11 +62,19 @@ public class AboutActivity extends BaseActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         final TextView textView = (TextView) findViewById(R.id.trial_or_paid);
+        PackageInfo pInfo = null;
+        String version = "";
+        try {
+            pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            version = pInfo.versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
         //#IFDEF 'PAID'
-        //textView.setText(getResources().getString(R.string.paid_version));
+        textView.setText(getResources().getString(R.string.paid_version)+" "+version);
         //#ENDIF
         //#IFDEF 'TRIAL'
-        textView.setText(getResources().getString(R.string.trial_version));
+        //textView.setText(getResources().getString(R.string.trial_version)+" "+version);
         //#ENDIF
 
         // get the image view

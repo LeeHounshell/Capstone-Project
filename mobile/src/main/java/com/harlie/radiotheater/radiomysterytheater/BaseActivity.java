@@ -30,12 +30,12 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.api.model.StringList;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
 import com.harlie.radiotheater.radiomysterytheater.data.RadioTheaterHelper;
 import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsCursor;
@@ -56,6 +56,7 @@ import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersSelection
 import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesSelection;
+
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadingAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.firebase.FirebaseConfigEpisode;
@@ -423,7 +424,7 @@ public class BaseActivity extends AppCompatActivity {
         LogHelper.v(TAG, "---> startAutoplayActivity <---");
         boolean dbMissing = doINeedToCreateADatabase();
         LogHelper.v(TAG, "---> dbMissing="+dbMissing);
-        if (dbMissing && !sCopiedDatabaseSuccess) {
+        if (dbMissing) {
             LogHelper.v(TAG, "*** first need to build the RadioMysteryTheater database ***");
             String message = getResources().getString(R.string.initializing);
             Toast.makeText(this, message, Toast.LENGTH_LONG).show();
@@ -431,7 +432,23 @@ public class BaseActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     Looper.prepare();
-                    loadSqliteDatabase();
+                    boolean dbMissing = doINeedToCreateADatabase();
+                    if (! dbMissing) {
+                        Looper.getMainLooper().quit();
+                    }
+
+                    // FIXME: there is a problem with copying the pre-built SQLite database into a Paid build with Marshmallow.
+                    // FIXME: the issue is related to shared content provider id's
+                    // FIXME: because i don't have time to look into this just now, the Paid build will load SQLite via Internet
+
+                    //#IFDEF 'PAID'
+                    //loadSqliteDatabase(false); // don't copy
+                    //#ENDIF
+
+                    //#IFDEF 'TRIAL'
+                    loadSqliteDatabase(true); // copy ok
+                    //#ENDIF
+
                     Looper.loop();
                 }
             }).start();
@@ -581,16 +598,16 @@ public class BaseActivity extends AppCompatActivity {
         //
         // NOTE: the code below uses the #IFDEF gradle preprocessor
         //#IFDEF 'TRIAL'
-        isPaid = new Boolean(false);
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-        isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
-        if (!isPaid) {
-            ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
-            if (existing != null) {
-                ContentValues configEpisode = existing.values();
-                isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
-            }
-        }
+        //isPaid = new Boolean(false);
+        //SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+        //isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
+        //if (!isPaid) {
+            //ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
+            //if (existing != null) {
+                //ContentValues configEpisode = existing.values();
+                //isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
+            //}
+        //}
         //#ENDIF
         return isPaid;
     }
@@ -603,6 +620,7 @@ public class BaseActivity extends AppCompatActivity {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putBoolean("userPaid", paid);
             editor.apply();
+
             // FIXME: update local SQLite Configuration table with user info
             // FIXME: update Firebase record for this user's email to be PAID
         }
@@ -634,7 +652,7 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     // this kicks off a series of AsyncTasks to load SQL tables from Firebase
-    protected void loadSqliteDatabase() {
+    protected void loadSqliteDatabase(boolean okToCopyDatabase) {
         LogHelper.v(TAG, "*** loadSqliteDatabase ***");
         mCircleView = (CircleProgressView) getRootView().findViewById(R.id.circle_view);
 
@@ -642,16 +660,16 @@ public class BaseActivity extends AppCompatActivity {
         //    LoadRadioTheaterTablesAsyncTask.setTesting(true); // load some dummy data instead of JSON
         //}
 
-        if (COPY_PACKAGED_SQLITE_DATABASE) {
+        if (okToCopyDatabase && COPY_PACKAGED_SQLITE_DATABASE) {
             mCount = 0;
             CircleViewHelper.showCircleView(this, getCircleView(), CircleViewHelper.CircleViewType.CREATE_DATABASE);
             CircleViewHelper.setCircleViewMaximum((float) TOTAL_SIZE_TO_COPY_IN_BYTES, this);
             CircleViewHelper.setCircleViewValue((float) mCount, this);
             String DB_NAME = RadioTheaterHelper.DATABASE_FILE_NAME;
             try {
-                String DB_OUTPUT_DIR = "databases/";
-                String DB_OUTPUT_PATH = getApplicationInfo().dataDir + "/" + DB_OUTPUT_DIR;
                 // for performance reasons, I have included a prebuilt-sqlite database
+                String DB_OUTPUT_DIR = "/databases/";
+                String DB_OUTPUT_PATH = this.getFilesDir().getPath() + DB_OUTPUT_DIR;
 
                 //#IFDEF 'PAID'
                 //String error_db_ok = copyFileFromAssets("paid_" + DB_NAME, DB_OUTPUT_PATH, DB_NAME);
@@ -668,11 +686,21 @@ public class BaseActivity extends AppCompatActivity {
                     LogHelper.v(TAG, "*** FAILED TO COPY the prebuilt SQLite database *** - error_db_ok="+error_db_ok+", error_jr_ok="+error_jr_ok);
                     String error = (error_db_ok != null ? error_db_ok : "") + " " + (error_jr_ok != null ? error_jr_ok : null);
                     problemLoadingDatabase(error);
+                    return;
                 }
                 else {
                     LogHelper.v(TAG, "*** successfully copied prebuilt SQLite database ***");
-                    sCopiedDatabaseSuccess = true;
-                    startAutoplayActivity();
+                    boolean dbMissing = doINeedToCreateADatabase();
+                    if (! dbMissing) {
+                        LogHelper.v(TAG, "*** successfully accessed prebuilt SQLite database ***");
+                        sCopiedDatabaseSuccess = true;
+                        startAutoplayActivity();
+                        return;
+                    }
+                    else {
+                        LogHelper.w(TAG, "*** FAILED TO ACCESSS the prebuilt SQLite database ***");
+                        // drop through to the 'runLoadState' call below
+                    }
                 }
             }
             catch (Exception any) {
@@ -681,13 +709,12 @@ public class BaseActivity extends AppCompatActivity {
                 // a circle progress view progresses as the database loads - takes a few minutes to run tho
                 String error = "problem copying "+DB_NAME+" database! - error="+any.getMessage();
                 problemLoadingDatabase(error);
+                return;
             }
         }
-        else {
-            // this will create a new SQLite database using Firebase source JSON
-            // a circle progress view progresses as the database loads - takes a few minutes to run tho
-            runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state
-        }
+        // this will create a new SQLite database using Firebase source JSON
+        // a circle progress view progresses as the database loads - takes a few minutes to run tho
+        runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state
     }
 
     private void problemExistingDatabase(String fileName) {
@@ -1491,12 +1518,15 @@ public class BaseActivity extends AppCompatActivity {
             bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, mEpisodeTitle);
             bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "audio");
             bundle.putString("episode", episodeIndex);
-            //#IFDEF 'TRIAL'
-            bundle.putString("user_action", "TRIAL: "+comment);
-            //#ENDIF
+
             //#IFDEF 'PAID'
-            //bundle.putString("user_action", "PAID: "+comment);
+            bundle.putString("user_action", "PAID: "+comment);
             //#ENDIF
+
+            //#IFDEF 'TRIAL'
+            //bundle.putString("user_action", "TRIAL: "+comment);
+            //#ENDIF
+
             bundle.putLong("listen_duration", duration);
             mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
             logToFirebase(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);

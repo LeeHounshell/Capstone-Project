@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This is a script to generate the SQLite ContentProvider Java code for PopularMoviesStage2
+# This is a script to generate the SQLite ContentProvider Java code for Radio Mystery Theater
 # It uses the generator jar from: https://github.com/BoD/android-contentprovider-generator
 #
 # run: 'java -jar android_contentprovider_generator-1.9.3-bundle.jar -i <input folder> -o <output folder>'
