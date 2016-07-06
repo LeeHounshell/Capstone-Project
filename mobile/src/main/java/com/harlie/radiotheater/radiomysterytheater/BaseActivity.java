@@ -598,16 +598,16 @@ public class BaseActivity extends AppCompatActivity {
         //
         // NOTE: the code below uses the #IFDEF gradle preprocessor
         //#IFDEF 'TRIAL'
-        //isPaid = new Boolean(false);
-        //SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-        //isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
-        //if (!isPaid) {
-            //ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
-            //if (existing != null) {
-                //ContentValues configEpisode = existing.values();
-                //isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
-            //}
-        //}
+        isPaid = new Boolean(false);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+        isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
+        if (!isPaid) {
+            ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
+            if (existing != null) {
+                ContentValues configEpisode = existing.values();
+                isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
+            }
+        }
         //#ENDIF
         return isPaid;
     }
@@ -1520,11 +1520,11 @@ public class BaseActivity extends AppCompatActivity {
             bundle.putString("episode", episodeIndex);
 
             //#IFDEF 'PAID'
-            bundle.putString("user_action", "PAID: "+comment);
+            //bundle.putString("user_action", "PAID: "+comment);
             //#ENDIF
 
             //#IFDEF 'TRIAL'
-            //bundle.putString("user_action", "TRIAL: "+comment);
+            bundle.putString("user_action", "TRIAL: "+comment);
             //#ENDIF
 
             bundle.putLong("listen_duration", duration);
