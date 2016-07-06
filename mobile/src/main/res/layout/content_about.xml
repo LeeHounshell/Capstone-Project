@@ -28,6 +28,20 @@
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/trial_or_paid"
+                style="?android:attr/textAppearanceMedium"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                android:textStyle="bold"
+                android:textColor="@android:color/black"
+                android:textColorLink="@color/accent"
+                android:textSize="@dimen/version_text_size"
+                android:contentDescription="@string/trial_vs_paid" />
+
+            <TextView
                 style="?android:attr/textAppearanceMedium"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -41,6 +55,7 @@
                 android:textColorLink="@color/accent"
                 android:textSize="@dimen/about_text_size"
                 android:lineSpacingMultiplier="@fraction/about_line_spacing_multiplier"
+                android:contentDescription="@string/description"
                 android:text="@string/app_description" />
 
             <ImageView
@@ -63,6 +78,7 @@
                 android:textAppearance="@style/TextAppearance.AppCompat.Caption"
                 android:textColor="@color/primary_text"
                 android:textSize="@dimen/about_small_text_size"
+                android:contentDescription="@string/app_author"
                 android:text="@string/app_author" />
 
             <TextView
@@ -72,6 +88,7 @@
                 android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
                 android:textColor="@color/secondary_text"
                 android:textSize="@dimen/about_small_text_size"
+                android:contentDescription="@string/app_author_contact"
                 android:text="@string/app_contact" />
 
         </LinearLayout>

@@ -10,9 +10,9 @@
 //#ENDIF
 //
 // The 'configuration' specified above can be a BUILD_TYPE or FLAVOR or BUILD_TYPE+FLAVOR or FLAVOR+BUILD_TYPE
-// For example: 'debug' or 'release' or 'paid' or 'free'
-//              or 'debugpaid' or 'debugfree 'or 'releasepaid' or 'releasefree'
-//              or 'paiddebug' or 'freedebug' or 'paidrelease' or 'freerelease'..
+// For example: 'debug' or 'release' or 'paid' or 'trial'
+//              or 'debugpaid' or 'debugtrial 'or 'releasepaid' or 'releasetrial'
+//              or 'paiddebug' or 'trialdebug' or 'paidrelease' or 'trialrelease'..
 //              these are all valid 'configuration' entries and will be processed by #IFDEF depending on buildType and flavor.
 // Note that nested #IFDEF statements are not supported (and there is no actual need to nest).
 // Also the 'configuration' is case independent
@@ -155,10 +155,10 @@ class PreProcessor {
   
 }
   
-task preProcessSourceCodeDebugFree << {
-    logger.quiet("---> PreProcessor.preProcessSourceCode(javaFiles, 'debug', 'free')")
-    description("preprocess free code after //#IFDEF 'debug' to //#ENDIF")
-    PreProcessor.preProcessSourceCode(javaFiles, 'debug', 'free')
+task preProcessSourceCodeDebugTrial << {
+    logger.quiet("---> PreProcessor.preProcessSourceCode(javaFiles, 'debug', 'trial')")
+    description("preprocess trial code after //#IFDEF 'debug' to //#ENDIF")
+    PreProcessor.preProcessSourceCode(javaFiles, 'debug', 'trial')
 }
   
 task preProcessSourceCodeDebugPaid << {
@@ -167,10 +167,10 @@ task preProcessSourceCodeDebugPaid << {
     PreProcessor.preProcessSourceCode(javaFiles, 'debug', 'paid')
 }
   
-task preProcessSourceCodeReleaseFree << {
-    logger.quiet("---> PreProcessor.preProcessSourceCode(javaFiles, 'release', 'free')")
-    description("preprocess free code after //#IFDEF 'release' to //#ENDIF")
-    PreProcessor.preProcessSourceCode(javaFiles, 'release', 'free')
+task preProcessSourceCodeReleaseTrial << {
+    logger.quiet("---> PreProcessor.preProcessSourceCode(javaFiles, 'release', 'trial')")
+    description("preprocess trial code after //#IFDEF 'release' to //#ENDIF")
+    PreProcessor.preProcessSourceCode(javaFiles, 'release', 'trial')
 }
   
 task preProcessSourceCodeReleasePaid << {
@@ -180,15 +180,15 @@ task preProcessSourceCodeReleasePaid << {
 }
   
 tasks.whenTaskAdded { task ->
-    if (task.name == 'compileFreeDebugJavaWithJavac') {
-        logger.quiet('---> compileFreeDebugJavaWithJavac dependsOn preProcessSourceCode')
-        task.dependsOn preProcessSourceCodeDebugFree
-        preProcessSourceCodeDebugFree.outputs.upToDateWhen { false } // always run
+    if (task.name == 'compileTrialDebugJavaWithJavac') {
+        logger.quiet('---> compileTrialDebugJavaWithJavac dependsOn preProcessSourceCode')
+        task.dependsOn preProcessSourceCodeDebugTrial
+        preProcessSourceCodeDebugTrial.outputs.upToDateWhen { false } // always run
     }
-    else if (task.name == 'compileFreeReleaseJavaWithJavac') {
-        logger.quiet('---> compileFreeReleaseJavaWithJavac dependsOn preProcessSourceCode')
-        task.dependsOn preProcessSourceCodeReleaseFree
-        preProcessSourceCodeReleaseFree.outputs.upToDateWhen { false } // always run
+    else if (task.name == 'compileTrialReleaseJavaWithJavac') {
+        logger.quiet('---> compileTrialReleaseJavaWithJavac dependsOn preProcessSourceCode')
+        task.dependsOn preProcessSourceCodeReleaseTrial
+        preProcessSourceCodeReleaseTrial.outputs.upToDateWhen { false } // always run
     }
     if (task.name == 'compilePaidDebugJavaWithJavac') {
         logger.quiet('---> compilePaidDebugJavaWithJavac dependsOn preProcessSourceCode')
@@ -200,15 +200,15 @@ tasks.whenTaskAdded { task ->
         task.dependsOn preProcessSourceCodeReleasePaid
         preProcessSourceCodeReleasePaid.outputs.upToDateWhen { false } // always run
     }
-    else if (task.name == 'compileFreeDebugUnitTestJavaWithJavac') {
-        logger.quiet('---> compileFreeDebugUnitTestJavaWithJavac dependsOn preProcessSourceCode')
-        task.dependsOn preProcessSourceCodeDebugFree
-        preProcessSourceCodeDebugFree.outputs.upToDateWhen { false } // always run
+    else if (task.name == 'compileTrialDebugUnitTestJavaWithJavac') {
+        logger.quiet('---> compileTrialDebugUnitTestJavaWithJavac dependsOn preProcessSourceCode')
+        task.dependsOn preProcessSourceCodeDebugTrial
+        preProcessSourceCodeDebugTrial.outputs.upToDateWhen { false } // always run
     }
-    else if (task.name == 'compileFreeReleaseUnitTestJavaWithJavac') {
-        logger.quiet('---> compileFreeReleaseUnitTestJavaWithJavac dependsOn preProcessSourceCode')
-        task.dependsOn preProcessSourceCodeReleaseFree
-        preProcessSourceCodeReleaseFree.outputs.upToDateWhen { false } // always run
+    else if (task.name == 'compileTrialReleaseUnitTestJavaWithJavac') {
+        logger.quiet('---> compileTrialReleaseUnitTestJavaWithJavac dependsOn preProcessSourceCode')
+        task.dependsOn preProcessSourceCodeReleaseTrial
+        preProcessSourceCodeReleaseTrial.outputs.upToDateWhen { false } // always run
     }
     else if (task.name == 'compilePaidDebugUnitTestJavaWithJavac') {
         logger.quiet('---> compilePaidDebugUnitTestJavaWithJavac dependsOn preProcessSourceCode')
@@ -220,15 +220,15 @@ tasks.whenTaskAdded { task ->
         task.dependsOn preProcessSourceCodeReleasePaid
         preProcessSourceCodeReleasePaid.outputs.upToDateWhen { false } // always run
     }
-    else if (task.name == 'compileFreeDebugAndroidTestJavaWithJavac') {
-        logger.quiet('---> compileFreeDebugAndroidTestJavaWithJavac dependsOn preProcessSourceCode')
-        task.dependsOn preProcessSourceCodeDebugFree
-        preProcessSourceCodeDebugFree.outputs.upToDateWhen { false } // always run
+    else if (task.name == 'compileTrialDebugAndroidTestJavaWithJavac') {
+        logger.quiet('---> compileTrialDebugAndroidTestJavaWithJavac dependsOn preProcessSourceCode')
+        task.dependsOn preProcessSourceCodeDebugTrial
+        preProcessSourceCodeDebugTrial.outputs.upToDateWhen { false } // always run
     }
-    else if (task.name == 'compileFreeReleaseAndroidTestJavaWithJavac') {
-        logger.quiet('---> compileFreeReleaseAndroidTestJavaWithJavac dependsOn preProcessSourceCode')
-        task.dependsOn preProcessSourceCodeReleaseFree
-        preProcessSourceCodeReleaseFree.outputs.upToDateWhen { false } // always run
+    else if (task.name == 'compileTrialReleaseAndroidTestJavaWithJavac') {
+        logger.quiet('---> compileTrialReleaseAndroidTestJavaWithJavac dependsOn preProcessSourceCode')
+        task.dependsOn preProcessSourceCodeReleaseTrial
+        preProcessSourceCodeReleaseTrial.outputs.upToDateWhen { false } // always run
     }
     else if (task.name == 'compilePaidDebugAndroidTestJavaWithJavac') {
         logger.quiet('---> compilePaidDebugAndroidTestJavaWithJavac dependsOn preProcessSourceCode')

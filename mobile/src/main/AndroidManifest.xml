@@ -52,7 +52,7 @@
         <provider
             android:name=".data.RadioTheaterProvider"
             android:authorities="${applicationId}.data.radiotheaterprovider"
-            android:exported="false" />
+            android:exported="true" />
 
         <meta-data
             android:name="com.google.android.gms.version"
@@ -175,6 +175,7 @@
 
         <activity
             android:name=".AuthenticationActivity"
+            android:launchMode="singleInstance"
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/app_name"
             android:screenOrientation="portrait">
@@ -182,24 +183,28 @@
 
         <activity
             android:name=".AuthEmailActivity"
+            android:launchMode="singleInstance"
             android:configChanges="keyboardHidden|orientation"
             android:screenOrientation="portrait">
         </activity>
 
         <activity
             android:name=".AuthGoogleActivity"
+            android:launchMode="singleInstance"
             android:configChanges="keyboardHidden|orientation"
             android:screenOrientation="portrait">
         </activity>
 
         <activity
             android:name=".AuthTwitterActivity"
+            android:launchMode="singleInstance"
             android:configChanges="keyboardHidden|orientation"
             android:screenOrientation="portrait">
         </activity>
 
         <activity
             android:name=".AuthFacebookActivity"
+            android:launchMode="singleInstance"
             android:configChanges="keyboardHidden|orientation"
             android:screenOrientation="portrait">
         </activity>
@@ -219,13 +224,13 @@
 
         <activity
             android:name=".EpisodeListActivity"
-            android:launchMode="singleTop"
+            android:launchMode="singleInstance"
             android:label="@string/app_name">
         </activity>
 
         <activity
             android:name=".EpisodeDetailActivity"
-            android:launchMode="singleTop"
+            android:launchMode="singleInstance"
             android:label="@string/title_episode_detail"
             android:parentActivityName=".EpisodeListActivity">
             <meta-data

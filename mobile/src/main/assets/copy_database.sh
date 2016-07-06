@@ -11,5 +11,5 @@ cp apps/com.harlie.radiotheater.radiomysterytheater/db/radiomysterytheater.db .
 rm -fr apps
 rm ./data.ab
 
-mv radiomysterytheater.db free/
-mv radiomysterytheater.db-journal free/
+mv radiomysterytheater.db trial/
+mv radiomysterytheater.db-journal trial/

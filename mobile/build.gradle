@@ -22,36 +22,6 @@ android {
     compileSdkVersion 24
     buildToolsVersion "24.0.0"
 
-    ext.addDependency = {
-        task, flavor, dependency ->
-            println('task=' + (String) task + 'flavor=' + (String) flavor + 'dependency=' + (String) dependency)
-    }
-
-    if (project.hasProperty("MyProject.properties")
-            && project.hasProperty("PaidProject.properties")
-            && new File(project.property("MyProject.properties") as String).exists()
-            && new File(project.property("PaidProject.properties") as String).exists()) {
-
-        Properties props = new Properties()
-
-        signingConfigs {
-            release {
-                props.load(new FileInputStream(file(project.property("PaidProject.properties"))))
-                keyAlias props['keystore.alias']
-                keyPassword props['keystore.password']
-                storeFile file(props['keystore'])
-                storePassword props['keystore.password']
-            }
-            debug {
-                props.load(new FileInputStream(file(project.property("MyProject.properties"))))
-                keyAlias props['keystore.alias']
-                keyPassword props['keystore.password']
-                storeFile file(props['keystore'])
-                storePassword props['keystore.password']
-            }
-        }
-    }
-
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 24
@@ -62,20 +32,38 @@ android {
         multiDexEnabled true
     }
 
+    ext.addDependency = {
+        task, flavor, dependency ->
+            println('task=' + (String) task + 'flavor=' + (String) flavor + 'dependency=' + (String) dependency)
+    }
+
+    signingConfigs {
+        trial {
+            keyAlias MyKeyAlias
+            keyPassword MyKeyPassword
+            storeFile file("../keystores-Radio-Mystery-Theater-FREE/lee.hounshell.keystore")
+            storePassword MyStorePassword
+        }
+        paid {
+            keyAlias MyKeyAlias
+            keyPassword MyKeyPassword
+            storeFile file("../keystores-Radio-Mystery-Theater-PAID/lee.hounshell.keystore")
+            storePassword MyStorePassword
+        }
+    }
+
     buildTypes {
         debug {
             minifyEnabled false
             shrinkResources false
             useProguard false
             debuggable true
-            signingConfig signingConfigs.debug
         }
         release {
             minifyEnabled true
             shrinkResources true
             useProguard true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
         }
     }
 
@@ -97,10 +85,12 @@ android {
         paid {
             applicationId "com.harlie.radiotheater.radiomysterytheater.paid"
             versionName "1.0-Paid"
+            signingConfig signingConfigs.paid
         }
-        free {
+        trial {
             applicationId "com.harlie.radiotheater.radiomysterytheater"
-            versionName "1.0-Free"
+            versionName "1.0-Trial"
+            signingConfig signingConfigs.trial
         }
     }
 
@@ -156,7 +146,7 @@ dependencies {
     compile 'com.android.support:support-annotations:24.0.0'
     compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha3'
 
-    freeCompile 'com.google.firebase:firebase-ads:9.2.0'
+    trialCompile 'com.google.firebase:firebase-ads:9.2.0'
 
     compile 'com.github.jakob-grabner:Circle-Progress-View:v1.2.9'
     compile 'org.immutables:gson:2.2.6'

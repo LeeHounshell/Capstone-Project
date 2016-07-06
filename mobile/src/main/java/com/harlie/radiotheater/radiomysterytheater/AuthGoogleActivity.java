@@ -1,10 +1,15 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.DialogFragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 
@@ -13,6 +18,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.plus.Plus;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
@@ -21,12 +27,19 @@ import static com.firebase.ui.auth.ui.AcquireEmailHelper.RC_SIGN_IN;
 
 public class AuthGoogleActivity
         extends BaseActivity
-        implements GoogleApiClient.OnConnectionFailedListener
+        implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener
 {
     private final static String TAG = "LEE: <" + AuthGoogleActivity.class.getSimpleName() + ">";
 
     private GoogleApiClient mGoogleApiClient;
     private Handler handler;
+
+    // Request code to use when launching the resolution activity
+    private static final int REQUEST_RESOLVE_ERROR = 1001;
+    // Unique tag for the error dialog fragment
+    private static final String DIALOG_ERROR = "dialog_error";
+    // Bool to track whether the app is already resolving an error
+    private boolean mResolvingError = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -102,15 +115,87 @@ public class AuthGoogleActivity
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         LogHelper.v(TAG, "onConnectionFailed - connectionResult=" + connectionResult.isSuccess());
-        handleAuthenticationRequestResult(connectionResult.isSuccess());
+        if (mResolvingError) {
+            // Already attempting to resolve an error.
+            return;
+        } else if (connectionResult.hasResolution()) {
+            try {
+                mResolvingError = true;
+                connectionResult.startResolutionForResult(this, REQUEST_RESOLVE_ERROR);
+            } catch (IntentSender.SendIntentException e) {
+                // There was an error with the resolution intent. Try again.
+                mGoogleApiClient.connect();
+            }
+        } else {
+            // Show dialog using GoogleApiAvailability.getErrorDialog()
+            showErrorDialog(connectionResult.getErrorCode());
+            mResolvingError = true;
+        }
+    }
+
+    // from: https://developers.google.com/android/guides/api-client#handle_connection_failures
+    // Creates a dialog for an error message
+    private void showErrorDialog(int errorCode) {
+        // Create a fragment for the error dialog
+        ErrorDialogFragment dialogFragment = new ErrorDialogFragment();
+        // Pass the error that should be displayed
+        Bundle args = new Bundle();
+        args.putInt(DIALOG_ERROR, errorCode);
+        dialogFragment.setArguments(args);
+        dialogFragment.show(getSupportFragmentManager(), "errordialog");
+    }
+
+    // Called from ErrorDialogFragment when the dialog is dismissed.
+    public void onDialogDismissed() {
+        mResolvingError = false;
+        handleAuthenticationRequestResult(false);
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        LogHelper.v(TAG, "onConnected: bundle="+bundle.toString());
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        LogHelper.v(TAG, "onConnectionSuspended: i="+i);
+    }
+
+    // A fragment to display an error dialog
+    public static class ErrorDialogFragment extends DialogFragment {
+        public ErrorDialogFragment() { }
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Get the error code and retrieve the appropriate dialog
+            int errorCode = this.getArguments().getInt(DIALOG_ERROR);
+            return GoogleApiAvailability.getInstance().getErrorDialog(
+                    this.getActivity(), errorCode, REQUEST_RESOLVE_ERROR);
+        }
+
+        @Override
+        public void onDismiss(DialogInterface dialog) {
+            ((AuthGoogleActivity) getActivity()).onDialogDismissed();
+        }
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         LogHelper.v(TAG, "onActivityResult: requestCode="+requestCode+", resultCode="+resultCode);
         super.onActivityResult(requestCode, resultCode, data);
+        //
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
-        if (requestCode == RC_SIGN_IN) {
+        //
+        if (requestCode == REQUEST_RESOLVE_ERROR) {
+            mResolvingError = false;
+            if (resultCode == RESULT_OK) {
+                // Make sure the app is not already connected or attempting to connect
+                if (!mGoogleApiClient.isConnecting() && !mGoogleApiClient.isConnected()) {
+                    mGoogleApiClient.connect();
+                }
+            }
+        }
+        else if (requestCode == RC_SIGN_IN) {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             if (result == null) {
                 LogHelper.v(TAG, "GoogleSignInResult is null!");

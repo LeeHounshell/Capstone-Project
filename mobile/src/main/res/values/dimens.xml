@@ -33,6 +33,7 @@
     <dimen name="scrolling_text_size">31sp</dimen>
     <dimen name="scrolling_text_margin_bottom">16sp</dimen>
 
+    <dimen name="version_text_size">30sp</dimen>
     <dimen name="about_text_size">26sp</dimen>
     <dimen name="about_small_text_size">22sp</dimen>
     <dimen name="about_item_margin">32dp</dimen>

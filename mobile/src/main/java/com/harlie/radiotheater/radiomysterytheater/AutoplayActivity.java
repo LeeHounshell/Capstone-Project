@@ -36,7 +36,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
 
-//#IFDEF 'FREE'
+//#IFDEF 'TRIAL'
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
@@ -337,7 +337,7 @@ public class AutoplayActivity extends BaseActivity {
         });
 
         // initialize AdMob - note this code uses the Gradle #IFDEF / #ENDIF gradle preprocessor
-        //#IFDEF 'FREE'
+        //#IFDEF 'TRIAL'
         String banner_ad_unit_id = getResources().getString(R.string.banner_ad_unit_id);
         MobileAds.initialize(getApplicationContext(), banner_ad_unit_id);
 

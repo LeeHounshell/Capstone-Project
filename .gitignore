@@ -4,13 +4,17 @@
 gradle.properties
 local.properties
 mobile/google-services.json
-mobile/src/free/google-services.json
+mobile/src/trial/google-services.json
 mobile/src/paid/google-services.json
 
-mobile/src/main/assets/free/radiomysterytheater.db
-mobile/src/main/assets/free/radiomysterytheater.db-journal
-mobile/src/main/assets/paid/radiomysterytheater.db
-mobile/src/main/assets/paid/radiomysterytheater.db-journal
+mobile/src/main/assets/radiomysterytheater.db
+mobile/src/main/assets/radiomysterytheater.db-journal
+mobile/src/main/assets/paid_radiomysterytheater.db
+mobile/src/main/assets/paid_radiomysterytheater.db-journal
+
+keystores-Radio-Mystery-Theater-FREE
+keystores-Radio-Mystery-Theater-PAID
+keystores-Radio-Mystery-Theater-PREMIUM
 
 .gradle
 .DS_Store

@@ -12,6 +12,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowInsets;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.harlie.radiotheater.radiomysterytheater.utils.FontPreferences;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
@@ -57,6 +58,14 @@ public class AboutActivity extends BaseActivity {
             }
         });
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        final TextView textView = (TextView) findViewById(R.id.trial_or_paid);
+        //#IFDEF 'PAID'
+        //textView.setText(getResources().getString(R.string.paid_version));
+        //#ENDIF
+        //#IFDEF 'TRIAL'
+        textView.setText(getResources().getString(R.string.trial_version));
+        //#ENDIF
 
         // get the image view
         final ImageView imageView = (ImageView) findViewById(R.id.LeeHounshellImage);

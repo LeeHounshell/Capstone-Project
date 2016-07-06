@@ -28,7 +28,7 @@ allprojects {
 }
 
 task installRelease {
-    dependsOn = [ "mobile:installPaidRelease", "mobile:installFreeRelease" ]
+    dependsOn = [ "mobile:installPaidRelease", "mobile:installTrialRelease" ]
 }
 
 task clean(type: Delete) {

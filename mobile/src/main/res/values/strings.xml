@@ -36,7 +36,12 @@
 
     <string name="e_g_marshall">E. G. Marshall</string>
     <string name="app_author">Lee Hounshell</string>
+    <string name="app_author_contact">contact Lee Hounshell</string>
     <string name="app_contact">lee.hounshell@gmail.com</string>
+    <string name="description">A description of the Radio Mystery Theater app.</string>
+    <string name="trial_vs_paid">Is this app a paid version?</string>
+    <string name="trial_version">This is a Trial version.</string>
+    <string name="paid_version">This is the Paid version.</string>
 
     <string name="filter_title_viewradiotheater">Radio Mystery Theater</string>
     <string name="title_activity_settings">Settings</string>
@@ -64,7 +69,12 @@
     <string name="playback_problem">There was a problem loading this episode.\nTry again.</string>
     <string name="ok">OK</string>
     <string name="no_metadata">Missing Episode Metadata</string>
-    <string name="metadata_loading_problem">Unable to load Episode information.\nSomething went wrong.</string>
+    <string name="existing_database">Existing Episode Database</string>
+    <string name="missing_database">Missing Episode Database</string>
+    <string name="metadata_loading_problem">Unable to load Episode information.\nSomething went wrong with Metadata.</string>
+    <string name="database_loading_problem">Unable to load Episode information.\nSomething is wrong with the Database.\nPlease wait for an Internet reload.</string>
+    <string name="database_existing_problem">Unexpected initialization error.\nThe SQL Database exists.\nPlease wait for an Internet reload.</string>
+    <string name="database_missing_problem">Unable to find Episode information.\nThe pre-loaded Database is missing.\nPlease wait for an Internet reload.</string>
 
     // Autoplay BROADCAST messages
     <string name="initialization">Radio-Mystery-Theater:</string>

@@ -2,8 +2,10 @@ package com.harlie.radiotheater.radiomysterytheater;
 
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
@@ -16,6 +18,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.WindowManager;
@@ -27,6 +30,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.api.model.StringList;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -59,6 +63,7 @@ import com.harlie.radiotheater.radiomysterytheater.utils.CircleViewHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.NetworkHelper;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -455,16 +460,24 @@ public class BaseActivity extends AppCompatActivity {
         }
     }
 
-    private void copyFileFromAssets(String inFileName, String outFileName) throws Exception {
+    private String copyFileFromAssets(String inFileName, String DB_OUTPUT_PATH, String DB_NAME) throws Exception {
+        String outFileName = DB_OUTPUT_PATH + DB_NAME;
         LogHelper.v(TAG, "copyFileFromAssets: INPUT="+inFileName+", OUTPUT="+outFileName);
-        InputStream input = getApplicationContext().getAssets().open(inFileName);
+        AssetManager assetManager = getAssets();
+        InputStream input = assetManager.open(inFileName);
         if (input == null) {
-            throw new Exception("null input stream for asset="+ inFileName);
+            //throw new Exception("null input stream for asset="+ inFileName);
+            return "null input stream for asset - inFileName="+ inFileName;
         }
         LogHelper.v(TAG, "InputStream is open.");
+        File folderPath = new File(DB_OUTPUT_PATH);
+        if (! folderPath.exists()) {
+            folderPath.mkdir();
+        }
         OutputStream output = new FileOutputStream(outFileName);
         if (output == null) {
-            throw new Exception("null output stream for database="+outFileName);
+            //throw new Exception("null output stream for database="+outFileName);
+            return "null output stream for database - outFileName="+outFileName;
         }
         LogHelper.v(TAG, "OutputStream is open.");
         byte[] buffer = new byte[1024];
@@ -480,6 +493,7 @@ public class BaseActivity extends AppCompatActivity {
         output.flush();
         output.close();
         input.close();
+        return null;
     }
 
     //--------------------------------------------------------------------------------
@@ -566,7 +580,7 @@ public class BaseActivity extends AppCompatActivity {
         //            and need to see if this episode is on the user's list of 10 free episodes.
         //
         // NOTE: the code below uses the #IFDEF gradle preprocessor
-        //#IFDEF 'FREE'
+        //#IFDEF 'TRIAL'
         isPaid = new Boolean(false);
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
         isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
@@ -638,28 +652,35 @@ public class BaseActivity extends AppCompatActivity {
                 String DB_OUTPUT_DIR = "databases/";
                 String DB_OUTPUT_PATH = getApplicationInfo().dataDir + "/" + DB_OUTPUT_DIR;
                 // for performance reasons, I have included a prebuilt-sqlite database
-                String outFileName = DB_OUTPUT_PATH + DB_NAME;
 
                 //#IFDEF 'PAID'
-                //copyFileFromAssets("paid/" + DB_NAME, outFileName);
-                //copyFileFromAssets("paid/" + DB_NAME + "-journal", outFileName + "-journal");
+                //String error_db_ok = copyFileFromAssets("paid_" + DB_NAME, DB_OUTPUT_PATH, DB_NAME);
+                //String error_jr_ok = copyFileFromAssets("paid_" + DB_NAME + "-journal", DB_OUTPUT_PATH, DB_NAME + "-journal");
                 //#ENDIF
 
-                //#IFDEF 'FREE'
-                copyFileFromAssets("free/" + DB_NAME, outFileName);
-                copyFileFromAssets("free/" + DB_NAME + "-journal", outFileName + "-journal");
+                //#IFDEF 'TRIAL'
+                String error_db_ok = copyFileFromAssets(DB_NAME, DB_OUTPUT_PATH, DB_NAME);
+                String error_jr_ok = copyFileFromAssets(DB_NAME + "-journal", DB_OUTPUT_PATH, DB_NAME + "-journal");
                 //#ENDIF
 
-                LogHelper.v(TAG, "*** successfully copied prebuilt SQLite database ***");
                 CircleViewHelper.hideCircleView(this);
-                sCopiedDatabaseSuccess = true;
-                startAutoplayActivity();
+                if (error_db_ok != null || error_jr_ok != null) {
+                    LogHelper.v(TAG, "*** FAILED TO COPY the prebuilt SQLite database *** - error_db_ok="+error_db_ok+", error_jr_ok="+error_jr_ok);
+                    String error = (error_db_ok != null ? error_db_ok : "") + " " + (error_jr_ok != null ? error_jr_ok : null);
+                    problemLoadingDatabase(error);
+                }
+                else {
+                    LogHelper.v(TAG, "*** successfully copied prebuilt SQLite database ***");
+                    sCopiedDatabaseSuccess = true;
+                    startAutoplayActivity();
+                }
             }
             catch (Exception any) {
                 LogHelper.e(TAG, "problem copying "+DB_NAME+" database! - "+any);
                 // this will create a new SQLite database using Firebase source JSON
                 // a circle progress view progresses as the database loads - takes a few minutes to run tho
-                runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state
+                String error = "problem copying "+DB_NAME+" database! - error="+any.getMessage();
+                problemLoadingDatabase(error);
             }
         }
         else {
@@ -667,6 +688,57 @@ public class BaseActivity extends AppCompatActivity {
             // a circle progress view progresses as the database loads - takes a few minutes to run tho
             runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state
         }
+    }
+
+    private void problemExistingDatabase(String fileName) {
+        LogHelper.w(TAG, "problemExistingDatabase, fileName="+fileName);
+        mCurrentPosition = 0;
+        AlertDialog alertDialog = new AlertDialog.Builder(BaseActivity.this).create();
+        alertDialog.setTitle(getResources().getString(R.string.existing_database));
+        alertDialog.setMessage(getResources().getString(R.string.database_existing_problem) + "\n\nfile="+fileName);
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        trackWithFirebaseAnalytics(String.valueOf(mEpisodeNumber), mCurrentPosition, "load sqlite failed");
+                        dialog.dismiss();
+                        runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state - slow via Internet, but it gets there.
+                    }
+                });
+        alertDialog.show();
+    }
+
+    private void problemMissingDatabase(String fileName) {
+        LogHelper.w(TAG, "problemMissingDatabase: fileName="+fileName);
+        mCurrentPosition = 0;
+        AlertDialog alertDialog = new AlertDialog.Builder(BaseActivity.this).create();
+        alertDialog.setTitle(getResources().getString(R.string.missing_database));
+        alertDialog.setMessage(getResources().getString(R.string.database_missing_problem) + "\n\nfile="+fileName);
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        trackWithFirebaseAnalytics(String.valueOf(mEpisodeNumber), mCurrentPosition, "load sqlite failed");
+                        dialog.dismiss();
+                        runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state - slow via Internet, but it gets there.
+                    }
+                });
+        alertDialog.show();
+    }
+
+    private void problemLoadingDatabase(String error) {
+        LogHelper.w(TAG, "problemLoadingDatabase: error="+error);
+        mCurrentPosition = 0;
+        AlertDialog alertDialog = new AlertDialog.Builder(BaseActivity.this).create();
+        alertDialog.setTitle(getResources().getString(R.string.missing_database));
+        alertDialog.setMessage(getResources().getString(R.string.database_loading_problem) + "\n\nerror=" + error);
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        trackWithFirebaseAnalytics(String.valueOf(mEpisodeNumber), mCurrentPosition, "load sqlite failed");
+                        dialog.dismiss();
+                        runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state - slow via Internet, but it gets there.
+                    }
+                });
+        alertDialog.show();
     }
 
     public void runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState state) {
@@ -904,7 +976,7 @@ public class BaseActivity extends AppCompatActivity {
                 //boolean noAdsForShow = true;
                 //#ENDIF
 
-                //#IFDEF 'FREE'
+                //#IFDEF 'TRIAL'
                 boolean purchased = cursor.getFieldPurchasedAccess();
                 boolean noAdsForShow = cursor.getFieldPurchasedNoads();
                 //#ENDIF
@@ -1419,8 +1491,8 @@ public class BaseActivity extends AppCompatActivity {
             bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, mEpisodeTitle);
             bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "audio");
             bundle.putString("episode", episodeIndex);
-            //#IFDEF 'FREE'
-            bundle.putString("user_action", "FREE: "+comment);
+            //#IFDEF 'TRIAL'
+            bundle.putString("user_action", "TRIAL: "+comment);
             //#ENDIF
             //#IFDEF 'PAID'
             //bundle.putString("user_action", "PAID: "+comment);
