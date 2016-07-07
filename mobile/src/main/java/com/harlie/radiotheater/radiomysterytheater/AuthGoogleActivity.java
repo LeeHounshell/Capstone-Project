@@ -45,6 +45,7 @@ public class AuthGoogleActivity
     public void onCreate(Bundle savedInstanceState) {
         LogHelper.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
+        getWindow().setWindowAnimations(0);
 
         boolean do_auth = false;
         Intent intent = getIntent();
@@ -103,6 +104,7 @@ public class AuthGoogleActivity
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
         signInIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         startActivityForResult(signInIntent, RC_SIGN_IN);
+        overridePendingTransition(0,0);
     }
 
     @Override
@@ -221,6 +223,7 @@ public class AuthGoogleActivity
                     authEmailIntent.putExtra("photo", personPhoto);
                     authEmailIntent.putExtra("DO_AUTH", true);
                     startActivity(authEmailIntent);
+                    overridePendingTransition(0,0);
                     finish();
                     return;
                 }

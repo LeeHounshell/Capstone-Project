@@ -20,6 +20,7 @@ public class AuthEmailActivity extends BaseActivity
     public void onCreate(Bundle savedInstanceState) {
         LogHelper.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
+        getWindow().setWindowAnimations(0);
 
         boolean do_auth = false;
         Intent intent = getIntent();
@@ -32,6 +33,7 @@ public class AuthEmailActivity extends BaseActivity
         if (! do_auth) {
             LogHelper.v(TAG, "DO_AUTH not present in Intent - go back to AuthenticationActivity");
             startAuthenticationActivity();
+            overridePendingTransition(0,0);
             return;
         }
 
@@ -39,11 +41,13 @@ public class AuthEmailActivity extends BaseActivity
         if (getAuth() == null) {
             LogHelper.v(TAG, "unable to get FirebaseAuth!");
             startAuthenticationActivity();
+            overridePendingTransition(0,0);
             return;
         }
         if (getAuth().getCurrentUser() != null && ! doINeedToCreateADatabase()) {
             LogHelper.v(TAG, "--> Firebase: user=" + getAuth().getCurrentUser().getDisplayName() + " already signed in!");
             startAutoplayActivity();
+            overridePendingTransition(0,0);
             return;
         }
         LogHelper.v(TAG, "--> Firebase: user not signed in");
@@ -81,6 +85,7 @@ public class AuthEmailActivity extends BaseActivity
             String message = getResources().getString(R.string.enter_email);
             Toast.makeText(this, message, Toast.LENGTH_LONG).show();
             startAuthenticationActivity();
+            overridePendingTransition(0,0);
             return;
         }
         LogHelper.v(TAG, "attempting signin for email="+getEmail());
@@ -115,6 +120,7 @@ public class AuthEmailActivity extends BaseActivity
     public void onBackPressed() {
         LogHelper.v(TAG, "onBackPressed");
         startAuthenticationActivity();
+        overridePendingTransition(0,0);
     }
 
 }

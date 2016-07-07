@@ -30,6 +30,7 @@ public class AuthenticationActivity extends BaseActivity
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setWindowAnimations(0);
 
         // first see if Authentication is even needed..
         if (getAuth() != null && getAuth().getCurrentUser() != null && getAuth().getCurrentUser().getEmail() != null && ! doINeedToCreateADatabase()) {
@@ -74,6 +75,7 @@ public class AuthenticationActivity extends BaseActivity
             Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
             trackSignupAttemptWithFirebaseAnalytics("email");
             startActivity(authEmailIntent, bundle);
+            overridePendingTransition(0,0);
             finish();
         }
         else {
@@ -91,6 +93,7 @@ public class AuthenticationActivity extends BaseActivity
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
         trackSignupAttemptWithFirebaseAnalytics("google");
         startActivity(authGoogleIntent, bundle);
+        overridePendingTransition(0,0);
         finish();
     }
 
@@ -103,6 +106,7 @@ public class AuthenticationActivity extends BaseActivity
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
         trackSignupAttemptWithFirebaseAnalytics("twitter");
         startActivity(authTwitterIntent, bundle);
+        overridePendingTransition(0,0);
         finish();
     }
 
@@ -115,6 +119,7 @@ public class AuthenticationActivity extends BaseActivity
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
         trackSignupAttemptWithFirebaseAnalytics("facebook");
         startActivity(authFacebookIntent, bundle);
+        overridePendingTransition(0,0);
         finish();
     }
 

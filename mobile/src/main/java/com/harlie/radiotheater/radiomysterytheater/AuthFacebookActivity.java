@@ -16,6 +16,7 @@ public class AuthFacebookActivity extends BaseActivity
     public void onCreate(Bundle savedInstanceState) {
         LogHelper.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
+        getWindow().setWindowAnimations(0);
 
         boolean do_auth = false;
         Intent intent = getIntent();
@@ -28,6 +29,7 @@ public class AuthFacebookActivity extends BaseActivity
         if (! do_auth) {
             LogHelper.v(TAG, "DO_AUTH not present in Intent - go back to AuthenticationActivity");
             startAuthenticationActivity();
+            overridePendingTransition(0,0);
             return;
         }
 
@@ -35,11 +37,13 @@ public class AuthFacebookActivity extends BaseActivity
         if (getAuth() == null) {
             LogHelper.v(TAG, "unable to get FirebaseAuth!");
             startAuthenticationActivity();
+            overridePendingTransition(0,0);
             return;
         }
         if (getAuth().getCurrentUser() != null && ! doINeedToCreateADatabase()) {
             LogHelper.v(TAG, "--> Firebase: user=" + getAuth().getCurrentUser().getDisplayName() + " already signed in!");
             startAutoplayActivity();
+            overridePendingTransition(0,0);
             return;
         }
         LogHelper.v(TAG, "--> Firebase: user not signed in");
@@ -60,6 +64,7 @@ public class AuthFacebookActivity extends BaseActivity
     @Override
     public void onBackPressed() {
         startAuthenticationActivity();
+        overridePendingTransition(0,0);
     }
 
 }
