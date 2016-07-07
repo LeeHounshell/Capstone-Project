@@ -46,6 +46,7 @@ import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpi
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesContentValues;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesSelection;
+import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesSelection;
@@ -59,6 +60,7 @@ import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersE
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadingAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.firebase.FirebaseConfigEpisode;
+import com.harlie.radiotheater.radiomysterytheater.firebase.FirebaseConfiguration;
 import com.harlie.radiotheater.radiomysterytheater.utils.CircleViewHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.NetworkHelper;
@@ -1038,15 +1040,70 @@ public class BaseActivity extends AppCompatActivity {
         return rc;
     }
 
-    // update Firebase
-    public void updateFirebaseConfigEntryValues(String episode, ContentValues configEntryValues, long duration) {
+    public void loadAnyExistingFirebaseConfigurationValues(String deviceId) {
+        LogHelper.v(TAG, "*** FIREBASE REQUEST *** - loadAnyExistingFirebaseConfigurationValues: deviceId="+deviceId);
+        if (deviceId == null) {
+            LogHelper.e(TAG, "ERROR: loadAnyExistingFirebaseConfigurationValues deviceId is null");
+            return;
+        }
+        final BaseActivity activity = this;
+        // Attach a listener to read the data initially
+        getDatabase().child("configuration").child(deviceId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
+                // load the dataSnapshot info
+                Object configurationObject = dataSnapshot.getValue();
+                if (configurationObject == null) {
+                    LogHelper.e(TAG, "the Firebase User Configuration (DataSnapshot) is null! email="+email);
+                    return;
+                }
+                String configurationJSON = configurationObject.toString();
+                LogHelper.v(TAG, "configurationJSON="+configurationJSON);
+                // FIXME: lee
+                LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                LogHelper.v(TAG, "loadAnyExistingFirebaseConfigurationValues - onCancelled");
+                activity.startAuthenticationActivity();
+            }
+        });
+
+    }
+
+    // update Firebase User Account info
+    public void updateFirebaseConfigurationValues(ContentValues configurationValues, String deviceId) {
         String  email = getEmail();
-        String  episode_number = configEntryValues.getAsString(ConfigEpisodesColumns.FIELD_EPISODE_NUMBER);
+        Boolean authenticated = configurationValues.getAsBoolean(ConfigurationColumns.FIELD_AUTHENTICATED);
+        Boolean paid_version = configurationValues.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
+        Boolean purchase_access = configurationValues.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
+        Boolean purchase_noads = configurationValues.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
+        Long    total_listen_count = configurationValues.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
+
+        FirebaseConfiguration firebaseConfiguration = new FirebaseConfiguration(
+                email,
+                getUID(),
+                deviceId,
+                authenticated,
+                paid_version,
+                purchase_access,
+                purchase_noads,
+                total_listen_count
+        );
+        firebaseConfiguration.commit(getDatabase(), deviceId);
+    }
+
+    // update Firebase User Episode History and Auth
+    public void updateFirebaseConfigEntryValues(String episode_number, ContentValues configEntryValues, long duration) {
+        String  email = getEmail();
         Boolean purchased_access = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_PURCHASED_ACCESS);
         Boolean purchased_noads = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_PURCHASED_NOADS);
         Boolean episode_downloaded = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_EPISODE_DOWNLOADED);
         Boolean episode_heard = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_EPISODE_HEARD);
         Long    episode_count = configEntryValues.getAsLong(ConfigEpisodesColumns.FIELD_LISTEN_COUNT);
+
         FirebaseConfigEpisode firebaseConfigEpisode = new FirebaseConfigEpisode(
                 email,
                 episode_number,
