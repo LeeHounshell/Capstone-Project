@@ -276,6 +276,8 @@ public class AutoplayActivity extends BaseActivity {
 
                 @Override
                 public void onClick() {
+                    ConfigEpisodesCursor configCursor = getCursorForNextAvailableEpisode();
+                    getEpisodeData(configCursor);
                     if (!getCircularSeekBar().isProcessingTouchEvents() && !sSeeking) {
                         LogHelper.v(TAG, "onClick - mFabActionButton");
                         trackWithFirebaseAnalytics(String.valueOf(mEpisodeNumber), mCurrentPosition, "BROWSE PLAYLIST");

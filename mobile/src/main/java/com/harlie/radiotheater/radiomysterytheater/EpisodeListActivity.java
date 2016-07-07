@@ -77,7 +77,7 @@ public class EpisodeListActivity extends BaseActivity
             });
         }
 
-        View recyclerView = findViewById(R.id.episode_list);
+        final View recyclerView = findViewById(R.id.episode_list);
         assert recyclerView != null;
         setupRecyclerView((RecyclerView) recyclerView);
 
@@ -87,6 +87,20 @@ public class EpisodeListActivity extends BaseActivity
             // If this view is present, then the
             // activity should be in two-pane mode.
             mTwoPane = true;
+        }
+
+        if (savedInstanceState == null) {
+            final int activePosition = (int) getEpisodeNumber() - 1;
+            ((RecyclerView) recyclerView).scrollToPosition(activePosition);
+            if (mTwoPane) {
+                getHandler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        LogHelper.v(TAG, "*** AUTO CLICK TO SHOW EPISODE DETAIL ***");
+                        ((RecyclerView) recyclerView).findViewHolderForAdapterPosition(activePosition).itemView.performClick();
+                    }
+                }, 1000);
+            }
         }
     }
 
