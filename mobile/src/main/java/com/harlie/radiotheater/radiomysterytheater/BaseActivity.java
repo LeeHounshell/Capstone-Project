@@ -5,7 +5,6 @@ import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
@@ -64,7 +63,6 @@ import com.harlie.radiotheater.radiomysterytheater.utils.CircleViewHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.NetworkHelper;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -127,6 +125,7 @@ public class BaseActivity extends AppCompatActivity {
     protected static volatile boolean sLoadedOK;
     protected static volatile boolean sShowUnit;
     protected static volatile boolean sCopiedDatabaseSuccess;
+    public static volatile boolean sProgressViewSpinning;
 
     protected static final int MIN_EMAIL_LENGTH = 3;
     protected static final int MIN_PASSWORD_LENGTH = 6;
@@ -264,7 +263,7 @@ public class BaseActivity extends AppCompatActivity {
     protected void handleAuthenticationRequestResult(boolean loginSuccess) {
         LogHelper.d(TAG, "handleAuthenticationRequestResult - loginSuccess=" + loginSuccess);
         if (loginSuccess) {
-            changeRadioMysteryTheaterFirebaseAccount(getEmail(), getPass());
+            authenticateRadioMysteryTheaterFirebaseAccount(getEmail(), getPass());
         } else {
             userLoginFailed();
             startAuthenticationActivity();
@@ -274,8 +273,8 @@ public class BaseActivity extends AppCompatActivity {
     //
     // FIREBASE COMMON USER AUTHENTICATION BLOCK
     //
-    protected void changeRadioMysteryTheaterFirebaseAccount(final String email, String pass) {
-        LogHelper.v(TAG, "changeRadioMysteryTheaterFirebaseAccount - Firebase Login using email="+email+", and password");
+    protected void authenticateRadioMysteryTheaterFirebaseAccount(final String email, String pass) {
+        LogHelper.v(TAG, "authenticateRadioMysteryTheaterFirebaseAccount - Firebase Login using email="+email+", and password");
         if (mAuth != null && email != null && pass != null && isValid(email, pass)) {
             final BaseActivity activity = this;
             mAuth.createUserWithEmailAndPassword(email, pass)
@@ -425,7 +424,8 @@ public class BaseActivity extends AppCompatActivity {
         boolean dbMissing = doINeedToCreateADatabase();
         LogHelper.v(TAG, "---> dbMissing="+dbMissing);
         if (dbMissing) {
-            LogHelper.v(TAG, "*** first need to build the RadioMysteryTheater database ***");
+            startProgressViewSpinning();
+            LogHelper.v(TAG, "*** first need to build the RadioMysteryTheater database (SPINNING) ***");
             String message = getResources().getString(R.string.initializing);
             Toast.makeText(this, message, Toast.LENGTH_LONG).show();
 
@@ -644,10 +644,7 @@ public class BaseActivity extends AppCompatActivity {
         //}
 
         if (okToCopyDatabase && COPY_PACKAGED_SQLITE_DATABASE) {
-            mCount = 0;
-            CircleViewHelper.showCircleView(this, getCircleView(), CircleViewHelper.CircleViewType.CREATE_DATABASE);
-            CircleViewHelper.setCircleViewMaximum((float) TOTAL_SIZE_TO_COPY_IN_BYTES, this);
-            CircleViewHelper.setCircleViewValue((float) mCount, this);
+            startProgressViewSpinning();
             String DB_NAME = RadioTheaterHelper.DATABASE_FILE_NAME;
             try {
                 // for performance reasons, I have included a prebuilt-sqlite database
@@ -694,6 +691,23 @@ public class BaseActivity extends AppCompatActivity {
         // this will create a new SQLite database using Firebase source JSON
         // a circle progress view progresses as the database loads - takes a few minutes to run tho
         runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state
+    }
+
+    protected void startProgressViewSpinning() {
+        LogHelper.v(TAG, "startProgressViewSpinning");
+        final BaseActivity baseActivity = this;
+        if (! sProgressViewSpinning) {
+            sProgressViewSpinning = true;
+            getHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    mCount = 0;
+                    CircleViewHelper.showCircleView(baseActivity, getCircleView(), CircleViewHelper.CircleViewType.CREATE_DATABASE);
+                    CircleViewHelper.setCircleViewMaximum((float) TOTAL_SIZE_TO_COPY_IN_BYTES, baseActivity);
+                    CircleViewHelper.setCircleViewValue((float) mCount, baseActivity);
+                }
+            });
+        }
     }
 
     private void problemExistingDatabase(String fileName) {
@@ -1060,6 +1074,10 @@ public class BaseActivity extends AppCompatActivity {
 
     public void initCircleView(CircleProgressView circleView, CircleViewHelper.CircleViewType what) {
         LogHelper.v(TAG, "initCircleView (CircleProgressView)");
+        if (circleView == null) {
+            LogHelper.w(TAG, "initCircleView: null circleView! - what="+what);
+            return;
+        }
         mCircleView = circleView; // needed to get around a problem with Fragments and findViewById
         sShowUnit = false;
         if (what == CircleViewHelper.CircleViewType.CREATE_DATABASE) {

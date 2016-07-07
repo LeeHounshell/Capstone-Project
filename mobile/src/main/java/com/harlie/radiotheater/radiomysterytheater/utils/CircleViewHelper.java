@@ -21,6 +21,7 @@ public class CircleViewHelper {
                     public void run() {
                         activity.initCircleView(circleProgressView, whatToDo);
                         activity.showCircleView();
+                        activity.sProgressViewSpinning = true;
                     }
                 });
             }
@@ -49,6 +50,7 @@ public class CircleViewHelper {
                     @Override
                     public void run() {
                         activity.setCircleViewValue(value);
+                        activity.sProgressViewSpinning = true;
                     }
                 });
             }
@@ -63,6 +65,7 @@ public class CircleViewHelper {
                     @Override
                     public void run() {
                         activity.hideCircleView();
+                        activity.sProgressViewSpinning = false;
                     }
                 });
             }

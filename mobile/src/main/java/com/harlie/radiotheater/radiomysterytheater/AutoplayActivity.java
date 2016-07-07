@@ -293,6 +293,7 @@ public class AutoplayActivity extends BaseActivity {
         }
 
         mCircleView = (CircleProgressView) findViewById(R.id.autoplay_circle_view);
+        sProgressViewSpinning = false;
         mHorizontalScrollingText = (ScrollingTextView) findViewById(R.id.horizontal_scrolling_text);
 
         // create a new View for the seek-bar and add it into the main_frame
@@ -1022,6 +1023,7 @@ public class AutoplayActivity extends BaseActivity {
             setAutoplayState(AutoplayState.LOADING, "loadingScreen");
             LoadingAsyncTask asyncTask = new LoadingAsyncTask(this, mCircleView, getCircularSeekBar(), getAutoPlay());
             asyncTask.execute();
+            sProgressViewSpinning = true;
             LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
         }
     }
