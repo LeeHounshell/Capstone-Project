@@ -652,6 +652,11 @@ public class BaseActivity extends AppCompatActivity {
             try {
                 // for performance reasons, I have included a prebuilt-sqlite database
 
+                //#IFDEF 'PAID'
+                //String error_db_ok = copyFileFromAssets("paid/" + DB_NAME, DB_NAME);
+                //String error_jr_ok = copyFileFromAssets("paid/" + DB_NAME + "-journal", DB_NAME + "-journal");
+                //#ENDIF
+
                 //#IFDEF 'TRIAL'
                 String error_db_ok = copyFileFromAssets("trial/" + DB_NAME, DB_NAME);
                 String error_jr_ok = copyFileFromAssets("trial/" + DB_NAME + "-journal", DB_NAME + "-journal");
