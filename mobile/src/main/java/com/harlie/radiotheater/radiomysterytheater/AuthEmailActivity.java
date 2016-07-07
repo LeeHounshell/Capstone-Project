@@ -103,6 +103,12 @@ public class AuthEmailActivity extends BaseActivity
                         boolean success = task.isSuccessful();
                         if (!success) {
                             success = checkExceptionReason(task, activity);
+                            if (! success) {
+                                LogHelper.v(TAG, "no success. signin failed.");
+                                startAuthenticationActivity();
+                                overridePendingTransition(0,0);
+                                return;
+                            }
                         }
                         if (success) {
                             if (getUID() == null) {

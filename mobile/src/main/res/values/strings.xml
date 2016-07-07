@@ -113,6 +113,9 @@
     <string name="auth_fail">Authorization Failed.</string>
     <string name="initializing">Initializing. please wait</string>
     <string name="loading">loading..</string>
+    <string name="playstore_error">Playstore Problem!</string>
+    <string name="update_playstore">You need to update the Google Playstore.\n
+                             Otherwise login using email and password.</string>
 
     <!-- Strings related to Detail View -->
     <string name="actor1">Actor One</string>

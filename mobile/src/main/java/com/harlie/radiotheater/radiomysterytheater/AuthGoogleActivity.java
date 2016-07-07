@@ -11,7 +11,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -21,6 +23,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.plus.Plus;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import static com.firebase.ui.auth.ui.AcquireEmailHelper.RC_SIGN_IN;
@@ -58,6 +61,7 @@ public class AuthGoogleActivity
         if (! do_auth) {
             LogHelper.v(TAG, "DO_AUTH not present in Intent - go back to AuthenticationActivity");
             startAuthenticationActivity();
+            overridePendingTransition(0,0);
             return;
         }
 
@@ -65,6 +69,7 @@ public class AuthGoogleActivity
         if (getAuth() == null) {
             LogHelper.v(TAG, "unable to get FirebaseAuth!");
             startAuthenticationActivity();
+            overridePendingTransition(0,0);
             return;
         }
         if (getAuth().getCurrentUser() != null && ! doINeedToCreateADatabase()) {
@@ -111,6 +116,7 @@ public class AuthGoogleActivity
     public void onBackPressed() {
         LogHelper.v(TAG, "onBackPressed");
         startAuthenticationActivity();
+        overridePendingTransition(0,0);
     }
 
     @Override
@@ -118,17 +124,20 @@ public class AuthGoogleActivity
         LogHelper.v(TAG, "onConnectionFailed - connectionResult=" + connectionResult.isSuccess());
         if (mResolvingError) {
             // Already attempting to resolve an error.
-            return;
+            LogHelper.v(TAG, "Already attempting to resolve an error.");
+            startAuthenticationActivity();
         } else if (connectionResult.hasResolution()) {
             try {
                 mResolvingError = true;
                 connectionResult.startResolutionForResult(this, REQUEST_RESOLVE_ERROR);
             } catch (IntentSender.SendIntentException e) {
                 // There was an error with the resolution intent. Try again.
+                LogHelper.v(TAG, "There was an error with the resolution intent. Try again.");
                 mGoogleApiClient.connect();
             }
         } else {
             // Show dialog using GoogleApiAvailability.getErrorDialog()
+            LogHelper.v(TAG, "Show dialog using GoogleApiAvailability.getErrorDialog()");
             showErrorDialog(connectionResult.getErrorCode());
             mResolvingError = true;
         }
@@ -136,7 +145,7 @@ public class AuthGoogleActivity
 
     // from: https://developers.google.com/android/guides/api-client#handle_connection_failures
     // Creates a dialog for an error message
-    private void showErrorDialog(int errorCode) {
+    private void showErrorDialog(final int errorCode) {
         // Create a fragment for the error dialog
         ErrorDialogFragment dialogFragment = new ErrorDialogFragment();
         // Pass the error that should be displayed
@@ -149,17 +158,18 @@ public class AuthGoogleActivity
     // Called from ErrorDialogFragment when the dialog is dismissed.
     public void onDialogDismissed() {
         mResolvingError = false;
-        handleAuthenticationRequestResult(false);
+        startAuthenticationActivity();
+        overridePendingTransition(0,0);
     }
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        LogHelper.v(TAG, "onConnected: bundle="+bundle.toString());
+        LogHelper.v(TAG, "---> onConnected: bundle="+bundle.toString());
     }
 
     @Override
     public void onConnectionSuspended(int i) {
-        LogHelper.v(TAG, "onConnectionSuspended: i="+i);
+        LogHelper.v(TAG, "---> onConnectionSuspended: i="+i);
     }
 
     // A fragment to display an error dialog
@@ -182,28 +192,35 @@ public class AuthGoogleActivity
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        LogHelper.v(TAG, "onActivityResult: requestCode="+requestCode+", resultCode="+resultCode);
+        LogHelper.v(TAG, "---> onActivityResult: requestCode="+requestCode+", resultCode="+resultCode);
         super.onActivityResult(requestCode, resultCode, data);
         //
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         //
         if (requestCode == REQUEST_RESOLVE_ERROR) {
+            LogHelper.v(TAG, "REQUEST_RESOLVE_ERROR");
             mResolvingError = false;
             if (resultCode == RESULT_OK) {
                 // Make sure the app is not already connected or attempting to connect
+                LogHelper.v(TAG, "Make sure the app is not already connected or attempting to connect");
                 if (!mGoogleApiClient.isConnecting() && !mGoogleApiClient.isConnected()) {
+                    LogHelper.v(TAG, "...looks ok to connect");
                     mGoogleApiClient.connect();
+                    return;
                 }
             }
         }
         else if (requestCode == RC_SIGN_IN) {
+            LogHelper.v(TAG, "RC_SIGN_IN");
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             if (result == null) {
                 LogHelper.v(TAG, "GoogleSignInResult is null!");
-                handleAuthenticationRequestResult(false);
+                startAuthenticationActivity();
+                overridePendingTransition(0, 0);
                 return;
             }
             if (result.isSuccess()) {
+                LogHelper.v(TAG, "result.isSuccess() == true");
                 GoogleSignInAccount acct = result.getSignInAccount();
                 if (acct != null) {
                     final String personName = acct.getDisplayName();
@@ -222,15 +239,15 @@ public class AuthGoogleActivity
                     authEmailIntent.putExtra("pass", personPass);
                     authEmailIntent.putExtra("photo", personPhoto);
                     authEmailIntent.putExtra("DO_AUTH", true);
+                    LogHelper.v(TAG, "---> DO_AUTH");
                     startActivity(authEmailIntent);
-                    overridePendingTransition(0,0);
-                    finish();
-                    return;
+                    overridePendingTransition(0, 0);
                 }
             }
-            LogHelper.v(TAG, "GOOGLE: unable to retrieve: name, email, id, photo");
-            handleAuthenticationRequestResult(false);
         }
+        LogHelper.v(TAG, "GOOGLE: unable to retrieve: name, email, id, photo");
+        startAuthenticationActivity();
+        overridePendingTransition(0,0);
     }
 
 }

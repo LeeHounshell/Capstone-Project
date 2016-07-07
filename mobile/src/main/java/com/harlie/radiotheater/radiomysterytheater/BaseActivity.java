@@ -462,8 +462,8 @@ public class BaseActivity extends AppCompatActivity {
             autoplayIntent.putExtras(playInfo);
             Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
             startActivity(autoplayIntent, bundle);
-            finish();
         }
+        finish();
     }
 
     private String copyFileFromAssets(String inFileName, String outFileName) throws Exception {
