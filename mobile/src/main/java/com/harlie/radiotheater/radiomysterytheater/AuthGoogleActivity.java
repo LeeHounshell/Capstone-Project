@@ -34,6 +34,8 @@ public class AuthGoogleActivity
 {
     private final static String TAG = "LEE: <" + AuthGoogleActivity.class.getSimpleName() + ">";
 
+    private static final String STATE_RESOLVING_ERROR = "resolving_error";
+
     private GoogleApiClient mGoogleApiClient;
     private Handler handler;
 
@@ -48,6 +50,8 @@ public class AuthGoogleActivity
     public void onCreate(Bundle savedInstanceState) {
         LogHelper.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
+        mResolvingError = savedInstanceState != null
+                && savedInstanceState.getBoolean(STATE_RESOLVING_ERROR, false);
         getWindow().setWindowAnimations(0);
 
         boolean do_auth = false;
@@ -61,7 +65,6 @@ public class AuthGoogleActivity
         if (! do_auth) {
             LogHelper.v(TAG, "DO_AUTH not present in Intent - go back to AuthenticationActivity");
             startAuthenticationActivity();
-            overridePendingTransition(0,0);
             return;
         }
 
@@ -69,12 +72,12 @@ public class AuthGoogleActivity
         if (getAuth() == null) {
             LogHelper.v(TAG, "unable to get FirebaseAuth!");
             startAuthenticationActivity();
-            overridePendingTransition(0,0);
             return;
         }
         if (getAuth().getCurrentUser() != null && ! doINeedToCreateADatabase()) {
             LogHelper.v(TAG, "--> Firebase: user=" + getAuth().getCurrentUser().getDisplayName() + " already signed in!");
             startAutoplayActivity();
+            overridePendingTransition(0,0);
             return;
         }
         LogHelper.v(TAG, "--> Firebase: user not signed in");
@@ -113,10 +116,15 @@ public class AuthGoogleActivity
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(STATE_RESOLVING_ERROR, mResolvingError);
+    }
+
+    @Override
     public void onBackPressed() {
         LogHelper.v(TAG, "onBackPressed");
         startAuthenticationActivity();
-        overridePendingTransition(0,0);
     }
 
     @Override
@@ -159,7 +167,6 @@ public class AuthGoogleActivity
     public void onDialogDismissed() {
         mResolvingError = false;
         startAuthenticationActivity();
-        overridePendingTransition(0,0);
     }
 
     @Override
@@ -242,13 +249,13 @@ public class AuthGoogleActivity
                     LogHelper.v(TAG, "---> DO_AUTH");
                     startActivity(authEmailIntent);
                     overridePendingTransition(0, 0);
+                    finish();
                     return;
                 }
             }
         }
         LogHelper.v(TAG, "GOOGLE: unable to retrieve: name, email, id, photo");
         startAuthenticationActivity();
-        overridePendingTransition(0,0);
     }
 
 }

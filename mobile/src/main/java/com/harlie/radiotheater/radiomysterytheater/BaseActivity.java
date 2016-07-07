@@ -366,6 +366,7 @@ public class BaseActivity extends AppCompatActivity {
         authenticationIntent.putExtras(playInfo);
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
         startActivity(authenticationIntent, bundle);
+        overridePendingTransition(0,0);
         finish();
     }
 
@@ -659,7 +660,6 @@ public class BaseActivity extends AppCompatActivity {
                 //String error_jr_ok = copyFileFromAssets("trial/" + DB_NAME + "-journal", DB_NAME + "-journal");
                 //#ENDIF
 
-                CircleViewHelper.hideCircleView(this);
                 if (error_db_ok != null || error_jr_ok != null) {
                     LogHelper.v(TAG, "*** FAILED TO COPY the prebuilt SQLite database *** - error_db_ok="+error_db_ok+", error_jr_ok="+error_jr_ok);
                     String error = (error_db_ok != null ? error_db_ok : "") + " " + (error_jr_ok != null ? error_jr_ok : null);
@@ -672,6 +672,7 @@ public class BaseActivity extends AppCompatActivity {
                     LogHelper.v(TAG, "*** successfully accessed prebuilt SQLite database ***");
                     sCopiedDatabaseSuccess = true;
                     startAutoplayActivity();
+                    overridePendingTransition(0,0);
                     return;
                 }
                 else {
