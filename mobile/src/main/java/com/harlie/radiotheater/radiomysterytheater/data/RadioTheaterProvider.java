@@ -42,7 +42,16 @@ public class RadioTheaterProvider extends BaseContentProvider {
     private static final String TYPE_CURSOR_ITEM = "vnd.android.cursor.item/";
     private static final String TYPE_CURSOR_DIR = "vnd.android.cursor.dir/";
 
-    public static final String AUTHORITY = "com.harlie.radiotheater.radiomysterytheater.data.radiotheaterprovider";
+    // NOTE: these values must match the values/values.xml:radio_theater_content_authority
+
+//#IFDEF 'PAID'
+    //public static final String AUTHORITY = "com.harlie.radiotheater.radiomysterytheater.paid.data.radiotheaterprovider";
+//#ENDIF
+
+//#IFDEF 'TRIAL'
+    public static final String AUTHORITY = "com.harlie.radiotheater.radiomysterytheater.trial.data.radiotheaterprovider";
+//#ENDIF
+
     public static final String CONTENT_URI_BASE = "content://" + AUTHORITY;
 
     private static final int URI_TYPE_ACTORS = 0;

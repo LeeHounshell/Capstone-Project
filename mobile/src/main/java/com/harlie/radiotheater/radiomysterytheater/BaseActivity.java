@@ -428,27 +428,16 @@ public class BaseActivity extends AppCompatActivity {
             LogHelper.v(TAG, "*** first need to build the RadioMysteryTheater database ***");
             String message = getResources().getString(R.string.initializing);
             Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     Looper.prepare();
                     boolean dbMissing = doINeedToCreateADatabase();
                     if (! dbMissing) {
-                        Looper.getMainLooper().quit();
+                        return;
                     }
-
-                    // FIXME: there is a problem with copying the pre-built SQLite database into a Paid build with Marshmallow.
-                    // FIXME: the issue is related to shared content provider id's
-                    // FIXME: because i don't have time to look into this just now, the Paid build will load SQLite via Internet
-
-                    //#IFDEF 'PAID'
-                    //loadSqliteDatabase(false); // don't copy
-                    //#ENDIF
-
-                    //#IFDEF 'TRIAL'
                     loadSqliteDatabase(true); // copy ok
-                    //#ENDIF
-
                     Looper.loop();
                 }
             }).start();
@@ -477,21 +466,15 @@ public class BaseActivity extends AppCompatActivity {
         }
     }
 
-    private String copyFileFromAssets(String inFileName, String DB_OUTPUT_PATH, String DB_NAME) throws Exception {
-        String outFileName = DB_OUTPUT_PATH + DB_NAME;
+    private String copyFileFromAssets(String inFileName, String outFileName) throws Exception {
         LogHelper.v(TAG, "copyFileFromAssets: INPUT="+inFileName+", OUTPUT="+outFileName);
-        AssetManager assetManager = getAssets();
-        InputStream input = assetManager.open(inFileName);
+        InputStream input = getApplicationContext().getAssets().open(inFileName);
         if (input == null) {
             //throw new Exception("null input stream for asset="+ inFileName);
             return "null input stream for asset - inFileName="+ inFileName;
         }
         LogHelper.v(TAG, "InputStream is open.");
-        File folderPath = new File(DB_OUTPUT_PATH);
-        if (! folderPath.exists()) {
-            folderPath.mkdir();
-        }
-        OutputStream output = new FileOutputStream(outFileName);
+        OutputStream output = new FileOutputStream(getApplicationContext().getDatabasePath(outFileName));
         if (output == null) {
             //throw new Exception("null output stream for database="+outFileName);
             return "null output stream for database - outFileName="+outFileName;
@@ -668,17 +651,10 @@ public class BaseActivity extends AppCompatActivity {
             String DB_NAME = RadioTheaterHelper.DATABASE_FILE_NAME;
             try {
                 // for performance reasons, I have included a prebuilt-sqlite database
-                String DB_OUTPUT_DIR = "/databases/";
-                String DB_OUTPUT_PATH = this.getFilesDir().getPath() + DB_OUTPUT_DIR;
-
-                //#IFDEF 'PAID'
-                //String error_db_ok = copyFileFromAssets("paid_" + DB_NAME, DB_OUTPUT_PATH, DB_NAME);
-                //String error_jr_ok = copyFileFromAssets("paid_" + DB_NAME + "-journal", DB_OUTPUT_PATH, DB_NAME + "-journal");
-                //#ENDIF
 
                 //#IFDEF 'TRIAL'
-                String error_db_ok = copyFileFromAssets(DB_NAME, DB_OUTPUT_PATH, DB_NAME);
-                String error_jr_ok = copyFileFromAssets(DB_NAME + "-journal", DB_OUTPUT_PATH, DB_NAME + "-journal");
+                String error_db_ok = copyFileFromAssets("trial/" + DB_NAME, DB_NAME);
+                String error_jr_ok = copyFileFromAssets("trial/" + DB_NAME + "-journal", DB_NAME + "-journal");
                 //#ENDIF
 
                 CircleViewHelper.hideCircleView(this);
@@ -688,19 +664,17 @@ public class BaseActivity extends AppCompatActivity {
                     problemLoadingDatabase(error);
                     return;
                 }
+                LogHelper.v(TAG, "*** successfully copied prebuilt SQLite database ***");
+                boolean dbMissing = doINeedToCreateADatabase();
+                if (! dbMissing) {
+                    LogHelper.v(TAG, "*** successfully accessed prebuilt SQLite database ***");
+                    sCopiedDatabaseSuccess = true;
+                    startAutoplayActivity();
+                    return;
+                }
                 else {
-                    LogHelper.v(TAG, "*** successfully copied prebuilt SQLite database ***");
-                    boolean dbMissing = doINeedToCreateADatabase();
-                    if (! dbMissing) {
-                        LogHelper.v(TAG, "*** successfully accessed prebuilt SQLite database ***");
-                        sCopiedDatabaseSuccess = true;
-                        startAutoplayActivity();
-                        return;
-                    }
-                    else {
-                        LogHelper.w(TAG, "*** FAILED TO ACCESSS the prebuilt SQLite database ***");
-                        // drop through to the 'runLoadState' call below
-                    }
+                    LogHelper.w(TAG, "*** FAILED TO ACCESSS the prebuilt SQLite database ***");
+                    // drop through to the 'runLoadState' call below
                 }
             }
             catch (Exception any) {

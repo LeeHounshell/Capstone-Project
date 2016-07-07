@@ -51,7 +51,7 @@
 
         <provider
             android:name=".data.RadioTheaterProvider"
-            android:authorities="${applicationId}.data.radiotheaterprovider"
+            android:authorities="@string/radio_theater_content_authority"
             android:exported="true" />
 
         <meta-data

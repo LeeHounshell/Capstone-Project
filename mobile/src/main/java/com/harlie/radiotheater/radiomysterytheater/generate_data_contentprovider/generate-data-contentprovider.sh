@@ -19,3 +19,20 @@ java -jar ./android_contentprovider_generator-1.9.3-bundle.jar -i . -o ${TMP}
 mv ${TMP}/com/harlie/radiotheater/radiomysterytheater/data ${OUTPUT}
 rm -fr ${TMP}
 cd ${ORIG_DIR}
+
+#
+# FIXME: remember to hand-edit the data/RadioTheaterProvider.java
+# FIXME: use different content AUTHORITY via #IFDEF 'PAID' and 'TRIAL'
+#
+
+#
+#    // NOTE: these values must match the values/values.xml:radio_theater_content_authority
+#
+#//#IFDEF 'PAID'
+#    //public static final String AUTHORITY = "com.harlie.radiotheater.radiomysterytheater.paid.data.radiotheaterprovider";
+#//#ENDIF
+#
+#//#IFDEF 'TRIAL'
+#    public static final String AUTHORITY = "com.harlie.radiotheater.radiomysterytheater.trial.data.radiotheaterprovider";
+#//#ENDIF
+#

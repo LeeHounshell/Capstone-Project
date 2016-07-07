@@ -40,8 +40,8 @@
     <string name="app_contact">lee.hounshell@gmail.com</string>
     <string name="description">A description of the Radio Mystery Theater app.</string>
     <string name="trial_vs_paid">Is this app a paid version?</string>
-    <string name="trial_version">This is a Trial version.</string>
-    <string name="paid_version">This is the Paid version.</string>
+    <string name="trial_version">Trial version:</string>
+    <string name="paid_version">Paid version:</string>
 
     <string name="filter_title_viewradiotheater">Radio Mystery Theater</string>
     <string name="title_activity_settings">Settings</string>

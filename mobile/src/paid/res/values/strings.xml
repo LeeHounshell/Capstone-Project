@@ -1,0 +1,3 @@
+<resources>
+    <string name="radio_theater_content_authority">com.harlie.radiotheater.radiomysterytheater.paid.data.radiotheaterprovider</string>
+</resources>

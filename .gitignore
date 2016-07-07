@@ -7,14 +7,11 @@ mobile/google-services.json
 mobile/src/trial/google-services.json
 mobile/src/paid/google-services.json
 
-mobile/src/main/assets/radiomysterytheater.db
-mobile/src/main/assets/radiomysterytheater.db-journal
-mobile/src/main/assets/paid_radiomysterytheater.db
-mobile/src/main/assets/paid_radiomysterytheater.db-journal
+mobile/src/main/assets/paid
+mobile/src/main/assets/trial
 
 keystores-Radio-Mystery-Theater-FREE
 keystores-Radio-Mystery-Theater-PAID
-keystores-Radio-Mystery-Theater-PREMIUM
 
 .gradle
 .DS_Store

@@ -52,6 +52,19 @@ android {
         }
     }
 
+    productFlavors {
+        paid {
+            applicationId "com.harlie.radiotheater.radiomysterytheater.paid"
+            versionName "1.0-Paid"
+            signingConfig signingConfigs.paid
+        }
+        trial {
+            applicationId "com.harlie.radiotheater.radiomysterytheater"
+            versionName "1.0-Trial"
+            signingConfig signingConfigs.trial
+        }
+    }
+
     buildTypes {
         debug {
             minifyEnabled false
@@ -79,19 +92,6 @@ android {
         it.buildConfigField 'String', 'TWITTER_API_KEY', MyTwitterAPIKey
         it.buildConfigField 'String', 'TWITTER_API_SECRET', MyTwitterAPISecret
         it.buildConfigField 'String', 'FABRIC_API_KEY', MyFabricAPIKey
-    }
-
-    productFlavors {
-        paid {
-            applicationId "com.harlie.radiotheater.radiomysterytheater.paid"
-            versionName "1.0-Paid"
-            signingConfig signingConfigs.paid
-        }
-        trial {
-            applicationId "com.harlie.radiotheater.radiomysterytheater"
-            versionName "1.0-Trial"
-            signingConfig signingConfigs.trial
-        }
     }
 
     packagingOptions {

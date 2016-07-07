@@ -114,7 +114,6 @@ public class AuthEmailActivity extends BaseActivity
     @Override
     public void onBackPressed() {
         LogHelper.v(TAG, "onBackPressed");
-        // FIXME: if database loading prevent back press until finished ??
         startAuthenticationActivity();
     }
 

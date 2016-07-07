@@ -23,9 +23,11 @@ import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.EpisodeRecyclerViewItem;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
+import com.harlie.radiotheater.radiomysterytheater.utils.BitmapHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.FontPreferences;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
+import java.io.IOException;
 import java.util.Locale;
 
 import static com.harlie.radiotheater.radiomysterytheater.data_helper.EpisodeRecyclerViewItem.CREATOR;
@@ -158,20 +160,31 @@ public class EpisodeDetailFragment extends FragmentBase {
             ((TextView) rootView.findViewById(R.id.episode_description)).setText(mItem.getDescription());
             ((RatingBar) rootView.findViewById(R.id.episode_rating)).setNumStars((int) mItem.getRating());
 
+            int height = 400;
+            int width = 300;
+
+            String[] assetList = new String[0];
+            try {
+                assetList = RadioTheaterApplication.getRadioTheaterApplicationContext().getAssets().list("portraits");
+            } catch (IOException e) {
+                LogHelper.e(TAG, "unable to read portraits assets! e="+e);
+            }
+            LogHelper.v(TAG, "available portraits: " + assetList.toString());
+
             String actor1 = mItem.getActor1();
-            loadPortrait(rootView, actor1, R.id.actor1, R.id.actor1_name);
+            loadPortrait(rootView, actor1, R.id.actor1, R.id.actor1_name, height, width);
             String actor2 = mItem.getActor2();
-            loadPortrait(rootView, actor2, R.id.actor2, R.id.actor2_name);
+            loadPortrait(rootView, actor2, R.id.actor2, R.id.actor2_name, height, width);
             String actor3 = mItem.getActor3();
-            loadPortrait(rootView, actor3, R.id.actor3, R.id.actor3_name);
+            loadPortrait(rootView, actor3, R.id.actor3, R.id.actor3_name, height, width);
             String actor4 = mItem.getActor4();
-            loadPortrait(rootView, actor4, R.id.actor4, R.id.actor4_name);
+            loadPortrait(rootView, actor4, R.id.actor4, R.id.actor4_name, height, width);
             String actor5 = mItem.getActor5();
-            loadPortrait(rootView, actor5, R.id.actor5, R.id.actor5_name);
+            loadPortrait(rootView, actor5, R.id.actor5, R.id.actor5_name, height, width);
             String actor6 = mItem.getActor6();
-            loadPortrait(rootView, actor6, R.id.actor6, R.id.actor6_name);
+            loadPortrait(rootView, actor6, R.id.actor6, R.id.actor6_name, height, width);
             String writer = mItem.getWriter();
-            loadPortrait(rootView, writer, R.id.writer, R.id.writer_name);
+            loadPortrait(rootView, writer, R.id.writer, R.id.writer_name, height, width);
 
             mPlayNow = (AppCompatButton) rootView.findViewById(R.id.play_now);
             mWebLink = (AppCompatButton) rootView.findViewById(R.id.weblink);
@@ -260,18 +273,28 @@ public class EpisodeDetailFragment extends FragmentBase {
         return textSize;
     }
 
-    private void loadPortrait(View rootView, String person, int personImageResource, int personNameResource) {
-        LogHelper.v(TAG, "loadPortrait");
+    private void loadPortrait(View rootView, String person, int personImageResource, int personNameResource, int height, int width) {
+        LogHelper.v(TAG, "loadPortrait: person="+person+", height="+height+", width="+width);
+        Bitmap bitmapPortrait;
+        String person_name = null;
         if (person != null) {
-            String person_name = makeFullName(person);
-            int portraitResourceId = getResources().getIdentifier("com.harlie.radiotheater.radiomysterytheater:drawable/" + person, null, null);
-            Bitmap bitmap;
-            if (portraitResourceId > 0) {
-                bitmap = BitmapFactory.decodeResource(getResources(), portraitResourceId);
-            } else {
-                bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.unknown);
-            }
-            ((ImageView) rootView.findViewById(personImageResource)).setImageBitmap(bitmap);
+            person_name = makeFullName(person);
+//          int portraitResourceId = getResources().getIdentifier("com.harlie.radiotheater.radiomysterytheater:drawable/" + person, null, null);
+//          Bitmap bitmap;
+//          if (portraitResourceId > 0) {
+//              bitmap = BitmapFactory.decodeResource(getResources(), portraitResourceId);
+//          } else {
+//              bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.unknown);
+//          }
+            bitmapPortrait = BitmapHelper.getBitmapFromAsset("portraits/"+person+".jpg");
+        }
+        else {
+            bitmapPortrait = BitmapFactory.decodeResource(getResources(), R.drawable.unknown);
+        }
+        if (person_name != null && bitmapPortrait != null) {
+            ((ImageView) rootView.findViewById(personImageResource)).setImageBitmap(BitmapHelper.scaleBitmap(bitmapPortrait, width, height));
+            ((ImageView) rootView.findViewById(personImageResource)).setScaleType(ImageView.ScaleType.CENTER_CROP);
+            ((ImageView) rootView.findViewById(personImageResource)).setAdjustViewBounds(true);
             ((ImageView) rootView.findViewById(personImageResource)).setVisibility(View.VISIBLE);
             ((TextView) rootView.findViewById(personNameResource)).setText(person_name);
             ((TextView) rootView.findViewById(personNameResource)).setVisibility(View.VISIBLE);

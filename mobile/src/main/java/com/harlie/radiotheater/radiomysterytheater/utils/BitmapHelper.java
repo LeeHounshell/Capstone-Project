@@ -20,11 +20,14 @@
 
 package com.harlie.radiotheater.radiomysterytheater.utils;
 
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+
+import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -39,6 +42,9 @@ public class BitmapHelper {
     private static final int MAX_READ_LIMIT_PER_IMG = 1024 * 1024;
 
     public static Bitmap scaleBitmap(Bitmap src, int maxWidth, int maxHeight) {
+        if (src == null) {
+            return null;
+        }
        double scaleFactor = Math.min(
            ((double) maxWidth)/src.getWidth(), ((double) maxHeight)/src.getHeight());
         return Bitmap.createScaledBitmap(src,
@@ -90,7 +96,7 @@ public class BitmapHelper {
     }
 
     // from: http://stackoverflow.com/questions/3035692/how-to-convert-a-drawable-to-a-bitmap
-    public static Bitmap drawableToBitmap (Drawable drawable) {
+    public static Bitmap drawableToBitmap(Drawable drawable) {
         Bitmap bitmap = null;
 
         if (drawable instanceof BitmapDrawable) {
@@ -110,6 +116,19 @@ public class BitmapHelper {
         drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
         drawable.draw(canvas);
         return bitmap;
+    }
+
+    public static Bitmap getBitmapFromAsset(String bitmapFileName)
+    {
+        AssetManager assetManager = RadioTheaterApplication.getRadioTheaterApplicationContext().getAssets();
+        InputStream inputStream = null;
+        try {
+            inputStream = assetManager.open(bitmapFileName);
+        } catch (IOException e) {
+            LogHelper.v(TAG, "FAILED to getBitmapFromAsset asset="+ bitmapFileName +", error="+e);
+            return null;
+        }
+        return BitmapFactory.decodeStream(inputStream);
     }
 
 }
