@@ -462,8 +462,8 @@ public class BaseActivity extends AppCompatActivity {
             autoplayIntent.putExtras(playInfo);
             Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
             startActivity(autoplayIntent, bundle);
+            finish();
         }
-        finish();
     }
 
     private String copyFileFromAssets(String inFileName, String outFileName) throws Exception {
@@ -581,16 +581,16 @@ public class BaseActivity extends AppCompatActivity {
         //
         // NOTE: the code below uses the #IFDEF gradle preprocessor
         //#IFDEF 'TRIAL'
-        isPaid = new Boolean(false);
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-        isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
-        if (!isPaid) {
-            ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
-            if (existing != null) {
-                ContentValues configEpisode = existing.values();
-                isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
-            }
-        }
+        //isPaid = new Boolean(false);
+        //SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+        //isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
+        //if (!isPaid) {
+            //ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
+            //if (existing != null) {
+                //ContentValues configEpisode = existing.values();
+                //isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
+            //}
+        //}
         //#ENDIF
         return isPaid;
     }
@@ -650,13 +650,13 @@ public class BaseActivity extends AppCompatActivity {
                 // for performance reasons, I have included a prebuilt-sqlite database
 
                 //#IFDEF 'PAID'
-                //String error_db_ok = copyFileFromAssets("paid/" + DB_NAME, DB_NAME);
-                //String error_jr_ok = copyFileFromAssets("paid/" + DB_NAME + "-journal", DB_NAME + "-journal");
+                String error_db_ok = copyFileFromAssets("paid/" + DB_NAME, DB_NAME);
+                String error_jr_ok = copyFileFromAssets("paid/" + DB_NAME + "-journal", DB_NAME + "-journal");
                 //#ENDIF
 
                 //#IFDEF 'TRIAL'
-                String error_db_ok = copyFileFromAssets("trial/" + DB_NAME, DB_NAME);
-                String error_jr_ok = copyFileFromAssets("trial/" + DB_NAME + "-journal", DB_NAME + "-journal");
+                //String error_db_ok = copyFileFromAssets("trial/" + DB_NAME, DB_NAME);
+                //String error_jr_ok = copyFileFromAssets("trial/" + DB_NAME + "-journal", DB_NAME + "-journal");
                 //#ENDIF
 
                 CircleViewHelper.hideCircleView(this);
@@ -992,13 +992,13 @@ public class BaseActivity extends AppCompatActivity {
                 record.putFieldEpisodeNumber(episodeNumber);
 
                 //#IFDEF 'PAID'
-                //boolean purchased = true;
-                //boolean noAdsForShow = true;
+                boolean purchased = true;
+                boolean noAdsForShow = true;
                 //#ENDIF
 
                 //#IFDEF 'TRIAL'
-                boolean purchased = cursor.getFieldPurchasedAccess();
-                boolean noAdsForShow = cursor.getFieldPurchasedNoads();
+                //boolean purchased = cursor.getFieldPurchasedAccess();
+                //boolean noAdsForShow = cursor.getFieldPurchasedNoads();
                 //#ENDIF
 
                 record.putFieldPurchasedAccess(purchased);
@@ -1517,11 +1517,11 @@ public class BaseActivity extends AppCompatActivity {
             bundle.putString("episode", episodeIndex);
 
             //#IFDEF 'PAID'
-            //bundle.putString("user_action", "PAID: "+comment);
+            bundle.putString("user_action", "PAID: "+comment);
             //#ENDIF
 
             //#IFDEF 'TRIAL'
-            bundle.putString("user_action", "TRIAL: "+comment);
+            //bundle.putString("user_action", "TRIAL: "+comment);
             //#ENDIF
 
             bundle.putLong("listen_duration", duration);

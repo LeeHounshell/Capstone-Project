@@ -215,8 +215,7 @@ public class AuthGoogleActivity
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             if (result == null) {
                 LogHelper.v(TAG, "GoogleSignInResult is null!");
-                startAuthenticationActivity();
-                overridePendingTransition(0, 0);
+                handleAuthenticationRequestResult(false);
                 return;
             }
             if (result.isSuccess()) {
@@ -230,6 +229,7 @@ public class AuthGoogleActivity
                     final Uri personPhoto = acct.getPhotoUrl();
                     setEmail(personEmail);
                     setPass(personPass);
+                    // we're in.  now here come's the trick:
                     // ok, now do the login invisibly with email to avoid extra app manifest permissions
                     LogHelper.v(TAG, "GOOGLE: name=" + personName + ", id=" + personId + ", email=" + getEmail() + ", url=" + personPhoto);
                     Intent authEmailIntent = new Intent(this, AuthEmailActivity.class);
@@ -242,6 +242,7 @@ public class AuthGoogleActivity
                     LogHelper.v(TAG, "---> DO_AUTH");
                     startActivity(authEmailIntent);
                     overridePendingTransition(0, 0);
+                    return;
                 }
             }
         }
