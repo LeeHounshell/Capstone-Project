@@ -36,7 +36,8 @@ import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersE
 public class RadioTheaterProvider extends BaseContentProvider {
     private static final String TAG = RadioTheaterProvider.class.getSimpleName();
 
-    private static final boolean DEBUG = BuildConfig.DEBUG;
+    //private static final boolean DEBUG = BuildConfig.DEBUG;
+    private static final boolean DEBUG = false;
 
     private static final String TYPE_CURSOR_ITEM = "vnd.android.cursor.item/";
     private static final String TYPE_CURSOR_DIR = "vnd.android.cursor.dir/";

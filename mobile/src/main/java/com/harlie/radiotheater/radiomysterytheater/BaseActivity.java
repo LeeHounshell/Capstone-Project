@@ -79,6 +79,7 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 import at.grabner.circleprogress.AnimationState;
 import at.grabner.circleprogress.AnimationStateChangedListener;
@@ -118,7 +119,6 @@ public class BaseActivity extends AppCompatActivity {
 
     protected static volatile boolean sOnRestoreInstanceComplete;
     protected static volatile boolean sFoundFirebaseDeviceId;
-    protected static volatile boolean sUpdatedConfiguration;
     protected static volatile boolean sOkLoadFirebaseConfiguration;
     protected static volatile boolean sShowPercentUnit;
 
@@ -1263,22 +1263,20 @@ public class BaseActivity extends AppCompatActivity {
 
     private void updateTheUserConfiguration() {
         LogHelper.v(TAG, "*** updateTheUserConfiguration ***");
-        if (sUpdatedConfiguration) {
-            LogHelper.w(TAG, "already updated.");
-            return;
-        }
-        sUpdatedConfiguration = true;
         ConfigurationContentValues configurationContent = null;
+        ContentValues sqliteConfiguration = null;
         // 1) load local SQLite entry for deviceId
         ConfigurationCursor configurationCursor = getCursorForConfigurationDevice(getAdvertId());
         if (configurationCursor != null && configurationCursor.moveToNext()) {
             LogHelper.v(TAG, "found existing SQLite user Configuration");
             configurationContent = getConfigurationContentValues(configurationCursor);
+            sqliteConfiguration = configurationContent.values();
+            configurationCursor.close();
         }
         if (! sFoundFirebaseDeviceId) { // deviceId not in Firebase
             LogHelper.v(TAG, "device entry for Configuration doesn't exist in Firebase yet..");
             // 2) if local SQLite entry doesn't exist, create it
-            if (configurationContent == null) { // no SQLite Configuration either
+            if (sqliteConfiguration == null) { // no SQLite Configuration either
                 LogHelper.v(TAG, "local SQLite Configuration doesn't exist yet..");
                 mConfiguration = new ConfigurationContentValues();
                 mConfiguration.putFieldUserEmail(getEmail());
@@ -1302,34 +1300,58 @@ public class BaseActivity extends AppCompatActivity {
                 insertConfiguration(configurationContent.values());
                 // 3) update Firebase with the new deviceId entry
                 updateFirebaseConfigurationValues(getAdvertId(), mConfiguration.values());
+                return;
             }
         }
-        else if (mConfiguration != null) { // found Firebase Configuration
-            LogHelper.v(TAG, "found device entry for Configuration in Firebase.");
-            ContentValues sqliteConfiguration = null;
+        if (mConfiguration == null && sqliteConfiguration != null && configurationContent != null) {
+            LogHelper.v(TAG, "have SQLite configuration, but not Firebase - so update Firebase with local");
+            mConfiguration = configurationContent;
+        }
+        if (mConfiguration != null) { // found Firebase Configuration
+            LogHelper.v(TAG, "updating Firebase entry for Configuration.");
             ContentValues firebaseConfiguration = mConfiguration.values();
             // 4) update local SQLite if Firebase has most recent data
-            if (configurationContent != null) { // have local SQLite Configuration?
-                LogHelper.v(TAG, "found local SQLite configuration");
-                sqliteConfiguration = configurationContent.values();
-                long sqlite_listen_count = sqliteConfiguration.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
-                long firebase_listen_count = firebaseConfiguration.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
-                if (sqlite_listen_count > firebase_listen_count) {
-                    LogHelper.v(TAG, "Firebase Configuration needs update..");
-                    mConfiguration.putFieldTotalListenCount((int) sqlite_listen_count);
+            if (sqliteConfiguration != null) { // have local SQLite Configuration?
+                LogHelper.v(TAG, "using local SQLite configuration for update");
+                Long sqlite_listen_count = new Long(0);
+                try {
+                    sqlite_listen_count = sqliteConfiguration.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
+                    if (sqlite_listen_count == null) {
+                        sqlite_listen_count = new Long(0);
+                    }
+                }
+                catch (Exception e) {
+                    LogHelper.w(TAG, "SQLite: unable to getAsLong ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT");
+                }
+                Long firebase_listen_count = new Long(0);
+                try {
+                    firebase_listen_count = firebaseConfiguration.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
+                    if (firebase_listen_count == null) {
+                        firebase_listen_count = new Long(0);
+                    }
+                }
+                catch (Exception e) {
+                    LogHelper.w(TAG, "Firebase: unable to getAsLong ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT");
+                }
+                if (sqlite_listen_count >= firebase_listen_count) {
+                    LogHelper.v(TAG, "Firebase Configuration needs update.. local listen_count is greater or equal");
+                    mConfiguration.putFieldTotalListenCount(sqlite_listen_count.intValue());
                     updateFirebaseConfigurationValues(getAdvertId(), mConfiguration.values());
                 }
                 else if (sqlite_listen_count < firebase_listen_count) {
-                    LogHelper.v(TAG, "SQLite Configuration needs update..");
-                    configurationContent.putFieldTotalListenCount((int) firebase_listen_count);
+                    LogHelper.v(TAG, "SQLite Configuration needs update.. local listen_count is smaller");
+                    configurationContent.putFieldTotalListenCount(firebase_listen_count.intValue());
                     updateConfigurationValues(getAdvertId(), configurationContent.values());
                 }
             }
             else {
-                LogHelper.v(TAG, "no local SQLite configuration - copy Firebase");
+                LogHelper.v(TAG, "no local SQLite configuration exists on this device! - copy Firebase");
                 sqliteConfiguration = mConfiguration.values();
                 updateConfigurationValues(getAdvertId(), sqliteConfiguration);
             }
+        }
+        else {
+            LogHelper.v(TAG, "unable to update Firebase Configuration!");
         }
     }
 
@@ -1480,7 +1502,7 @@ public class BaseActivity extends AppCompatActivity {
             LoadingAsyncTask.mLoadingNow = false;
             if (getCircleView() != null) {
                 getCircleView().setValue(value);
-                LogHelper.w(TAG, "setCircleViewValue: value=" + value);
+                //LogHelper.w(TAG, "setCircleViewValue: value=" + value);
                 if (value == getCircleView().getMaxValue()) {
                     hideCircleView();
                 }
