@@ -78,8 +78,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
-import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 
 import at.grabner.circleprogress.AnimationState;
 import at.grabner.circleprogress.AnimationStateChangedListener;
@@ -1290,7 +1288,7 @@ public class BaseActivity extends AppCompatActivity {
                 //#ENDIF
 
                 //#IFDEF 'TRIAL'
-                mConfiguration.putFieldAuthenticated(false);
+                mConfiguration.putFieldAuthenticated(getEmail() != null);
                 mConfiguration.putFieldPurchaseAccess(false);
                 mConfiguration.putFieldPurchaseNoads(false);
                 //#ENDIF
@@ -1313,8 +1311,26 @@ public class BaseActivity extends AppCompatActivity {
             // 4) update local SQLite if Firebase has most recent data
             if (sqliteConfiguration != null) { // have local SQLite Configuration?
                 LogHelper.v(TAG, "using local SQLite configuration for update");
+                Boolean paidVersion = false;
+                Boolean purchaseAccess = false;
+                Boolean purchaseNoads = false;
+                Boolean firebasePaidVersion = false;
+                Boolean firebasePurchaseAccess = false;
+                Boolean firebasePurchaseNoAds = false;
                 Long sqlite_listen_count = new Long(0);
                 try {
+                    //#IFDEF 'PAID'
+                    //paidVersion = true;
+                    //purchaseAccess = true;
+                    //purchaseNoads = true;
+                    //#ENDIF
+
+                    //#IFDEF 'TRIAL'
+                    paidVersion = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
+                    purchaseAccess = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
+                    purchaseNoads = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
+                    //#ENDIF
+
                     sqlite_listen_count = sqliteConfiguration.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
                     if (sqlite_listen_count == null) {
                         sqlite_listen_count = new Long(0);
@@ -1325,6 +1341,9 @@ public class BaseActivity extends AppCompatActivity {
                 }
                 Long firebase_listen_count = new Long(0);
                 try {
+                    paidVersion = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
+                    purchaseAccess = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
+                    purchaseNoads = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
                     firebase_listen_count = firebaseConfiguration.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
                     if (firebase_listen_count == null) {
                         firebase_listen_count = new Long(0);
@@ -1333,14 +1352,30 @@ public class BaseActivity extends AppCompatActivity {
                 catch (Exception e) {
                     LogHelper.w(TAG, "Firebase: unable to getAsLong ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT");
                 }
+                boolean dirty = false;
                 if (sqlite_listen_count >= firebase_listen_count) {
                     LogHelper.v(TAG, "Firebase Configuration needs update.. local listen_count is greater or equal");
                     mConfiguration.putFieldTotalListenCount(sqlite_listen_count.intValue());
-                    updateFirebaseConfigurationValues(getAdvertId(), mConfiguration.values());
+                    dirty = true;
                 }
                 else if (sqlite_listen_count < firebase_listen_count) {
                     LogHelper.v(TAG, "SQLite Configuration needs update.. local listen_count is smaller");
                     configurationContent.putFieldTotalListenCount(firebase_listen_count.intValue());
+                    dirty = true;
+                }
+                if ((paidVersion != null && paidVersion) || (firebasePaidVersion != null && firebasePaidVersion)) {
+                    configurationContent.putFieldPaidVersion(true);
+                    dirty = true;
+                }
+                if ((purchaseAccess != null && purchaseAccess) || (firebasePurchaseAccess != null && firebasePurchaseAccess)) {
+                    configurationContent.putFieldPurchaseAccess(true);
+                    dirty = true;
+                }
+                if ((purchaseNoads != null && purchaseAccess) || (firebasePurchaseNoAds != null && firebasePurchaseAccess)) {
+                    configurationContent.putFieldPurchaseNoads(true);
+                    dirty = true;
+                }
+                if (dirty) {
                     updateConfigurationValues(getAdvertId(), configurationContent.values());
                 }
             }
@@ -1358,11 +1393,20 @@ public class BaseActivity extends AppCompatActivity {
     // update Firebase User Account info
     public void updateFirebaseConfigurationValues(String deviceId, ContentValues configurationValues) {
         String  email = getEmail();
-        Boolean authenticated = configurationValues.getAsBoolean(ConfigurationColumns.FIELD_AUTHENTICATED);
+        Boolean authenticated = email != null;
+        Long    total_listen_count = configurationValues.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
+
+        //#IFDEF 'PAID'
+        //Boolean paid_version = true;
+        //Boolean purchase_access = true;
+        //Boolean purchase_noads = true;
+        //#ENDIF
+
+        //#IFDEF 'TRIAL'
         Boolean paid_version = configurationValues.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
         Boolean purchase_access = configurationValues.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
         Boolean purchase_noads = configurationValues.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
-        Long    total_listen_count = configurationValues.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
+        //#ENDIF
 
         FirebaseConfiguration firebaseConfiguration = new FirebaseConfiguration(
                 email,
@@ -1380,11 +1424,19 @@ public class BaseActivity extends AppCompatActivity {
     // update Firebase User Episode History and Auth
     public void updateFirebaseConfigEntryValues(String episode_number, ContentValues configEntryValues, long duration) {
         String  email = getEmail();
-        Boolean purchased_access = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_PURCHASED_ACCESS);
-        Boolean purchased_noads = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_PURCHASED_NOADS);
         Boolean episode_downloaded = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_EPISODE_DOWNLOADED);
         Boolean episode_heard = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_EPISODE_HEARD);
         Long    episode_count = configEntryValues.getAsLong(ConfigEpisodesColumns.FIELD_LISTEN_COUNT);
+
+        //#IFDEF 'PAID'
+        //Boolean purchased_access = true;
+        //Boolean purchased_noads = true;
+        //#ENDIF
+
+        //#IFDEF 'TRIAL'
+        Boolean purchased_access = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_PURCHASED_ACCESS);
+        Boolean purchased_noads = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_PURCHASED_NOADS);
+        //#ENDIF
 
         FirebaseConfigEpisode firebaseConfigEpisode = new FirebaseConfigEpisode(
                 email,
