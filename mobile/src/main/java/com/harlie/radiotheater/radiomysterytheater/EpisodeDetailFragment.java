@@ -68,7 +68,7 @@ public class EpisodeDetailFragment extends FragmentBase {
         LogHelper.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
 
-        if (getArguments().containsKey(ARG_EPISODE_ID)) {
+        if (getArguments() != null && getArguments().containsKey(ARG_EPISODE_ID)) {
             // Load the content specified by the fragment arguments.
             // The ARG_EPISODE_PARCELABLE contains a Parcelable EpisodeRecyclerViewItem.
             long episodeId = Long.valueOf(getArguments().getString(ARG_EPISODE_ID));

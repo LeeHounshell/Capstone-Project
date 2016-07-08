@@ -1,9 +1,12 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.widget.Toast;
 
@@ -15,6 +18,8 @@ import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 public class AuthEmailActivity extends BaseActivity
 {
     private final static String TAG = "LEE: <" + AuthEmailActivity.class.getSimpleName() + ">";
+
+    private boolean cancelTimer = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -92,6 +97,8 @@ public class AuthEmailActivity extends BaseActivity
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
+                        cancelTimer = true;
+
                         LogHelper.d(TAG, "signInWithEmailAndPassword:onComplete:" + task.isSuccessful());
 
                         // If sign in fails, display a message to the user. If sign in succeeds
@@ -116,6 +123,36 @@ public class AuthEmailActivity extends BaseActivity
                         handleAuthenticationRequestResult(success);
                     }
                 });
+
+        // just in case of auth problems
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (! cancelTimer) {
+                    LogHelper.v(TAG, "********* TIMER TRIPPED *********");
+                    problemAuthenticating("auth did not complete");
+                }
+                else {
+                    LogHelper.v(TAG, "********* TIMER CANCELLED *********");
+                }
+            }
+        }, 9000); // nine seconds
+    }
+
+    private void problemAuthenticating(String error) {
+        LogHelper.w(TAG, "problemAuthenticating: error="+error);
+        mCurrentPosition = 0;
+        AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+        alertDialog.setTitle(getResources().getString(R.string.problem_authenticating));
+        alertDialog.setMessage(getResources().getString(R.string.firebase_authentication_error) + "\n\nerror=" + error);
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        startAuthenticationActivity();
+                    }
+                });
+        alertDialog.show();
     }
 
     @Override

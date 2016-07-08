@@ -71,10 +71,10 @@ public class AboutActivity extends BaseActivity {
             e.printStackTrace();
         }
         //#IFDEF 'PAID'
-        textView.setText(getResources().getString(R.string.paid_version)+" "+version);
+        //textView.setText(getResources().getString(R.string.paid_version)+" "+version);
         //#ENDIF
         //#IFDEF 'TRIAL'
-        //textView.setText(getResources().getString(R.string.trial_version)+" "+version);
+        textView.setText(getResources().getString(R.string.trial_version)+" "+version);
         //#ENDIF
 
         // get the image view

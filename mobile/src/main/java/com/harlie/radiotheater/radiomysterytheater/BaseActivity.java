@@ -584,16 +584,16 @@ public class BaseActivity extends AppCompatActivity {
         //
         // NOTE: the code below uses the #IFDEF gradle preprocessor
         //#IFDEF 'TRIAL'
-        //isPaid = new Boolean(false);
-        //SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-        //isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
-        //if (!isPaid) {
-            //ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
-            //if (existing != null) {
-                //ContentValues configEpisode = existing.values();
-                //isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
-            //}
-        //}
+        isPaid = new Boolean(false);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+        isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
+        if (!isPaid) {
+            ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
+            if (existing != null) {
+                ContentValues configEpisode = existing.values();
+                isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
+            }
+        }
         //#ENDIF
         return isPaid;
     }
@@ -653,13 +653,13 @@ public class BaseActivity extends AppCompatActivity {
                 // for performance reasons, I have included a prebuilt-sqlite database
 
                 //#IFDEF 'PAID'
-                String error_db_ok = copyFileFromAssets("paid/" + DB_NAME, DB_NAME);
-                String error_jr_ok = copyFileFromAssets("paid/" + DB_NAME + "-journal", DB_NAME + "-journal");
+                //String error_db_ok = copyFileFromAssets("paid/" + DB_NAME, DB_NAME);
+                //String error_jr_ok = copyFileFromAssets("paid/" + DB_NAME + "-journal", DB_NAME + "-journal");
                 //#ENDIF
 
                 //#IFDEF 'TRIAL'
-                //String error_db_ok = copyFileFromAssets("trial/" + DB_NAME, DB_NAME);
-                //String error_jr_ok = copyFileFromAssets("trial/" + DB_NAME + "-journal", DB_NAME + "-journal");
+                String error_db_ok = copyFileFromAssets("trial/" + DB_NAME, DB_NAME);
+                String error_jr_ok = copyFileFromAssets("trial/" + DB_NAME + "-journal", DB_NAME + "-journal");
                 //#ENDIF
 
                 if (error_db_ok != null || error_jr_ok != null) {
@@ -995,13 +995,13 @@ public class BaseActivity extends AppCompatActivity {
                 record.putFieldEpisodeNumber(episodeNumber);
 
                 //#IFDEF 'PAID'
-                boolean purchased = true;
-                boolean noAdsForShow = true;
+                //boolean purchased = true;
+                //boolean noAdsForShow = true;
                 //#ENDIF
 
                 //#IFDEF 'TRIAL'
-                //boolean purchased = cursor.getFieldPurchasedAccess();
-                //boolean noAdsForShow = cursor.getFieldPurchasedNoads();
+                boolean purchased = cursor.getFieldPurchasedAccess();
+                boolean noAdsForShow = cursor.getFieldPurchasedNoads();
                 //#ENDIF
 
                 record.putFieldPurchasedAccess(purchased);
@@ -1566,7 +1566,7 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     protected void trackWithFirebaseAnalytics(String episodeIndex, long duration, String comment) {
-        if (mFirebaseAnalytics != null) {
+        if (mFirebaseAnalytics != null && episodeIndex != null && comment != null) {
             LogHelper.v(TAG, "ANALYTICS: trackWithFirebaseAnalytics: episode="+episodeIndex+", duration="+duration+", comment="+comment);
             Bundle bundle = new Bundle();
             bundle.putString(FirebaseAnalytics.Param.ITEM_ID, episodeIndex);
@@ -1575,14 +1575,35 @@ public class BaseActivity extends AppCompatActivity {
             bundle.putString("episode", episodeIndex);
 
             //#IFDEF 'PAID'
-            bundle.putString("user_action", "PAID: "+comment);
+            //bundle.putString("user_action", "PAID: "+comment);
             //#ENDIF
 
             //#IFDEF 'TRIAL'
-            //bundle.putString("user_action", "TRIAL: "+comment);
+            bundle.putString("user_action", "TRIAL: "+comment);
             //#ENDIF
 
             bundle.putLong("listen_duration", duration);
+            mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+            logToFirebase(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+        }
+    }
+
+    protected void trackWithFirebaseAnalytics(String event, String email, String comment) {
+        if (mFirebaseAnalytics != null && event != null && email != null && comment != null) {
+            LogHelper.v(TAG, "ANALYTICS: trackWithFirebaseAnalytics: event="+event+", email="+email);
+            Bundle bundle = new Bundle();
+            bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "event");
+            bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, event);
+            bundle.putString(FirebaseAnalytics.Param.ORIGIN, email);
+
+            //#IFDEF 'PAID'
+            //bundle.putString("user_action", "PAID: "+comment);
+            //#ENDIF
+
+            //#IFDEF 'TRIAL'
+            bundle.putString("user_action", "TRIAL: "+comment);
+            //#ENDIF
+
             mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
             logToFirebase(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
         }
@@ -1648,6 +1669,7 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     protected void logToFirebase(String action, Bundle bundle) {
+        // FIXME: ensure the Firebase user is logged-in
         String detail = "";
         if (bundle != null) {
             detail = "{";

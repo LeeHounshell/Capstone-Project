@@ -113,6 +113,9 @@
     <string name="auth_fail">Authorization Failed.</string>
     <string name="initializing">Initializing. please wait</string>
     <string name="loading">loading..</string>
+    <string name="problem_authenticating">Unable to Authenticate!</string>
+    <string name="firebase_authentication_error">The Firebase authentication service did not respond in time.\n\n
+                  Check that you have the latest version of Google Play services installed.</string>
     <string name="playstore_error">Playstore Problem!</string>
     <string name="update_playstore">You need to update the Google Playstore.\n
                              Otherwise login using email and password.</string>
