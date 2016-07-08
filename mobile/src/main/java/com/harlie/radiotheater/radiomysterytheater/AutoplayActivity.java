@@ -98,6 +98,7 @@ public class AutoplayActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         LogHelper.v(TAG, "onCreate");
+        sOkLoadFirebaseConfiguration = true;
 
         initializeForEpisode("onCreate: initializing..");
 

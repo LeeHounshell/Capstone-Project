@@ -83,7 +83,6 @@ public class RadioTheaterHelper extends SQLiteOpenHelper {
             + ConfigurationColumns.FIELD_PURCHASE_ACCESS + " INTEGER NOT NULL DEFAULT 0, "
             + ConfigurationColumns.FIELD_PURCHASE_NOADS + " INTEGER NOT NULL DEFAULT 0, "
             + ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT + " INTEGER NOT NULL DEFAULT 0 "
-            + ", CONSTRAINT fk_field_user_email FOREIGN KEY (" + ConfigurationColumns.FIELD_USER_EMAIL + ") REFERENCES config_episodes (_id) ON DELETE CASCADE"
             + ", CONSTRAINT field_unique UNIQUE (field_user_email) ON CONFLICT ABORT"
             + " );";
 

@@ -18,7 +18,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.harlie.radiotheater.radiomysterytheater.data.base.AbstractCursor;
-import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.*;
 
 /**
  * Cursor wrapper for the {@code configuration} table.
@@ -47,66 +46,6 @@ public class ConfigurationCursor extends AbstractCursor implements Configuration
         String res = getStringOrNull(ConfigurationColumns.FIELD_USER_EMAIL);
         if (res == null)
             throw new NullPointerException("The value of 'field_user_email' in the database was null, which is not allowed according to the model definition");
-        return res;
-    }
-
-    /**
-     * Get the {@code field_episode_number} value.
-     */
-    public long getConfigEpisodesFieldEpisodeNumber() {
-        Long res = getLongOrNull(ConfigEpisodesColumns.FIELD_EPISODE_NUMBER);
-        if (res == null)
-            throw new NullPointerException("The value of 'field_episode_number' in the database was null, which is not allowed according to the model definition");
-        return res;
-    }
-
-    /**
-     * Get the {@code field_purchased_access} value.
-     */
-    public boolean getConfigEpisodesFieldPurchasedAccess() {
-        Boolean res = getBooleanOrNull(ConfigEpisodesColumns.FIELD_PURCHASED_ACCESS);
-        if (res == null)
-            throw new NullPointerException("The value of 'field_purchased_access' in the database was null, which is not allowed according to the model definition");
-        return res;
-    }
-
-    /**
-     * Get the {@code field_purchased_noads} value.
-     */
-    public boolean getConfigEpisodesFieldPurchasedNoads() {
-        Boolean res = getBooleanOrNull(ConfigEpisodesColumns.FIELD_PURCHASED_NOADS);
-        if (res == null)
-            throw new NullPointerException("The value of 'field_purchased_noads' in the database was null, which is not allowed according to the model definition");
-        return res;
-    }
-
-    /**
-     * Get the {@code field_episode_downloaded} value.
-     */
-    public boolean getConfigEpisodesFieldEpisodeDownloaded() {
-        Boolean res = getBooleanOrNull(ConfigEpisodesColumns.FIELD_EPISODE_DOWNLOADED);
-        if (res == null)
-            throw new NullPointerException("The value of 'field_episode_downloaded' in the database was null, which is not allowed according to the model definition");
-        return res;
-    }
-
-    /**
-     * Get the {@code field_episode_heard} value.
-     */
-    public boolean getConfigEpisodesFieldEpisodeHeard() {
-        Boolean res = getBooleanOrNull(ConfigEpisodesColumns.FIELD_EPISODE_HEARD);
-        if (res == null)
-            throw new NullPointerException("The value of 'field_episode_heard' in the database was null, which is not allowed according to the model definition");
-        return res;
-    }
-
-    /**
-     * Get the {@code field_listen_count} value.
-     */
-    public int getConfigEpisodesFieldListenCount() {
-        Integer res = getIntegerOrNull(ConfigEpisodesColumns.FIELD_LISTEN_COUNT);
-        if (res == null)
-            throw new NullPointerException("The value of 'field_listen_count' in the database was null, which is not allowed according to the model definition");
         return res;
     }
 

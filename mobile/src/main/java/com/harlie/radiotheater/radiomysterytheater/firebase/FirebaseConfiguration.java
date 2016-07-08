@@ -52,7 +52,7 @@ public class FirebaseConfiguration {
         LogHelper.v(TAG, "commit for user configuration email="+firebase_email+", key="+key);
         if (firebase_database != null && key != null) {
             LogHelper.v(TAG, "commit: key=" + key);
-            firebase_database.child("configuration").child(key).setValue(this, new DatabaseReference.CompletionListener() {
+            firebase_database.child("configuration").child("device").child(key).setValue(this, new DatabaseReference.CompletionListener() {
                 @Override
                 public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
                     if (databaseError != null) {

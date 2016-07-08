@@ -4,11 +4,7 @@
     {
       "name": "field_user_email",
       "type": "String",
-      "nullable": false,
-      "foreignKey": {
-        "table": "config_episodes",
-        "onDelete": "CASCADE"
-      }
+      "nullable": false
     },
     {
       "name": "field_user_name",

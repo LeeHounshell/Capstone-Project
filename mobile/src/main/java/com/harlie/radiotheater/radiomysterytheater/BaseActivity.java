@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -24,6 +25,9 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.firebase.client.Firebase;
+import com.google.android.gms.ads.identifier.AdvertisingIdClient;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.analytics.FirebaseAnalytics;
@@ -47,6 +51,9 @@ import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpi
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesSelection;
 import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationContentValues;
+import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationCursor;
+import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationSelection;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesSelection;
@@ -66,10 +73,12 @@ import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.NetworkHelper;
 
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
+import java.util.UUID;
 
 import at.grabner.circleprogress.AnimationState;
 import at.grabner.circleprogress.AnimationStateChangedListener;
@@ -107,8 +116,13 @@ public class BaseActivity extends AppCompatActivity {
 
     public static volatile long sKickstartTime;
 
-    private static volatile boolean sOnRestoreInstanceComplete;
+    protected static volatile boolean sOnRestoreInstanceComplete;
+    protected static volatile boolean sFoundFirebaseDeviceId;
+    protected static volatile boolean sUpdatedConfiguration;
+    protected static volatile boolean sOkLoadFirebaseConfiguration;
+    protected static volatile boolean sShowPercentUnit;
 
+    // need to save these across Activities
     protected static volatile boolean sHandleRotationEvent;
     protected static volatile boolean sNeed2RestartPlayback;
     protected static volatile boolean sLoadingScreenEnabled;
@@ -117,6 +131,7 @@ public class BaseActivity extends AppCompatActivity {
     protected static volatile boolean sAutoplayNextNow;
     protected static volatile boolean sOkKickstart;
 
+    // need to save these across Activities
     protected static volatile boolean sPurchased;
     protected static volatile boolean sNoAdsForShow;
     protected static volatile boolean sDownloaded;
@@ -125,13 +140,13 @@ public class BaseActivity extends AppCompatActivity {
     protected static volatile boolean sSeeking;
     protected static volatile boolean sPlaying;
     protected static volatile boolean sLoadedOK;
-    protected static volatile boolean sShowUnit;
-    protected static volatile boolean sCopiedDatabaseSuccess;
+
     public static volatile boolean sProgressViewSpinning;
 
     protected static final int MIN_EMAIL_LENGTH = 3;
     protected static final int MIN_PASSWORD_LENGTH = 6;
 
+    protected ConfigurationContentValues mConfiguration;
     protected FirebaseAuth mAuth;
     protected Firebase mFirebase;
     protected DatabaseReference mDatabase;
@@ -142,10 +157,11 @@ public class BaseActivity extends AppCompatActivity {
 
     private static int mCount;
 
-    private String email;
-    private String uid;
-    private String pass;
-    private Boolean isPaid;
+    private String mAdvId;
+    private String mName;
+    private String mEmail;
+    private String mUID;
+    private String mPassword;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -174,8 +190,6 @@ public class BaseActivity extends AppCompatActivity {
             sSeeking = false;
             sPlaying = false;
             sLoadedOK = false;
-            sShowUnit = false;
-            sCopiedDatabaseSuccess = false;
 
             Bundle playInfo = getIntent().getExtras();
             if (playInfo != null) {
@@ -190,18 +204,56 @@ public class BaseActivity extends AppCompatActivity {
         mFirebase = new Firebase("https://radio-mystery-theater.firebaseio.com");
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+
+        final BaseActivity baseActivity = this;
+
+        // capture the advertising id and save it
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                if (getEmail() != null) {
+                    try {
+                        AdvertisingIdClient.Info adInfo = AdvertisingIdClient.getAdvertisingIdInfo(baseActivity);
+                        mAdvId = adInfo != null ? adInfo.getId() : null;
+                    }
+                    catch (IOException | GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException exception) {
+                        LogHelper.e(TAG, "*** UNABLE TO LOAD ADVERT ID ***"); // and it is needed for my Firebase key...
+                    }
+                    finally {
+                        if (mAdvId == null) {
+                            mAdvId = getAdvertId(); // from shared pref
+                        }
+                        if (mAdvId != null) {
+                            setAdvertId(mAdvId); // also in shared pref
+                        }
+                    }
+                }
+            }
+        });
     }
 
     @Override
     public void onDestroy() {
         LogHelper.v(TAG, "onDestroy");
         super.onDestroy();
+        mConfiguration = null;
         mAuth = null;
         mCircleView = null;
+        mFirebaseAnalytics = null;
         mDatabase = null;
         mHandler = null;
         mRootView = null;
+        mAirdate = null;
+        mEpisodeTitle = null;
+        mEpisodeDescription = null;
+        mEpisodeWeblinkUrl = null;
+        mEpisodeDownloadUrl = null;
         mMediaId = null;
+        mAdvId = null;
+        mName = null;
+        mEmail = null;
+        mUID = null;
+        mPassword = null;
     }
 
     @Override
@@ -372,15 +424,36 @@ public class BaseActivity extends AppCompatActivity {
         finish();
     }
 
-    public String getEmail() {
-        if (email == null) {
+    public String getName() {
+        if (mName == null) {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            email = sharedPreferences.getString("userEmail", "");
-            if (email.length() == 0) {
-                email = null;
+            mName = sharedPreferences.getString("userName", "");
+            if (mName.length() == 0) {
+                mName = null;
             }
         }
-        return email;
+        return mName;
+    }
+
+    public void setName(String name) {
+        if (name != null && name.length() > 0) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("userName", name);
+            editor.apply();
+        }
+        this.mName = name;
+    }
+
+    public String getEmail() {
+        if (mEmail == null) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            mEmail = sharedPreferences.getString("userEmail", "");
+            if (mEmail.length() == 0) {
+                mEmail = null;
+            }
+        }
+        return mEmail;
     }
 
     public void setEmail(String email) {
@@ -390,18 +463,18 @@ public class BaseActivity extends AppCompatActivity {
             editor.putString("userEmail", email);
             editor.apply();
         }
-        this.email = email;
+        this.mEmail = email;
     }
 
     public String getUID() {
-        if (uid == null) {
+        if (mUID == null) {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            uid = sharedPreferences.getString("userUID", "");
-            if (uid.length() == 0) {
-                uid = null;
+            mUID = sharedPreferences.getString("userUID", "");
+            if (mUID.length() == 0) {
+                mUID = null;
             }
         }
-        return uid;
+        return mUID;
     }
 
     public void setUID(String uid) {
@@ -411,15 +484,41 @@ public class BaseActivity extends AppCompatActivity {
             editor.putString("userUID", uid);
             editor.apply();
         }
-        this.uid = uid;
+        this.mUID = uid;
+    }
+
+    public String getAdvertId() {
+        if (mAdvId == null) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            String advertID = sharedPreferences.getString("advertID", mAdvId); // passing null object for default
+            if (advertID != null && advertID.length() != 0) {
+                mAdvId = advertID;
+            }
+        }
+        LogHelper.v(TAG, "get mAdvId="+mAdvId);
+        return mAdvId;
+    }
+
+    public void setAdvertId(String advId) {
+        if (advId != null && advId.length() > 0) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("advertID", advId);
+            editor.apply();
+            if (sOkLoadFirebaseConfiguration) {
+                loadAnyExistingFirebaseConfigurationValues(advId);
+            }
+        }
+        LogHelper.v(TAG, "set mAdvId="+advId);
+        this.mAdvId = advId;
     }
 
     public String getPass() {
-        return pass;
+        return mPassword;
     }
 
-    public void setPass(String pass) {
-        this.pass = pass;
+    public void setPass(String password) {
+        this.mPassword = password;
     }
 
     public void startAutoplayActivity() {
@@ -454,7 +553,7 @@ public class BaseActivity extends AppCompatActivity {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putString("authentication", getEmail());
-            editor.putString("uid", getUID());
+            editor.putString("userUID", getUID());
             editor.apply();
 
             Intent autoplayIntent = new Intent(this, AutoplayActivity.class);
@@ -576,22 +675,24 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     public Boolean isPaidEpisode(String episode) {
-        Boolean isPaid = true;
-        //
-        // FIXME: if (existing == null)
-        //            need to query Firebase record for this user to see if they paid already..
-        //            and need to see if this episode is on the user's list of 10 free episodes.
-        //
-        // NOTE: the code below uses the #IFDEF gradle preprocessor
+        Boolean isPaid = false;
+        //#IFDEF 'PAID'
+        //isPaid = true;
+        //#ENDIF
+
         //#IFDEF 'TRIAL'
-        isPaid = new Boolean(false);
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-        isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
+        if (mConfiguration != null) {
+            isPaid = mConfiguration.values().getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
+        }
         if (!isPaid) {
-            ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
-            if (existing != null) {
-                ContentValues configEpisode = existing.values();
-                isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
+            if (!isPaid) {
+                ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
+                if (existing != null) {
+                    ContentValues configEpisode = existing.values();
+                    isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
+                }
             }
         }
         //#ENDIF
@@ -672,9 +773,8 @@ public class BaseActivity extends AppCompatActivity {
                 boolean dbMissing = doINeedToCreateADatabase();
                 if (! dbMissing) {
                     LogHelper.v(TAG, "*** successfully accessed prebuilt SQLite database ***");
-                    sCopiedDatabaseSuccess = true;
+                    // ok, we're in
                     startAutoplayActivity();
-                    overridePendingTransition(0,0);
                     return;
                 }
                 else {
@@ -883,7 +983,6 @@ public class BaseActivity extends AppCompatActivity {
         }
         else {
             LogHelper.v(TAG, "SQL: episode "+episode+" not found");
-            // FIXME: need to query Firebase record for this user (maybe - not if used by EpisodeRecyclerViewAdapter)
         }
         return record;
     }
@@ -963,6 +1062,23 @@ public class BaseActivity extends AppCompatActivity {
         return (cursor != null && cursor.getCount() > 0) ? new WritersEpisodesCursor(cursor) : null;
     }
 
+    public ConfigurationCursor getCursorForConfigurationDevice(String deviceId) {
+        ConfigurationSelection where = new ConfigurationSelection();
+        // find the specified configuration
+        where.fieldDeviceId(deviceId);
+
+        String order_limit = ConfigurationEntry.FIELD_DEVICE_ID + " ASC LIMIT 1";
+
+        Cursor cursor = getContentResolver().query(
+                ConfigurationColumns.CONTENT_URI,  // the 'content://' Uri to query
+                null,                               // projection String[] - leaving "columns" null just returns all the columns.
+                where.sel(),                        // selection - SQL where
+                where.args(),                       // selection args String[] - values for the "where" clause
+                order_limit);                       // sort order and limit (String)
+
+        return (cursor != null) ? new ConfigurationCursor(cursor) : null;
+    }
+
     public ConfigEpisodesCursor getCursorForNextAvailableEpisode() {
         ConfigEpisodesSelection where = new ConfigEpisodesSelection();
         // find the next unwatched episode, in airdate order
@@ -982,6 +1098,44 @@ public class BaseActivity extends AppCompatActivity {
                 order_limit);                       // sort order and limit (String)
 
         return (cursor != null) ? new ConfigEpisodesCursor(cursor) : null;
+    }
+
+    @NonNull
+    private ConfigurationContentValues getConfigurationContentValues(ConfigurationCursor cursor) {
+        LogHelper.v(TAG, "getConfigurationContentValues: SQL found "+cursor.getCount()+" records");
+        ConfigurationContentValues record = new ConfigurationContentValues();
+
+        if (cursor.moveToNext()) {
+            try {
+                record.putFieldUserEmail(getEmail());
+                record.putFieldUserName(getName() != null ? getName() : "unknown");
+                record.putFieldDeviceId(getAdvertId());
+
+                //#IFDEF 'PAID'
+                //boolean paidVersion = true;
+                //boolean purchased = true;
+                //boolean noAdsForShow = true;
+                //#ENDIF
+
+                //#IFDEF 'TRIAL'
+                boolean paidVersion = cursor.getFieldPaidVersion();
+                boolean purchased = cursor.getFieldPurchaseAccess();
+                boolean noAdsForShow = cursor.getFieldPurchaseNoads();
+                //#ENDIF
+
+                record.putFieldPaidVersion(paidVersion);
+                record.putFieldPurchaseAccess(purchased);
+                record.putFieldPurchaseNoads(noAdsForShow);
+
+                int listenCount = cursor.getFieldTotalListenCount();
+                record.putFieldTotalListenCount(listenCount);
+            } catch (Exception e) {
+                LogHelper.e(TAG, "RECORD NOT FOUND: Exception=" + e);
+                record = null;
+            }
+        }
+        cursor.close();
+        return record;
     }
 
     @NonNull
@@ -1024,6 +1178,22 @@ public class BaseActivity extends AppCompatActivity {
         return record;
     }
 
+    public Uri insertConfiguration(ContentValues configurationValues) {
+        LogHelper.v(TAG, "insertConfigurationValues");
+        Uri configurationEntry = ConfigurationEntry.buildConfigurationUri();
+        return this.getContentResolver().insert(configurationEntry, configurationValues);
+    }
+
+    // update local SQLite
+    public int updateConfigurationValues(String deviceId, ContentValues configurationValues) {
+        LogHelper.v(TAG, "updateConfigurationValues");
+        Uri configurationEntry = ConfigurationEntry.buildConfigurationUri();
+        String whereClause = ConfigurationEntry.FIELD_DEVICE_ID + "=?";
+        String whereCondition[] = new String[]{deviceId};
+        int rc = this.getContentResolver().update(configurationEntry, configurationValues, whereClause, whereCondition);
+        return rc;
+    }
+
     public Uri insertConfigEntryValues(ContentValues configEntryValues) {
         LogHelper.v(TAG, "insertConfigEntryValues");
         Uri configEntry = ConfigEpisodesEntry.buildConfigEpisodesUri();
@@ -1046,21 +1216,39 @@ public class BaseActivity extends AppCompatActivity {
             LogHelper.e(TAG, "ERROR: loadAnyExistingFirebaseConfigurationValues deviceId is null");
             return;
         }
+        if (getEmail() == null) {
+            LogHelper.e(TAG, "ERROR: loadAnyExistingFirebaseConfigurationValues email is null");
+            return;
+        }
         final BaseActivity activity = this;
+
+        // Use a timer to determine if this deviceId is tracked inside Firebase
+        sFoundFirebaseDeviceId = false;
+        getHandler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                LogHelper.v(TAG, "*** CHECK THE USER CONFIGURATION ***");
+                updateTheUserConfiguration();
+            }
+        }, 30000); // allow thirty seconds
+
         // Attach a listener to read the data initially
-        getDatabase().child("configuration").child(deviceId).addListenerForSingleValueEvent(new ValueEventListener() {
+        getDatabase().child("configuration").child("device").child(deviceId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
                 // load the dataSnapshot info
                 Object configurationObject = dataSnapshot.getValue();
                 if (configurationObject == null) {
-                    LogHelper.e(TAG, "the Firebase User Configuration (DataSnapshot) is null! email="+email);
+                    LogHelper.e(TAG, "the Firebase User Configuration (DataSnapshot) is null! deviceId="+getAdvertId()+", email="+getEmail());
+                    updateTheUserConfiguration();
                     return;
                 }
                 String configurationJSON = configurationObject.toString();
-                LogHelper.v(TAG, "configurationJSON="+configurationJSON);
-                // FIXME: lee
+                LogHelper.v(TAG, "===> Firebase configurationJSON="+configurationJSON);
+                sFoundFirebaseDeviceId = true;
+                // FIXME: lee decode the info and save locally as the mConfiguration object
+                //mConfiguration = decoded;
                 LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
             }
 
@@ -1073,8 +1261,80 @@ public class BaseActivity extends AppCompatActivity {
 
     }
 
+    private void updateTheUserConfiguration() {
+        LogHelper.v(TAG, "*** updateTheUserConfiguration ***");
+        if (sUpdatedConfiguration) {
+            LogHelper.w(TAG, "already updated.");
+            return;
+        }
+        sUpdatedConfiguration = true;
+        ConfigurationContentValues configurationContent = null;
+        // 1) load local SQLite entry for deviceId
+        ConfigurationCursor configurationCursor = getCursorForConfigurationDevice(getAdvertId());
+        if (configurationCursor != null && configurationCursor.moveToNext()) {
+            LogHelper.v(TAG, "found existing SQLite user Configuration");
+            configurationContent = getConfigurationContentValues(configurationCursor);
+        }
+        if (! sFoundFirebaseDeviceId) { // deviceId not in Firebase
+            LogHelper.v(TAG, "device entry for Configuration doesn't exist in Firebase yet..");
+            // 2) if local SQLite entry doesn't exist, create it
+            if (configurationContent == null) { // no SQLite Configuration either
+                LogHelper.v(TAG, "local SQLite Configuration doesn't exist yet..");
+                mConfiguration = new ConfigurationContentValues();
+                mConfiguration.putFieldUserEmail(getEmail());
+                mConfiguration.putFieldUserName(getName());
+                mConfiguration.putFieldDeviceId(getAdvertId());
+
+                //#IFDEF 'PAID'
+                //mConfiguration.putFieldAuthenticated(true);
+                //mConfiguration.putFieldPurchaseAccess(true);
+                //mConfiguration.putFieldPurchaseNoads(true);
+                //#ENDIF
+
+                //#IFDEF 'TRIAL'
+                mConfiguration.putFieldAuthenticated(false);
+                mConfiguration.putFieldPurchaseAccess(false);
+                mConfiguration.putFieldPurchaseNoads(false);
+                //#ENDIF
+
+                mConfiguration.putFieldTotalListenCount(0);
+                configurationContent = mConfiguration;
+                insertConfiguration(configurationContent.values());
+                // 3) update Firebase with the new deviceId entry
+                updateFirebaseConfigurationValues(getAdvertId(), mConfiguration.values());
+            }
+        }
+        else if (mConfiguration != null) { // found Firebase Configuration
+            LogHelper.v(TAG, "found device entry for Configuration in Firebase.");
+            ContentValues sqliteConfiguration = null;
+            ContentValues firebaseConfiguration = mConfiguration.values();
+            // 4) update local SQLite if Firebase has most recent data
+            if (configurationContent != null) { // have local SQLite Configuration?
+                LogHelper.v(TAG, "found local SQLite configuration");
+                sqliteConfiguration = configurationContent.values();
+                long sqlite_listen_count = sqliteConfiguration.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
+                long firebase_listen_count = firebaseConfiguration.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
+                if (sqlite_listen_count > firebase_listen_count) {
+                    LogHelper.v(TAG, "Firebase Configuration needs update..");
+                    mConfiguration.putFieldTotalListenCount((int) sqlite_listen_count);
+                    updateFirebaseConfigurationValues(getAdvertId(), mConfiguration.values());
+                }
+                else if (sqlite_listen_count < firebase_listen_count) {
+                    LogHelper.v(TAG, "SQLite Configuration needs update..");
+                    configurationContent.putFieldTotalListenCount((int) firebase_listen_count);
+                    updateConfigurationValues(getAdvertId(), configurationContent.values());
+                }
+            }
+            else {
+                LogHelper.v(TAG, "no local SQLite configuration - copy Firebase");
+                sqliteConfiguration = mConfiguration.values();
+                updateConfigurationValues(getAdvertId(), sqliteConfiguration);
+            }
+        }
+    }
+
     // update Firebase User Account info
-    public void updateFirebaseConfigurationValues(ContentValues configurationValues, String deviceId) {
+    public void updateFirebaseConfigurationValues(String deviceId, ContentValues configurationValues) {
         String  email = getEmail();
         Boolean authenticated = configurationValues.getAsBoolean(ConfigurationColumns.FIELD_AUTHENTICATED);
         Boolean paid_version = configurationValues.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
@@ -1137,14 +1397,15 @@ public class BaseActivity extends AppCompatActivity {
             return;
         }
         mCircleView = circleView; // needed to get around a problem with Fragments and findViewById
-        sShowUnit = false;
         if (what == CircleViewHelper.CircleViewType.CREATE_DATABASE) {
+            sShowPercentUnit = true;
             LogHelper.v(TAG, "initCircleView: CREATE_DATABASE");
             getCircleView().setUnit("%");
             getCircleView().setUnitVisible(true);
             getCircleView().setTextMode(TextMode.PERCENT); // Shows current percent of the current value from the max value
         }
         else if (what == CircleViewHelper.CircleViewType.PLAY_EPISODE) {
+            sShowPercentUnit = false;
             LogHelper.v(TAG, "initCircleView: PLAY_EPISODE");
             getCircleView().setUnit("");
             getCircleView().setUnitVisible(false);
@@ -1162,7 +1423,6 @@ public class BaseActivity extends AppCompatActivity {
             @Override
             public void run() {
 
-                sShowUnit = false;
                 getCircleView().setVisibility(View.VISIBLE);
                 LogHelper.w(TAG, "showCircleView: CircleView VISIBLE");
                 getCircleView().setAutoTextSize(true); // enable auto text size, previous values are overwritten
@@ -1185,7 +1445,7 @@ public class BaseActivity extends AppCompatActivity {
                                         case ANIMATING:
                                         case START_ANIMATING_AFTER_SPINNING:
                                             getCircleView().setTextMode(TextMode.PERCENT); // show percent if not spinning
-                                            getCircleView().setUnitVisible(sShowUnit);
+                                            getCircleView().setUnitVisible(sShowPercentUnit);
                                             break;
                                         case SPINNING:
                                             getCircleView().setTextMode(TextMode.TEXT); // show text while spinning
@@ -1669,7 +1929,10 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     protected void logToFirebase(String action, Bundle bundle) {
-        // FIXME: ensure the Firebase user is logged-in
+        if (getEmail() == null) { // ensure the Firebase user is logged-in
+            LogHelper.w(TAG, "unable to logToFirebase - Firebase user is not logged in!");
+            return;
+        }
         String detail = "";
         if (bundle != null) {
             detail = "{";

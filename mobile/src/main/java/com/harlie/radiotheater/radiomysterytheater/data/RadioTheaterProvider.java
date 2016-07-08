@@ -36,13 +36,10 @@ import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersE
 public class RadioTheaterProvider extends BaseContentProvider {
     private static final String TAG = RadioTheaterProvider.class.getSimpleName();
 
-    //private static final boolean DEBUG = BuildConfig.DEBUG;
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = BuildConfig.DEBUG;
 
     private static final String TYPE_CURSOR_ITEM = "vnd.android.cursor.item/";
     private static final String TYPE_CURSOR_DIR = "vnd.android.cursor.dir/";
-
-    // NOTE: these values must match the values/values.xml:radio_theater_content_authority
 
 //#IFDEF 'PAID'
     //public static final String AUTHORITY = "com.harlie.radiotheater.radiomysterytheater.paid.data.radiotheaterprovider";
@@ -236,9 +233,6 @@ public class RadioTheaterProvider extends BaseContentProvider {
                 res.table = ConfigurationColumns.TABLE_NAME;
                 res.idColumn = ConfigurationColumns._ID;
                 res.tablesWithJoins = ConfigurationColumns.TABLE_NAME;
-                if (ConfigEpisodesColumns.hasColumns(projection)) {
-                    res.tablesWithJoins += " LEFT OUTER JOIN " + ConfigEpisodesColumns.TABLE_NAME + " AS " + ConfigurationColumns.PREFIX_CONFIG_EPISODES + " ON " + ConfigurationColumns.TABLE_NAME + "." + ConfigurationColumns.FIELD_USER_EMAIL + "=" + ConfigurationColumns.PREFIX_CONFIG_EPISODES + "." + ConfigEpisodesColumns._ID;
-                }
                 res.orderBy = ConfigurationColumns.DEFAULT_ORDER;
                 break;
 

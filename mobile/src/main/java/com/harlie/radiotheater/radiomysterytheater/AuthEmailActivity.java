@@ -67,9 +67,11 @@ public class AuthEmailActivity extends BaseActivity
             }
         }
 
+        setName(null);
         setEmail(null);
         setUID(null);
         setPass(null);
+
         boolean found_login_info = true;
         if (intent.hasExtra("email")) {
             setEmail(intent.getStringExtra("email"));
@@ -82,6 +84,9 @@ public class AuthEmailActivity extends BaseActivity
         }
         else {
             found_login_info = false;
+        }
+        if (intent.hasExtra("name")) {
+            setName(intent.getStringExtra("name"));
         }
         if (! found_login_info || getEmail() == null || getEmail().length() == 0 || getPass() == null || getPass().length() == 0) {
             LogHelper.e(TAG, "Failure to extract email and pass from Intent bundle!");

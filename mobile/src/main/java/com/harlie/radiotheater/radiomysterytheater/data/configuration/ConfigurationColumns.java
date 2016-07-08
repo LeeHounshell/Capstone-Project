@@ -85,5 +85,4 @@ public class ConfigurationColumns implements BaseColumns {
         return false;
     }
 
-    public static final String PREFIX_CONFIG_EPISODES = TABLE_NAME + "__" + ConfigEpisodesColumns.TABLE_NAME;
 }
