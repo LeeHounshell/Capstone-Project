@@ -42,6 +42,9 @@
     <string name="trial_vs_paid">Is this app a paid version?</string>
     <string name="trial_version">Trial version:</string>
     <string name="paid_version">Paid version:</string>
+    <string name="app_not_found">Not on PlayStore</string>
+    <string name="not_on_playstore">The paid version of this app is not available on the Google PlayStore. Try again later.</string>
+    <string name="playstore_upgrade">Opening Google PlayStore for upgrade.</string>
     <string name="one_moment">One moment, please&#8230;</string>
 
     <string name="filter_title_viewradiotheater">Radio Mystery Theater</string>

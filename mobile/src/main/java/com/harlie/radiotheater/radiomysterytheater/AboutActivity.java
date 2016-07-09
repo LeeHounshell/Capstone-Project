@@ -70,9 +70,11 @@ public class AboutActivity extends BaseActivity {
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
+
         //#IFDEF 'PAID'
         //textView.setText(getResources().getString(R.string.paid_version)+" "+version);
         //#ENDIF
+
         //#IFDEF 'TRIAL'
         textView.setText(getResources().getString(R.string.trial_version)+" "+version);
         //#ENDIF
@@ -156,7 +158,6 @@ public class AboutActivity extends BaseActivity {
         intent.putExtra(Intent.EXTRA_EMAIL, new String[] {contact});
         intent.putExtra(Intent.EXTRA_SUBJECT, "Re: the 'Radio Mystery Theater' Android app");
         intent.putExtra(Intent.EXTRA_TEXT, "");
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(Intent.createChooser(intent, ""));
         overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
     }
@@ -168,7 +169,6 @@ public class AboutActivity extends BaseActivity {
         intent.setAction(Intent.ACTION_VIEW);
         intent.addCategory(Intent.CATEGORY_BROWSABLE);
         intent.setData(Uri.parse("http://www.linkedin.com/pub/lee-hounshell/2/674/852"));
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
         overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
     }

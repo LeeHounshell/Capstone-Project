@@ -77,6 +77,7 @@ import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterT
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadingAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.firebase.FirebaseConfigEpisode;
 import com.harlie.radiotheater.radiomysterytheater.firebase.FirebaseConfiguration;
+import com.harlie.radiotheater.radiomysterytheater.utils.CheckPlayStore;
 import com.harlie.radiotheater.radiomysterytheater.utils.CircleViewHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.NetworkHelper;
@@ -1015,6 +1016,7 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     protected void maxTrialEpisodesAreReached() {
+        final BaseActivity baseActivity = this;
         if (sPurchased != true) {
             LogHelper.v(TAG, "maxTrialEpisodesAreReached");
             AlertDialog alertDialog = new AlertDialog.Builder(this).create();
@@ -1024,6 +1026,7 @@ public class BaseActivity extends AppCompatActivity {
                     new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
                             dialog.dismiss();
+                            CheckPlayStore.upgradeToPaid(baseActivity);
                         }
                     });
             alertDialog.show();
@@ -1412,7 +1415,7 @@ public class BaseActivity extends AppCompatActivity {
                 LogHelper.v(TAG, "*** CHECK THE USER CONFIGURATION ***");
                 updateTheUserConfiguration();
             }
-        }, 30000); // allow thirty seconds
+        }, 19000); // allow nineteen seconds
 
         // Attach a listener to read the data initially
         getDatabase().child("configuration").child("device").child(deviceId).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -1504,7 +1507,7 @@ public class BaseActivity extends AppCompatActivity {
                 Boolean firebasePaidVersion = false;
                 Boolean firebasePurchaseAccess = false;
                 Boolean firebasePurchaseNoAds = false;
-                Long sqlite_listen_count = Long.valueOf(0);
+                Long total_listen_count = Long.valueOf(0);
                 try {
                     //#IFDEF 'PAID'
                     //paidVersion = true;
@@ -1518,9 +1521,15 @@ public class BaseActivity extends AppCompatActivity {
                     purchaseNoads = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
                     //#ENDIF
 
-                    sqlite_listen_count = sqliteConfiguration.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
-                    if (sqlite_listen_count == null) {
-                        sqlite_listen_count = Long.valueOf(0);
+                    total_listen_count = sqliteConfiguration.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
+                    if (total_listen_count == null) {
+                        total_listen_count = Long.valueOf(0);
+                    }
+                    if (total_listen_count < mAllListenCount) {
+                        total_listen_count = mAllListenCount;
+                    }
+                    else {
+                        mAllListenCount = total_listen_count;
                     }
                 }
                 catch (Exception e) {
@@ -1535,21 +1544,27 @@ public class BaseActivity extends AppCompatActivity {
                     if (firebase_listen_count == null) {
                         firebase_listen_count = Long.valueOf(0);
                     }
+                    if (firebase_listen_count < mAllListenCount) {
+                        firebase_listen_count = mAllListenCount;
+                    }
+                    else {
+                        mAllListenCount = firebase_listen_count;
+                    }
                 }
                 catch (Exception e) {
                     LogHelper.w(TAG, "Firebase: unable to get ConfigurationColumns FIELD, e="+e.getMessage());
                 }
                 boolean dirty = false;
-                if (sqlite_listen_count >= firebase_listen_count) {
+                if (total_listen_count >= firebase_listen_count) {
                     LogHelper.v(TAG, "Firebase Configuration needs update.. local listen_count is greater or equal");
-                    int count = (int) sqlite_listen_count.longValue();
-                    mConfiguration.putFieldTotalListenCount(count);
+                    mAllListenCount = total_listen_count.longValue();
+                    mConfiguration.putFieldTotalListenCount(mAllListenCount.intValue());
                     dirty = true;
                 }
-                else if (sqlite_listen_count < firebase_listen_count) {
+                else if (total_listen_count < firebase_listen_count) {
                     LogHelper.v(TAG, "SQLite Configuration needs update.. local listen_count is smaller");
-                    int count = (int) firebase_listen_count.longValue();
-                    mConfiguration.putFieldTotalListenCount(count);
+                    mAllListenCount = firebase_listen_count.longValue();
+                    mConfiguration.putFieldTotalListenCount(mAllListenCount.intValue());
                     dirty = true;
                 }
                 if ((paidVersion != null && paidVersion)
@@ -1597,6 +1612,13 @@ public class BaseActivity extends AppCompatActivity {
         String  email = getEmail();
         Boolean authenticated = email != null;
         Long    total_listen_count = configurationValues.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
+
+        if (total_listen_count < mAllListenCount) {
+            total_listen_count = mAllListenCount;
+        }
+        else {
+            mAllListenCount = total_listen_count;
+        }
 
         //#IFDEF 'PAID'
         //Boolean paid_version = true;
@@ -1782,6 +1804,10 @@ public class BaseActivity extends AppCompatActivity {
 
     public FirebaseAuth getAuth() {
         return mAuth;
+    }
+
+    public boolean isPurchased() {
+        return sPurchased;
     }
 
     public Firebase getFirebase() {
@@ -2081,27 +2107,31 @@ public class BaseActivity extends AppCompatActivity {
             existingConfiguration = getConfigurationContentValues(configurationCursor);
             configurationCursor.close();
         }
-        long allListenCount = 0;
+        long total_listen_count = 0;
         if (existingConfiguration != null && existingConfiguration.values() != null && existingConfiguration.values().size() != 0) {
             ContentValues configurationValues = existingConfiguration.values();
 
-            allListenCount = configurationValues.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
-            ++allListenCount;
-            if (mAllListenCount < allListenCount) {
-                mAllListenCount = allListenCount;
+            total_listen_count = configurationValues.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
+            ++total_listen_count;
+
+            if (total_listen_count < mAllListenCount) {
+                total_listen_count = mAllListenCount;
+            }
+            else {
+                mAllListenCount = total_listen_count;
             }
 
             configurationValues.put(ConfigurationEntry.FIELD_TOTAL_LISTEN_COUNT, mAllListenCount);
             updateConfigurationValues(getAdvertId(), configurationValues);
             updateFirebaseConfigurationValues(getAdvertId(), configurationValues);
-            LogHelper.d(TAG, "---> markEpisodeAsHeardAndIncrementPlayCount: new ALL-LISTEN-COUNT="+allListenCount+" <---");
+            LogHelper.d(TAG, "---> markEpisodeAsHeardAndIncrementPlayCount: new ALL-LISTEN-COUNT="+ total_listen_count +" <---");
         }
         else {
             LogHelper.e(TAG, "*** SQLITE FAILURE - unable to getConfiguration email="+getEmail()+", deviceId="+getAdvertId());
         }
 
         // send Analytics record to Firebase for Episode+Heard+Count
-        trackWithFirebaseAnalytics(episodeIndex, duration, "mark HEARD + playcount="+listenCount+" + allcount="+allListenCount);
+        trackWithFirebaseAnalytics(episodeIndex, duration, "mark HEARD + playcount="+listenCount+" + allcount="+ total_listen_count);
     }
 
     public void markEpisodeAs_NOT_Heard(long episodeNumber, String episodeIndex, long duration) {

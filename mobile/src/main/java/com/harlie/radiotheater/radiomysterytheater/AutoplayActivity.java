@@ -163,28 +163,7 @@ public class AutoplayActivity extends BaseActivity {
 
             @Override
             public void onClick() {
-                LogHelper.v(TAG, "onClick");
-                //#IFDEF 'PAID'
-                //handleAutoplayClick();
-                //#ENDIF
-
-                //#IFDEF 'TRIAL'
-                if ((sPurchased != true) && (mAllListenCount != null) && (mAllListenCount >= MAX_TRIAL_EPISODES)) {
-                    getHandler().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
-                            LogHelper.v(TAG, "*** onClick - MAX_TRIAL_EPISODES - controls.stop()");
-                            controls.stop();
-                            setAutoplayState(AutoplayState.READY2PLAY, "onClick");
-                            maxTrialEpisodesAreReached();
-                        }
-                    });
-                }
-                else {
-                    handleAutoplayClick();
-                }
-                //#ENDIF
+                verifyPaidClick(true);
             }
 
             @Override
@@ -312,7 +291,6 @@ public class AutoplayActivity extends BaseActivity {
                     getEpisodeData(configCursor);
                     if (!getCircularSeekBar().isProcessingTouchEvents() && !sSeeking) {
                         LogHelper.v(TAG, "onClick - mFabActionButton");
-                        trackWithFirebaseAnalytics(String.valueOf(mEpisodeNumber), mCurrentPosition, "BROWSE PLAYLIST");
                         Intent episodeListIntent = new Intent(activity, EpisodeListActivity.class);
                         Bundle playInfo = new Bundle();
                         savePlayInfoToBundle(playInfo);
@@ -378,6 +356,31 @@ public class AutoplayActivity extends BaseActivity {
         sLoadingScreenEnabled = true;
     }
 
+    public void verifyPaidClick(boolean handleClick) {
+        LogHelper.v(TAG, "onClick");
+        //#IFDEF 'PAID'
+        //if (handleClick) handleAutoplayClick();
+        //#ENDIF
+
+        //#IFDEF 'TRIAL'
+        if ((sPurchased != true) && (mAllListenCount != null) && (mAllListenCount >= MAX_TRIAL_EPISODES)) {
+            getHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
+                    LogHelper.v(TAG, "*** onClick - MAX_TRIAL_EPISODES - controls.stop()");
+                    controls.stop();
+                    setAutoplayState(AutoplayState.READY2PLAY, "onClick");
+                    maxTrialEpisodesAreReached();
+                }
+            });
+        }
+        else {
+            if (handleClick) handleAutoplayClick();
+        }
+        //#ENDIF
+    }
+
     private void setupAdMob() {
         // initialize AdMob - note this code uses the Gradle #IFDEF / #ENDIF gradle preprocessor
         //#IFDEF 'TRIAL'
@@ -415,6 +418,7 @@ public class AutoplayActivity extends BaseActivity {
         @Override
         public void run() {
             if (getRadioMediaController() != null) {
+                verifyPaidClick(false);
                 if (getCircularSeekBar() != null && !getCircularSeekBar().isProcessingTouchEvents() && !sSeeking) {
                     PlaybackStateCompat lastPlaybackState = getRadioMediaController().getPlaybackState();
                     mCurrentPosition = lastPlaybackState.getPosition();
@@ -1186,29 +1190,7 @@ public class AutoplayActivity extends BaseActivity {
                     sAutoplayNextNow = true;
                     markEpisodeAsHeardAndIncrementPlayCount(getEpisodeNumber(), episodeIndex, mDuration);
                     initializeForEpisode("playback completed for episode "+episodeIndex);
-
-                    //#IFDEF 'PAID'
-                    //handleAutoplayClick();
-                    //#ENDIF
-
-                    //#IFDEF 'TRIAL'
-                    if ((sPurchased != true) && (mAllListenCount != null) && (mAllListenCount >= MAX_TRIAL_EPISODES)) {
-                        getHandler().post(new Runnable() {
-                            @Override
-                            public void run() {
-                                MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
-                                LogHelper.v(TAG, "*** onClick - MAX_TRIAL_EPISODES - controls.stop()");
-                                controls.stop();
-                                setAutoplayState(AutoplayState.READY2PLAY, "onClick");
-                                maxTrialEpisodesAreReached();
-                            }
-                        });
-                    }
-                    else {
-                        handleAutoplayClick();
-                    }
-                    //#ENDIF
-
+                    verifyPaidClick(true);
                 }
                 else if (message.length() > KEY_POKE_ME.length() && message.substring(0, KEY_POKE_ME.length()).equals(KEY_POKE_ME)) {
                     String episodeIndex = message.substring(KEY_POKE_ME.length(), message.length());
