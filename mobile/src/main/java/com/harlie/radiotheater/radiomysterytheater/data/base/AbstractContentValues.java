@@ -11,9 +11,9 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.base;
 
-import android.content.Context;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.net.Uri;
 
 public abstract class AbstractContentValues {

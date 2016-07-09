@@ -21,6 +21,7 @@
     <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/episode_list"
+        android:focusable="true"
         android:name="com.harlie.radiotheater.radiomysterytheater.EpisodeListFragment"
         android:layout_width="@dimen/item_width"
         android:layout_height="match_parent"
@@ -41,7 +42,9 @@
         android:scrollbarStyle="outsideOverlay"
         android:scrollbars="vertical"
         tools:context="com.harlie.radiotheater.radiomysterytheater.EpisodeListActivity"
-        tools:listitem="@layout/episode_list_content" />
+        tools:listitem="@layout/episode_list_content">
+        <requestFocus />
+    </android.support.v7.widget.RecyclerView>
 
     <FrameLayout
         android:id="@+id/episode_detail_container"

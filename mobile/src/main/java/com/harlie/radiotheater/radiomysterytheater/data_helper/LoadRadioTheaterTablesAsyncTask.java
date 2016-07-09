@@ -8,7 +8,6 @@ import android.view.View;
 
 import com.google.firebase.database.DataSnapshot;
 import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
-import com.harlie.radiotheater.radiomysterytheater.utils.CircleViewHelper;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
 import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsCursor;
@@ -16,6 +15,7 @@ import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsSelection;
 import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersSelection;
+import com.harlie.radiotheater.radiomysterytheater.utils.CircleViewHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import java.util.Iterator;

@@ -5,10 +5,7 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.widget.RemoteViews;
 
-import com.harlie.radiotheater.radiomysterytheater.R;
-import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterWidgetService;
 
 // from: http://www.vogella.com/tutorials/AndroidWidgets/article.html

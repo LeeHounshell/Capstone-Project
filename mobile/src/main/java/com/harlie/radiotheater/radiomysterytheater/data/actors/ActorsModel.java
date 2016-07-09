@@ -11,12 +11,10 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.actors;
 
-import com.harlie.radiotheater.radiomysterytheater.data.base.BaseModel;
-
-import java.util.Date;
-
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import com.harlie.radiotheater.radiomysterytheater.data.base.BaseModel;
 
 /**
  * Radio Mystery Theater actors list.

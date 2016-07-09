@@ -18,9 +18,7 @@ import android.database.DefaultDatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
-import android.util.Log;
 
-import com.harlie.radiotheater.radiomysterytheater.BuildConfig;
 import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.actorsepisodes.ActorsEpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesColumns;

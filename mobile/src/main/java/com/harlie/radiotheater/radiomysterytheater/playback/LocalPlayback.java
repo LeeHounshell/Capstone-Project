@@ -36,7 +36,6 @@ import android.text.TextUtils;
 import com.harlie.radiotheater.radiomysterytheater.R;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterService;
-import com.harlie.radiotheater.radiomysterytheater.RadioTheaterWidgetService;
 import com.harlie.radiotheater.radiomysterytheater.model.MusicProvider;
 import com.harlie.radiotheater.radiomysterytheater.model.MusicProviderSource;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;

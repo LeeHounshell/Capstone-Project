@@ -29,7 +29,6 @@ import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 
 import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
-import com.harlie.radiotheater.radiomysterytheater.utils.AlbumArtCache;
 import com.harlie.radiotheater.radiomysterytheater.R;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesColumns;
@@ -40,6 +39,7 @@ import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesSelection;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 import com.harlie.radiotheater.radiomysterytheater.model.MusicProvider;
+import com.harlie.radiotheater.radiomysterytheater.utils.AlbumArtCache;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.NetworkHelper;
@@ -52,7 +52,12 @@ import java.util.Iterator;
 import java.util.List;
 
 import static com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper.MEDIA_ID_MUSICS_BY_GENRE;
-import static com.harlie.radiotheater.radiomysterytheater.utils.QueueHelper.*;
+import static com.harlie.radiotheater.radiomysterytheater.utils.QueueHelper.convertToQueue;
+import static com.harlie.radiotheater.radiomysterytheater.utils.QueueHelper.getMusicIndexOnQueue;
+import static com.harlie.radiotheater.radiomysterytheater.utils.QueueHelper.getPlayingQueue;
+import static com.harlie.radiotheater.radiomysterytheater.utils.QueueHelper.getPlayingQueueFromSearch;
+import static com.harlie.radiotheater.radiomysterytheater.utils.QueueHelper.getRandomQueue;
+import static com.harlie.radiotheater.radiomysterytheater.utils.QueueHelper.isIndexPlayable;
 
 /**
  * Simple data provider for queues. Keeps track of a current queue and a current index in the

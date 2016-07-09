@@ -25,6 +25,7 @@
 
         <android.support.v7.widget.AppCompatButton
             android:id="@+id/autoplay"
+            android:focusable="true"
             android:layout_width="@dimen/autoplay_width"
             android:layout_height="@dimen/autoplay_height"
             android:layout_gravity="center"
@@ -37,6 +38,7 @@
 
         <at.grabner.circleprogress.CircleProgressView
             android:id="@+id/autoplay_circle_view"
+            android:focusable="true"
             style="@style/circleview_style"
             CircleProgressView:barWidth="5dp"
             CircleProgressView:contourSize="0dp"
@@ -57,13 +59,14 @@
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
+        style="@style/FloatingActionButton"
+        android:focusable="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_library_music_black_24dp"
         app:backgroundTint="@color/primary_light"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        android:elevation="@dimen/fab_elevation"
         android:visibility="invisible" />
 
 </android.support.design.widget.CoordinatorLayout>

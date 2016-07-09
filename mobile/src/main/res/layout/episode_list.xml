@@ -4,6 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/episode_list"
+    android:focusable="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginStart="8dp"
@@ -22,4 +23,6 @@
     android:scrollbars="vertical"
     tools:context="com.harlie.radiotheater.radiomysterytheater.EpisodeListActivity"
     android:name="com.harlie.radiotheater.radiomysterytheater.EpisodeListFragment"
-    tools:listitem="@layout/episode_list_content" />
+    tools:listitem="@layout/episode_list_content">
+    <requestFocus />
+</android.support.v7.widget.RecyclerView>

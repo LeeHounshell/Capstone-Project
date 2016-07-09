@@ -38,7 +38,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-
 import com.harlie.radiotheater.radiomysterytheater.data.RadioTheaterHelper;
 import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsCursor;
@@ -63,7 +62,6 @@ import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersSelection
 import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesSelection;
-
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadingAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.firebase.FirebaseConfigEpisode;
@@ -84,7 +82,13 @@ import at.grabner.circleprogress.AnimationStateChangedListener;
 import at.grabner.circleprogress.CircleProgressView;
 import at.grabner.circleprogress.TextMode;
 
-import static com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract.*;
+import static com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract.ActorsEntry;
+import static com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract.ActorsEpisodesEntry;
+import static com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract.ConfigEpisodesEntry;
+import static com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract.ConfigurationEntry;
+import static com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract.EpisodesEntry;
+import static com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract.WritersEntry;
+import static com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract.WritersEpisodesEntry;
 
 @SuppressLint("Registered")
 public class BaseActivity extends AppCompatActivity {
@@ -417,6 +421,7 @@ public class BaseActivity extends AppCompatActivity {
         Bundle playInfo = new Bundle();
         savePlayInfoToBundle(playInfo);
         authenticationIntent.putExtras(playInfo);
+        authenticationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
         startActivity(authenticationIntent, bundle);
         overridePendingTransition(0,0);
@@ -561,6 +566,7 @@ public class BaseActivity extends AppCompatActivity {
             Bundle playInfo = new Bundle();
             savePlayInfoToBundle(playInfo);
             autoplayIntent.putExtras(playInfo);
+            autoplayIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
             startActivity(autoplayIntent, bundle);
             finish();
@@ -864,17 +870,19 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     protected void maxTrialEpisodesAreReached() {
-        LogHelper.v(TAG, "maxTrialEpisodesAreReached");
-        AlertDialog alertDialog = new AlertDialog.Builder(this).create();
-        alertDialog.setTitle(getResources().getString(R.string.trial_complete));
-        alertDialog.setMessage(getResources().getString(R.string.all_trial_heard));
-        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-        alertDialog.show();
+        if (sPurchased != true) {
+            LogHelper.v(TAG, "maxTrialEpisodesAreReached");
+            AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+            alertDialog.setTitle(getResources().getString(R.string.trial_complete));
+            alertDialog.setMessage(getResources().getString(R.string.all_trial_heard));
+            alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+            alertDialog.show();
+        }
     }
 
     public void runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState state) {
@@ -1302,11 +1310,12 @@ public class BaseActivity extends AppCompatActivity {
             sqliteConfiguration = configurationContent.values();
             configurationCursor.close();
         }
+
         if (! sFoundFirebaseDeviceId) { // deviceId not in Firebase
             LogHelper.v(TAG, "device entry for Configuration doesn't exist in Firebase yet..");
             // 2) if local SQLite entry doesn't exist, create it
             if (sqliteConfiguration == null) { // no SQLite Configuration either
-                LogHelper.v(TAG, "local SQLite Configuration doesn't exist yet..");
+                LogHelper.v(TAG, "*** INITIALIZING USER *** - create local SQLite Configuration");
                 mConfiguration = new ConfigurationContentValues();
                 mConfiguration.putFieldUserEmail(getEmail());
                 mConfiguration.putFieldUserName(getName());
@@ -1331,10 +1340,12 @@ public class BaseActivity extends AppCompatActivity {
                 return;
             }
         }
+
         if (mConfiguration == null && sqliteConfiguration != null && configurationContent != null) {
             LogHelper.v(TAG, "have SQLite configuration, but not Firebase - so update Firebase with local");
             mConfiguration = configurationContent;
         }
+
         if (mConfiguration != null) { // found Firebase Configuration
             LogHelper.v(TAG, "updating Firebase entry for Configuration.");
             ContentValues firebaseConfiguration = mConfiguration.values();
@@ -1396,15 +1407,25 @@ public class BaseActivity extends AppCompatActivity {
                     mConfiguration.putFieldTotalListenCount(count);
                     dirty = true;
                 }
-                if ((paidVersion != null && paidVersion) || (firebasePaidVersion != null && firebasePaidVersion)) {
+                if ((paidVersion != null && paidVersion)
+                        || (firebasePaidVersion != null && firebasePaidVersion))
+                {
                     mConfiguration.putFieldPaidVersion(true);
                     dirty = true;
                 }
-                if ((purchaseAccess != null && purchaseAccess) || (firebasePurchaseAccess != null && firebasePurchaseAccess)) {
+                if ((purchaseAccess != null && purchaseAccess)
+                        || (firebasePurchaseAccess != null && firebasePurchaseAccess)
+                        || (paidVersion != null && paidVersion)
+                        || (firebasePaidVersion != null && firebasePaidVersion))
+                {
                     mConfiguration.putFieldPurchaseAccess(true);
                     dirty = true;
                 }
-                if ((purchaseNoads != null && purchaseNoads) || (firebasePurchaseNoAds != null && firebasePurchaseNoAds)) {
+                if ((purchaseNoads != null && purchaseNoads)
+                        || (firebasePurchaseNoAds != null && firebasePurchaseNoAds)
+                        || (paidVersion != null && paidVersion)
+                        || (firebasePaidVersion != null && firebasePaidVersion))
+                {
                     mConfiguration.putFieldPurchaseNoads(true);
                     dirty = true;
                 }
@@ -1921,9 +1942,11 @@ public class BaseActivity extends AppCompatActivity {
 
             allListenCount = configurationValues.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
             ++allListenCount;
-            mAllListenCount = allListenCount;
+            if (mAllListenCount < allListenCount) {
+                mAllListenCount = allListenCount;
+            }
 
-            configurationValues.put(ConfigurationEntry.FIELD_TOTAL_LISTEN_COUNT, allListenCount);
+            configurationValues.put(ConfigurationEntry.FIELD_TOTAL_LISTEN_COUNT, mAllListenCount);
             updateConfigurationValues(getAdvertId(), configurationValues);
             updateFirebaseConfigurationValues(getAdvertId(), configurationValues);
             LogHelper.d(TAG, "---> markEpisodeAsHeardAndIncrementPlayCount: new ALL-LISTEN-COUNT="+allListenCount+" <---");

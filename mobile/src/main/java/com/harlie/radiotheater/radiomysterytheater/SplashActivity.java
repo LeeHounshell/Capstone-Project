@@ -22,12 +22,14 @@ public class SplashActivity extends AppCompatActivity
         if (authenticated.length() > 0 && authenticated.equals(email)) {
             LogHelper.v(TAG, "Authenticated.");
             Intent intent = new Intent(this, AutoplayActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         }
         else {
             LogHelper.v(TAG, "Need to Authenticate.");
             Intent intent = new Intent(this, AuthenticationActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         }
         finish();

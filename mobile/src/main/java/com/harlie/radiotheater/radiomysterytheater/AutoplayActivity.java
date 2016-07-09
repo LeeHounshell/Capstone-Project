@@ -19,6 +19,7 @@ import android.preference.PreferenceActivity;
 import android.support.annotation.NonNull;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
@@ -34,6 +35,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.FrameLayout;
 
 //#IFDEF 'TRIAL'
@@ -44,7 +46,6 @@ import com.google.android.gms.ads.MobileAds;
 
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
-import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadingAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 import com.harlie.radiotheater.radiomysterytheater.utils.CircularSeekBar;
@@ -61,10 +62,11 @@ import java.util.concurrent.TimeUnit;
 
 import at.grabner.circleprogress.CircleProgressView;
 
+
 public class AutoplayActivity extends BaseActivity {
     private final static String TAG = "LEE: <" + AutoplayActivity.class.getSimpleName() + ">";
 
-    private static final int MAX_TRIAL_EPISODES = 13;
+    private static final int MAX_TRIAL_EPISODES = 19;
 
     public enum ControlsState {
         ENABLED, ENABLED_SHOW_PAUSE, DISABLED, DISABLED_SHOW_PAUSE, SEEKING_POSITION
@@ -101,8 +103,9 @@ public class AutoplayActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         LogHelper.v(TAG, "onCreate");
-        sOkLoadFirebaseConfiguration = true;
+        getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
 
+        sOkLoadFirebaseConfiguration = true;
         initializeForEpisode("onCreate: initializing..");
 
         super.onCreate(savedInstanceState);
@@ -120,6 +123,7 @@ public class AutoplayActivity extends BaseActivity {
             LogHelper.d(TAG, "Running on a TV Device");
             Intent tvIntent = new Intent(this, TvPlaybackActivity.class);
             tvIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION");
+            tvIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(tvIntent);
             finish();
             return;
@@ -127,6 +131,7 @@ public class AutoplayActivity extends BaseActivity {
         */
 
         setContentView(R.layout.activity_autoplay);
+
         configureToolbarTitleBehavior();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         if (toolbar != null) {
@@ -145,6 +150,7 @@ public class AutoplayActivity extends BaseActivity {
                 new ComponentName(this, RadioTheaterService.class), mConnectionCallback, null);
 
         mAutoPlay = (AppCompatButton) findViewById(R.id.autoplay);
+        mAutoPlay.setFocusable(true);
         getAutoPlay().setVisibility(View.INVISIBLE);
         getAutoPlay().setEnabled(false);
         //final Drawable pressedButton = ResourcesCompat.getDrawable(getResources(), R.drawable.big_button_pressed, null);
@@ -157,10 +163,19 @@ public class AutoplayActivity extends BaseActivity {
             @Override
             public void onClick() {
                 LogHelper.v(TAG, "onClick");
-                if ((mAllListenCount != null) && (mAllListenCount >= MAX_TRIAL_EPISODES)) {
+                //#IFDEF 'PAID'
+                //handleAutoplayClick();
+                //#ENDIF
+
+                //#IFDEF 'TRIAL'
+                if ((sPurchased != true) && (mAllListenCount != null) && (mAllListenCount >= MAX_TRIAL_EPISODES)) {
                     getHandler().post(new Runnable() {
                         @Override
                         public void run() {
+                            MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
+                            LogHelper.v(TAG, "*** onClick - MAX_TRIAL_EPISODES - controls.stop()");
+                            controls.stop();
+                            setAutoplayState(AutoplayState.READY2PLAY, "onClick");
                             maxTrialEpisodesAreReached();
                         }
                     });
@@ -168,6 +183,7 @@ public class AutoplayActivity extends BaseActivity {
                 else {
                     handleAutoplayClick();
                 }
+                //#ENDIF
             }
 
             @Override
@@ -284,6 +300,7 @@ public class AutoplayActivity extends BaseActivity {
         });
 
         mFabActionButton = (FloatingActionButton) findViewById(R.id.fab);
+        mFabActionButton.setFocusable(true);
         if (getFabActionButton() != null) {
             final AutoplayActivity activity = this;
             getFabActionButton().setOnTouchListener(new OnSwipeTouchListener(this, getHandler(), getFabActionButton()) {
@@ -299,6 +316,7 @@ public class AutoplayActivity extends BaseActivity {
                         Bundle playInfo = new Bundle();
                         savePlayInfoToBundle(playInfo);
                         episodeListIntent.putExtras(playInfo);
+                        episodeListIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(episodeListIntent);
                     }
                     else {
@@ -353,23 +371,30 @@ public class AutoplayActivity extends BaseActivity {
             }
         });
 
-        // initialize AdMob - note this code uses the Gradle #IFDEF / #ENDIF gradle preprocessor
-        //#IFDEF 'TRIAL'
-        String banner_ad_unit_id = getResources().getString(R.string.banner_ad_unit_id);
-        MobileAds.initialize(getApplicationContext(), banner_ad_unit_id);
-
-        final TelephonyManager tm =(TelephonyManager)getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
-
-        AdView mAdView = (AdView) findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder()
-                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)        // All emulators
-                .addTestDevice(getResources().getString(R.string.test_device1))
-                .addTestDevice(getResources().getString(R.string.test_device2))
-                .build();
-        mAdView.loadAd(adRequest);
-        //#ENDIF
+        setupAdMob();
 
         sLoadingScreenEnabled = true;
+    }
+
+    private void setupAdMob() {
+        // initialize AdMob - note this code uses the Gradle #IFDEF / #ENDIF gradle preprocessor
+        //#IFDEF 'TRIAL'
+        if (sPurchased != true && sNoAdsForShow != true) {
+            LogHelper.v(TAG, "setupAdMob");
+            String banner_ad_unit_id = getResources().getString(R.string.banner_ad_unit_id);
+            MobileAds.initialize(getApplicationContext(), banner_ad_unit_id);
+
+            final TelephonyManager tm = (TelephonyManager) getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
+
+            AdView mAdView = (AdView) findViewById(R.id.adView);
+            AdRequest adRequest = new AdRequest.Builder()
+                    .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)        // All emulators
+                    .addTestDevice(getResources().getString(R.string.test_device1))
+                    .addTestDevice(getResources().getString(R.string.test_device2))
+                    .build();
+            mAdView.loadAd(adRequest);
+        }
+        //#ENDIF
     }
 
     @Override
@@ -925,18 +950,21 @@ public class AutoplayActivity extends BaseActivity {
                 intent.putExtras(playInfo);
                 intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT, SettingsActivity.GeneralPreferenceFragment.class.getName());
                 intent.putExtra(PreferenceActivity.EXTRA_NO_HEADERS, true);
-                trackSettingsWithFirebaseAnalytics();
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
+                trackSettingsWithFirebaseAnalytics();
                 // FIXME: need to make Settings pass back the playInfo Bundle somehow.
                 return true;
             }
             case R.id.about: {
                 Intent intent = new Intent(this, AboutActivity.class);
-                Bundle playInfo = new Bundle();
+                String transitionName = "fancy";
+                Bundle playInfo = ActivityOptionsCompat.makeSceneTransitionAnimation(this, this.mAutoPlay, transitionName).toBundle();
                 savePlayInfoToBundle(playInfo);
                 intent.putExtras(playInfo);
-                trackAboutWithFirebaseAnalytics();
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
+                trackAboutWithFirebaseAnalytics();
                 return true;
             }
             default: {
@@ -1155,7 +1183,29 @@ public class AutoplayActivity extends BaseActivity {
                     sAutoplayNextNow = true;
                     markEpisodeAsHeardAndIncrementPlayCount(getEpisodeNumber(), episodeIndex, mDuration);
                     initializeForEpisode("playback completed for episode "+episodeIndex);
-                    handleAutoplayClick();
+
+                    //#IFDEF 'PAID'
+                    //handleAutoplayClick();
+                    //#ENDIF
+
+                    //#IFDEF 'TRIAL'
+                    if ((sPurchased != true) && (mAllListenCount != null) && (mAllListenCount >= MAX_TRIAL_EPISODES)) {
+                        getHandler().post(new Runnable() {
+                            @Override
+                            public void run() {
+                                MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
+                                LogHelper.v(TAG, "*** onClick - MAX_TRIAL_EPISODES - controls.stop()");
+                                controls.stop();
+                                setAutoplayState(AutoplayState.READY2PLAY, "onClick");
+                                maxTrialEpisodesAreReached();
+                            }
+                        });
+                    }
+                    else {
+                        handleAutoplayClick();
+                    }
+                    //#ENDIF
+
                 }
                 else if (message.length() > KEY_POKE_ME.length() && message.substring(0, KEY_POKE_ME.length()).equals(KEY_POKE_ME)) {
                     String episodeIndex = message.substring(KEY_POKE_ME.length(), message.length());

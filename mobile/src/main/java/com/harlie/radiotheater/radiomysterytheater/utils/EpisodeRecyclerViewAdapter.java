@@ -5,10 +5,10 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
 import android.widget.TextView;
 
 import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
@@ -27,6 +27,7 @@ public class EpisodeRecyclerViewAdapter
 {
     private final static String TAG = "LEE: <" + EpisodeRecyclerViewAdapter.class.getSimpleName() + ">";
 
+    private final int FADE_DURATION = 2;
     private final Context mContext;
     private Cursor mDataCursor;
 
@@ -59,7 +60,11 @@ public class EpisodeRecyclerViewAdapter
         else {
             episode_description.setVisibility(View.GONE);
         }
-        return new EpisodeViewHolder(view);
+        EpisodeViewHolder holder = new EpisodeViewHolder(view);
+        // FIXME: special list-item colors get lost during scroll-back
+        //holder.setIsRecyclable(false); // stop the special colors from changing during scroll
+        //holder.setSpecialColors();
+        return holder;
     }
 
     @Override
@@ -72,10 +77,13 @@ public class EpisodeRecyclerViewAdapter
         holder.mEpisodeTitle.setText(holder.mItem.getTitle());
         holder.mEpisodeDescription.setText(holder.mItem.getDescription());
         holder.mEpisodeRating.setRating(holder.mItem.getRating());
-        holder.setSpecialColors();
         BaseActivity activity = (BaseActivity) mContext;
         holder.setFontTypeAndSizes(activity);
+        // FIXME: special list-item colors get lost during scroll-back
+        //holder.setIsRecyclable(false); // stop the special colors from changing during scroll
+        //holder.setSpecialColors();
         holderSetOnClickListener(holder);
+        setFadeAnimation(holder.mView);
     }
 
     // --- dummy content disabled ---
@@ -89,8 +97,16 @@ public class EpisodeRecyclerViewAdapter
 //        holder.mEpisodeTitle.setText(mValues.get(position).episode_title);
 //        holder.mEpisodeDescription.setText(mValues.get(position).episode_description);
 //        holderSetOnClickListener(holder);
+//        setFadeAnimation(holder.mItem);
 //    }
     // --- dummy content disabled ---
+
+    // animate the list items using a transition animation
+    private void setFadeAnimation(View view) {
+        AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
+        anim.setDuration(FADE_DURATION);
+        view.startAnimation(anim);
+    }
 
     private void holderSetOnClickListener(final EpisodeViewHolder holder) {
         holder.mView.setOnClickListener(new View.OnClickListener() {
@@ -109,6 +125,7 @@ public class EpisodeRecyclerViewAdapter
                         Bundle playInfo = new Bundle();
                         episodeListActivity.savePlayInfoToBundle(playInfo);
                         intent.putExtras(playInfo);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                         context.startActivity(intent);
 
                     } else {

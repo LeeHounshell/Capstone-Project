@@ -7,7 +7,6 @@ package com.harlie.radiotheater.radiomysterytheater.data_helper;
 
 import android.content.ContentUris;
 import android.net.Uri;
-import android.text.format.Time;
 
 import com.harlie.radiotheater.radiomysterytheater.data.RadioTheaterProvider;
 import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsColumns;
@@ -24,7 +23,6 @@ import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 

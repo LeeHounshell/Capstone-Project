@@ -74,6 +74,7 @@ public class AuthenticationActivity extends BaseActivity
             authEmailIntent.putExtra("DO_AUTH", true);
             Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
             trackSignupAttemptWithFirebaseAnalytics("email");
+            authEmailIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(authEmailIntent, bundle);
             overridePendingTransition(0,0);
             finish();
@@ -92,6 +93,7 @@ public class AuthenticationActivity extends BaseActivity
         authGoogleIntent.putExtra("DO_AUTH", true);
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
         trackSignupAttemptWithFirebaseAnalytics("google");
+        authGoogleIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(authGoogleIntent, bundle);
         overridePendingTransition(0,0);
         finish();
@@ -105,6 +107,7 @@ public class AuthenticationActivity extends BaseActivity
         authTwitterIntent.putExtra("DO_AUTH", true);
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
         trackSignupAttemptWithFirebaseAnalytics("twitter");
+        authTwitterIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(authTwitterIntent, bundle);
         overridePendingTransition(0,0);
         finish();
@@ -118,6 +121,7 @@ public class AuthenticationActivity extends BaseActivity
         authFacebookIntent.putExtra("DO_AUTH", true);
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
         trackSignupAttemptWithFirebaseAnalytics("facebook");
+        authFacebookIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(authFacebookIntent, bundle);
         overridePendingTransition(0,0);
         finish();

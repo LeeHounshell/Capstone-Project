@@ -22,8 +22,6 @@ package com.harlie.radiotheater.radiomysterytheater.utils;
 
 import android.util.Log;
 
-import com.harlie.radiotheater.radiomysterytheater.BuildConfig;
-
 public class LogHelper {
 
     private static final String LOG_PREFIX = "harlie_";

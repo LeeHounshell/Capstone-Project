@@ -11,14 +11,14 @@
 //
 package com.harlie.radiotheater.radiomysterytheater.data.base;
 
+import android.content.ContentResolver;
+import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import android.content.Context;
-import android.content.ContentResolver;
-import android.database.Cursor;
-import android.net.Uri;
 
 public abstract class AbstractSelection<T extends AbstractSelection<?>> {
     private static final String EQ = "=?";

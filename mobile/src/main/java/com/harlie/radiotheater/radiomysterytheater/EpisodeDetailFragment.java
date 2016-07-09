@@ -3,12 +3,10 @@ package com.harlie.radiotheater.radiomysterytheater;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.v7.widget.AppCompatButton;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,8 +27,6 @@ import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import java.io.IOException;
 import java.util.Locale;
-
-import static com.harlie.radiotheater.radiomysterytheater.data_helper.EpisodeRecyclerViewItem.CREATOR;
 
 /**
  * A fragment representing a single Episode detail screen.

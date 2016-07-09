@@ -7,9 +7,9 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.widget.AppCompatButton;
 import android.view.GestureDetector;
-import android.support.v4.view.GestureDetectorCompat ;
 import android.view.MotionEvent;
 import android.view.View;
 

@@ -8,10 +8,8 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
-
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesContentValues;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
-
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 

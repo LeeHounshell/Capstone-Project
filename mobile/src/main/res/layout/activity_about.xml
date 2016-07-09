@@ -12,6 +12,7 @@
 
     <android.support.v7.widget.AppCompatImageButton
         android:id="@+id/linkedin"
+        android:focusable="true"
         android:background="@null"
         android:layout_width="56dp"
         android:layout_height="56dp"

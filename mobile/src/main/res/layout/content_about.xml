@@ -61,6 +61,7 @@
             <ImageView
                 style="@style/AboutImage"
                 android:id="@+id/LeeHounshellImage"
+                android:focusable="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingTop="@dimen/about_item_margin"

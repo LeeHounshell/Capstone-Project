@@ -10,6 +10,7 @@
     <ImageButton
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         android:id="@+id/action_up"
+        android:focusable="true"
         android:layout_width="@dimen/up_button_hieght"
         android:layout_height="?actionBarSize"
         android:background="?selectableItemBackgroundBorderless"

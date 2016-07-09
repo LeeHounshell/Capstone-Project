@@ -156,6 +156,7 @@ public class AboutActivity extends BaseActivity {
         intent.putExtra(Intent.EXTRA_EMAIL, new String[] {contact});
         intent.putExtra(Intent.EXTRA_SUBJECT, "Re: the 'Radio Mystery Theater' Android app");
         intent.putExtra(Intent.EXTRA_TEXT, "");
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(Intent.createChooser(intent, ""));
     }
 
@@ -166,6 +167,7 @@ public class AboutActivity extends BaseActivity {
         intent.setAction(Intent.ACTION_VIEW);
         intent.addCategory(Intent.CATEGORY_BROWSABLE);
         intent.setData(Uri.parse("http://www.linkedin.com/pub/lee-hounshell/2/674/852"));
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
     }
 
@@ -179,6 +181,7 @@ public class AboutActivity extends BaseActivity {
         Bundle playInfo = new Bundle();
         savePlayInfoToBundle(playInfo);
         autoplayIntent.putExtras(playInfo);
+        autoplayIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(autoplayIntent);
     }
 

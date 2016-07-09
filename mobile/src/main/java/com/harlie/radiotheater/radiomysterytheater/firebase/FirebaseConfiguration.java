@@ -5,10 +5,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.IgnoreExtraProperties;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-
 @IgnoreExtraProperties
 public class FirebaseConfiguration {
     private final static String TAG = "LEE: <" + FirebaseConfiguration.class.getSimpleName() + ">";

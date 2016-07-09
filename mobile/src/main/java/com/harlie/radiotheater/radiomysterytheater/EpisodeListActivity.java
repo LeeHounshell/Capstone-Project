@@ -1,6 +1,5 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -12,15 +11,12 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.view.Window;
 
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
-import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
-import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesSelection;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
-import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.EpisodeRecyclerViewAdapter;
-
-import java.util.List;
+import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 /**
  * An activity representing a list of Episodes. This activity
@@ -44,6 +40,8 @@ public class EpisodeListActivity extends BaseActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         LogHelper.v(TAG, "onCreate");
+        getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_episode_list);
 
@@ -58,6 +56,7 @@ public class EpisodeListActivity extends BaseActivity
         }
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setFocusable(true);
         if (fab != null) {
             final EpisodeListActivity activity = this;
             fab.setOnClickListener(new View.OnClickListener() {
@@ -72,6 +71,7 @@ public class EpisodeListActivity extends BaseActivity
                     Bundle playInfo = new Bundle();
                     savePlayInfoToBundle(playInfo);
                     autoplayIntent.putExtras(playInfo);
+                    autoplayIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(autoplayIntent);
                 }
             });
@@ -106,6 +106,7 @@ public class EpisodeListActivity extends BaseActivity
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
         LogHelper.v(TAG, "setupRecyclerView");
+        recyclerView.setFocusable(true);
 
         String order_limit = RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER + " ASC";
 
@@ -117,7 +118,8 @@ public class EpisodeListActivity extends BaseActivity
                 order_limit);                       // sort order and limit (String)
 
         if (cursor != null) {
-            recyclerView.setAdapter(new EpisodeRecyclerViewAdapter(this, cursor));
+            EpisodeRecyclerViewAdapter adapter = new EpisodeRecyclerViewAdapter(this, cursor);
+            recyclerView.setAdapter(adapter);
             LogHelper.v(TAG, "setupRecyclerView: cursor has Count=" + cursor.getCount());
         }
         else {

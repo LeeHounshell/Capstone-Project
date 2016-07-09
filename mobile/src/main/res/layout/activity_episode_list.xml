@@ -22,12 +22,13 @@
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
+        style="@style/FloatingActionButton"
+        android:focusable="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_radio_black_24dp"
         app:backgroundTint="@color/primary_light"
         android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        android:elevation="@dimen/fab_elevation" />
+        android:layout_margin="@dimen/fab_margin" />
 
 </android.support.design.widget.CoordinatorLayout>
