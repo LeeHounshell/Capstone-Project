@@ -1317,7 +1317,7 @@ public class BaseActivity extends AppCompatActivity {
                 Boolean firebasePaidVersion = false;
                 Boolean firebasePurchaseAccess = false;
                 Boolean firebasePurchaseNoAds = false;
-                Long sqlite_listen_count = new Long(0);
+                Long sqlite_listen_count = Long.valueOf(0);
                 try {
                     //#IFDEF 'PAID'
                     //paidVersion = true;
@@ -1333,20 +1333,20 @@ public class BaseActivity extends AppCompatActivity {
 
                     sqlite_listen_count = sqliteConfiguration.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
                     if (sqlite_listen_count == null) {
-                        sqlite_listen_count = new Long(0);
+                        sqlite_listen_count = Long.valueOf(0);
                     }
                 }
                 catch (Exception e) {
                     LogHelper.w(TAG, "SQLite: unable to getAsLong ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT");
                 }
-                Long firebase_listen_count = new Long(0);
+                Long firebase_listen_count = Long.valueOf(0);
                 try {
                     paidVersion = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
                     purchaseAccess = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
                     purchaseNoads = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
                     firebase_listen_count = firebaseConfiguration.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
                     if (firebase_listen_count == null) {
-                        firebase_listen_count = new Long(0);
+                        firebase_listen_count = Long.valueOf(0);
                     }
                 }
                 catch (Exception e) {

@@ -310,7 +310,7 @@ public class EpisodeDetailFragment extends FragmentBase {
         String[] names = staffMember.split("_");
         for (int i = names.length; i > 0; --i) {
             String part = names[i - 1];
-            part = part.substring(0, 1).toUpperCase() + part.substring(1).toLowerCase(Locale.getDefault());
+            part = part.substring(0, 1).toUpperCase(Locale.getDefault()) + part.substring(1).toLowerCase(Locale.getDefault());
             fullName = fullName + " " + part;
         }
         return fullName;

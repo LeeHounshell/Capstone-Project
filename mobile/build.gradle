@@ -109,7 +109,8 @@ android {
                 'GradleDynamicVersion','PackageManagerGetSignatures','Recycle',
                 'StaticFieldLeak','UnusedResources','IconLocation',
                 'IconDensities','AlwaysShowAction','ClickableViewAccessibility',
-                'SetTextI18n', 'UseCompoundDrawables', 'Overdraw'
+                'SetTextI18n', 'UseCompoundDrawables', 'Overdraw',
+                'ExportedContentProvider', 'InefficientWeight'
     }
 
     dexOptions {
@@ -144,7 +145,7 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:24.0.0'
     compile 'com.android.support:design:24.0.0'
     compile 'com.android.support:support-annotations:24.0.0'
-    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha3'
+    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha4'
 
     trialCompile 'com.google.firebase:firebase-ads:9.2.0'
 
