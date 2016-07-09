@@ -19,7 +19,6 @@ import android.preference.PreferenceActivity;
 import android.support.annotation.NonNull;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
@@ -163,7 +162,7 @@ public class AutoplayActivity extends BaseActivity {
 
             @Override
             public void onClick() {
-                verifyPaidClick(true);
+                verifyPaidVersion(true);
             }
 
             @Override
@@ -356,7 +355,7 @@ public class AutoplayActivity extends BaseActivity {
         sLoadingScreenEnabled = true;
     }
 
-    public void verifyPaidClick(boolean handleClick) {
+    public boolean verifyPaidVersion(boolean handleClick) {
         LogHelper.v(TAG, "onClick");
         //#IFDEF 'PAID'
         //if (handleClick) handleAutoplayClick();
@@ -374,11 +373,14 @@ public class AutoplayActivity extends BaseActivity {
                     maxTrialEpisodesAreReached();
                 }
             });
+            return false;
         }
         else {
             if (handleClick) handleAutoplayClick();
         }
         //#ENDIF
+
+        return true;
     }
 
     private void setupAdMob() {
@@ -418,7 +420,7 @@ public class AutoplayActivity extends BaseActivity {
         @Override
         public void run() {
             if (getRadioMediaController() != null) {
-                verifyPaidClick(false);
+                verifyPaidVersion(false);
                 if (getCircularSeekBar() != null && !getCircularSeekBar().isProcessingTouchEvents() && !sSeeking) {
                     PlaybackStateCompat lastPlaybackState = getRadioMediaController().getPlaybackState();
                     mCurrentPosition = lastPlaybackState.getPosition();
@@ -1190,7 +1192,7 @@ public class AutoplayActivity extends BaseActivity {
                     sAutoplayNextNow = true;
                     markEpisodeAsHeardAndIncrementPlayCount(getEpisodeNumber(), episodeIndex, mDuration);
                     initializeForEpisode("playback completed for episode "+episodeIndex);
-                    verifyPaidClick(true);
+                    verifyPaidVersion(true);
                 }
                 else if (message.length() > KEY_POKE_ME.length() && message.substring(0, KEY_POKE_ME.length()).equals(KEY_POKE_ME)) {
                     String episodeIndex = message.substring(KEY_POKE_ME.length(), message.length());
