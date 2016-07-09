@@ -135,8 +135,13 @@ public class EpisodeRecyclerViewAdapter
                         LogHelper.v(TAG, "-NEW- ARG_EPISODE_ID="+holder.mItem.getEpisodeNumber());
                         EpisodeDetailFragment fragment = new EpisodeDetailFragment();
                         fragment.setArguments(arguments);
-                        episodeListActivity.getSupportFragmentManager().beginTransaction()
+
+                        episodeListActivity
+                                .getSupportFragmentManager()
+                                .beginTransaction()
+                                .setCustomAnimations(R.anim.abc_fade_in, R.anim.abc_fade_out,R.anim.abc_fade_in, R.anim.abc_fade_out)
                                 .replace(R.id.episode_detail_container, fragment)
+                                .addToBackStack(null)
                                 .commit();
 
                     }

@@ -958,8 +958,7 @@ public class AutoplayActivity extends BaseActivity {
             }
             case R.id.about: {
                 Intent intent = new Intent(this, AboutActivity.class);
-                String transitionName = "fancy";
-                Bundle playInfo = ActivityOptionsCompat.makeSceneTransitionAnimation(this, this.mAutoPlay, transitionName).toBundle();
+                Bundle playInfo = new Bundle();
                 savePlayInfoToBundle(playInfo);
                 intent.putExtras(playInfo);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
