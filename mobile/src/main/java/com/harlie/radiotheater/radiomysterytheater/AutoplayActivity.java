@@ -44,6 +44,7 @@ import com.google.android.gms.ads.MobileAds;
 
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadingAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 import com.harlie.radiotheater.radiomysterytheater.utils.CircularSeekBar;
@@ -62,6 +63,8 @@ import at.grabner.circleprogress.CircleProgressView;
 
 public class AutoplayActivity extends BaseActivity {
     private final static String TAG = "LEE: <" + AutoplayActivity.class.getSimpleName() + ">";
+
+    private static final int MAX_TRIAL_EPISODES = 13;
 
     public enum ControlsState {
         ENABLED, ENABLED_SHOW_PAUSE, DISABLED, DISABLED_SHOW_PAUSE, SEEKING_POSITION
@@ -154,7 +157,17 @@ public class AutoplayActivity extends BaseActivity {
             @Override
             public void onClick() {
                 LogHelper.v(TAG, "onClick");
-                handleAutoplayClick();
+                if ((mAllListenCount != null) && (mAllListenCount >= MAX_TRIAL_EPISODES)) {
+                    getHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            maxTrialEpisodesAreReached();
+                        }
+                    });
+                }
+                else {
+                    handleAutoplayClick();
+                }
             }
 
             @Override

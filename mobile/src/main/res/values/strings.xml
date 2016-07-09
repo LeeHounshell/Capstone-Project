@@ -65,6 +65,9 @@
     <string name="haunted_url">http://harlie.com/radiotheater/haunted.png</string>
     <string name="error_loading_media">Error Loading Media</string>
     <string name="nothing_unheard">No Unheard Episodes</string>
+    <string name="trial_complete">TRIAL VERSION EXPIRED</string>
+    <string name="all_trial_heard">To continue listening, you must upgrade to the paid version.\n
+                  Click OK to visit the Playstore and upgrade!</string>
     <string name="heard_everything">You have listened to all 1399 episodes!\nNo unheard episodes remain.</string>
     <string name="unable_to_load">Episode Failed to Load</string>
     <string name="playback_problem">There was a problem loading this episode.\nTry again.</string>
@@ -72,10 +75,14 @@
     <string name="no_metadata">Missing Episode Metadata</string>
     <string name="existing_database">Existing Episode Database</string>
     <string name="missing_database">Missing Episode Database</string>
-    <string name="metadata_loading_problem">Unable to load Episode information.\nSomething went wrong with Metadata.</string>
-    <string name="database_loading_problem">Unable to load Episode information.\nSomething is wrong with the Database.\nPlease wait for an Internet reload.</string>
-    <string name="database_existing_problem">Unexpected initialization error.\nThe SQL Database exists.\nPlease wait for an Internet reload.</string>
-    <string name="database_missing_problem">Unable to find Episode information.\nThe pre-loaded Database is missing.\nPlease wait for an Internet reload.</string>
+    <string name="metadata_loading_problem">Unable to load Episode information.\n
+                  Something went wrong with Metadata.</string>
+    <string name="database_loading_problem">Unable to load Episode information.\n
+                  Something is wrong with the Database.\nPlease wait for an Internet reload.</string>
+    <string name="database_existing_problem">Unexpected initialization error.\n
+                  The SQL Database exists.\nPlease wait for an Internet reload.</string>
+    <string name="database_missing_problem">Unable to find Episode information.\n
+                  The pre-loaded Database is missing.\nPlease wait for an Internet reload.</string>
 
     // Autoplay BROADCAST messages
     <string name="initialization">Radio-Mystery-Theater:</string>
@@ -118,7 +125,7 @@
                   Check that you have the latest version of Google Play services installed.</string>
     <string name="playstore_error">Playstore Problem!</string>
     <string name="update_playstore">You need to update the Google Playstore.\n
-                             Otherwise login using email and password.</string>
+                  Otherwise login using email and password.</string>
 
     <!-- Strings related to Detail View -->
     <string name="actor1">Actor One</string>

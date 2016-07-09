@@ -152,6 +152,7 @@ public class BaseActivity extends AppCompatActivity {
     protected Handler mHandler;
     protected View mRootView;
     protected CircleProgressView mCircleView;
+    protected Long mAllListenCount;
 
     private static int mCount;
 
@@ -687,7 +688,7 @@ public class BaseActivity extends AppCompatActivity {
             isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
             if (!isPaid) {
                 ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
-                if (existing != null) {
+                if (existing != null && existing.values() != null && existing.values().size() != 0) {
                     ContentValues configEpisode = existing.values();
                     isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
                 }
@@ -714,7 +715,7 @@ public class BaseActivity extends AppCompatActivity {
             ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
             ContentValues configurationValues;
             try {
-                if (existing != null) {
+                if (existing != null && existing.values() != null && existing.values().size() != 0) {
                     // UPDATE and mark an individual episode as paid
                     configurationValues = existing.values();
                     LogHelper.v(TAG, "FOUND: so update ConfigEntry for episode "+episode+" with paid="+paid);
@@ -862,6 +863,20 @@ public class BaseActivity extends AppCompatActivity {
         alertDialog.show();
     }
 
+    protected void maxTrialEpisodesAreReached() {
+        LogHelper.v(TAG, "maxTrialEpisodesAreReached");
+        AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+        alertDialog.setTitle(getResources().getString(R.string.trial_complete));
+        alertDialog.setMessage(getResources().getString(R.string.all_trial_heard));
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        alertDialog.show();
+    }
+
     public void runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState state) {
         LogHelper.v(TAG, "runLoadState: for state="+state);
         if (state == LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS) {
@@ -978,6 +993,7 @@ public class BaseActivity extends AppCompatActivity {
         if (cursor != null && cursor.getCount() > 0) {
             ConfigEpisodesCursor configEpisodesCursor = new ConfigEpisodesCursor(cursor);
             record = getConfigEpisodesContentValues(configEpisodesCursor);
+            cursor.close();
         }
         else {
             LogHelper.v(TAG, "SQL: episode "+episode+" not found");
@@ -1172,12 +1188,15 @@ public class BaseActivity extends AppCompatActivity {
                 record = null;
             }
         }
-        cursor.close();
         return record;
     }
 
     public Uri insertConfiguration(ContentValues configurationValues) {
         LogHelper.v(TAG, "insertConfigurationValues");
+        if (configurationValues == null || configurationValues.size() == 0) {
+            LogHelper.w(TAG, "unable to insertConfigurationValues! - null or empty values.");
+            return null;
+        }
         Uri configurationEntry = ConfigurationEntry.buildConfigurationUri();
         return this.getContentResolver().insert(configurationEntry, configurationValues);
     }
@@ -1185,6 +1204,10 @@ public class BaseActivity extends AppCompatActivity {
     // update local SQLite
     public int updateConfigurationValues(String deviceId, ContentValues configurationValues) {
         LogHelper.v(TAG, "updateConfigurationValues");
+        if (configurationValues == null || configurationValues.size() == 0) {
+            LogHelper.w(TAG, "unable to updateConfigurationValues! - null or empty values.");
+            return 0;
+        }
         Uri configurationEntry = ConfigurationEntry.buildConfigurationUri();
         String whereClause = ConfigurationEntry.FIELD_DEVICE_ID + "=?";
         String whereCondition[] = new String[]{deviceId};
@@ -1194,6 +1217,10 @@ public class BaseActivity extends AppCompatActivity {
 
     public Uri insertConfigEntryValues(ContentValues configEntryValues) {
         LogHelper.v(TAG, "insertConfigEntryValues");
+        if (configEntryValues == null || configEntryValues.size() == 0) {
+            LogHelper.w(TAG, "unable to insertConfigEntryValues! - null or empty values.");
+            return null;
+        }
         Uri configEntry = ConfigEpisodesEntry.buildConfigEpisodesUri();
         return this.getContentResolver().insert(configEntry, configEntryValues);
     }
@@ -1201,6 +1228,10 @@ public class BaseActivity extends AppCompatActivity {
     // update local SQLite
     public int updateConfigEntryValues(String episode, ContentValues configEntryValues) {
         LogHelper.v(TAG, "updateConfigEntryValues");
+        if (configEntryValues == null || configEntryValues.size() == 0) {
+            LogHelper.w(TAG, "unable to updateConfigurationValues! - null or empty values.");
+            return 0;
+        }
         Uri configEntry = ConfigEpisodesEntry.buildConfigEpisodesUri();
         String whereClause = ConfigEpisodesEntry.FIELD_EPISODE_NUMBER + "=?";
         String whereCondition[] = new String[]{episode};
@@ -1265,7 +1296,7 @@ public class BaseActivity extends AppCompatActivity {
         ContentValues sqliteConfiguration = null;
         // 1) load local SQLite entry for deviceId
         ConfigurationCursor configurationCursor = getCursorForConfigurationDevice(getAdvertId());
-        if (configurationCursor != null && configurationCursor.moveToNext()) {
+        if (configurationCursor != null) {
             LogHelper.v(TAG, "found existing SQLite user Configuration");
             configurationContent = getConfigurationContentValues(configurationCursor);
             sqliteConfiguration = configurationContent.values();
@@ -1294,8 +1325,7 @@ public class BaseActivity extends AppCompatActivity {
                 //#ENDIF
 
                 mConfiguration.putFieldTotalListenCount(0);
-                configurationContent = mConfiguration;
-                insertConfiguration(configurationContent.values());
+                insertConfiguration(mConfiguration.values());
                 // 3) update Firebase with the new deviceId entry
                 updateFirebaseConfigurationValues(getAdvertId(), mConfiguration.values());
                 return;
@@ -1308,6 +1338,7 @@ public class BaseActivity extends AppCompatActivity {
         if (mConfiguration != null) { // found Firebase Configuration
             LogHelper.v(TAG, "updating Firebase entry for Configuration.");
             ContentValues firebaseConfiguration = mConfiguration.values();
+            mConfiguration = new ConfigurationContentValues();
             // 4) update local SQLite if Firebase has most recent data
             if (sqliteConfiguration != null) { // have local SQLite Configuration?
                 LogHelper.v(TAG, "using local SQLite configuration for update");
@@ -1337,7 +1368,7 @@ public class BaseActivity extends AppCompatActivity {
                     }
                 }
                 catch (Exception e) {
-                    LogHelper.w(TAG, "SQLite: unable to getAsLong ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT");
+                    LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns FIELD, e="+e.getMessage());
                 }
                 Long firebase_listen_count = Long.valueOf(0);
                 try {
@@ -1350,33 +1381,38 @@ public class BaseActivity extends AppCompatActivity {
                     }
                 }
                 catch (Exception e) {
-                    LogHelper.w(TAG, "Firebase: unable to getAsLong ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT");
+                    LogHelper.w(TAG, "Firebase: unable to get ConfigurationColumns FIELD, e="+e.getMessage());
                 }
                 boolean dirty = false;
                 if (sqlite_listen_count >= firebase_listen_count) {
                     LogHelper.v(TAG, "Firebase Configuration needs update.. local listen_count is greater or equal");
-                    mConfiguration.putFieldTotalListenCount(sqlite_listen_count.intValue());
+                    int count = (int) sqlite_listen_count.longValue();
+                    mConfiguration.putFieldTotalListenCount(count);
                     dirty = true;
                 }
                 else if (sqlite_listen_count < firebase_listen_count) {
                     LogHelper.v(TAG, "SQLite Configuration needs update.. local listen_count is smaller");
-                    configurationContent.putFieldTotalListenCount(firebase_listen_count.intValue());
+                    int count = (int) firebase_listen_count.longValue();
+                    mConfiguration.putFieldTotalListenCount(count);
                     dirty = true;
                 }
                 if ((paidVersion != null && paidVersion) || (firebasePaidVersion != null && firebasePaidVersion)) {
-                    configurationContent.putFieldPaidVersion(true);
+                    mConfiguration.putFieldPaidVersion(true);
                     dirty = true;
                 }
                 if ((purchaseAccess != null && purchaseAccess) || (firebasePurchaseAccess != null && firebasePurchaseAccess)) {
-                    configurationContent.putFieldPurchaseAccess(true);
+                    mConfiguration.putFieldPurchaseAccess(true);
                     dirty = true;
                 }
-                if ((purchaseNoads != null && purchaseAccess) || (firebasePurchaseNoAds != null && firebasePurchaseAccess)) {
-                    configurationContent.putFieldPurchaseNoads(true);
+                if ((purchaseNoads != null && purchaseNoads) || (firebasePurchaseNoAds != null && firebasePurchaseNoAds)) {
+                    mConfiguration.putFieldPurchaseNoads(true);
                     dirty = true;
                 }
                 if (dirty) {
-                    updateConfigurationValues(getAdvertId(), configurationContent.values());
+                    sqliteConfiguration = mConfiguration.values();
+                    LogHelper.v(TAG, "DIRTY: sqliteConfiguration="+sqliteConfiguration.toString());
+                    updateConfigurationValues(getAdvertId(), sqliteConfiguration);
+                    updateFirebaseConfigurationValues(getAdvertId(), mConfiguration.values());
                 }
             }
             else {
@@ -1856,11 +1892,13 @@ public class BaseActivity extends AppCompatActivity {
         // UPDATE SQLITE - mark SQLite config episode as "HEARD" and increment "PLAY COUNT" - Also send record to Firebase
         ConfigEpisodesContentValues existing = getConfigForEpisode(episodeIndex);
         long listenCount = 0;
-        if (existing != null) {
+        if (existing != null && existing.values() != null && existing.values().size() != 0) {
             ContentValues configEpisode = existing.values();
             configEpisode.put(ConfigEpisodesEntry.FIELD_EPISODE_HEARD, true);
+
             listenCount = configEpisode.getAsLong(ConfigEpisodesColumns.FIELD_LISTEN_COUNT);
             ++listenCount;
+
             configEpisode.put(ConfigEpisodesEntry.FIELD_LISTEN_COUNT, listenCount);
             updateConfigEntryValues(episodeIndex, configEpisode);
             updateFirebaseConfigEntryValues(episodeIndex, configEpisode, duration);
@@ -1870,8 +1908,32 @@ public class BaseActivity extends AppCompatActivity {
             LogHelper.e(TAG, "*** SQLITE FAILURE - unable to getConfigForEpisode="+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
         }
 
+        // UPDATE SQLITE - mark SQLite configuration as "HEARD" and increment "PLAY COUNT"
+        ConfigurationCursor configurationCursor = getCursorForConfigurationDevice(getAdvertId());
+        ConfigurationContentValues existingConfiguration = null;
+        if (configurationCursor != null) {
+            existingConfiguration = getConfigurationContentValues(configurationCursor);
+            configurationCursor.close();
+        }
+        long allListenCount = 0;
+        if (existingConfiguration != null && existingConfiguration.values() != null && existingConfiguration.values().size() != 0) {
+            ContentValues configurationValues = existingConfiguration.values();
+
+            allListenCount = configurationValues.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
+            ++allListenCount;
+            mAllListenCount = allListenCount;
+
+            configurationValues.put(ConfigurationEntry.FIELD_TOTAL_LISTEN_COUNT, allListenCount);
+            updateConfigurationValues(getAdvertId(), configurationValues);
+            updateFirebaseConfigurationValues(getAdvertId(), configurationValues);
+            LogHelper.d(TAG, "---> markEpisodeAsHeardAndIncrementPlayCount: new ALL-LISTEN-COUNT="+allListenCount+" <---");
+        }
+        else {
+            LogHelper.e(TAG, "*** SQLITE FAILURE - unable to getConfiguration email="+getEmail()+", deviceId="+getAdvertId());
+        }
+
         // send Analytics record to Firebase for Episode+Heard+Count
-        trackWithFirebaseAnalytics(episodeIndex, duration, "mark HEARD + playcount="+listenCount);
+        trackWithFirebaseAnalytics(episodeIndex, duration, "mark HEARD + playcount="+listenCount+" + allcount="+allListenCount);
     }
 
     public void markEpisodeAs_NOT_Heard(long episodeNumber, String episodeIndex, long duration) {
@@ -1884,7 +1946,7 @@ public class BaseActivity extends AppCompatActivity {
 
         // UPDATE SQLITE - mark SQLite config episode as "NOT HEARD" - Also send record to Firebase
         ConfigEpisodesContentValues existing = getConfigForEpisode(episodeIndex);
-        if (existing != null) {
+        if (existing != null && existing.values() != null && existing.values().size() != 0) {
             ContentValues configEpisode = existing.values();
             configEpisode.put(ConfigEpisodesEntry.FIELD_EPISODE_HEARD, false);
             updateConfigEntryValues(episodeIndex, configEpisode);
