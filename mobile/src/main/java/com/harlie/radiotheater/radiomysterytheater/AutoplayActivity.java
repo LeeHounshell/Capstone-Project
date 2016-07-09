@@ -125,6 +125,7 @@ public class AutoplayActivity extends BaseActivity {
             tvIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION");
             tvIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(tvIntent);
+            overridePendingTransition((R.anim.abc_fade_in, R.anim.abc_fade_out,R.anim.abc_fade_in, R.anim.abc_fade_out);
             finish();
             return;
         }
@@ -318,6 +319,7 @@ public class AutoplayActivity extends BaseActivity {
                         episodeListIntent.putExtras(playInfo);
                         episodeListIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(episodeListIntent);
+                        overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
                     }
                     else {
                         LogHelper.v(TAG, "isProcessingTouchEvents or seeking - onClick ignored");
@@ -952,6 +954,7 @@ public class AutoplayActivity extends BaseActivity {
                 intent.putExtra(PreferenceActivity.EXTRA_NO_HEADERS, true);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
+                overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
                 trackSettingsWithFirebaseAnalytics();
                 // FIXME: need to make Settings pass back the playInfo Bundle somehow.
                 return true;
@@ -963,6 +966,7 @@ public class AutoplayActivity extends BaseActivity {
                 intent.putExtras(playInfo);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
+                overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
                 trackAboutWithFirebaseAnalytics();
                 return true;
             }

@@ -203,6 +203,7 @@ public class EpisodeDetailFragment extends FragmentBase {
                     Intent webLinkIntent = new Intent(Intent.ACTION_VIEW);
                     webLinkIntent.setData(Uri.parse(url));
                     startActivity(webLinkIntent);
+                    getActivity().overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
                 }
             });
 

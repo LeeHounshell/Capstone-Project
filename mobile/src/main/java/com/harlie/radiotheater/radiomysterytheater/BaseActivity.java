@@ -1,5 +1,7 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.DialogInterface;
@@ -20,8 +22,17 @@ import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.transition.Fade;
+import android.transition.Transition;
+import android.transition.TransitionInflater;
 import android.view.View;
+import android.view.ViewAnimationUtils;
 import android.view.WindowManager;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.AnimationUtils;
+import android.view.animation.Interpolator;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.firebase.client.Firebase;
@@ -96,6 +107,7 @@ public class BaseActivity extends AppCompatActivity {
 
     protected static final boolean COPY_PACKAGED_SQLITE_DATABASE = true;
     protected static final int TOTAL_SIZE_TO_COPY_IN_BYTES = 1347584;
+    protected static final int ANIMATION_DELAY = 100;
     protected static final String FIREBASE_WRITERS_URL = "radiomysterytheater/0/writers";
     protected static final String FIREBASE_ACTORS_URL = "radiomysterytheater/1/actors";
     protected static final String FIREBASE_SHOWS_URL = "radiomysterytheater/2/shows";
@@ -158,6 +170,9 @@ public class BaseActivity extends AppCompatActivity {
     protected CircleProgressView mCircleView;
     protected Long mAllListenCount;
 
+    private Interpolator interpolator;
+    private RelativeLayout bgViewGroup;
+
     private static int mCount;
 
     private String mAdvId;
@@ -202,6 +217,7 @@ public class BaseActivity extends AppCompatActivity {
 
         mRootView = findViewById(android.R.id.content);
         mHandler = new Handler();
+
         Firebase.setAndroidContext(this);
         mAuth = FirebaseAuth.getInstance();
         mFirebase = new Firebase("https://radio-mystery-theater.firebaseio.com");
@@ -233,6 +249,135 @@ public class BaseActivity extends AppCompatActivity {
                 }
             }
         });
+
+        setupWindowAnimations();
+    }
+
+    private void setupWindowAnimations() {
+        interpolator = AnimationUtils.loadInterpolator(this, android.R.interpolator.linear_out_slow_in);
+        setupEnterAnimations();
+        setupExitAnimations();
+    }
+
+    // transition animation code from: https://github.com/lgvalle/Material-Animations/blob/master/app/src/main/java/com/lgvalle/material_animations/RevealActivity.java
+    private void setupEnterAnimations() {
+        final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Transition transition = TransitionInflater.from(this).inflateTransition(R.transition.changebounds_with_arcmotion);
+        getWindow().setSharedElementEnterTransition(transition);
+        transition.addListener(new Transition.TransitionListener() {
+            @Override
+            public void onTransitionStart(Transition transition) {
+            }
+
+            @Override
+            public void onTransitionEnd(Transition transition) {
+                // Removing listener here is very important because shared element transition is executed again backwards on exit. If we don't remove the listener this code will be triggered again.
+                transition.removeListener(this);
+                hideTarget();
+                animateRevealShow(toolbar);
+                animateButtonsIn();
+            }
+
+            @Override
+            public void onTransitionCancel(Transition transition) {
+            }
+
+            @Override
+            public void onTransitionPause(Transition transition) {
+            }
+
+            @Override
+            public void onTransitionResume(Transition transition) {
+            }
+        });
+    }
+
+    private void setupExitAnimations() {
+        Fade returnTransition = new Fade();
+        getWindow().setReturnTransition(returnTransition);
+        returnTransition.setDuration(getResources().getInteger(R.integer.anim_duration_medium));
+        returnTransition.setStartDelay(getResources().getInteger(R.integer.anim_duration_medium));
+        returnTransition.addListener(new Transition.TransitionListener() {
+            @Override
+            public void onTransitionStart(Transition transition) {
+                transition.removeListener(this);
+                animateButtonsOut();
+                animateRevealHide(bgViewGroup);
+            }
+
+            @Override
+            public void onTransitionEnd(Transition transition) {
+            }
+
+            @Override
+            public void onTransitionCancel(Transition transition) {
+            }
+
+            @Override
+            public void onTransitionPause(Transition transition) {
+            }
+
+            @Override
+            public void onTransitionResume(Transition transition) {
+            }
+        });
+    }
+
+    private void hideTarget() {
+        //findViewById(R.id.shared_target).setVisibility(View.GONE);
+    }
+
+    private void animateButtonsIn() {
+        for (int i = 0; i < bgViewGroup.getChildCount(); i++) {
+            View child = bgViewGroup.getChildAt(i);
+            child.animate()
+                    .setStartDelay(100 + i * ANIMATION_DELAY)
+                    .setInterpolator(interpolator)
+                    .alpha(1)
+                    .scaleX(1)
+                    .scaleY(1);
+        }
+    }
+
+    private void animateButtonsOut() {
+        for (int i = 0; i < bgViewGroup.getChildCount(); i++) {
+            View child = bgViewGroup.getChildAt(i);
+            child.animate()
+                    .setStartDelay(i)
+                    .setInterpolator(interpolator)
+                    .alpha(0)
+                    .scaleX(0f)
+                    .scaleY(0f);
+        }
+    }
+
+    private void animateRevealShow(View viewRoot) {
+        int cx = (viewRoot.getLeft() + viewRoot.getRight()) / 2;
+        int cy = (viewRoot.getTop() + viewRoot.getBottom()) / 2;
+        int finalRadius = Math.max(viewRoot.getWidth(), viewRoot.getHeight());
+
+        Animator anim = ViewAnimationUtils.createCircularReveal(viewRoot, cx, cy, 0, finalRadius);
+        viewRoot.setVisibility(View.VISIBLE);
+        anim.setDuration(getResources().getInteger(R.integer.anim_duration_long));
+        anim.setInterpolator(new AccelerateInterpolator());
+        anim.start();
+    }
+
+    private void animateRevealHide(final View viewRoot) {
+        int cx = (viewRoot.getLeft() + viewRoot.getRight()) / 2;
+        int cy = (viewRoot.getTop() + viewRoot.getBottom()) / 2;
+        int initialRadius = viewRoot.getWidth();
+
+        Animator anim = ViewAnimationUtils.createCircularReveal(viewRoot, cx, cy, initialRadius, 0);
+        anim.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                viewRoot.setVisibility(View.INVISIBLE);
+            }
+        });
+        anim.setDuration(getResources().getInteger(R.integer.anim_duration_medium));
+        anim.start();
     }
 
     @Override

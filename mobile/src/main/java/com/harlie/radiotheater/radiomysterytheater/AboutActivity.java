@@ -158,6 +158,7 @@ public class AboutActivity extends BaseActivity {
         intent.putExtra(Intent.EXTRA_TEXT, "");
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(Intent.createChooser(intent, ""));
+        overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
     }
 
     private void showMyLinkedInProfile() {
@@ -169,6 +170,7 @@ public class AboutActivity extends BaseActivity {
         intent.setData(Uri.parse("http://www.linkedin.com/pub/lee-hounshell/2/674/852"));
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
+        overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
     }
 
     @Override
@@ -183,6 +185,7 @@ public class AboutActivity extends BaseActivity {
         autoplayIntent.putExtras(playInfo);
         autoplayIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(autoplayIntent);
+        overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
     }
 
 }

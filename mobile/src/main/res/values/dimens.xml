@@ -8,6 +8,7 @@
     <dimen name="signup_button_padding">12dp</dimen>
     <dimen name="button_group_spacing">4dp</dimen>
     <dimen name="phone_margin">32dp</dimen>
+
     <dimen name="image_elevation">9dp</dimen>
     <dimen name="button_elevation">6dp</dimen>
     <dimen name="admob_elevation">6dp</dimen>
@@ -45,4 +46,6 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="detail_inner_horiz_margin">32dp</dimen>
+
+    <integer name="anim_duration_medium">300</integer>
 </resources>

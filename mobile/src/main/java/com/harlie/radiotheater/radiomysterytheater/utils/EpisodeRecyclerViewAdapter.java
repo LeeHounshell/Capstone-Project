@@ -111,43 +111,52 @@ public class EpisodeRecyclerViewAdapter
         holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mContext instanceof EpisodeListActivity) {
-                    EpisodeListActivity episodeListActivity = (EpisodeListActivity) mContext;
-                    if (! EpisodeListActivity.isTwoPane()
-                            || v.getContext().getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
-                    {
-                        Context context = v.getContext();
-                        Intent intent = new Intent(context, EpisodeDetailActivity.class);
-                        intent.putExtra(EpisodeDetailFragment.ARG_EPISODE_ID, String.valueOf(holder.mItem.getEpisodeNumber()));
-                        intent.putExtra(EpisodeDetailFragment.ARG_EPISODE_PARCELABLE, holder.mItem);
-                        LogHelper.v(TAG, "-NEW- ARG_EPISODE_ID="+holder.mItem.getEpisodeNumber());
-                        Bundle playInfo = new Bundle();
-                        episodeListActivity.savePlayInfoToBundle(playInfo);
-                        intent.putExtras(playInfo);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                        context.startActivity(intent);
-
-                    } else {
-
-                        Bundle arguments = new Bundle();
-                        arguments.putString(EpisodeDetailFragment.ARG_EPISODE_ID, String.valueOf(holder.mItem.getEpisodeNumber()));
-                        arguments.putParcelable(EpisodeDetailFragment.ARG_EPISODE_PARCELABLE, holder.mItem);
-                        LogHelper.v(TAG, "-NEW- ARG_EPISODE_ID="+holder.mItem.getEpisodeNumber());
-                        EpisodeDetailFragment fragment = new EpisodeDetailFragment();
-                        fragment.setArguments(arguments);
-
-                        episodeListActivity
-                                .getSupportFragmentManager()
-                                .beginTransaction()
-                                .setCustomAnimations(R.anim.abc_fade_in, R.anim.abc_fade_out,R.anim.abc_fade_in, R.anim.abc_fade_out)
-                                .replace(R.id.episode_detail_container, fragment)
-                                .addToBackStack(null)
-                                .commit();
-
-                    }
+                try {
+                    showDetailView(v, holder);
+                }
+                catch (Exception e) {
+                    LogHelper.e(TAG, "*** showDetailView error="+e.getMessage());
                 }
             }
         });
+    }
+
+    private void showDetailView(View v, EpisodeViewHolder holder) {
+        if (mContext instanceof EpisodeListActivity) {
+            EpisodeListActivity episodeListActivity = (EpisodeListActivity) mContext;
+            if (! EpisodeListActivity.isTwoPane()
+                    || v.getContext().getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+            {
+                Context context = v.getContext();
+                Intent intent = new Intent(context, EpisodeDetailActivity.class);
+                intent.putExtra(EpisodeDetailFragment.ARG_EPISODE_ID, String.valueOf(holder.mItem.getEpisodeNumber()));
+                intent.putExtra(EpisodeDetailFragment.ARG_EPISODE_PARCELABLE, holder.mItem);
+                LogHelper.v(TAG, "-NEW- ARG_EPISODE_ID="+holder.mItem.getEpisodeNumber());
+                Bundle playInfo = new Bundle();
+                episodeListActivity.savePlayInfoToBundle(playInfo);
+                intent.putExtras(playInfo);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+
+            } else {
+
+                Bundle arguments = new Bundle();
+                arguments.putString(EpisodeDetailFragment.ARG_EPISODE_ID, String.valueOf(holder.mItem.getEpisodeNumber()));
+                arguments.putParcelable(EpisodeDetailFragment.ARG_EPISODE_PARCELABLE, holder.mItem);
+                LogHelper.v(TAG, "-NEW- ARG_EPISODE_ID="+holder.mItem.getEpisodeNumber());
+                EpisodeDetailFragment fragment = new EpisodeDetailFragment();
+                fragment.setArguments(arguments);
+
+                episodeListActivity
+                        .getSupportFragmentManager()
+                        .beginTransaction()
+                        .setCustomAnimations(R.anim.abc_fade_in, R.anim.abc_fade_out,R.anim.abc_fade_in, R.anim.abc_fade_out)
+                        .replace(R.id.episode_detail_container, fragment)
+                        .addToBackStack(null)
+                        .commit();
+
+            }
+        }
     }
 
     @Override

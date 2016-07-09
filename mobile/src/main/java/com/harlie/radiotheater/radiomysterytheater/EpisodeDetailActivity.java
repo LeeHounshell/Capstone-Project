@@ -51,6 +51,7 @@ public class EpisodeDetailActivity extends BaseActivity {
                     savePlayInfoToBundle(playInfo);
                     autoplayIntent.putExtras(playInfo);
                     startActivity(autoplayIntent);
+                    overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
                 }
             });
         }
