@@ -45,6 +45,7 @@ public class EpisodeRecyclerViewAdapter
         super(baseActivity, cursor);
         mContext = baseActivity;
         mDataCursor = cursor;
+        setHasStableIds(true);
     }
 
     @Override
@@ -61,9 +62,8 @@ public class EpisodeRecyclerViewAdapter
             episode_description.setVisibility(View.GONE);
         }
         EpisodeViewHolder holder = new EpisodeViewHolder(view);
-        // FIXME: special list-item colors get lost during scroll-back
-        //holder.setIsRecyclable(false); // stop the special colors from changing during scroll
-        //holder.setSpecialColors();
+        holder.setIsRecyclable(false); // stop the special colors from changing during scroll
+        holder.setSpecialColors();
         return holder;
     }
 
@@ -79,9 +79,8 @@ public class EpisodeRecyclerViewAdapter
         holder.mEpisodeRating.setRating(holder.mItem.getRating());
         BaseActivity activity = (BaseActivity) mContext;
         holder.setFontTypeAndSizes(activity);
-        // FIXME: special list-item colors get lost during scroll-back
-        //holder.setIsRecyclable(false); // stop the special colors from changing during scroll
-        //holder.setSpecialColors();
+        holder.setIsRecyclable(false); // stop the special colors from changing during scroll
+        holder.setSpecialColors();
         holderSetOnClickListener(holder);
         setFadeAnimation(holder.mView);
     }
@@ -158,6 +157,13 @@ public class EpisodeRecyclerViewAdapter
         // --- dummy content disabled ---
         //      return mValues.size();
         // --- dummy content disabled ---
+    }
+
+    @Override
+    public void onViewRecycled(EpisodeViewHolder holder) {
+        LogHelper.v(TAG, "onViewRecycled");
+        super.onViewRecycled(holder);
+        holder.setNormalColors();
     }
 
 }
