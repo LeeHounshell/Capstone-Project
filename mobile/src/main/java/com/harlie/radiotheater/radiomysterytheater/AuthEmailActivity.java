@@ -141,7 +141,7 @@ public class AuthEmailActivity extends BaseActivity
                     LogHelper.v(TAG, "********* TIMER CANCELLED *********");
                 }
             }
-        }, 9000); // nine seconds
+        }, 19000); // nineteen seconds
     }
 
     private void problemAuthenticating(String error) {
