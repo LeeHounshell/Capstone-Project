@@ -116,6 +116,11 @@
         </service>
 
         <service
+            android:name=".RadioTheaterControllerIntentService"
+            android:enabled="true">
+        </service>
+
+        <service
             android:name=".RadioTheaterWidgetService"
             android:enabled="true"
             android:exported="false">

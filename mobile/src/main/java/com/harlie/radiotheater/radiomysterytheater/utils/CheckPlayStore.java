@@ -20,11 +20,10 @@ public class CheckPlayStore {
 
     //noinspection ConstantConditions
     @SuppressWarnings("UnusedReturnValue")
-    public static boolean upgradeToPaid(final BaseActivity activity) {
+    public static void upgradeToPaid(final BaseActivity activity) {
 
         //#IFDEF 'PAID'
         //Log.v(TAG, "already using PAID version.");
-        //return false;
         //#ENDIF
 
         //#IFDEF 'TRIAL'
@@ -50,11 +49,10 @@ public class CheckPlayStore {
             }
             catch (ActivityNotFoundException e) {
                 noticeAppNotAvailableOnPlaystore(packageId, activity);
-                return false;
             }
         }
-        return true;
         //#ENDIF
+
     }
 
     public static void noticeAppNotAvailableOnPlaystore(String packageId, BaseActivity activity) {
