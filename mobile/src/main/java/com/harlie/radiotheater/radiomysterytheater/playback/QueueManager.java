@@ -76,7 +76,6 @@ public class QueueManager {
 
     private static volatile int sCurrentIndex;
     private static String sDownloadUrl;
-    private static long sPokeMeTime;
 
     public QueueManager(@NonNull MusicProvider musicProvider,
                         @NonNull Resources resources,

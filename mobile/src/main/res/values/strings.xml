@@ -9,8 +9,6 @@
         <b>Autoplay</b> will begin with the oldest unheard episode and keep playing.
         After one episode finishes, the next automatically starts. Press Autoplay again to Pause.
         Swipe right for next episode, left for previous episode. Long-press to Stop.
-        <b>Voice Search</b> allows you to speak natural language queries into the search engine.
-        For help and advanced features, say or type <b>\'help\'</b> into a Search from the main toolbar.
         Once playback begins, a ring will appear. Use the button on that ring to adjust play position.
         The ring-seekbar and/or FAB can be removed from Options -> Settings, for impaired users.
         Also an option to download, and change text size + font selection.

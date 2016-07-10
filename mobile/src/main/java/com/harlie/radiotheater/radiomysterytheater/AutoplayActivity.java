@@ -384,7 +384,7 @@ public class AutoplayActivity extends BaseActivity {
     }
 
     private void setupAdMob() {
-        // initialize AdMob - note this code uses the Gradle #IFDEF / #ENDIF gradle preprocessor
+        // initialize AdMob
         //#IFDEF 'TRIAL'
         if (sPurchased != true && sNoAdsForShow != true) {
             LogHelper.v(TAG, "setupAdMob");
@@ -1127,7 +1127,6 @@ public class AutoplayActivity extends BaseActivity {
                 final String KEY_NOPLAY = getResources().getString(R.string.noplay);
                 final String KEY_PLAY = getResources().getString(R.string.play);
                 final String KEY_COMPLETION = getResources().getString(R.string.complete);
-                final String KEY_POKE_ME = getResources().getString(R.string.pokeme);
 
                 if (message.equals(KEY_LOAD_OK)) {
                     LogHelper.v(TAG, KEY_LOAD_OK);
@@ -1193,33 +1192,6 @@ public class AutoplayActivity extends BaseActivity {
                     markEpisodeAsHeardAndIncrementPlayCount(getEpisodeNumber(), episodeIndex, mDuration);
                     initializeForEpisode("playback completed for episode "+episodeIndex);
                     verifyPaidVersion(true);
-                }
-                else if (message.length() > KEY_POKE_ME.length() && message.substring(0, KEY_POKE_ME.length()).equals(KEY_POKE_ME)) {
-                    String episodeIndex = message.substring(KEY_POKE_ME.length(), message.length());
-                    LogHelper.v(TAG,  "*** RECEIVED BROADCAST: !!! POKE-ME !!! for EPISODE "+episodeIndex);
-                    if (sLoadedOK) {
-                        if (getRadioMediaController() != null) {
-                            PlaybackStateCompat playbackState = getRadioMediaController().getPlaybackState();
-                            if (playbackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
-                                MediaControllerCompat.TransportControls controls = getRadioMediaController().getTransportControls();
-                                LogHelper.v(TAG, "*** POKE-ME: STOPPING MEDIA CONTROLLER - controls.stop()");
-                                controls.stop();
-                                try {
-                                    Thread.sleep(2);
-                                } catch (Exception e) {
-                                    LogHelper.w(TAG, "POKE: problem waiting for play e=" + e);
-                                }
-                            }
-                        }
-                        enableButtons();
-                        initializeForEpisode("*** POKE-ME: do handleAutoplayClick for episode " + episodeIndex);
-                        handleAutoplayClick();
-                    }
-                    else {
-                        LogHelper.w(TAG, "*** REINITIALIZE POKE-ME");
-                        startAutoplayActivity();
-                        finish();
-                    }
                 }
                 else {
                     LogHelper.v(TAG, "*** UNKNOWN MESSAGE VIA INTENT: "+message);
