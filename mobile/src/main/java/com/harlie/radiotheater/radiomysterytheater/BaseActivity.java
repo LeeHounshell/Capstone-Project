@@ -88,6 +88,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import at.grabner.circleprogress.AnimationState;
 import at.grabner.circleprogress.AnimationStateChangedListener;
@@ -859,6 +861,7 @@ public class BaseActivity extends AppCompatActivity {
             editor.putBoolean("userPaid", paid);
             editor.apply();
 
+            // FIXME: add in-app-payments, allow purchase
             // FIXME: update local SQLite Configuration table with user info
             // FIXME: update Firebase record for this user's email to be PAID
         }
@@ -1415,7 +1418,7 @@ public class BaseActivity extends AppCompatActivity {
                 LogHelper.v(TAG, "*** CHECK THE USER CONFIGURATION ***");
                 updateTheUserConfiguration();
             }
-        }, 19000); // allow nineteen seconds
+        }, 90000); // allow a minute and a half
 
         // Attach a listener to read the data initially
         getDatabase().child("configuration").child("device").child(deviceId).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -1426,14 +1429,51 @@ public class BaseActivity extends AppCompatActivity {
                 Object configurationObject = dataSnapshot.getValue();
                 if (configurationObject == null) {
                     LogHelper.e(TAG, "the Firebase User Configuration (DataSnapshot) is null! deviceId="+getAdvertId()+", email="+getEmail());
-                    updateTheUserConfiguration();
+                    //updateTheUserConfiguration();
                     return;
                 }
                 String configurationJSON = configurationObject.toString();
-                LogHelper.v(TAG, "===> Firebase configurationJSON="+configurationJSON);
                 sFoundFirebaseDeviceId = true;
-                // FIXME: lee decode the info and save locally as the mConfiguration object
-                //mConfiguration = decoded;
+                LogHelper.v(TAG, "===> Firebase configurationJSON="+configurationJSON);
+
+                //#IFDEF 'PAID'
+                //boolean paidVersion = true;
+                //boolean purchaseAccess = true;
+                //boolean purchaseNoads = true;
+                //#ENDIF
+
+                //#IFDEF 'TRIAL'
+                boolean paidVersion = false;
+                boolean purchaseAccess = false;
+                boolean purchaseNoads = false;
+                //#ENDIF
+
+                mConfiguration = new ConfigurationContentValues();
+                mConfiguration.putFieldUserEmail(getEmail());
+                mConfiguration.putFieldUserName(getName() != null ? getName() : "unknown");
+                mConfiguration.putFieldDeviceId(getAdvertId());
+
+                mConfiguration.putFieldPaidVersion(paidVersion);
+                mConfiguration.putFieldPurchaseAccess(purchaseAccess);
+                mConfiguration.putFieldPurchaseNoads(purchaseNoads);
+
+                int decodedListenCount = 0;
+                //
+                // since we only need a single value from the JSON use a regex pattern
+                // EXAMPLE JSON: {firebase_user_name=colefklbBSTHPrRWGPt9BWYcCYS2, firebase_device_id=bf5874b5-0cd5-4457-9401-6fd384edb579, firebase_email=lee@harlie.com, firebase_authenticated=true, firebase_total_listen_count=19}
+                //
+                Pattern pattern = Pattern.compile(".*firebase_total_listen_count=([0-9]+).*");
+                Matcher matcher = pattern.matcher((configurationJSON));
+                if (matcher.find()) {
+                    try {
+                        decodedListenCount = Integer.parseInt(matcher.group(1));
+                        LogHelper.v(TAG, "---> DECODED LISTEN_COUNT="+decodedListenCount);
+                    }
+                    catch (NumberFormatException e) {
+                        LogHelper.e(TAG, "NumberFormatException: group="+matcher.group(1));
+                    }
+                }
+                mConfiguration.putFieldTotalListenCount(decodedListenCount);
                 LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
             }
 
@@ -1446,6 +1486,9 @@ public class BaseActivity extends AppCompatActivity {
 
     }
 
+    // the Configuration exists initially in SQLite, then in Firebase also.
+    // but if a new install happens for the account, we need to remember LISTEN_COUNT
+    // and pull it from Firebase instead of using local data.
     private void updateTheUserConfiguration() {
         LogHelper.v(TAG, "*** updateTheUserConfiguration ***");
         ConfigurationContentValues configurationContent = null;
@@ -1829,6 +1872,10 @@ public class BaseActivity extends AppCompatActivity {
 
     public long getEpisodeNumber() {
         return mEpisodeNumber;
+    }
+
+    public void setEpisodeNumber(long episodeNumber) {
+        this.mEpisodeNumber = episodeNumber;
     }
 
     public String getEpisodeDescription() {
