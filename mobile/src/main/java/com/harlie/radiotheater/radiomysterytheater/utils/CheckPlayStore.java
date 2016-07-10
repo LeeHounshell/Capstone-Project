@@ -36,7 +36,7 @@ public class CheckPlayStore {
                 String upgradeLink = "http://market.android.com/details?id=" + packageId;
                 if (CheckPlayStore.isGooglePlayInstalled(activity.getApplicationContext())) {
                     upgradeLink = "market://details?id=" + packageId;
-                } //FIXME: log 'upgrade' web-click to Firebase
+                }
                 String message = activity.getResources().getString(R.string.playstore_upgrade);
                 Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
                 Log.v(TAG, "---> upgrade Link=" + upgradeLink);
@@ -44,7 +44,7 @@ public class CheckPlayStore {
                 intent.setAction(Intent.ACTION_VIEW);
                 intent.addCategory(Intent.CATEGORY_BROWSABLE);
                 intent.setData(Uri.parse(upgradeLink));
-                activity.startActivity(intent);
+                activity.startActivity(intent); //FIXME: log 'upgrade' web-click to Firebase
                 activity.overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
             }
             catch (ActivityNotFoundException e) {
