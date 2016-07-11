@@ -110,15 +110,35 @@ public class RadioTheaterService
     // The action of the incoming Intent indicating that it contains a command
     // to be executed (see {@link #onStartCommand})
     public static final String ACTION_CMD = "com.harlie.radiotheater.radiomysterytheater.ACTION_CMD";
+
     // The key in the extras of the incoming Intent indicating the command that
     // should be executed (see {@link #onStartCommand})
     public static final String CMD_NAME = "CMD_NAME";
+
+    // A value of a CMD_NAME key in the extras of the incoming Intent that
+    // indicates that the music playback should be started (see {@link #onStartCommand})
+    public static final String CMD_PLAY = "CMD_PLAY";
+
     // A value of a CMD_NAME key in the extras of the incoming Intent that
     // indicates that the music playback should be paused (see {@link #onStartCommand})
     public static final String CMD_PAUSE = "CMD_PAUSE";
+
+    // A value of a CMD_NAME key in the extras of the incoming Intent that
+    // indicates that the music playback should be stopped (see {@link #onStartCommand})
+    public static final String CMD_STOP = "CMD_STOP";
+
+    // A value of a CMD_NAME key that indicates that the music playback should skip
+    // to the next item in the playback list (see {@link #onStartCommand})
+    public static final String CMD_NEXT = "CMD_NEXT";
+
+    // A value of a CMD_NAME key that indicates that the music playback should skip
+    // to the previous item in the playback list (see {@link #onStartCommand})
+    public static final String CMD_PREV = "CMD_PREV";
+
     // A value of a CMD_NAME key that indicates that the music playback should switch
     // to local playback from cast playback.
     public static final String CMD_STOP_CASTING = "CMD_STOP_CASTING";
+
     // Delay stopSelf by using a handler.
     private static final int STOP_DELAY = 30000;
 
@@ -264,10 +284,27 @@ public class RadioTheaterService
             String action = startIntent.getAction();
             String command = startIntent.getStringExtra(CMD_NAME);
             if (ACTION_CMD.equals(action)) {
-                if (CMD_PAUSE.equals(command)) {
+                LogHelper.v(TAG, "=========>>> ACTION: "+action+", COMMAND="+command);
+                if (CMD_PLAY.equals(command)) {
+                    mPlaybackManager.handlePlayRequest();
+                }
+                else if (CMD_PAUSE.equals(command)) {
                     mPlaybackManager.handlePauseRequest();
-                } else if (CMD_STOP_CASTING.equals(command)) {
+                }
+                else if (CMD_STOP.equals(command)) {
+                    mPlaybackManager.handleStopRequest(null);
+                }
+                else if (CMD_NEXT.equals(command)) {
+                    // FIXME
+                }
+                else if (CMD_PREV.equals(command)) {
+                    // FIXME
+                }
+                else if (CMD_STOP_CASTING.equals(command)) {
                     VideoCastManager.getInstance().disconnect();
+                }
+                else {
+                    LogHelper.w(TAG, "*** UNKNOWN ACTION="+action+" for COMMAND="+command);
                 }
             } else {
                 // Try to handle the intent as a media button event wrapped by MediaButtonReceiver

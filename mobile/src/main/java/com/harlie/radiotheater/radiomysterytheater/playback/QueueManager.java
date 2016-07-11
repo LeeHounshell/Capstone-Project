@@ -24,12 +24,14 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 
 import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
 import com.harlie.radiotheater.radiomysterytheater.R;
+import com.harlie.radiotheater.radiomysterytheater.RadioControlIntentService;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
@@ -170,14 +172,6 @@ public class QueueManager {
     }
 
     //-------- RADIO THEATER --------
-    private void waitabit() {
-        try {
-            Thread.sleep(31);
-        } catch (Exception e) {}
-        ;
-    }
-
-    //-------- RADIO THEATER --------
     public void setOrderedQueue() {
         LogHelper.v(TAG, "setOrderedQueue");
         String mediaId = setCurrentIndexFromEpisodeId();
@@ -199,6 +193,13 @@ public class QueueManager {
         }
         else if (mPlayingQueue.size() == 0) {
             LogHelper.v(TAG, "*** THE PLAYING QUEUE IS EMPTY ***");
+//            MusicProvider.Callback queueLoadedCallback = new MusicProvider.Callback() {
+//                @Override
+//                public void onMusicCatalogReady(boolean success) {
+//                    LogHelper.v(TAG, "*** THE PLAYING QUEUE IS LOADED ***");
+//                }
+//            };
+//            mMusicProvider.retrieveMediaAsync(queueLoadedCallback);
             waitabit();
             return null;
         }
@@ -206,7 +207,22 @@ public class QueueManager {
     }
 
     //-------- RADIO THEATER --------
+    private void waitabit() {
+        try {
+            long timeInMills = 1000;
+            SystemClock.sleep(timeInMills);
+        }catch (Exception e) {
+            ;
+        }
+    }
+
+    //-------- RADIO THEATER --------
     public String setCurrentIndexFromEpisodeId() {
+        while (MusicProvider.isMediaLoaded() == false) {
+            LogHelper.v(TAG, "setCurrentIndexFromEpisodeId: goto sleep (waiting for MusicProvider Media to load..)");
+            waitabit();
+            LogHelper.v(TAG, "setCurrentIndexFromEpisodeId: wakeup! - MusicProvider.isMediaLoaded() == true ... lastRequest="+RadioControlIntentService.lastRequest());
+        }
         int episodeId = getNextAvailableEpisode();
         LocalPlayback.setCurrentEpisode(episodeId);
         LogHelper.v(TAG, "---> setCurrentIndexFromEpisodeId: episodeId="+episodeId);
@@ -239,6 +255,11 @@ public class QueueManager {
         Iterable<MediaMetadataCompat> all_episodes = mMusicProvider.getMusicsByGenre(categoryValue);
         List<MediaSessionCompat.QueueItem> all_queued = convertToQueue(all_episodes, categoryType, categoryValue);
         sCurrentIndex = QueueHelper.getMusicIndexOnQueue(all_queued, episodeMediaId);
+        try {
+            setCurrentQueue(title, all_queued);
+        } catch (Exception e) {
+            LogHelper.w(TAG, "setCurrentQueue all_queued request - e="+e.getMessage());
+        }
         LogHelper.v(TAG, "getCurrentMusic: sCurrentIndex="+sCurrentIndex);
         return episodeMediaId;
     }

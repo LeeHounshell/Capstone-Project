@@ -20,6 +20,8 @@ import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 public class EpisodeDetailActivity extends BaseActivity {
     private final static String TAG = "LEE: <" + EpisodeDetailActivity.class.getSimpleName() + ">";
 
+    private String mArgEpisodeId;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         LogHelper.v(TAG, "onCreate");
@@ -35,15 +37,15 @@ public class EpisodeDetailActivity extends BaseActivity {
             }
         }
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        if (fab != null) {
+        FloatingActionButton fabActionButton = (FloatingActionButton) findViewById(R.id.fab);
+        if (fabActionButton != null) {
             final EpisodeDetailActivity activity = this;
-            fab.setOnClickListener(new View.OnClickListener() {
+            fabActionButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     //Snackbar.make(view, "Replace with your own detail action", Snackbar.LENGTH_LONG)
                     //        .setAction("Action", null).show();
-                    LogHelper.v(TAG, "CLICK - fab");
+                    LogHelper.v(TAG, "CLICK - mFabActionButton");
                     Intent autoplayIntent = new Intent(activity, AutoplayActivity.class);
                     // close existing activity stack regardless of what's in there and create new root
                     //autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -75,10 +77,10 @@ public class EpisodeDetailActivity extends BaseActivity {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
-            String arg_episode_id = getIntent().getStringExtra(EpisodeDetailFragment.ARG_EPISODE_ID);
+            mArgEpisodeId = getIntent().getStringExtra(EpisodeDetailFragment.ARG_EPISODE_ID);
             Parcelable arg_episode_parcel = getIntent().getParcelableExtra(EpisodeDetailFragment.ARG_EPISODE_PARCELABLE);
             LogHelper.v(TAG, "(SEND) ARG_EPISODE_PARCELABLE and ARG_EPISODE_ID="+EpisodeDetailFragment.ARG_EPISODE_ID);
-            arguments.putString(EpisodeDetailFragment.ARG_EPISODE_ID, arg_episode_id);
+            arguments.putString(EpisodeDetailFragment.ARG_EPISODE_ID, mArgEpisodeId);
             arguments.putParcelable(EpisodeDetailFragment.ARG_EPISODE_PARCELABLE, arg_episode_parcel);
             EpisodeDetailFragment fragment = new EpisodeDetailFragment();
             fragment.setArguments(arguments);
@@ -86,6 +88,8 @@ public class EpisodeDetailActivity extends BaseActivity {
                     .add(R.id.episode_detail_container, fragment)
                     .commit();
         }
+
+        RadioControlIntentService.startActionStart(this, "DETAIL", mArgEpisodeId, null);
     }
 
     @Override

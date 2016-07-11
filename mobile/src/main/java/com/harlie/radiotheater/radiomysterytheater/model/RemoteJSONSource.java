@@ -150,6 +150,50 @@ public class RemoteJSONSource implements MusicProviderSource {
         // mediaSession.setMetadata) is not a good idea for a real world player app, because
         // the session metadata can be accessed by notification listeners.
 
+        //--------------------------------------------------------------------------------
+        // FIXME - FAILED BINDER TRANSACTION error with images.  (removed the images from MetaData for temp fix)
+        /*
+        07-11 00:50:33.274 8581-8581/com.harlie.radiotheater.radiomysterytheater.paid V/LEE: <QueueManager>: ---------> getCurrentMusic: mediaId=881854013, episodeMediaId=__BY_GENRE__/__RADIO_DRAMA__|881854013, title=The Old Ones Are Hard to Kill
+        07-11 00:50:33.274 8581-8581/com.harlie.radiotheater.radiomysterytheater.paid V/LEE: <MusicProvider>: getMusicsByGenre: genre=__RADIO_DRAMA__
+        07-11 00:50:33.274 8581-8581/com.harlie.radiotheater.radiomysterytheater.paid V/LEE: <MusicProvider>: getMusicsByGenre(__RADIO_DRAMA__) found 1
+        07-11 00:50:33.274 8581-8581/com.harlie.radiotheater.radiomysterytheater.paid V/LEE: <QueueHelper>: convertToQueue
+        07-11 00:50:33.297 8581-8581/com.harlie.radiotheater.radiomysterytheater.paid V/LEE: <QueueHelper>: getMusicIndexOnQueue: mediaId=__BY_GENRE__/__RADIO_DRAMA__|881854013
+        07-11 00:50:33.298 8581-8581/com.harlie.radiotheater.radiomysterytheater.paid V/LEE: <QueueManager>: setCurrentQueue
+        07-11 00:50:33.298 8581-8581/com.harlie.radiotheater.radiomysterytheater.paid V/LEE: <QueueManager>: setCurrentQueue: title=The Old Ones Are Hard to Kill
+        07-11 00:50:33.321 8581-8581/com.harlie.radiotheater.radiomysterytheater.paid E/JavaBinder: !!! FAILED BINDER TRANSACTION !!!  (parcel size = 65936)
+        07-11 00:50:33.324 8581-8581/com.harlie.radiotheater.radiomysterytheater.paid E/Dead object in setQueue.: Transaction failed on small parcel; remote process probably died
+        android.os.DeadObjectException: Transaction failed on small parcel; remote process probably died
+        at android.os.BinderProxy.transactNative(Native Method)
+        at android.os.BinderProxy.transact(Binder.java:503)
+        at android.media.session.ISession$Stub$Proxy.setQueue(ISession.java:439)
+        at android.media.session.MediaSession.setQueue(MediaSession.java:438)
+        at android.support.v4.media.session.MediaSessionCompatApi21.setQueue(MediaSessionCompatApi21.java:124)
+        at android.support.v4.media.session.MediaSessionCompat$MediaSessionImplApi21.setQueue(MediaSessionCompat.java:2264)
+        at android.support.v4.media.session.MediaSessionCompat.setQueue(MediaSessionCompat.java:434)
+        at com.harlie.radiotheater.radiomysterytheater.RadioTheaterService$2.onQueueUpdated(RadioTheaterService.java:236)
+        at com.harlie.radiotheater.radiomysterytheater.playback.QueueManager.setCurrentQueue(QueueManager.java:385)
+        at com.harlie.radiotheater.radiomysterytheater.playback.QueueManager.setCurrentQueue(QueueManager.java:374)
+        at com.harlie.radiotheater.radiomysterytheater.playback.QueueManager.setCurrentIndexFromEpisodeId(QueueManager.java:260)
+        at com.harlie.radiotheater.radiomysterytheater.playback.QueueManager.getCurrentMusic(QueueManager.java:189)
+        at com.harlie.radiotheater.radiomysterytheater.playback.PlaybackManager.setCustomAction(PlaybackManager.java:159)
+        at com.harlie.radiotheater.radiomysterytheater.playback.PlaybackManager.updatePlaybackState(PlaybackManager.java:130)
+        at com.harlie.radiotheater.radiomysterytheater.playback.PlaybackManager.onPlaybackStatusChanged(PlaybackManager.java:215)
+        at com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback.stop(LocalPlayback.java:137)
+        at com.harlie.radiotheater.radiomysterytheater.playback.PlaybackManager.handleStopRequest(PlaybackManager.java:109)
+        at com.harlie.radiotheater.radiomysterytheater.RadioTheaterService.onDestroy(RadioTheaterService.java:334)
+        at android.app.ActivityThread.handleStopService(ActivityThread.java:3082)
+        at android.app.ActivityThread.-wrap21(ActivityThread.java)
+        at android.app.ActivityThread$H.handleMessage(ActivityThread.java:1448)
+        at android.os.Handler.dispatchMessage(Handler.java:104)
+        at android.os.Looper.loop(Looper.java:148)
+        at android.app.ActivityThread.main(ActivityThread.java:5460)
+        at java.lang.reflect.Method.invoke(Native Method)
+        at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:726)
+        at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:616)
+        07-11 00:50:33.326 8581-8581/com.harlie.radiotheater.radiomysterytheater.paid V/LEE: <QueueManager>: getCurrentMusic: sCurrentIndex=0
+        */
+        //--------------------------------------------------------------------------------
+
         //noinspection ResourceType
         MediaMetadataCompat theMetadata = new MediaMetadataCompat.Builder()
                 .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, id)
@@ -164,11 +208,11 @@ public class RemoteJSONSource implements MusicProviderSource {
                 .putString(MediaMetadataCompat.METADATA_KEY_DATE, airdate)
                 .putLong(MediaMetadataCompat.METADATA_KEY_YEAR, airdate_year)
                 .putString(MediaMetadataCompat.METADATA_KEY_GENRE, genre)
-                .putBitmap(MediaMetadataCompat.METADATA_KEY_ART, keyArtBitmap)
+//                .putBitmap(MediaMetadataCompat.METADATA_KEY_ART, keyArtBitmap)
 //                .putString(MediaMetadataCompat.METADATA_KEY_ART_URI, keyArtUrl)
-                .putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, iconBitmap)
+//                .putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, iconBitmap)
 //                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, iconUrl)
-                .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, hauntedBitmap)
+//                .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, hauntedBitmap)
 //                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, hauntedUrl)
                 .putLong(MediaMetadataCompat.METADATA_KEY_TRACK_NUMBER, episodeNumber)
                 .putLong(MediaMetadataCompat.METADATA_KEY_NUM_TRACKS, totalTrackCount)

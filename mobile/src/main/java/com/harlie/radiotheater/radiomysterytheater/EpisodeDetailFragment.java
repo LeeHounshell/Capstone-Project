@@ -5,10 +5,14 @@ import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.widget.AppCompatButton;
 import android.view.LayoutInflater;
+import android.view.SoundEffectConstants;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -43,9 +47,11 @@ public class EpisodeDetailFragment extends FragmentBase {
      */
     public static final String ARG_EPISODE_ID = "KEY_EPISODE_ID";
     public static final String ARG_EPISODE_PARCELABLE = "KEY_EPISODE_PARCELABLE";
+    //private MediaPlayer mp;
 
     private AppCompatButton mPlayNow;
     private AppCompatButton mWebLink;
+    private long mEpisodeId;
 
     /**
      * The dummy content this fragment is presenting.
@@ -62,19 +68,23 @@ public class EpisodeDetailFragment extends FragmentBase {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         LogHelper.v(TAG, "onCreate");
+        //mp = MediaPlayer.create(this.getActivity(), R.raw.click);
+
         super.onCreate(savedInstanceState);
 
         if (getArguments() != null && getArguments().containsKey(ARG_EPISODE_ID)) {
             // Load the content specified by the fragment arguments.
             // The ARG_EPISODE_PARCELABLE contains a Parcelable EpisodeRecyclerViewItem.
-            long episodeId = Long.valueOf(getArguments().getString(ARG_EPISODE_ID));
-            LogHelper.v(TAG, "onCreate: build EpisodeRecyclerViewItem for (RECEIVE) ARG_EPISODE_ID="+ episodeId);
+            mEpisodeId = Long.valueOf(getArguments().getString(ARG_EPISODE_ID));
+            BaseActivity baseActivity = (BaseActivity) getActivity();
+            baseActivity.setEpisodeNumber(mEpisodeId);
+            LogHelper.v(TAG, "onCreate: build EpisodeRecyclerViewItem for (RECEIVE) ARG_EPISODE_ID="+ mEpisodeId);
             mItem = getArguments().getParcelable(ARG_EPISODE_PARCELABLE);
 
             BaseActivity activity = (BaseActivity) getActivity();
 
             // Load the actors for this episode
-            ActorsEpisodesCursor actorsEpisodesCursor = activity.getActorsEpisodesCursor(episodeId);
+            ActorsEpisodesCursor actorsEpisodesCursor = activity.getActorsEpisodesCursor(mEpisodeId);
             int actorNumber = 0;
             while (actorsEpisodesCursor != null && actorsEpisodesCursor.moveToNext()) {
                 actorNumber += 1;
@@ -118,7 +128,7 @@ public class EpisodeDetailFragment extends FragmentBase {
             }
 
             // Load the writers for this episode
-            WritersEpisodesCursor writersEpisodesCursor = activity.getWritersEpisodesCursor(episodeId);
+            WritersEpisodesCursor writersEpisodesCursor = activity.getWritersEpisodesCursor(mEpisodeId);
             while (writersEpisodesCursor != null && writersEpisodesCursor.moveToNext()) {
                 long writerId = writersEpisodesCursor.getFieldWriterId();
                 WritersCursor writersCursor = activity.getWritersCursor(writerId);
@@ -140,12 +150,15 @@ public class EpisodeDetailFragment extends FragmentBase {
 //          //#ENDIF
             // --- dummy content disabled ---
         }
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         LogHelper.v(TAG, "onCreateView");
         View rootView = inflater.inflate(R.layout.episode_detail, container, false);
+        final Drawable pleaseWaitButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_please_wait_button_selector, null);
+        final Drawable playNowButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_playnow_button_selector, null);
 
         // Show the dummy content as text in a TextView.
         if (mItem != null) {
@@ -183,14 +196,35 @@ public class EpisodeDetailFragment extends FragmentBase {
             loadPortrait(rootView, writer, R.id.writer, R.id.writer_name, height, width);
 
             mPlayNow = (AppCompatButton) rootView.findViewById(R.id.play_now);
+            mPlayNow.setBackground(playNowButton);
+            mPlayNow.setEnabled(true);
+            mPlayNow.playSoundEffect(SoundEffectConstants.CLICK);
             mWebLink = (AppCompatButton) rootView.findViewById(R.id.weblink);
 
+            final BaseActivity baseActivity = (BaseActivity) this.getActivity();
             mPlayNow.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    mPlayNow.setEnabled(false);
+                    mPlayNow.setBackground(pleaseWaitButton);
+                    //mp.start();
                     LogHelper.v(TAG, "onClick - PLAY NOW");
-                    // FIXME: this 'play_now' button needs to send a message for a specific QueueItem to play.
-                    // FIXME: because of time-limitations, this feature and voice-search will be built last, time permitting.
+                    RadioControlIntentService.startActionPlay(baseActivity, "DETAIL", String.valueOf(mEpisodeId), null);
+                    Intent autoplayIntent = new Intent(baseActivity, AutoplayActivity.class);
+                    // close existing activity stack regardless of what's in there and create new root
+                    //autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    Bundle playInfo = new Bundle();
+                    baseActivity.savePlayInfoToBundle(playInfo);
+                    autoplayIntent.putExtras(playInfo);
+                    startActivity(autoplayIntent);
+                    baseActivity.overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
+                    baseActivity.getHandler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            mPlayNow.setBackground(playNowButton);
+                            mPlayNow.setEnabled(true);
+                        }
+                    }, 7000);
                 }
             });
 

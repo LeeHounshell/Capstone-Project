@@ -4,6 +4,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.appwidget.AppWidgetManager;
 import android.content.Intent;
+import android.media.MediaPlayer;
 import android.os.IBinder;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.widget.RemoteViews;
@@ -16,6 +17,8 @@ import com.harlie.radiotheater.radiomysterytheater.utils.RadioTheaterWidgetProvi
 public class RadioTheaterWidgetService extends Service {
     private final static String TAG = "LEE: <" + RadioTheaterWidgetService.class.getSimpleName() + ">";
 
+    //private MediaPlayer mp;
+
     public RadioTheaterWidgetService() {
     }
 
@@ -27,6 +30,8 @@ public class RadioTheaterWidgetService extends Service {
     }
 
     private void handleCommand(Intent intent) {
+        //mp = MediaPlayer.create(this, R.raw.click);
+        //mp.start();
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this.getApplicationContext());
 
         int[] allWidgetIds = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS);
@@ -110,18 +115,18 @@ public class RadioTheaterWidgetService extends Service {
     private void Autoplay(RemoteViews remoteViews) {
         LogHelper.v(TAG, "WIDGET: <set the widget to Autoplay>");
         remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_autoplay_button_selector);
-        RadioTheaterControllerIntentService.startActionPlay(this.getApplicationContext(), null, null);
+        RadioControlIntentService.startActionPlay(this.getApplicationContext(), "WIDGET", null, null);
     }
 
     private void PleaseWait(RemoteViews remoteViews) {
         LogHelper.v(TAG, "WIDGET: <set the widget to Please Wait>");
-        remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_pause_disabled_button_selector);
+        remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_please_wait_button_selector);
     }
 
     private void Pause(RemoteViews remoteViews) {
         LogHelper.v(TAG, "WIDGET: <set the widget to Pause>");
         remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_pause_button_selector);
-        RadioTheaterControllerIntentService.startActionPause(this.getApplicationContext(), null, null);
+        RadioControlIntentService.startActionPause(this.getApplicationContext(), "WIDGET", null, null);
     }
 
     @Override

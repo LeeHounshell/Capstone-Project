@@ -72,6 +72,7 @@
 
         <android.support.v7.widget.AppCompatButton
             android:id="@+id/play_now"
+            android:soundEffectsEnabled="true"
             android:focusable="true"
             android:layout_width="@dimen/play_now_width"
             android:layout_height="@dimen/play_now_height"

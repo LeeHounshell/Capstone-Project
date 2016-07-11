@@ -115,12 +115,6 @@ public class BaseActivity extends AppCompatActivity {
     protected static final String FIREBASE_ACTORS_URL = "radiomysterytheater/1/actors";
     protected static final String FIREBASE_SHOWS_URL = "radiomysterytheater/2/shows";
 
-    public enum AutoplayState {
-        READY2PLAY, LOADING, PLAYING, PAUSED
-    }
-    protected AutoplayState mAutoplayState = AutoplayState.READY2PLAY;
-
-    protected int mAudioFocusRequstResult;
     protected long mDuration;
     protected long mCurrentPosition;
     protected String mAirdate;
@@ -129,10 +123,7 @@ public class BaseActivity extends AppCompatActivity {
     protected String mEpisodeWeblinkUrl;
     protected String mEpisodeDownloadUrl;
 
-    protected String mMediaId;
     protected long mEpisodeNumber;
-
-    public static volatile long sKickstartTime;
 
     protected static volatile boolean sOnRestoreInstanceComplete;
     protected static volatile boolean sFoundFirebaseDeviceId;
@@ -141,12 +132,10 @@ public class BaseActivity extends AppCompatActivity {
 
     // need to save these across Activities
     protected static volatile boolean sHandleRotationEvent;
-    protected static volatile boolean sNeed2RestartPlayback;
     protected static volatile boolean sLoadingScreenEnabled;
     protected static volatile boolean sBeginLoading;
     protected static volatile boolean sSeekUpdateRunning;
     protected static volatile boolean sAutoplayNextNow;
-    protected static volatile boolean sOkKickstart;
 
     // need to save these across Activities
     protected static volatile boolean sPurchased;
@@ -154,7 +143,6 @@ public class BaseActivity extends AppCompatActivity {
     protected static volatile boolean sDownloaded;
     protected static volatile boolean sEpisodeHeard;
     protected static volatile boolean sHaveRealDuration;
-    protected static volatile boolean sSeeking;
     protected static volatile boolean sPlaying;
     protected static volatile boolean sLoadedOK;
 
@@ -196,19 +184,16 @@ public class BaseActivity extends AppCompatActivity {
         }
         else {
             sHandleRotationEvent = false;
-            sNeed2RestartPlayback = false;
             sLoadingScreenEnabled = false;
             sBeginLoading = false;
             sSeekUpdateRunning = false;
             sAutoplayNextNow = false;
-            sOkKickstart = false;
 
             sPurchased = false;
             sNoAdsForShow = false;
             sDownloaded = false;
             sEpisodeHeard = false;
             sHaveRealDuration = false;
-            sSeeking = false;
             sPlaying = false;
             sLoadedOK = false;
 
@@ -399,7 +384,6 @@ public class BaseActivity extends AppCompatActivity {
         mEpisodeDescription = null;
         mEpisodeWeblinkUrl = null;
         mEpisodeDownloadUrl = null;
-        mMediaId = null;
         mAdvId = null;
         mName = null;
         mEmail = null;
@@ -1532,122 +1516,170 @@ public class BaseActivity extends AppCompatActivity {
             }
         }
 
-        if (mConfiguration == null && sqliteConfiguration != null && configurationContent != null) {
+        ContentValues firebaseConfiguration = null;
+        boolean updateFirebaseWithLocal = false;
+        if (mConfiguration != null) {
+            firebaseConfiguration = mConfiguration.values();
+        }
+        else if (sqliteConfiguration != null && configurationContent != null) {
             LogHelper.v(TAG, "have SQLite configuration, but not Firebase - so update Firebase with local");
-            mConfiguration = configurationContent;
+            updateFirebaseWithLocal = true;
         }
 
-        if (mConfiguration != null) { // found Firebase Configuration
+        if (mConfiguration != null || updateFirebaseWithLocal) { // found Firebase Configuration
             LogHelper.v(TAG, "updating Firebase entry for Configuration.");
-            ContentValues firebaseConfiguration = mConfiguration.values();
-            mConfiguration = new ConfigurationContentValues();
-            // 4) update local SQLite if Firebase has most recent data
-            if (sqliteConfiguration != null) { // have local SQLite Configuration?
-                LogHelper.v(TAG, "using local SQLite configuration for update");
-                Boolean paidVersion = false;
-                Boolean purchaseAccess = false;
-                Boolean purchaseNoads = false;
-                Boolean firebasePaidVersion = false;
-                Boolean firebasePurchaseAccess = false;
-                Boolean firebasePurchaseNoAds = false;
-                Long total_listen_count = Long.valueOf(0);
-                try {
-                    //#IFDEF 'PAID'
-                    //paidVersion = true;
-                    //purchaseAccess = true;
-                    //purchaseNoads = true;
-                    //#ENDIF
-
-                    //#IFDEF 'TRIAL'
-                    paidVersion = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
-                    purchaseAccess = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
-                    purchaseNoads = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
-                    //#ENDIF
-
-                    total_listen_count = sqliteConfiguration.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
-                    if (total_listen_count == null) {
-                        total_listen_count = Long.valueOf(0);
-                    }
-                    if (total_listen_count < mAllListenCount) {
-                        total_listen_count = mAllListenCount;
-                    }
-                    else {
-                        mAllListenCount = total_listen_count;
-                    }
-                }
-                catch (Exception e) {
-                    LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns FIELD, e="+e.getMessage());
-                }
-                Long firebase_listen_count = Long.valueOf(0);
-                try {
-                    paidVersion = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
-                    purchaseAccess = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
-                    purchaseNoads = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
-                    firebase_listen_count = firebaseConfiguration.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
-                    if (firebase_listen_count == null) {
-                        firebase_listen_count = Long.valueOf(0);
-                    }
-                    if (firebase_listen_count < mAllListenCount) {
-                        firebase_listen_count = mAllListenCount;
-                    }
-                    else {
-                        mAllListenCount = firebase_listen_count;
-                    }
-                }
-                catch (Exception e) {
-                    LogHelper.w(TAG, "Firebase: unable to get ConfigurationColumns FIELD, e="+e.getMessage());
-                }
-                boolean dirty = false;
-                if (total_listen_count >= firebase_listen_count) {
-                    LogHelper.v(TAG, "Firebase Configuration needs update.. local listen_count is greater or equal");
-                    mAllListenCount = total_listen_count.longValue();
-                    mConfiguration.putFieldTotalListenCount(mAllListenCount.intValue());
-                    dirty = true;
-                }
-                else if (total_listen_count < firebase_listen_count) {
-                    LogHelper.v(TAG, "SQLite Configuration needs update.. local listen_count is smaller");
-                    mAllListenCount = firebase_listen_count.longValue();
-                    mConfiguration.putFieldTotalListenCount(mAllListenCount.intValue());
-                    dirty = true;
-                }
-                if ((paidVersion != null && paidVersion)
-                        || (firebasePaidVersion != null && firebasePaidVersion))
-                {
-                    mConfiguration.putFieldPaidVersion(true);
-                    dirty = true;
-                }
-                if ((purchaseAccess != null && purchaseAccess)
-                        || (firebasePurchaseAccess != null && firebasePurchaseAccess)
-                        || (paidVersion != null && paidVersion)
-                        || (firebasePaidVersion != null && firebasePaidVersion))
-                {
-                    mConfiguration.putFieldPurchaseAccess(true);
-                    dirty = true;
-                }
-                if ((purchaseNoads != null && purchaseNoads)
-                        || (firebasePurchaseNoAds != null && firebasePurchaseNoAds)
-                        || (paidVersion != null && paidVersion)
-                        || (firebasePaidVersion != null && firebasePaidVersion))
-                {
-                    mConfiguration.putFieldPurchaseNoads(true);
-                    dirty = true;
-                }
-                if (dirty) {
-                    sqliteConfiguration = mConfiguration.values();
-                    LogHelper.v(TAG, "DIRTY: sqliteConfiguration="+sqliteConfiguration.toString());
-                    updateConfigurationValues(getAdvertId(), sqliteConfiguration);
-                    updateFirebaseConfigurationValues(getAdvertId(), mConfiguration.values());
-                }
-            }
-            else {
-                LogHelper.v(TAG, "no local SQLite configuration exists on this device! - copy Firebase");
+            // 4) merge and update local SQLite and Firebase
+            boolean dirty = mergeConfiguratons(sqliteConfiguration, firebaseConfiguration);
+            if (dirty) {
                 sqliteConfiguration = mConfiguration.values();
+                LogHelper.v(TAG, "DIRTY: sqliteConfiguration="+sqliteConfiguration.toString());
                 updateConfigurationValues(getAdvertId(), sqliteConfiguration);
+                updateFirebaseConfigurationValues(getAdvertId(), mConfiguration.values());
             }
         }
         else {
             LogHelper.v(TAG, "unable to update Firebase Configuration!");
         }
+    }
+
+    private boolean mergeConfiguratons(ContentValues sqliteConfiguration, ContentValues firebaseConfiguration) {
+        LogHelper.v(TAG, "mergeConfiguratons");
+        boolean dirty = false;
+        Boolean paidVersion = false;
+        Boolean purchaseAccess = false;
+        Boolean purchaseNoads = false;
+        Boolean firebasePaidVersion = false;
+        Boolean firebasePurchaseAccess = false;
+        Boolean firebasePurchaseNoads = false;
+        Long sqlite_listen_count = Long.valueOf(0);
+        Long firebase_listen_count = Long.valueOf(0);
+
+        //#IFDEF 'PAID'
+        //paidVersion = true;
+        //purchaseAccess = true;
+        //purchaseNoads = true;
+        //firebasePaidVersion = true;
+        //firebasePurchaseAccess = true;
+        //firebasePurchaseNoads = true;
+        //#ENDIF
+
+        try {
+            if (sqliteConfiguration == null) {
+                if (firebaseConfiguration == null) {
+                    LogHelper.w(TAG, "both SQLite and Firebase have NO CONFIGURATION! - can't update");
+                    return false;
+                }
+                LogHelper.v(TAG, "no local SQLite configuration exists on this device! - copy from Firebase");
+                sqliteConfiguration = firebaseConfiguration;
+                dirty = true;
+            }
+            mConfiguration = new ConfigurationContentValues();
+        }
+        catch (Exception e) {
+            LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT, e="+e.getMessage());
+        }
+
+        //--------------------------------------------------------------------------------
+        //#IFDEF 'TRIAL'
+        try {
+            paidVersion = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
+            if (!paidVersion && firebaseConfiguration != null) {
+                firebasePaidVersion = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
+                if (firebasePaidVersion != null) {
+                    paidVersion = firebasePaidVersion;
+                }
+            }
+        }
+        catch (Exception e) {
+            LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PAID_VERSION, e="+e.getMessage());
+        }
+        try {
+            purchaseAccess = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
+            if (!purchaseAccess && firebaseConfiguration != null) {
+                firebasePurchaseAccess = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
+                if (firebasePurchaseAccess != null) {
+                    purchaseAccess = firebasePurchaseAccess;
+                }
+            }
+        }
+        catch (Exception e) {
+            LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PURCHASE_ACCESS, e="+e.getMessage());
+        }
+        try {
+            purchaseNoads = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
+            if (!purchaseNoads && firebaseConfiguration != null) {
+                firebasePurchaseNoads = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
+                if (firebasePurchaseNoads != null) {
+                    purchaseNoads = firebasePurchaseNoads;
+                }
+            }
+        }
+        catch (Exception e) {
+            LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PURCHASE_NOADS, e="+e.getMessage());
+        }
+        //#ENDIF
+        //--------------------------------------------------------------------------------
+
+        try {
+            sqlite_listen_count = sqliteConfiguration.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
+            if (sqlite_listen_count == null) {
+                sqlite_listen_count = Long.valueOf(0);
+            }
+        }
+        catch (Exception e) {
+            LogHelper.w(TAG, "SQLite: unable to get SQLite ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT, e="+e.getMessage());
+            sqlite_listen_count = Long.valueOf(0);
+        }
+
+        try {
+            if (firebaseConfiguration != null) {
+                firebase_listen_count = firebaseConfiguration.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
+                if (firebase_listen_count == null) {
+                    firebase_listen_count = Long.valueOf(0);
+                }
+            }
+        }
+        catch (Exception e) {
+            LogHelper.w(TAG, "SQLite: unable to get Firebase ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT, e="+e.getMessage());
+            firebase_listen_count = Long.valueOf(0);
+        }
+
+        if (sqlite_listen_count > firebase_listen_count) {
+            mAllListenCount = sqlite_listen_count.longValue();
+            LogHelper.v(TAG, "local listen count GREATER THAN firebase listen count: mAllListenCount="+mAllListenCount);
+            mConfiguration.putFieldTotalListenCount(mAllListenCount.intValue());
+            dirty = true;
+        }
+        else {
+            mAllListenCount = firebase_listen_count.longValue();
+            LogHelper.v(TAG, "firebase listen count GREATER THAN local listen count: mAllListenCount="+mAllListenCount);
+            mConfiguration.putFieldTotalListenCount(mAllListenCount.intValue());
+            dirty = true;
+        }
+
+        if ((paidVersion != null && paidVersion)
+                || (firebasePaidVersion != null && firebasePaidVersion))
+        {
+            mConfiguration.putFieldPaidVersion(true);
+            dirty = true;
+        }
+        if ((purchaseAccess != null && purchaseAccess)
+                || (firebasePurchaseAccess != null && firebasePurchaseAccess)
+                || (paidVersion != null && paidVersion)
+                || (firebasePaidVersion != null && firebasePaidVersion))
+        {
+            mConfiguration.putFieldPurchaseAccess(true);
+            dirty = true;
+        }
+        if ((purchaseNoads != null && purchaseNoads)
+                || (firebasePurchaseNoads != null && firebasePurchaseNoads)
+                || (paidVersion != null && paidVersion)
+                || (firebasePaidVersion != null && firebasePaidVersion))
+        {
+            mConfiguration.putFieldPurchaseNoads(true);
+            dirty = true;
+        }
+        return dirty;
     }
 
     // update Firebase User Account info
@@ -1817,7 +1849,6 @@ public class BaseActivity extends AppCompatActivity {
 
     public void setCircleViewValue(float value) {
         if (value != 0) {
-            mAutoplayState = AutoplayState.PLAYING;
             LoadingAsyncTask.mLoadingNow = false;
             if (getCircleView() != null) {
                 getCircleView().setValue(value);
@@ -1890,20 +1921,12 @@ public class BaseActivity extends AppCompatActivity {
         return mEpisodeDownloadUrl;
     }
 
-    public String getMediaId() {
-        return mMediaId;
-    }
-
     public CircleProgressView getCircleView() {
         return mCircleView;
     }
 
     public View getRootView() {
         return mRootView;
-    }
-
-    public AutoplayState getAutoplayState() {
-        return mAutoplayState;
     }
 
     public static boolean isPlaying() {
@@ -1945,7 +1968,6 @@ public class BaseActivity extends AppCompatActivity {
     private static final String KEY_DESCRIPTION             = "description";
     private static final String KEY_WEBLINK                 = "weblink";
     private static final String KEY_DOWNLOAD_URL            = "downloadUrl";
-    private static final String KEY_AUTOPLAY_STATE          = "autoplayState";
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -1965,29 +1987,23 @@ public class BaseActivity extends AppCompatActivity {
         LogHelper.v(TAG, "savePlayInfoToBundle");
 
         playInfoBundle.putBoolean(KEY_HANDLE_ROTATION_EVENT   , sHandleRotationEvent);
-        playInfoBundle.putBoolean(KEY_NEED_RESTART_PLAYBACK   , sNeed2RestartPlayback);
         playInfoBundle.putBoolean(KEY_LOADING_SCREEN_ENABLED  , sLoadingScreenEnabled);
         playInfoBundle.putBoolean(KEY_BEGIN_LOADING           , sBeginLoading);
         playInfoBundle.putBoolean(KEY_SEEK_UPDATE_RUNNING     , sSeekUpdateRunning);
         playInfoBundle.putBoolean(KEY_AUTOPLAY_NEXT_NOW       , sAutoplayNextNow);
-        playInfoBundle.putBoolean(KEY_KICKSTART_OK            , sOkKickstart);
-        playInfoBundle.putLong   (KEY_KICKSTART_TIME          , sKickstartTime);
 
-        LogHelper.v(TAG, "APP-STATE (Autoplay): saveAutoplayInfoToBundle: sHandleRotationEvent="+sHandleRotationEvent+", sNeed2RestartPlayback="+sNeed2RestartPlayback
+        LogHelper.v(TAG, "APP-STATE (Autoplay): saveAutoplayInfoToBundle: sHandleRotationEvent="+sHandleRotationEvent
                 +", sLoadingScreenEnabled="+sLoadingScreenEnabled+", sBeginLoading="+sBeginLoading+", sSeekUpdateRunning="+sSeekUpdateRunning
-                +", sAutoplayNextNow="+sAutoplayNextNow+", sOkKickstart="+sOkKickstart+", sKickstartTime="+sKickstartTime+" <<<=========");
+                +", sAutoplayNextNow="+sAutoplayNextNow+" <<<=========");
 
-        playInfoBundle.putString(KEY_MEDIA_ID, getMediaId());
         playInfoBundle.putLong(KEY_EPISODE, getEpisodeNumber());
         playInfoBundle.putBoolean(KEY_PURCHASED, sPurchased);
         playInfoBundle.putBoolean(KEY_NOADS, sNoAdsForShow);
         playInfoBundle.putBoolean(KEY_DOWNLOADED, sDownloaded);
         playInfoBundle.putBoolean(KEY_HEARD, sEpisodeHeard);
-        playInfoBundle.putInt(KEY_AUDIO_FOCUS, mAudioFocusRequstResult);
         playInfoBundle.putLong(KEY_DURATION, mDuration);
         playInfoBundle.putBoolean(KEY_REAL_DURATION, sHaveRealDuration);
         playInfoBundle.putLong(KEY_CURRENT_POSITION, mCurrentPosition);
-        playInfoBundle.putBoolean(KEY_SEEKING, sSeeking);
         playInfoBundle.putBoolean(KEY_PLAYING, sPlaying);
         playInfoBundle.putBoolean(KEY_LOADED_OK, sLoadedOK);
         playInfoBundle.putString(KEY_AIRDATE, getAirdate());
@@ -1996,31 +2012,12 @@ public class BaseActivity extends AppCompatActivity {
         playInfoBundle.putString(KEY_WEBLINK, getEpisodeWeblinkUrl());
         playInfoBundle.putString(KEY_DOWNLOAD_URL, getEpisodeDownloadUrl());
 
-        switch (getAutoplayState()) {
-            case READY2PLAY: {
-                playInfoBundle.putInt(KEY_AUTOPLAY_STATE, 0);
-                break;
-            }
-            case LOADING: {
-                playInfoBundle.putInt(KEY_AUTOPLAY_STATE, 1);
-                break;
-            }
-            case PLAYING: {
-                playInfoBundle.putInt(KEY_AUTOPLAY_STATE, 2);
-                break;
-            }
-            case PAUSED: {
-                playInfoBundle.putInt(KEY_AUTOPLAY_STATE, 3);
-                break;
-            }
-        }
-
-        LogHelper.v(TAG, "APP-STATE (Base): savePlayInfoToBundle: mMediaId="+mMediaId+", mEpisodeNumber="+mEpisodeNumber
-                +", sPurchased="+sPurchased+", sNoAdsForShow="+sNoAdsForShow+", sDownloaded="+sDownloaded+", sEpisodeHeard="+sEpisodeHeard
-                +", mAudioFocusRequestResult="+mAudioFocusRequstResult+", mDuration="+mDuration+", sHaveRealDuration="+sHaveRealDuration
-                +", mCurrentPosition="+mCurrentPosition+", sSeeking="+sSeeking+", sPlaying="+sPlaying+", sLoadedOK="+sLoadedOK
+        LogHelper.v(TAG, "APP-STATE (Base): savePlayInfoToBundle: mEpisodeNumber="+mEpisodeNumber
+                +", sPurchased="+sPurchased+", sNoAdsForShow="+sNoAdsForShow+", sDownloaded="+sDownloaded
+                +", sEpisodeHeard="+sEpisodeHeard+", mDuration="+mDuration+", sHaveRealDuration="+sHaveRealDuration
+                +", mCurrentPosition="+mCurrentPosition+", sPlaying="+sPlaying+", sLoadedOK="+sLoadedOK
                 +", mAirdate="+mAirdate+", mEpisodeTitle="+mEpisodeTitle+", mEpisodeDescription="+mEpisodeDescription
-                +", mEpisodeWeblinkUrl="+mEpisodeWeblinkUrl+", mEpisodeDownloadUrl="+mEpisodeDownloadUrl+", mAutoplayState="+mAutoplayState+" <<<=========");
+                +", mEpisodeWeblinkUrl="+mEpisodeWeblinkUrl+", mEpisodeDownloadUrl="+mEpisodeDownloadUrl+" <<<=========");
     }
 
     protected void restorePlayInfoFromBundle(Bundle playInfoBundle) {
@@ -2028,29 +2025,23 @@ public class BaseActivity extends AppCompatActivity {
             sOnRestoreInstanceComplete = true;
 
             sHandleRotationEvent = playInfoBundle.getBoolean(KEY_HANDLE_ROTATION_EVENT);
-            sNeed2RestartPlayback = playInfoBundle.getBoolean(KEY_NEED_RESTART_PLAYBACK);
             sLoadingScreenEnabled = playInfoBundle.getBoolean(KEY_LOADING_SCREEN_ENABLED);
             sBeginLoading = playInfoBundle.getBoolean(KEY_BEGIN_LOADING);
             sSeekUpdateRunning = playInfoBundle.getBoolean(KEY_SEEK_UPDATE_RUNNING);
             sAutoplayNextNow = playInfoBundle.getBoolean(KEY_AUTOPLAY_NEXT_NOW);
-            sOkKickstart = playInfoBundle.getBoolean(KEY_KICKSTART_OK);
-            sKickstartTime = playInfoBundle.getLong(KEY_KICKSTART_TIME);
 
-            LogHelper.v(TAG, "APP-STATE (Autoplay): restoreAutoplayInfoFromBundle: sHandleRotationEvent="+sHandleRotationEvent+", sNeed2RestartPlayback="+sNeed2RestartPlayback
+            LogHelper.v(TAG, "APP-STATE (Autoplay): restoreAutoplayInfoFromBundle: sHandleRotationEvent="+sHandleRotationEvent
                     +", sLoadingScreenEnabled="+sLoadingScreenEnabled+", sBeginLoading="+sBeginLoading+", sSeekUpdateRunning="+sSeekUpdateRunning
-                    +", sAutoplayNextNow="+sAutoplayNextNow+", sOkKickstart="+sOkKickstart+", sKickstartTime="+sKickstartTime+" <<<=========");
+                    +", sAutoplayNextNow="+sAutoplayNextNow+" <<<=========");
 
-            mMediaId = playInfoBundle.getString(KEY_MEDIA_ID);
             mEpisodeNumber = playInfoBundle.getLong(KEY_EPISODE);
             sPurchased = playInfoBundle.getBoolean(KEY_PURCHASED);
             sNoAdsForShow = playInfoBundle.getBoolean(KEY_NOADS);
             sDownloaded = playInfoBundle.getBoolean(KEY_DOWNLOADED);
             sEpisodeHeard = playInfoBundle.getBoolean(KEY_HEARD);
-            mAudioFocusRequstResult = playInfoBundle.getInt(KEY_AUDIO_FOCUS);
             mDuration = playInfoBundle.getLong(KEY_DURATION);
             sHaveRealDuration = playInfoBundle.getBoolean(KEY_REAL_DURATION);
             mCurrentPosition = playInfoBundle.getLong(KEY_CURRENT_POSITION);
-            sSeeking = playInfoBundle.getBoolean(KEY_SEEKING);
             sPlaying = playInfoBundle.getBoolean(KEY_PLAYING);
             sLoadedOK = playInfoBundle.getBoolean(KEY_LOADED_OK);
             mAirdate = playInfoBundle.getString(KEY_AIRDATE);
@@ -2059,48 +2050,18 @@ public class BaseActivity extends AppCompatActivity {
             mEpisodeWeblinkUrl = playInfoBundle.getString(KEY_WEBLINK);
             mEpisodeDownloadUrl = playInfoBundle.getString(KEY_DOWNLOAD_URL);
 
-            int state = playInfoBundle.getInt(KEY_AUTOPLAY_STATE);
-            if (state == 1) {
-                setAutoplayState(AutoplayState.LOADING, "restorePlayInfoFromBundle - LOADING");
-            } else if (state == 2) {
-                setAutoplayState(AutoplayState.PLAYING, "restorePlayInfoFromBundle - PLAYING");
-            } else if (state == 3) {
-                setAutoplayState(AutoplayState.PAUSED, "restorePlayInfoFromBundle - PAUSED");
-            } else {
-                setAutoplayState(AutoplayState.READY2PLAY, "restorePlayInfoFromBundle - READY2PLAY");
-            }
-
-            LogHelper.v(TAG, "APP-STATE (Base): restorePlayInfoFromBundle: mMediaId="+mMediaId+", mEpisodeNumber="+mEpisodeNumber
-                    +", sPurchased="+sPurchased+", sNoAdsForShow="+sNoAdsForShow+", sDownloaded="+sDownloaded+", sEpisodeHeard="+sEpisodeHeard
-                    +", mAudioFocusRequestResult="+mAudioFocusRequstResult+", mDuration="+mDuration+", sHaveRealDuration="+sHaveRealDuration
-                    +", mCurrentPosition="+mCurrentPosition+", sSeeking="+sSeeking+", sPlaying="+sPlaying+", sLoadedOK="+sLoadedOK
+            LogHelper.v(TAG, "APP-STATE (Base): restorePlayInfoFromBundle: mEpisodeNumber="+mEpisodeNumber
+                    +", sPurchased="+sPurchased+", sNoAdsForShow="+sNoAdsForShow+", sDownloaded="+sDownloaded
+                    +", sEpisodeHeard="+sEpisodeHeard+", mDuration="+mDuration+", sHaveRealDuration="+sHaveRealDuration
+                    +", mCurrentPosition="+mCurrentPosition+", sPlaying="+sPlaying+", sLoadedOK="+sLoadedOK
                     +", mAirdate="+mAirdate+", mEpisodeTitle="+mEpisodeTitle+", mEpisodeDescription="+mEpisodeDescription
-                    +", mEpisodeWeblinkUrl="+mEpisodeWeblinkUrl+", mEpisodeDownloadUrl="+mEpisodeDownloadUrl+", mAutoplayState="+mAutoplayState+" <<<=========");
+                    +", mEpisodeWeblinkUrl="+mEpisodeWeblinkUrl+", mEpisodeDownloadUrl="+mEpisodeDownloadUrl+" <<<=========");
 
             showCurrentInfo();
         }
     }
 
     protected void showCurrentInfo() {
-        String state = "unknown";
-        switch (getAutoplayState()) {
-            case READY2PLAY: {
-                state = "READY to PLAY";
-                break;
-            }
-            case LOADING: {
-                state = "LOADING Episode";
-                break;
-            }
-            case PLAYING: {
-                state = "PLAYING Episode";
-                break;
-            }
-            case PAUSED: {
-                state = "Episode PAUSED";
-                break;
-            }
-        }
         LogHelper.v(TAG, "===> EPISODE INFO"
                 + ": mEpisodeTitle=" + getEpisodeTitle()
                 + ": mEpisodeNumber=" + getEpisodeNumber()
@@ -2111,13 +2072,7 @@ public class BaseActivity extends AppCompatActivity {
                 + ", sPurchased=" + sPurchased
                 + ", sNoAdsForShow=" + sNoAdsForShow
                 + ", sDownloaded=" + sDownloaded
-                + ", sEpisodeHeard=" + sEpisodeHeard
-                + ", mAutoplayState=" + state);
-    }
-
-    protected void setAutoplayState(AutoplayState autoplayState, String log) {
-        LogHelper.v(TAG, "setAutoplayState: "+autoplayState+", "+log);
-        this.mAutoplayState = autoplayState;
+                + ", sEpisodeHeard=" + sEpisodeHeard);
     }
 
     public void markEpisodeAsHeardAndIncrementPlayCount(long episodeNumber, String episodeIndex, long duration) {

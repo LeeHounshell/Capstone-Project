@@ -83,9 +83,12 @@ public class LocalPlayback
     private boolean mPlayOnFocusGain;
     private Callback mCallback;
     private final MusicProvider mMusicProvider;
-    private volatile boolean mAudioNoisyReceiverRegistered;
-    private volatile int mCurrentPosition;
-    private volatile String mCurrentMediaId;
+
+    private volatile static boolean mAudioNoisyReceiverRegistered;
+    private volatile static int sCurrentPosition;
+    private volatile static int sCurrentEpisode;
+    private volatile static int sCurrentState;
+    private volatile static String sCurrentMediaId;
 
     // Type of audio focus we have:
     private int mAudioFocus = AUDIO_NO_FOCUS_NO_DUCK;
@@ -136,7 +139,7 @@ public class LocalPlayback
         if (notifyListeners && mCallback != null) {
             mCallback.onPlaybackStatusChanged(mState);
         }
-        mCurrentPosition = getCurrentStreamPosition();
+        sCurrentPosition = getCurrentStreamPosition();
         // Give up Audio focus
         giveUpAudioFocus();
         unregisterAudioNoisyReceiver();
@@ -172,15 +175,23 @@ public class LocalPlayback
     @Override
     public int getCurrentStreamPosition() {
         LogHelper.v(TAG, "getCurrentStreamPosition");
-        return mMediaPlayer != null ?
-                mMediaPlayer.getCurrentPosition() : mCurrentPosition;
+        if (mMediaPlayer != null) {
+            sCurrentPosition = mMediaPlayer.getCurrentPosition();
+        }
+        return sCurrentPosition;
+    }
+
+    //-------- RADIO THEATER --------
+    public static int getCurrentPosition() {
+        LogHelper.v(TAG, "getCurrentPosition");
+        return sCurrentPosition;
     }
 
     @Override
     public void updateLastKnownStreamPosition() {
         LogHelper.v(TAG, "updateLastKnownStreamPosition");
         if (mMediaPlayer != null) {
-            mCurrentPosition = mMediaPlayer.getCurrentPosition();
+            sCurrentPosition = mMediaPlayer.getCurrentPosition();
         }
     }
 
@@ -224,9 +235,6 @@ public class LocalPlayback
         RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
     }
 
-    static volatile private int sCurrentEpisode;
-    static volatile private int sCurrentState;
-
     static void setCurrentEpisode(int currentEpisode) {
         sCurrentEpisode = currentEpisode;
     }
@@ -252,10 +260,10 @@ public class LocalPlayback
         tryToGetAudioFocus();
         registerAudioNoisyReceiver();
         String mediaId = item.getDescription().getMediaId();
-        boolean mediaHasChanged = !TextUtils.equals(mediaId, mCurrentMediaId);
+        boolean mediaHasChanged = !TextUtils.equals(mediaId, sCurrentMediaId);
         if (mediaHasChanged) {
-            mCurrentPosition = 0;
-            mCurrentMediaId = mediaId;
+            sCurrentPosition = 0;
+            sCurrentMediaId = mediaId;
             notifyEpisodePlaying();
         }
 
@@ -317,7 +325,7 @@ public class LocalPlayback
             // Pause media player and cancel the 'foreground service' state.
             if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
                 mMediaPlayer.pause();
-                mCurrentPosition = mMediaPlayer.getCurrentPosition();
+                sCurrentPosition = mMediaPlayer.getCurrentPosition();
             }
             // while paused, retain the MediaPlayer but give up audio focus
             relaxResources(false);
@@ -337,7 +345,7 @@ public class LocalPlayback
 
         if (mMediaPlayer == null) {
             // If we do not have a current media player, simply update the current position
-            mCurrentPosition = position;
+            sCurrentPosition = position;
         } else {
             if (mMediaPlayer.isPlaying()) {
                 mState = PlaybackStateCompat.STATE_BUFFERING;
@@ -359,19 +367,19 @@ public class LocalPlayback
     @Override
     public void setCurrentStreamPosition(int pos) {
         LogHelper.v(TAG, "setCurrentStreamPosition: pos="+pos);
-        this.mCurrentPosition = pos;
+        this.sCurrentPosition = pos;
     }
 
     @Override
     public void setCurrentMediaId(String mediaId) {
         LogHelper.v(TAG, "setCurrentMediaId: mediaId="+mediaId);
-        this.mCurrentMediaId = mediaId;
+        this.sCurrentMediaId = mediaId;
     }
 
     @Override
     public String getCurrentMediaId() {
         LogHelper.v(TAG, "getCurrentMediaId");
-        return mCurrentMediaId;
+        return sCurrentMediaId;
     }
 
     /**
@@ -429,13 +437,13 @@ public class LocalPlayback
             if (mPlayOnFocusGain) {
                 if (mMediaPlayer != null && !mMediaPlayer.isPlaying()) {
                     LogHelper.d(TAG,"configMediaPlayerState startMediaPlayer. seeking to ",
-                        mCurrentPosition);
-                    if (mCurrentPosition == mMediaPlayer.getCurrentPosition()) {
+                            sCurrentPosition);
+                    if (sCurrentPosition == mMediaPlayer.getCurrentPosition()) {
                         mMediaPlayer.start();
                         mState = PlaybackStateCompat.STATE_PLAYING;
                         setCurrentState(mState);
                     } else {
-                        mMediaPlayer.seekTo(mCurrentPosition);
+                        mMediaPlayer.seekTo(sCurrentPosition);
                         mState = PlaybackStateCompat.STATE_BUFFERING;
                         setCurrentState(mState);
                     }
@@ -488,7 +496,7 @@ public class LocalPlayback
     @Override
     public void onSeekComplete(MediaPlayer mp) {
         LogHelper.v(TAG, "onSeekComplete: position=", mp.getCurrentPosition());
-        mCurrentPosition = mp.getCurrentPosition();
+        sCurrentPosition = mp.getCurrentPosition();
         if (mState == PlaybackStateCompat.STATE_BUFFERING) {
             mMediaPlayer.start();
             mState = PlaybackStateCompat.STATE_PLAYING;
@@ -512,7 +520,7 @@ public class LocalPlayback
         if (mCallback != null) {
             mCallback.onCompletion();
         }
-        mCurrentPosition = 0;
+        sCurrentPosition = 0;
         stop(false); // the next PLAY REQUEST will automatically come from Autoplay
         notifyEpisodeComplete(); // RADIO THEATER Notification
     }

@@ -29,6 +29,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
     private Drawable mPressedDrawable;
     private Timer mDownTimer = new Timer();
 
+    private static volatile boolean onDownClick;
     private static volatile boolean onLongClick;
     private static volatile boolean onDoubleClick;
     private static volatile boolean onSwipeLeft;
@@ -74,6 +75,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
                 case MotionEvent.ACTION_DOWN: {
                     sDownPressTime = System.currentTimeMillis();
                     clearInput();
+                    onDownClick = true;
                     if (mPressedDrawable != null) {
                         mHandler.post(new Runnable() {
                             @Override
@@ -111,6 +113,10 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
 
                 case MotionEvent.ACTION_UP: {
                     mDownTimer.cancel();
+                    if (!onDownClick) {
+                        break;
+                    }
+                    onDownClick = false;
                     if (sIgnoreUpPressUntilDown) {
                         sIgnoreUpPressUntilDown = false;
                     }
@@ -150,6 +156,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
     }
 
     private static void clearInput() {
+        onDownClick = false;
         onLongClick = false;
         onDoubleClick = false;
         onSwipeLeft = false;

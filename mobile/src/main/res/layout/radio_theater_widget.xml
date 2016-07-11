@@ -8,6 +8,7 @@
 
     <ImageButton
         android:id="@+id/autoplay_widget"
+        android:soundEffectsEnabled="true"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"

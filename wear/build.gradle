@@ -50,10 +50,7 @@ android {
     }
 
     buildTypes.each {
-        it.buildConfigField 'String', 'GOOGLE_PROJECT_NUMBER', MyGoogleProjectNumber
-        it.buildConfigField 'String', 'GOOGLE_PROJECT_ID', MyGoogleProjectID
-        it.buildConfigField 'String', 'TWITTER_API_KEY', MyTwitterAPIKey
-        it.buildConfigField 'String', 'TWITTER_API_SECRET', MyTwitterAPISecret
+        it.buildConfigField 'String', 'FABRIC_API_KEY', MyFabricAPIKey
     }
 
     productFlavors {

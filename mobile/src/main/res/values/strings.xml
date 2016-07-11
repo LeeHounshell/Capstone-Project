@@ -88,12 +88,12 @@
     // Autoplay BROADCAST messages
     <string name="initialization">Radio-Mystery-Theater:</string>
     <string name="metadata_loaded">loaded.</string>
-    <string name="error_no_metadata">load failed.</string>
+    <string name="request_play">request:</string>
     <string name="duration">duration:</string>
     <string name="play">play:</string>
     <string name="noplay">noplay:</string>
     <string name="complete">complete:</string>
-    <string name="pokeme">pokeme:</string>
+    <string name="error_no_metadata">load failed.</string>
 
     <!-- Strings related to RadioTheaterService -->
     <string name="casting_to_device">Casting to %1$s</string>

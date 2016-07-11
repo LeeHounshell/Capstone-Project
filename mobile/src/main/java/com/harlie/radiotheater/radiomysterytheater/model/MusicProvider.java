@@ -54,6 +54,12 @@ import static com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper.cr
 public class MusicProvider {
     private final static String TAG = "LEE: <" + MusicProvider.class.getSimpleName() + ">";
 
+    public static boolean isMediaLoaded() {
+        return sMediaLoaded;
+    }
+
+    private static volatile boolean sMediaLoaded;
+
     private MusicProviderSource mSource;
 
     // Categorized caches for music track data:
@@ -123,6 +129,7 @@ public class MusicProvider {
         if (mCurrentState != State.INITIALIZED || !mMusicListByGenre.containsKey(genre)) {
             return Collections.emptyList();
         }
+        LogHelper.v(TAG, "getMusicsByGenre("+genre+") found "+mMusicListByGenre.size());
         return mMusicListByGenre.get(genre);
     }
 
@@ -137,6 +144,21 @@ public class MusicProvider {
         if (iter == null) {
             LogHelper.v(TAG, "searchMusicBySongTitle: *** RADIO THEATER - search returned null Iterable. query="+query);
             iter = Collections.emptyList();
+        }
+        else {
+            if (iter.iterator().hasNext()) {
+                LogHelper.v(TAG, "searchMusicBySongTitle: *** RADIO THEATER - search found an EPISODE! - next=" + iter.iterator().next().toString());
+            }
+            else {
+                LogHelper.v(TAG, "searchMusicBySongTitle: *** RADIO THEATER - search found nothing");
+//                MusicProvider.Callback queueLoadedCallback = new MusicProvider.Callback() {
+//                    @Override
+//                    public void onMusicCatalogReady(boolean success) {
+//                        LogHelper.v(TAG, "*** THE PLAYING QUEUE SHOULD BE LOADED NOW! ***");
+//                    }
+//                };
+//                this.retrieveMediaAsync(queueLoadedCallback);
+            }
         }
         return iter;
     }
@@ -184,7 +206,9 @@ public class MusicProvider {
      */
     public MediaMetadataCompat getMusic(String musicId) {
         LogHelper.v(TAG, "getMusic: musicId="+musicId);
-        return mMusicListById.containsKey(musicId) ? mMusicListById.get(musicId).metadata : null;
+        MediaMetadataCompat item = mMusicListById.containsKey(musicId) ? mMusicListById.get(musicId).metadata : null;
+        LogHelper.v(TAG, "getMusic("+musicId+") found "+((item == null) ? "nothing" : item.getDescription().getTitle()));
+        return item;
     }
 
     public synchronized void updateMusicArt(String musicId, Bitmap albumArt, Bitmap icon) {
@@ -230,7 +254,7 @@ public class MusicProvider {
      * for future reference, keying tracks by musicId and grouping by genre.
      */
     public void retrieveMediaAsync(final Callback callback) {
-        LogHelper.v(TAG, "retrieveMediaAsync");
+        LogHelper.v(TAG, "---> retrieveMediaAsync <---");
         if (mCurrentState == State.INITIALIZED) {
             if (callback != null) {
                 // Nothing to do, execute callback immediately
@@ -243,14 +267,14 @@ public class MusicProvider {
         new AsyncTask<Void, Void, State>() {
             @Override
             protected State doInBackground(Void... params) {
-                LogHelper.v(TAG, "doInBackground");
+                LogHelper.v(TAG, "---> doInBackground <---");
                 retrieveMedia();
                 return mCurrentState;
             }
 
             @Override
             protected void onPostExecute(State current) {
-                LogHelper.v(TAG, "onPostExecute");
+                LogHelper.v(TAG, "---> onPostExecute <---");
                 if (callback != null) {
                     callback.onMusicCatalogReady(current == State.INITIALIZED);
                 }
@@ -272,11 +296,12 @@ public class MusicProvider {
             }
             list.add(m.metadata);
         }
+        LogHelper.v(TAG, "==========> buildListsByGenre: found "+newMusicListByGenre.size()+" episodes");
         mMusicListByGenre = newMusicListByGenre;
     }
 
     private synchronized void retrieveMedia() {
-        LogHelper.v(TAG, "retrieveMedia");
+        LogHelper.v(TAG, "---> retrieveMedia <---");
         try {
             if (mCurrentState == State.NON_INITIALIZED) {
                 mCurrentState = State.INITIALIZING;
@@ -295,6 +320,7 @@ public class MusicProvider {
         } finally {
             String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
             if (mCurrentState != State.INITIALIZED) {
+                LogHelper.v(TAG, "*** retrieveMedia FINISHED *** - LOAD FAILED");
                 // Something bad happened, so we reset state to NON_INITIALIZED to allow
                 // retries (eg if the network connection is temporary unavailable)
                 mCurrentState = State.NON_INITIALIZED;
@@ -303,9 +329,11 @@ public class MusicProvider {
                 RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
             }
             else {
+                LogHelper.v(TAG, "*** retrieveMedia FINISHED *** - LOAD SUCCESS");
                 String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.metadata_loaded);
                 Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
                 RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
+                sMediaLoaded = true;
             }
         }
     }
@@ -360,7 +388,7 @@ public class MusicProvider {
     }
 
     private MediaBrowserCompat.MediaItem createMediaItem(MediaMetadataCompat metadata) {
-        LogHelper.v(TAG, "createMediaItem: metadata="+metadata);
+        LogHelper.v(TAG, "!!! createMediaItem: metadata="+metadata);
         // Since mediaMetadata fields are immutable, we need to create a copy, so we
         // can set a hierarchy-aware mediaID. We will need to know the media hierarchy
         // when we get a onPlayFromMusicID call, so we can create the proper queue based

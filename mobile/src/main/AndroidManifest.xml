@@ -52,15 +52,18 @@
         <provider
             android:name=".data.RadioTheaterProvider"
             android:authorities="@string/radio_theater_content_authority"
-            android:exported="true" />
+            android:exported="true">
+        </provider>
 
         <meta-data
             android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version" />
+            android:value="@integer/google_play_services_version">
+        </meta-data>
 
         <meta-data
             android:name="com.google.android.gms.car.application"
-            android:resource="@xml/automotive_app_desc" />
+            android:resource="@xml/automotive_app_desc">
+        </meta-data>
 
         <meta-data
             android:name="io.fabric.ApiKey"
@@ -73,7 +76,9 @@
         -->
         <meta-data
             android:name="com.google.android.gms.car.notification.SmallIcon"
-            android:resource="@drawable/ic_notification" />
+            android:resource="@drawable/ic_notification"
+            tools:ignore="ManifestResource">
+        </meta-data>
 
         <!--
              (OPTIONAL) use this meta data to override the theme from which Android Auto will
@@ -82,7 +87,8 @@
         -->
         <meta-data
             android:name="com.google.android.gms.car.application.theme"
-            android:resource="@style/CarTheme" />
+            android:resource="@style/CarTheme">
+        </meta-data>
 
         <!--
              (OPTIONAL) use this meta data to override the theme from which Android Wear will
@@ -92,7 +98,8 @@
         -->
         <meta-data
             android:name="com.google.android.wearable.media.theme"
-            android:resource="@style/WearTheme" />
+            android:resource="@style/WearTheme">
+        </meta-data>
 
         <!--
          Main audio playback service, provides media browsing and media playback services to
@@ -116,14 +123,39 @@
         </service>
 
         <service
-            android:name=".RadioTheaterControllerIntentService"
-            android:enabled="true">
-        </service>
-
-        <service
             android:name=".RadioTheaterWidgetService"
             android:enabled="true"
             android:exported="false">
+        </service>
+
+        <service
+            android:name=".RadioControlIntentService"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.harlie.radiotheater.radiomysterytheater.action.START" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.harlie.radiotheater.radiomysterytheater.action.PLAY" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.harlie.radiotheater.radiomysterytheater.action.SEEK" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.harlie.radiotheater.radiomysterytheater.action.BACKUP" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.harlie.radiotheater.radiomysterytheater.action.STOP" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.harlie.radiotheater.radiomysterytheater.action.PAUSE" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.harlie.radiotheater.radiomysterytheater.action.NEXT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.harlie.radiotheater.radiomysterytheater.action.PREV" />
+            </intent-filter>
         </service>
 
         <!--
@@ -151,7 +183,8 @@
 
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/radio_theater_widget_info" />
+                android:resource="@xml/radio_theater_widget_info">
+            </meta-data>
         </receiver>
 
         <receiver
@@ -164,7 +197,8 @@
 
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/radio_theater_widget_info" />
+                android:resource="@xml/radio_theater_widget_info">
+            </meta-data>
         </receiver>
 
         <activity
@@ -240,7 +274,8 @@
             android:parentActivityName=".EpisodeListActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.harlie.radiotheater.radiomysterytheater.EpisodeListActivity" />
+                android:value="com.harlie.radiotheater.radiomysterytheater.EpisodeListActivity">
+            </meta-data>
             <intent-filter
                 android:label="@string/filter_title_viewradiotheater">
                 <action android:name="android.intent.action.VIEW" />
@@ -249,11 +284,13 @@
                 <!-- Accepts URIs that begin with "http://www.harlie.com/radiotheater” -->
                 <data android:scheme="http"
                     android:host="www.harlie.com"
-                    android:pathPrefix="/radiotheater" />
+                    android:pathPrefix="/radiotheater">
+                </data>
                 <!-- note that the leading "/" is required for pathPrefix-->
                 <!-- Accepts URIs that begin with "harlie://radiotheater” -->
                 <data android:scheme="harlie"
-                    android:host="radiotheater" />
+                    android:host="radiotheater">
+                </data>
             </intent-filter>
 
         </activity>
@@ -264,7 +301,8 @@
             android:parentActivityName=".AutoplayActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.harlie.radiotheater.radiomysterytheater.AutoplayActivity" />
+                android:value="com.harlie.radiotheater.radiomysterytheater.AutoplayActivity">
+            </meta-data>
         </activity>
 
         <activity
@@ -274,7 +312,8 @@
             android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.harlie.radiotheater.radiomysterytheater.AutoplayActivity" />
+                android:value="com.harlie.radiotheater.radiomysterytheater.AutoplayActivity">
+            </meta-data>
         </activity>
 
     </application>
