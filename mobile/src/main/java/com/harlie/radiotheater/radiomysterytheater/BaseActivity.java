@@ -206,11 +206,7 @@ public class BaseActivity extends AppCompatActivity {
         mRootView = findViewById(android.R.id.content);
         mHandler = new Handler();
 
-        Firebase.setAndroidContext(this);
-        mAuth = FirebaseAuth.getInstance();
-        mFirebase = new Firebase("https://radio-mystery-theater.firebaseio.com");
-        mDatabase = FirebaseDatabase.getInstance().getReference();
-        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        initializeFirebase();
 
         final BaseActivity baseActivity = this;
 
@@ -239,6 +235,14 @@ public class BaseActivity extends AppCompatActivity {
         });
 
         setupWindowAnimations();
+    }
+
+    protected void initializeFirebase() {
+        Firebase.setAndroidContext(this);
+        mAuth = FirebaseAuth.getInstance();
+        mFirebase = new Firebase("https://radio-mystery-theater.firebaseio.com");
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
     }
 
     private void setupWindowAnimations() {
@@ -1684,6 +1688,10 @@ public class BaseActivity extends AppCompatActivity {
 
     // update Firebase User Account info
     public void updateFirebaseConfigurationValues(String deviceId, ContentValues configurationValues) {
+        LogHelper.v(TAG, "updateFirebaseConfigurationValues");
+        if (getDatabase() == null) {
+            initializeFirebase();
+        }
         String  email = getEmail();
         Boolean authenticated = email != null;
         Long    total_listen_count = configurationValues.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
@@ -1722,6 +1730,10 @@ public class BaseActivity extends AppCompatActivity {
 
     // update Firebase User Episode History and Auth
     public void updateFirebaseConfigEntryValues(String episode_number, ContentValues configEntryValues, long duration) {
+        LogHelper.v(TAG, "updateFirebaseConfigEntryValues");
+        if (getDatabase() == null) {
+            initializeFirebase();
+        }
         String  email = getEmail();
         Boolean episode_downloaded = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_EPISODE_DOWNLOADED);
         Boolean episode_heard = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_EPISODE_HEARD);

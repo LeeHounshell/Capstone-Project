@@ -91,25 +91,25 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
         String writerJSON = writerObject.toString();
 
         //#IFDEF 'DEBUG'
-        //System.out.println();
-        //System.out.println(writerJSON);
-        //System.out.println();
-        //if (isTesting()) {
-            //LogHelper.v(TAG, "LOADING TEST WRITER");
-            //ContentValues writerValues = new ContentValues();
-            //writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_ID, 1);
-            //writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_NAME, "Slesar, Henry");
-            //writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_URL, "slesar_henry.jpg");
-            //try {
-                //Uri result = insertWriterValues(writerValues);
-                //LogHelper.v(TAG, "Test Writer insert result="+result);
-                //return true;
-            //}
-            //catch (Exception e) {
-                //LogHelper.e(TAG, "Test Writer insert exception="+e);
-                //return false;
-            //}
-        //}
+        System.out.println();
+        System.out.println(writerJSON);
+        System.out.println();
+        if (isTesting()) {
+            LogHelper.v(TAG, "LOADING TEST WRITER");
+            ContentValues writerValues = new ContentValues();
+            writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_ID, 1);
+            writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_NAME, "Slesar, Henry");
+            writerValues.put(RadioTheaterContract.WritersEntry.FIELD_WRITER_URL, "slesar_henry.jpg");
+            try {
+                Uri result = insertWriterValues(writerValues);
+                LogHelper.v(TAG, "Test Writer insert result="+result);
+                return true;
+            }
+            catch (Exception e) {
+                LogHelper.e(TAG, "Test Writer insert exception="+e);
+                return false;
+            }
+        }
         //#ENDIF
 
         // parse the JSON
@@ -153,25 +153,25 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
         String actorJSON = actorObject.toString();
 
         //#IFDEF 'DEBUG'
-        //System.out.println();
-        //System.out.println(actorJSON);
-        //System.out.println();
-        //if (isTesting()) {
-            //LogHelper.v(TAG, "LOADING TEST ACTOR");
-            //ContentValues actorValues = new ContentValues();
-            //actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_ID, 1);
-            //actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_NAME, "DeKoven, Roger");
-            //actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_URL, "dekoven_roger.jpg");
-            //try {
-                //Uri result = insertActorValues(actorValues);
-                //LogHelper.v(TAG, "Test Actor insert result="+result);
-                //return true;
-            //}
-            //catch (Exception e) {
-                //LogHelper.e(TAG, "Test Actor insert exception="+e);
-                //return false;
-            //}
-        //}
+        System.out.println();
+        System.out.println(actorJSON);
+        System.out.println();
+        if (isTesting()) {
+            LogHelper.v(TAG, "LOADING TEST ACTOR");
+            ContentValues actorValues = new ContentValues();
+            actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_ID, 1);
+            actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_NAME, "DeKoven, Roger");
+            actorValues.put(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_URL, "dekoven_roger.jpg");
+            try {
+                Uri result = insertActorValues(actorValues);
+                LogHelper.v(TAG, "Test Actor insert result="+result);
+                return true;
+            }
+            catch (Exception e) {
+                LogHelper.e(TAG, "Test Actor insert exception="+e);
+                return false;
+            }
+        }
         //#ENDIF
 
         // parse the JSON
@@ -215,30 +215,30 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
         String episodeJSON = episodeObject.toString();
 
         //#IFDEF 'DEBUG'
-        //System.out.println();
-        //System.out.println(episodeJSON);
-        //System.out.println();
-        //if (isTesting()) {
-            //LogHelper.v(TAG, "LOADING TEST EPISODE");
-            //ContentValues episodeValues = new ContentValues();
-            //episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, "0001");
-            //episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_AIRDATE, "1974-01-06");
-            //episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_TITLE, "The Old Ones Are Hard to Kill");
-            //episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_DESCRIPTION, "An old lady rents a room to a sick boarder. She runs into problems with his strange deathbed confession.");
-            //episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_DOWNLOAD_URL, "www.cbsrmt.com/mp3/CBS Radio Mystery Theater 74-01-06 e0001 The Old Ones Are Hard to Kill.mp3");
-            //episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_WEBLINK_URL, "www.cbsrmt.com/episode_name-1-the-old-ones-are-hard-to-kill.html");
-            //episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_RATING, 3.2);
-            //episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_VOTE_COUNT, 1); // true count is unknown at present
-            //try {
-                //Uri result = insertEpisodeValues(episodeValues);
-                //LogHelper.v(TAG, "Test Episode insert result="+result);
-                //return true;
-            //}
-            //catch (Exception e) {
-                //LogHelper.e(TAG, "Test Episode insert exception="+e);
-                //return false;
-            //}
-        //}
+        System.out.println();
+        System.out.println(episodeJSON);
+        System.out.println();
+        if (isTesting()) {
+            LogHelper.v(TAG, "LOADING TEST EPISODE");
+            ContentValues episodeValues = new ContentValues();
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, "0001");
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_AIRDATE, "1974-01-06");
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_TITLE, "The Old Ones Are Hard to Kill");
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_DESCRIPTION, "An old lady rents a room to a sick boarder. She runs into problems with his strange deathbed confession.");
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_DOWNLOAD_URL, "www.cbsrmt.com/mp3/CBS Radio Mystery Theater 74-01-06 e0001 The Old Ones Are Hard to Kill.mp3");
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_WEBLINK_URL, "www.cbsrmt.com/episode_name-1-the-old-ones-are-hard-to-kill.html");
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_RATING, 3.2);
+            episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_VOTE_COUNT, 1); // true count is unknown at present
+            try {
+                Uri result = insertEpisodeValues(episodeValues);
+                LogHelper.v(TAG, "Test Episode insert result="+result);
+                return true;
+            }
+            catch (Exception e) {
+                LogHelper.e(TAG, "Test Episode insert exception="+e);
+                return false;
+            }
+        }
         //#ENDIF
 
         // parse the JSON
