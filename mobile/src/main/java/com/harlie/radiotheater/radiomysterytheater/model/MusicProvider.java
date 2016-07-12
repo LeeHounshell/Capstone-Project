@@ -54,17 +54,23 @@ import static com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper.cr
 public class MusicProvider {
     private final static String TAG = "LEE: <" + MusicProvider.class.getSimpleName() + ">";
 
+    //--------------------------------------------------------------------------------
     public static boolean isMediaLoaded() {
         return sMediaLoaded;
     }
-
     private static volatile boolean sMediaLoaded;
+
+    public static boolean isOnMusicCatalogReady() {
+        return sOnMusicCatalogReady;
+    }
+    private static volatile boolean sOnMusicCatalogReady = false;
+    //--------------------------------------------------------------------------------
 
     private MusicProviderSource mSource;
 
     // Categorized caches for music track data:
     private ConcurrentMap<String, List<MediaMetadataCompat>> mMusicListByGenre;
-    private final ConcurrentMap<String, MutableMediaMetadata> mMusicListById;
+    private static ConcurrentMap<String, MutableMediaMetadata> sMusicListById;
 
     private final Set<String> mFavoriteTracks;
 
@@ -87,7 +93,9 @@ public class MusicProvider {
         LogHelper.v(TAG, "MusicProvider: source="+source);
         mSource = source;
         mMusicListByGenre = new ConcurrentHashMap<>();
-        mMusicListById = new ConcurrentHashMap<>();
+        if (sMusicListById == null) {
+            sMusicListById = new ConcurrentHashMap<>();
+        }
         mFavoriteTracks = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
     }
 
@@ -112,8 +120,8 @@ public class MusicProvider {
         if (mCurrentState != State.INITIALIZED) {
             return Collections.emptyList();
         }
-        List<MediaMetadataCompat> shuffled = new ArrayList<>(mMusicListById.size());
-        for (MutableMediaMetadata mutableMetadata: mMusicListById.values()) {
+        List<MediaMetadataCompat> shuffled = new ArrayList<>(sMusicListById.size());
+        for (MutableMediaMetadata mutableMetadata: sMusicListById.values()) {
             shuffled.add(mutableMetadata.metadata);
         }
         Collections.shuffle(shuffled);
@@ -151,16 +159,19 @@ public class MusicProvider {
             }
             else {
                 LogHelper.v(TAG, "searchMusicBySongTitle: *** RADIO THEATER - search found nothing");
-//                MusicProvider.Callback queueLoadedCallback = new MusicProvider.Callback() {
-//                    @Override
-//                    public void onMusicCatalogReady(boolean success) {
-//                        LogHelper.v(TAG, "*** THE PLAYING QUEUE SHOULD BE LOADED NOW! ***");
-//                    }
-//                };
-//                this.retrieveMediaAsync(queueLoadedCallback);
             }
         }
         return iter;
+    }
+
+    /**
+     * Very basic implementation of a search that filter music tracks with album containing
+     * the given query.
+     *
+     */
+    public Iterable<MediaMetadataCompat> searchMusicById(String query) {
+        LogHelper.v(TAG, "searchMusicById: query="+query);
+        return searchMusic(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, query);
     }
 
     /**
@@ -190,7 +201,7 @@ public class MusicProvider {
         }
         ArrayList<MediaMetadataCompat> result = new ArrayList<>();
         query = query.toLowerCase(Locale.US);
-        for (MutableMediaMetadata track : mMusicListById.values()) {
+        for (MutableMediaMetadata track : sMusicListById.values()) {
             if (track.metadata.getString(metadataField).toLowerCase(Locale.US)
                 .contains(query)) {
                 result.add(track.metadata);
@@ -206,9 +217,19 @@ public class MusicProvider {
      */
     public MediaMetadataCompat getMusic(String musicId) {
         LogHelper.v(TAG, "getMusic: musicId="+musicId);
-        MediaMetadataCompat item = mMusicListById.containsKey(musicId) ? mMusicListById.get(musicId).metadata : null;
+        MediaMetadataCompat item = sMusicListById.containsKey(musicId) ? sMusicListById.get(musicId).metadata : null;
         LogHelper.v(TAG, "getMusic("+musicId+") found "+((item == null) ? "nothing" : item.getDescription().getTitle()));
         return item;
+    }
+
+    // for debugging
+    private void dumpTheMusicList() {
+        LogHelper.v(TAG, "*** DUMPING LIST ***");
+        for (MutableMediaMetadata element : sMusicListById.values()) {
+            if (element != null) {
+                LogHelper.v(TAG, "FOUND ELEMENT: "+element.metadata.getDescription().getTitle()+" - "+element.metadata.getDescription().getMediaId());
+            }
+        }
     }
 
     public synchronized void updateMusicArt(String musicId, Bitmap albumArt, Bitmap icon) {
@@ -227,7 +248,7 @@ public class MusicProvider {
 
                 .build();
 
-        MutableMediaMetadata mutableMetadata = mMusicListById.get(musicId);
+        MutableMediaMetadata mutableMetadata = sMusicListById.get(musicId);
         if (mutableMetadata == null) {
             throw new IllegalStateException("Unexpected error: Inconsistent data structures in " +
                     "MusicProvider");
@@ -275,6 +296,7 @@ public class MusicProvider {
             @Override
             protected void onPostExecute(State current) {
                 LogHelper.v(TAG, "---> onPostExecute <---");
+                sOnMusicCatalogReady = true;
                 if (callback != null) {
                     callback.onMusicCatalogReady(current == State.INITIALIZED);
                 }
@@ -286,7 +308,7 @@ public class MusicProvider {
         LogHelper.v(TAG, "buildListsByGenre");
         ConcurrentMap<String, List<MediaMetadataCompat>> newMusicListByGenre = new ConcurrentHashMap<>();
 
-        for (MutableMediaMetadata m : mMusicListById.values()) {
+        for (MutableMediaMetadata m : sMusicListById.values()) {
             String genre = m.metadata.getString(MediaMetadataCompat.METADATA_KEY_GENRE);
             List<MediaMetadataCompat> list = newMusicListByGenre.get(genre);
             //LogHelper.v(TAG, "==========> buildListsByGenre: genre="+genre+", mediaId="+m.metadata.getDescription().getMediaId()+", title="+m.metadata.getDescription().getTitle());
@@ -312,7 +334,7 @@ public class MusicProvider {
                     MediaMetadataCompat item = tracks.next();
                     String musicId = item.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
                     //LogHelper.v(TAG, "item="+item.getDescription()+", meta="+item.getMediaMetadata()+", musicId="+musicId);
-                    mMusicListById.put(musicId, new MutableMediaMetadata(musicId, item));
+                    sMusicListById.put(musicId, new MutableMediaMetadata(musicId, item));
                 }
                 buildListsByGenre();
                 mCurrentState = State.INITIALIZED;

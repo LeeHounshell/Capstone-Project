@@ -56,7 +56,6 @@ import java.util.List;
 import static com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper.MEDIA_ID_MUSICS_BY_GENRE;
 import static com.harlie.radiotheater.radiomysterytheater.utils.QueueHelper.convertToQueue;
 import static com.harlie.radiotheater.radiomysterytheater.utils.QueueHelper.getMusicIndexOnQueue;
-import static com.harlie.radiotheater.radiomysterytheater.utils.QueueHelper.getPlayingQueue;
 import static com.harlie.radiotheater.radiomysterytheater.utils.QueueHelper.getPlayingQueueFromSearch;
 import static com.harlie.radiotheater.radiomysterytheater.utils.QueueHelper.getRandomQueue;
 import static com.harlie.radiotheater.radiomysterytheater.utils.QueueHelper.isIndexPlayable;
@@ -73,10 +72,13 @@ public class QueueManager {
     private MetadataUpdateListener mListener;
     private Resources mResources;
 
-    // "Now playing" queue:
-    private List<MediaSessionCompat.QueueItem> mPlayingQueue;
+    public static List<MediaSessionCompat.QueueItem> getPlayingQueue() {
+        return sPlayingQueue;
+    }
+    private static List<MediaSessionCompat.QueueItem> sPlayingQueue; // "Now playing" queue
 
-    private static volatile int sCurrentIndex;
+    private static volatile int sCurrentIndex = 0;
+    private static volatile int sPreviousIndex = -1;
     private static String sDownloadUrl;
 
     public QueueManager(@NonNull MusicProvider musicProvider,
@@ -88,7 +90,9 @@ public class QueueManager {
         this.mListener = listener;
         this.mResources = resources;
 
-        mPlayingQueue = Collections.synchronizedList(new ArrayList<MediaSessionCompat.QueueItem>());
+        if (sPlayingQueue == null) {
+            sPlayingQueue = Collections.synchronizedList(new ArrayList<MediaSessionCompat.QueueItem>());
+        }
         sCurrentIndex = 0;
     }
 
@@ -105,10 +109,10 @@ public class QueueManager {
 
     private void setCurrentQueueIndex(int index) {
         LogHelper.v(TAG, "setCurrentQueueIndex: index="+index);
-        if (mPlayingQueue != null) {
-            if (index >= 0 && index < mPlayingQueue.size()) {
+        if (getPlayingQueue() != null) {
+            if (index >= 0 && index < getPlayingQueue().size()) {
                 sCurrentIndex = index;
-                mListener.onCurrentQueueIndexUpdated(sCurrentIndex);
+                mListener.onCurrentQueueIndexUpdated(getCurrentIndex());
             }
         }
         else {
@@ -119,7 +123,10 @@ public class QueueManager {
     public boolean setCurrentQueueItem(long queueId) {
         LogHelper.v(TAG, "setCurrentQueueItem: queueId="+queueId);
         // set the current index on queue from the queue Id:
-        int index = getMusicIndexOnQueue(mPlayingQueue, queueId);
+        if (getPlayingQueue() == null) {
+            return false;
+        }
+        int index = getMusicIndexOnQueue(getPlayingQueue(), queueId);
         if (index == -1) {
             setCurrentQueueIndex((int) queueId);
             return queueId >= 0;
@@ -131,29 +138,32 @@ public class QueueManager {
     public boolean setCurrentQueueItem(String mediaId) {
         LogHelper.v(TAG, "setCurrentQueueItem: mediaId="+mediaId);
         // set the current index on queue from the music Id:
-        int index = getMusicIndexOnQueue(mPlayingQueue, mediaId);
+        if (getPlayingQueue() == null) {
+            return false;
+        }
+        int index = getMusicIndexOnQueue(getPlayingQueue(), mediaId);
         setCurrentQueueIndex(index);
         return index >= 0;
     }
 
     public boolean skipQueuePosition(int amount) {
         LogHelper.v(TAG, "skipQueuePosition: amount="+amount);
-        if (mPlayingQueue == null) {
-            LogHelper.v(TAG, "the mPlayingQueue is null - can't backup or advance yet.");
+        if (getPlayingQueue() == null) {
+            LogHelper.v(TAG, "the sPlayingQueue is null - can't backup or advance yet.");
             return false;
         }
-        int index = sCurrentIndex + amount;
+        int index = getCurrentIndex() + amount;
         if (index < 0) {
             // skip backwards before the first song will keep you on the first song
             index = 0;
         }
-        else if (mPlayingQueue.size() > 0) {
+        else if (getPlayingQueue().size() > 0) {
             // skip forwards when in last song will cycle back to start of the queue
-            index %= mPlayingQueue.size();
+            index %= getPlayingQueue().size();
         }
-        if (!isIndexPlayable(index, mPlayingQueue)) {
+        if (!isIndexPlayable(index, getPlayingQueue())) {
             LogHelper.e(TAG, "Cannot increment queue index by ", amount,
-                    ". Current=", sCurrentIndex, " queue length=", mPlayingQueue.size());
+                    ". Current=", getCurrentIndex(), " queue length=", getPlayingQueue().size());
             return false;
         }
         sCurrentIndex = index;
@@ -173,10 +183,10 @@ public class QueueManager {
 
     //-------- RADIO THEATER --------
     public void setOrderedQueue() {
-        LogHelper.v(TAG, "setOrderedQueue");
+        LogHelper.v(TAG, "*** setOrderedQueue ***");
         String mediaId = setCurrentIndexFromEpisodeId();
-        if (mediaId != null) {
-            setCurrentQueue(mResources.getString(R.string.next_queue_title), getPlayingQueue(mediaId, mMusicProvider));
+        if (mediaId != null && getPlayingQueue() != null) {
+            setCurrentQueue(mResources.getString(R.string.next_queue_title), getPlayingQueue()); // WATCHME
         }
         else {
             LogHelper.e(TAG, "unable to determine next mediaId - wait a bit - mediaId="+mediaId);
@@ -185,14 +195,20 @@ public class QueueManager {
 
     //-------- RADIO THEATER --------
     public MediaSessionCompat.QueueItem getCurrentMusic() {
-        setCurrentIndexFromEpisodeId();
-        LogHelper.v(TAG, "getCurrentMusic: sCurrentIndex="+sCurrentIndex+", size="+mPlayingQueue.size());
-        if (mPlayingQueue.size() == 1) {
-            LogHelper.v(TAG, "*** THE PLAYING QUEUE HAS A SINGLE ITEM ***");
-            return mPlayingQueue.get(0);
+        LogHelper.v(TAG, "*** getCurrentMusic ***");
+        if (getPlayingQueue() == null) {
+            return null;
         }
-        else if (mPlayingQueue.size() == 0) {
-            LogHelper.v(TAG, "*** THE PLAYING QUEUE IS EMPTY ***");
+        if (sPreviousIndex != getCurrentIndex()) {
+            sPreviousIndex = getCurrentIndex();
+            setCurrentIndexFromEpisodeId();
+        }
+        if (getPlayingQueue().size() == 1) {
+            LogHelper.v(TAG, "getCurrentMusic: *** THE PLAYING QUEUE HAS A SINGLE ITEM *** sCurrentIndex="+getCurrentIndex()+", size="+ getPlayingQueue().size());
+            return getPlayingQueue().get(0);
+        }
+        else if (getPlayingQueue().size() == 0) {
+            LogHelper.v(TAG, "getCurrentMusic: *** THE PLAYING QUEUE IS EMPTY ***");
 //            MusicProvider.Callback queueLoadedCallback = new MusicProvider.Callback() {
 //                @Override
 //                public void onMusicCatalogReady(boolean success) {
@@ -203,7 +219,7 @@ public class QueueManager {
             waitabit();
             return null;
         }
-        return mPlayingQueue.get(sCurrentIndex);
+        return getPlayingQueue().get(getCurrentIndex());
     }
 
     //-------- RADIO THEATER --------
@@ -218,15 +234,16 @@ public class QueueManager {
 
     //-------- RADIO THEATER --------
     public String setCurrentIndexFromEpisodeId() {
-        while (MusicProvider.isMediaLoaded() == false) {
-            LogHelper.v(TAG, "setCurrentIndexFromEpisodeId: goto sleep (waiting for MusicProvider Media to load..)");
+        while (MusicProvider.isMediaLoaded() == false && MusicProvider.isOnMusicCatalogReady() == false) {
+            LogHelper.v(TAG, "setCurrentIndexFromEpisodeId: goto sleep (waiting for MusicProvider Media and catalog..)");
             waitabit();
-            LogHelper.v(TAG, "setCurrentIndexFromEpisodeId: wakeup! - MusicProvider.isMediaLoaded() == true ... lastRequest="+RadioControlIntentService.lastRequest());
         }
+        waitabit();
+        LogHelper.v(TAG, "setCurrentIndexFromEpisodeId: wakeup! - MusicProvider INITIALIZED ... lastRequest="+RadioControlIntentService.lastRequest());
         int episodeId = getNextAvailableEpisode();
         LocalPlayback.setCurrentEpisode(episodeId);
         LogHelper.v(TAG, "---> setCurrentIndexFromEpisodeId: episodeId="+episodeId);
-        String title = getTitleAndDownloadUrlForEpisode(episodeId); // this also sets mDownloadUrl - needed below or else NPE
+        String title = getTitleAndDownloadUrlForEpisode(episodeId); // this also sets sDownloadUrl - needed below or else NPE
         Iterable<MediaMetadataCompat> title_list = mMusicProvider.searchMusicBySongTitle(title);
         if (title_list == null) {
             LogHelper.e(TAG, "FAIL: could not locate media for title: ", title);
@@ -253,14 +270,20 @@ public class QueueManager {
         String episodeMediaId = MediaIDHelper.createMediaID(mediaId, categoryType, categoryValue);
         LogHelper.v(TAG, "---------> getCurrentMusic: mediaId="+mediaId+", episodeMediaId="+episodeMediaId+", title="+title);
         Iterable<MediaMetadataCompat> all_episodes = mMusicProvider.getMusicsByGenre(categoryValue);
+
         List<MediaSessionCompat.QueueItem> all_queued = convertToQueue(all_episodes, categoryType, categoryValue);
+
         sCurrentIndex = QueueHelper.getMusicIndexOnQueue(all_queued, episodeMediaId);
         try {
             setCurrentQueue(title, all_queued);
         } catch (Exception e) {
             LogHelper.w(TAG, "setCurrentQueue all_queued request - e="+e.getMessage());
         }
-        LogHelper.v(TAG, "getCurrentMusic: sCurrentIndex="+sCurrentIndex);
+        LogHelper.v(TAG, "getCurrentMusic: sCurrentIndex="+getCurrentIndex());
+
+        // automatically start playback
+        //RadioControlIntentService.startActionPlay(RadioTheaterApplication.getRadioTheaterApplicationContext(), "setCurrentIndexFromEpisodeId", String.valueOf(episodeId), sDownloadUrl);
+
         return episodeMediaId;
     }
 
@@ -297,7 +320,7 @@ public class QueueManager {
     //-------- RADIO THEATER --------
     private int getNextAvailableEpisode() {
         // find the next index to play from SQLite
-        int index = sCurrentIndex;
+        int index = getCurrentIndex();
         ConfigEpisodesCursor configCursor = getCursorForNextAvailableEpisode();
         if (configCursor != null && configCursor.moveToNext()) {
             // found the next episode to listen to
@@ -352,20 +375,20 @@ public class QueueManager {
         if (mediaId != null && isSameBrowsingCategory(mediaId)) {
             canReuseQueue = setCurrentQueueItem(mediaId);
         }
-        if (!canReuseQueue) {
+        if (!canReuseQueue && getPlayingQueue() != null) {
             String queueTitle = mResources.getString(R.string.browse_musics_by_genre_subtitle,
                     MediaIDHelper.extractBrowseCategoryValueFromMediaID(mediaId));
-            setCurrentQueue(queueTitle, getPlayingQueue(mediaId, mMusicProvider), mediaId);
+            setCurrentQueue(queueTitle, getPlayingQueue(), mediaId); // WATCHME
         }
         updateMetadata();
     }
 
     public int getCurrentQueueSize() {
         LogHelper.v(TAG, "getCurrentQueueSize");
-        if (mPlayingQueue == null) {
+        if (getPlayingQueue() == null) {
             return 0;
         }
-        return mPlayingQueue.size();
+        return getPlayingQueue().size();
     }
 
     protected void setCurrentQueue(String title, List<MediaSessionCompat.QueueItem> newQueue) {
@@ -375,10 +398,10 @@ public class QueueManager {
 
     protected void setCurrentQueue(String title, List<MediaSessionCompat.QueueItem> newQueue, String initialMediaId) {
         LogHelper.v(TAG, "setCurrentQueue: title="+title);
-        mPlayingQueue = newQueue;
+        sPlayingQueue = newQueue;
         int index = 0;
-        if (initialMediaId != null) {
-            index = getMusicIndexOnQueue(mPlayingQueue, initialMediaId);
+        if (initialMediaId != null && getPlayingQueue() != null) {
+            index = getMusicIndexOnQueue(getPlayingQueue(), initialMediaId);
         }
         sCurrentIndex = Math.max(index, 0);
         mListener.onQueueUpdated(title, newQueue);
@@ -391,8 +414,7 @@ public class QueueManager {
             mListener.onMetadataRetrieveError();
             return;
         }
-        final String musicId = MediaIDHelper.extractMusicIDFromMediaID(
-                currentMusic.getDescription().getMediaId());
+        final String musicId = MediaIDHelper.extractMusicIDFromMediaID(currentMusic.getDescription().getMediaId());
         MediaMetadataCompat metadata = mMusicProvider.getMusic(musicId);
         if (metadata == null) {
             throw new IllegalArgumentException("Invalid musicId " + musicId);
@@ -415,8 +437,7 @@ public class QueueManager {
                     if (currentMusic == null) {
                         return;
                     }
-                    String currentPlayingId = MediaIDHelper.extractMusicIDFromMediaID(
-                            currentMusic.getDescription().getMediaId());
+                    String currentPlayingId = MediaIDHelper.extractMusicIDFromMediaID(currentMusic.getDescription().getMediaId());
                     if (musicId.equals(currentPlayingId)) {
                         mListener.onMetadataChanged(mMusicProvider.getMusic(currentPlayingId));
                     }

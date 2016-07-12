@@ -9,7 +9,6 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.graphics.drawable.Drawable;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -17,7 +16,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
-import android.os.SystemClock;
 import android.preference.PreferenceActivity;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -225,28 +223,33 @@ public class AutoplayActivity extends BaseActivity {
         getAutoPlay().setOnTouchListener(new OnSwipeTouchListener(this, getHandler(), getAutoPlay(), pressedButton) {
 
             private boolean isTimePassed() {
-                long time_now = System.currentTimeMillis();
-                if ((time_now - click_time) < DELAY_BEFORE_NEXT_CLICK_ALLOWED) {
-                    LogHelper.v(TAG, "*** -IGNORED-CLICK- ***");
-                    return false;
-                }
-                click_time = time_now;
+                if (isClickWaitExpired()) return false;
                 LogHelper.v(TAG, "*** -GOOD-CLICK- ***");
                 sWaitForMedia = true;
-                showExpectedControls("isTimePassed-A");
+                showExpectedControls("isTimePassed-GOOD");
                 getHandler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         sWaitForMedia = false;
-                        showExpectedControls("isTimePassed-B");
+                        showExpectedControls("isTimePassed-ALLOW_CLICK");
                     }
                 }, DELAY_BEFORE_NEXT_CLICK_ALLOWED);
                 return true;
             }
 
+            private boolean isClickWaitExpired() {
+                long time_now = System.currentTimeMillis();
+                if (sWaitForMedia || (time_now - click_time) < DELAY_BEFORE_NEXT_CLICK_ALLOWED) {
+                    LogHelper.v(TAG, "*** -IGNORED-CLICK- ***");
+                    showExpectedControls("isTimePassed-IGNORED");
+                    return true;
+                }
+                click_time = time_now;
+                return false;
+            }
+
             @Override
             public void onClick() {
-                showExpectedControls("onClick");
                 ButtonState oldButtonState = sShowingButton;
                 if (! isTimePassed()) {
                     return;
@@ -276,7 +279,6 @@ public class AutoplayActivity extends BaseActivity {
 
             @Override
             public void onDoubleClick() { // FIXME: OnSwipeTouchListener issue
-                showExpectedControls("onDoubleClick");
                 if (! isTimePassed()) {
                     return;
                 }
@@ -287,7 +289,6 @@ public class AutoplayActivity extends BaseActivity {
 
             @Override
             public void onLongClick(final Drawable buttonImage) {
-                showExpectedControls("onLongClick");
                 if (! isTimePassed()) {
                     return;
                 }
@@ -298,7 +299,6 @@ public class AutoplayActivity extends BaseActivity {
 
             @Override
             public void onSwipeRight() {
-                showExpectedControls("onSwipeRight");
                 if (! isTimePassed()) {
                     return;
                 }
@@ -310,7 +310,6 @@ public class AutoplayActivity extends BaseActivity {
 
             @Override
             public void onSwipeLeft() {
-                showExpectedControls("onSwipeLeft");
                 if (! isTimePassed()) {
                     return;
                 }
@@ -323,7 +322,6 @@ public class AutoplayActivity extends BaseActivity {
 /*
 //            @Override
 //            public void onSwipeUp() { // FIXME: OnSwipeTouchListener issue, low priority
-//                showExpectedControls("onSwipeUp");
 //                if (! isTimePassed()) {
 //                    return;
 //                }
@@ -342,7 +340,6 @@ public class AutoplayActivity extends BaseActivity {
 //
 //            @Override
 //            public void onSwipeDown() { // FIXME: OnSwipeTouchListener issue, low priority
-//                showExpectedControls("onSwipeDown");
 //                if (! isTimePassed()) {
 //                    return;
 //                }

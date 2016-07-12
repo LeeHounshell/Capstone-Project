@@ -103,8 +103,6 @@ public class RadioTheaterService
 {
     private final static String TAG = "LEE: <" + RadioTheaterService.class.getSimpleName() + ">";
 
-    private static QueueManager sQueueManager;
-
     // Extra on MediaSession that contains the Cast device name currently connected to
     public static final String EXTRA_CONNECTED_CAST = "com.harlie.radiotheater.radiomysterytheater.CAST_NAME";
     // The action of the incoming Intent indicating that it contains a command
@@ -205,41 +203,38 @@ public class RadioTheaterService
 
         mMusicProvider = new MusicProvider();
 
-        // To make the app more responsive, fetch and cache catalog information now.
-        // This can help improve the response time in the method
-        // {@link #onLoadChildren(String, Result<List<MediaItem>>) onLoadChildren()}.
-        mMusicProvider.retrieveMediaAsync(null /* Callback */);
-
         mPackageValidator = new PackageValidator(this);
 
         QueueManager queueManager = new QueueManager(mMusicProvider, getResources(),
                 new QueueManager.MetadataUpdateListener() {
                     @Override
                     public void onMetadataChanged(MediaMetadataCompat metadata) {
+                        LogHelper.v(TAG, "===> onMetadataChanged");
                         mSession.setMetadata(metadata);
                     }
 
                     @Override
                     public void onMetadataRetrieveError() {
+                        LogHelper.v(TAG, "===> onMetadataRetrieveError");
                         mPlaybackManager.updatePlaybackState(getString(R.string.error_no_metadata));
                     }
 
                     @Override
                     public void onCurrentQueueIndexUpdated(int queueIndex) {
+                        LogHelper.v(TAG, "===> onCurrentQueueIndexUpdated <===");
                         mPlaybackManager.handlePlayRequest();
                     }
 
                     @Override
                     public void onQueueUpdated(String title, List<MediaSessionCompat.QueueItem> newQueue) {
+                        LogHelper.v(TAG, "===> onQueueUpdated <===");
                         mSession.setQueue(newQueue);
                         mSession.setQueueTitle(title);
                     }
                 });
-        sQueueManager = queueManager;
 
         LocalPlayback playback = new LocalPlayback(this, mMusicProvider);
-        mPlaybackManager = new PlaybackManager(this, getResources(), mMusicProvider, queueManager,
-                playback);
+        mPlaybackManager = new PlaybackManager(this, getResources(), mMusicProvider, queueManager, playback);
 
         // Start a new MediaSession
         mSession = new MediaSessionCompat(this, "RadioTheaterService");
@@ -247,6 +242,16 @@ public class RadioTheaterService
         mSession.setCallback(mPlaybackManager.getMediaSessionCallback());
         mSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
                 MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
+
+        // To make the app more responsive, fetch and cache catalog information now.
+        // This can help improve the response time in the method
+        // {@link #onLoadChildren(String, Result<List<MediaItem>>) onLoadChildren()}.
+        mMusicProvider.retrieveMediaAsync(new MusicProvider.Callback() {
+            @Override
+            public void onMusicCatalogReady(boolean success) {
+                LogHelper.v(TAG, "*** CALLBACK *** - onMusicCatalogReady");
+            }
+        });
 
         Context context = getApplicationContext();
         Intent intent = new Intent(context, AutoplayActivity.class);
@@ -271,6 +276,7 @@ public class RadioTheaterService
         mMediaRouter = MediaRouter.getInstance(getApplicationContext());
 
         registerCarConnectionReceiver();
+
     }
 
     /**
@@ -332,7 +338,6 @@ public class RadioTheaterService
         VideoCastManager.getInstance().removeVideoCastConsumer(mCastConsumer);
         mDelayedStopHandler.removeCallbacksAndMessages(null);
         mSession.release();
-        sQueueManager = null;
     }
 
     @Override
@@ -459,10 +464,6 @@ public class RadioTheaterService
                 service.stopSelf();
             }
         }
-    }
-
-    public static QueueManager getQueueManager() {
-        return sQueueManager;
     }
 
 }

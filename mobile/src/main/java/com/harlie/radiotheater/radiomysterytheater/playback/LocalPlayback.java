@@ -255,7 +255,7 @@ public class LocalPlayback
     //-------- RADIO THEATER --------
     @Override
     public void play(QueueItem item) {
-        LogHelper.v(TAG, "play ---> *** RADIO MYSTERY THEATER: PLAY EPISODE" +item.getDescription().getTitle()+", mediaId="+item.getDescription().getMediaId());
+        LogHelper.v(TAG, "play ---> *** RADIO MYSTERY THEATER: PLAY EPISODE - " +item.getDescription().getTitle()+", mediaId="+item.getDescription().getMediaId());
         mPlayOnFocusGain = true;
         tryToGetAudioFocus();
         registerAudioNoisyReceiver();
@@ -274,46 +274,74 @@ public class LocalPlayback
             mState = PlaybackStateCompat.STATE_STOPPED;
             setCurrentState(mState);
             relaxResources(false); // release everything except MediaPlayer
-            MediaMetadataCompat track = mMusicProvider.getMusic(MediaIDHelper.extractMusicIDFromMediaID(item.getDescription().getMediaId()));
-
-            //noinspection ResourceType
-            String source = track.getString(MusicProviderSource.CUSTOM_METADATA_TRACK_SOURCE);
-            LogHelper.v(TAG, "===> source="+source);
-
-            try {
-                createMediaPlayerIfNeeded();
-
-                mState = PlaybackStateCompat.STATE_BUFFERING;
-                setCurrentState(mState);
-
-                mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                //Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
-                //mMediaPlayer.setDataSource(context, Uri.parse(source));
-                mMediaPlayer.setDataSource(source.replaceAll(" ", "%20"));
-
-                // Starts preparing the media player in the background. When
-                // it's done, it will call our OnPreparedListener (that is,
-                // the onPrepared() method on this class, since we set the
-                // listener to 'this'). Until the media player is prepared,
-                // we *cannot* call start() on it!
-                mMediaPlayer.prepareAsync();
-
-                // If we are streaming from the internet, we want to hold a
-                // Wifi lock, which prevents the Wifi radio from going to
-                // sleep while the song is playing.
-                mWifiLock.acquire();
-
-                if (mCallback != null) {
-                    mCallback.onPlaybackStatusChanged(mState);
-                }
-
+            String musicId = MediaIDHelper.extractMusicIDFromMediaID(mediaId);
+            String source = null;
+            boolean error = false;
+            if (musicId == null) {
+                LogHelper.e(TAG, "*** UNABLE TO GET MUSIC ID *** - musicId="+musicId+", mediaId="+mediaId);
+                error = true;
             }
-            catch (IOException ex) {
-                LogHelper.e(TAG, ex, "Exception playing song");
-                if (mCallback != null) {
-                    mCallback.onError(ex.getMessage());
-                    notifyIfUnableToPlay();
+            else {
+                MediaMetadataCompat mediaMetadataCompat = mMusicProvider.getMusic(musicId);
+                if (mediaMetadataCompat == null) {
+                    LogHelper.e(TAG, "*** UNABLE TO GET MEDIA METADATA COMPAT *** - musicId=" + musicId + ", mediaId=" + mediaId);
+                    error = true;
                 }
+                else {
+                    MediaMetadataCompat track = MediaMetadataCompat.fromMediaMetadata(mediaMetadataCompat.getMediaMetadata());
+                    if (track == null) {
+                        LogHelper.e(TAG, "*** UNABLE TO LOAD TRACK *** - musicId=" + musicId + ", mediaId=" + mediaId);
+                        error = true;
+                    }
+                    else {
+                        //noinspection ResourceType
+                        source = track.getString(MusicProviderSource.CUSTOM_METADATA_TRACK_SOURCE);
+                        LogHelper.v(TAG, "===> source=" + source);
+                    }
+                }
+            }
+            if (error) {
+                LogHelper.v(TAG, "*** MEDIA METADATA NOT FOUND ***");
+            }
+
+            if (source != null) {
+                try {
+                    createMediaPlayerIfNeeded();
+
+                    mState = PlaybackStateCompat.STATE_BUFFERING;
+                    setCurrentState(mState);
+
+                    mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                    //Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+                    //mMediaPlayer.setDataSource(context, Uri.parse(source));
+                    mMediaPlayer.setDataSource(source.replaceAll(" ", "%20"));
+
+                    // Starts preparing the media player in the background. When
+                    // it's done, it will call our OnPreparedListener (that is,
+                    // the onPrepared() method on this class, since we set the
+                    // listener to 'this'). Until the media player is prepared,
+                    // we *cannot* call start() on it!
+                    mMediaPlayer.prepareAsync();
+
+                    // If we are streaming from the internet, we want to hold a
+                    // Wifi lock, which prevents the Wifi radio from going to
+                    // sleep while the song is playing.
+                    mWifiLock.acquire();
+
+                    if (mCallback != null) {
+                        mCallback.onPlaybackStatusChanged(mState);
+                    }
+
+                } catch (IOException ex) {
+                    LogHelper.e(TAG, ex, "Exception playing song");
+                    if (mCallback != null) {
+                        mCallback.onError(ex.getMessage());
+                        notifyIfUnableToPlay();
+                    }
+                }
+            }
+            else {
+                LogHelper.w(TAG, "*** SOURCE is null ***");
             }
         }
     }

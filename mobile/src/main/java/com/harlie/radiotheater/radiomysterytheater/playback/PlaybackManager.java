@@ -43,8 +43,12 @@ public class PlaybackManager implements Playback.Callback {
     // Action to thumbs up a media item
     private static final String CUSTOM_ACTION_THUMBS_UP = "com.harlie.radiotheater.radiomysterytheater.THUMBS_UP";
 
+    public static QueueManager getQueueManager() {
+        return sQueueManager;
+    }
+    private static QueueManager sQueueManager;
+
     private MusicProvider mMusicProvider;
-    private QueueManager mQueueManager;
     private Resources mResources;
     private Playback mPlayback;
     private PlaybackServiceCallback mServiceCallback;
@@ -55,10 +59,10 @@ public class PlaybackManager implements Playback.Callback {
                            Playback playback)
     {
         LogHelper.v(TAG, "PlaybackManager");
+        sQueueManager = queueManager;
         mMusicProvider = musicProvider;
         mServiceCallback = serviceCallback;
         mResources = resources;
-        mQueueManager = queueManager;
         mMediaSessionCallback = new MediaSessionCallback();
         mPlayback = playback;
         mPlayback.setCallback(this);
@@ -79,7 +83,7 @@ public class PlaybackManager implements Playback.Callback {
      */
     public void handlePlayRequest() {
         LogHelper.v(TAG, "handlePlayRequest: mState=" + mPlayback.getState());
-        MediaSessionCompat.QueueItem currentMusic = mQueueManager.getCurrentMusic();
+        MediaSessionCompat.QueueItem currentMusic = getQueueManager().getCurrentMusic();
         if (currentMusic != null) {
             mServiceCallback.onPlaybackStart();
             mPlayback.play(currentMusic);
@@ -141,7 +145,7 @@ public class PlaybackManager implements Playback.Callback {
         stateBuilder.setState(state, position, 1.0f, SystemClock.elapsedRealtime());
 
         // Set the activeQueueItemId if the current index is valid.
-        MediaSessionCompat.QueueItem currentMusic = mQueueManager.getCurrentMusic();
+        MediaSessionCompat.QueueItem currentMusic = getQueueManager().getCurrentMusic();
         if (currentMusic != null) {
             stateBuilder.setActiveQueueItemId(currentMusic.getQueueId());
         }
@@ -156,7 +160,7 @@ public class PlaybackManager implements Playback.Callback {
 
     private void setCustomAction(PlaybackStateCompat.Builder stateBuilder) {
         LogHelper.v(TAG, "setCustomAction");
-        MediaSessionCompat.QueueItem currentMusic = mQueueManager.getCurrentMusic();
+        MediaSessionCompat.QueueItem currentMusic = getQueueManager().getCurrentMusic();
         if (currentMusic == null) {
             return;
         }
@@ -200,9 +204,9 @@ public class PlaybackManager implements Playback.Callback {
         LogHelper.v(TAG, "onCompletion");
         // The media player finished playing the current song, so we go ahead
         // and start the next.
-        if (mQueueManager.skipQueuePosition(1)) {
+        if (getQueueManager().skipQueuePosition(1)) {
             handlePlayRequest();
-            mQueueManager.updateMetadata();
+            getQueueManager().updateMetadata();
         } else {
             // If skipping was not possible, we stop and release the resources:
             handleStopRequest(null);
@@ -224,7 +228,7 @@ public class PlaybackManager implements Playback.Callback {
     @Override
     public void setCurrentMediaId(String mediaId) {
         LogHelper.v(TAG, "setCurrentMediaId", mediaId);
-        mQueueManager.setQueueFromMusic(mediaId);
+        getQueueManager().setQueueFromMusic(mediaId);
     }
 
     /**
@@ -255,7 +259,7 @@ public class PlaybackManager implements Playback.Callback {
                 mPlayback.pause();
                 break;
             case PlaybackStateCompat.STATE_PLAYING:
-                MediaSessionCompat.QueueItem currentMusic = mQueueManager.getCurrentMusic();
+                MediaSessionCompat.QueueItem currentMusic = getQueueManager().getCurrentMusic();
                 if (resumePlaying && currentMusic != null) {
                     mPlayback.play(currentMusic);
                 } else if (!resumePlaying) {
@@ -277,8 +281,8 @@ public class PlaybackManager implements Playback.Callback {
         @Override
         public void onPlay() {
             LogHelper.v(TAG, "play");
-            if (mQueueManager.getCurrentMusic() == null) {
-                mQueueManager.setOrderedQueue();
+            if (getQueueManager().getCurrentMusic() == null) {
+                getQueueManager().setOrderedQueue();
             }
             handlePlayRequest();
         }
@@ -286,9 +290,9 @@ public class PlaybackManager implements Playback.Callback {
         @Override
         public void onSkipToQueueItem(long queueId) {
             LogHelper.v(TAG, "onSkipToQueueItem:" + queueId);
-            mQueueManager.setCurrentQueueItem(queueId);
+            getQueueManager().setCurrentQueueItem(queueId);
             handlePlayRequest();
-            mQueueManager.updateMetadata();
+            getQueueManager().updateMetadata();
         }
 
         @Override
@@ -300,7 +304,7 @@ public class PlaybackManager implements Playback.Callback {
         @Override
         public void onPlayFromMediaId(String mediaId, Bundle extras) {
             LogHelper.v(TAG, "=========> onPlayFromMediaId mediaId="+mediaId+", extras="+extras);
-            mQueueManager.setQueueFromMusic(mediaId);
+            getQueueManager().setQueueFromMusic(mediaId);
             handlePlayRequest();
         }
 
@@ -319,23 +323,23 @@ public class PlaybackManager implements Playback.Callback {
         @Override
         public void onSkipToNext() {
             LogHelper.v(TAG, "onSkipToNext");
-            if (mQueueManager.skipQueuePosition(1)) {
+            if (getQueueManager().skipQueuePosition(1)) {
                 handlePlayRequest();
             } else {
                 handleStopRequest("Cannot skip");
             }
-            mQueueManager.updateMetadata();
+            getQueueManager().updateMetadata();
         }
 
         @Override
         public void onSkipToPrevious() {
             LogHelper.v(TAG, "onSkipToPrevious");
-            if (mQueueManager.skipQueuePosition(-1)) {
+            if (getQueueManager().skipQueuePosition(-1)) {
                 handlePlayRequest();
             } else {
                 handleStopRequest("Cannot skip");
             }
-            mQueueManager.updateMetadata();
+            getQueueManager().updateMetadata();
         }
 
         @Override
@@ -343,7 +347,7 @@ public class PlaybackManager implements Playback.Callback {
             LogHelper.v(TAG, "onCustomAction");
             if (CUSTOM_ACTION_THUMBS_UP.equals(action)) {
                 LogHelper.i(TAG, "onCustomAction: favorite for current track");
-                MediaSessionCompat.QueueItem currentMusic = mQueueManager.getCurrentMusic();
+                MediaSessionCompat.QueueItem currentMusic = getQueueManager().getCurrentMusic();
                 if (currentMusic != null) {
                     String mediaId = currentMusic.getDescription().getMediaId();
                     if (mediaId != null) {
@@ -376,9 +380,9 @@ public class PlaybackManager implements Playback.Callback {
         public void onPlayFromSearch(final String query, final Bundle extras) {
             LogHelper.d(TAG, "onPlayFromSearch - query=", query, " extras=", extras);
             mPlayback.setState(PlaybackStateCompat.STATE_CONNECTING);
-            mQueueManager.setQueueFromSearch(query, extras);
+            getQueueManager().setQueueFromSearch(query, extras);
             handlePlayRequest();
-            mQueueManager.updateMetadata();
+            getQueueManager().updateMetadata();
         }
     }
 
