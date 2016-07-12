@@ -73,7 +73,7 @@ public class AuthGoogleActivity
         }
         if (getAuth().getCurrentUser() != null && ! doINeedToCreateADatabase()) {
             LogHelper.v(TAG, "--> Firebase: user=" + getAuth().getCurrentUser().getDisplayName() + " already signed in!");
-            startAutoplayActivity();
+            startAutoplayActivity(false);
             overridePendingTransition(0,0);
             return;
         }

@@ -1,10 +1,12 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
+import android.transition.Transition;
 
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
@@ -23,7 +25,13 @@ public class SplashActivity extends AppCompatActivity
             LogHelper.v(TAG, "Authenticated.");
             Intent intent = new Intent(this, AutoplayActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
+            // setup the primary app-startup Transition effect
+            LogHelper.v(TAG, "Transitioning using animation..");
+            Transition exitTransition = new android.transition.Fade();
+            getWindow().setExitTransition(exitTransition);
+            ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this);
+            Bundle bundle = options.toBundle();
+            startActivity(intent, bundle);
         }
         else {
             LogHelper.v(TAG, "Need to Authenticate.");

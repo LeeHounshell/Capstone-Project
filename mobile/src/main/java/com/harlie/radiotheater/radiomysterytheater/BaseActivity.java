@@ -3,6 +3,7 @@ package com.harlie.radiotheater.radiomysterytheater;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
+import android.app.ActivityOptions;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -176,6 +177,11 @@ public class BaseActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         LogHelper.v(TAG, "onCreate");
         sOnRestoreInstanceComplete = false;
+
+        Transition enterTransition = new android.transition.Fade();
+        getWindow().setEnterTransition(enterTransition);
+        Transition returnTransition = new android.transition.Slide();
+        getWindow().setReturnTransition(returnTransition);
 
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
@@ -488,7 +494,8 @@ public class BaseActivity extends AppCompatActivity {
                                 setEmail(email);
                                 setUID(uid);
                                 trackSignupWithFirebaseAnalytics();
-                                startAutoplayActivity();
+                                // ok, we're in
+                                startAutoplayActivity(true);
                             }
                             else {
                                 userLoginFailed();
@@ -661,8 +668,8 @@ public class BaseActivity extends AppCompatActivity {
         this.mPassword = password;
     }
 
-    public void startAutoplayActivity() {
-        LogHelper.v(TAG, "---> startAutoplayActivity <---");
+    public void startAutoplayActivity(boolean animate) {
+        LogHelper.v(TAG, "---> startAutoplayActivity: animate="+animate+" <---");
         boolean dbMissing = doINeedToCreateADatabase();
         LogHelper.v(TAG, "---> dbMissing="+dbMissing);
         if (dbMissing) {
@@ -699,11 +706,20 @@ public class BaseActivity extends AppCompatActivity {
             Intent autoplayIntent = new Intent(this, AutoplayActivity.class);
             // close existing activity stack regardless of what's in there and create new root
             //autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            Bundle playInfo = new Bundle();
-            savePlayInfoToBundle(playInfo);
-            autoplayIntent.putExtras(playInfo);
+            // Transition Effects..
+            Bundle bundle;
+            if (animate) {
+                LogHelper.v(TAG, "--> using Simple Transition animation..");
+                ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this);
+                bundle = options.toBundle();
+            }
+            else {
+                LogHelper.v(TAG, "--> using Standard Fade Transition animation..");
+                bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
+            }
+            savePlayInfoToBundle(bundle);
+            autoplayIntent.putExtras(bundle);
             autoplayIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
             startActivity(autoplayIntent, bundle);
             finish();
         }
@@ -915,8 +931,8 @@ public class BaseActivity extends AppCompatActivity {
                 boolean dbMissing = doINeedToCreateADatabase();
                 if (! dbMissing) {
                     LogHelper.v(TAG, "*** successfully accessed prebuilt SQLite database ***");
-                    // ok, we're in
-                    startAutoplayActivity();
+                    // ok, we're almost in
+                    startAutoplayActivity(false);
                     return;
                 }
                 else {
@@ -1050,8 +1066,8 @@ public class BaseActivity extends AppCompatActivity {
         }
         else
         if (state == LoadRadioTheaterTablesAsyncTask.LoadState.EPISODES) {
-            // ok, we're in
-            startAutoplayActivity();
+            // ok, we're almost in
+            startAutoplayActivity(false);
         }
     }
 
@@ -1458,7 +1474,7 @@ public class BaseActivity extends AppCompatActivity {
                         LogHelper.v(TAG, "---> DECODED LISTEN_COUNT="+decodedListenCount);
                     }
                     catch (NumberFormatException e) {
-                        LogHelper.e(TAG, "NumberFormatException: group="+matcher.group(1));
+                        LogHelper.e(TAG, "*** UNABLE TO DECODE LISTEN_COUNT FROM FIREBASE *** - NumberFormatException: configuration="+configurationJSON);
                     }
                 }
                 mConfiguration.putFieldTotalListenCount(decodedListenCount);

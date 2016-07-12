@@ -317,10 +317,13 @@ public class RadioTheaterService
                 MediaButtonReceiver.handleIntent(mSession, startIntent);
             }
         }
+
+/*
         // Reset the delay handler to enqueue a message to stop the service if
         // nothing is playing.
         mDelayedStopHandler.removeCallbacksAndMessages(null);
         mDelayedStopHandler.sendEmptyMessageDelayed(0, STOP_DELAY);
+*/
         return START_STICKY;
     }
 
@@ -402,10 +405,12 @@ public class RadioTheaterService
     @Override
     public void onPlaybackStop() {
         LogHelper.v(TAG, "onPlaybackStop");
+/*
         // Reset the delayed stop handler, so after STOP_DELAY it will be executed again,
         // potentially stopping the service.
         mDelayedStopHandler.removeCallbacksAndMessages(null);
         mDelayedStopHandler.sendEmptyMessageDelayed(0, STOP_DELAY);
+*/
         stopForeground(true);
     }
 
@@ -456,10 +461,12 @@ public class RadioTheaterService
             LogHelper.v(TAG, "handleMessage: msg="+msg);
             RadioTheaterService service = mWeakReference.get();
             if (service != null && service.mPlaybackManager.getPlayback() != null) {
+/*
                 if (service.mPlaybackManager.getPlayback().isPlaying()) {
                     LogHelper.d(TAG, "=========>>> ignoring delayed stop since the media player is in use.");
                     return;
                 }
+*/
                 LogHelper.d(TAG, "Stopping service with delay handler.");
                 service.stopSelf();
             }

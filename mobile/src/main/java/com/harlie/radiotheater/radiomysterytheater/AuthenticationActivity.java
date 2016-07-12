@@ -37,7 +37,7 @@ public class AuthenticationActivity extends BaseActivity
             setEmail(getAuth().getCurrentUser().getEmail());
             setUID(getAuth().getCurrentUser().getUid());
             LogHelper.v(TAG, "--> Firebase: user=" + getAuth().getCurrentUser().getDisplayName() + " already signed in with email="+getEmail());
-            startAutoplayActivity();
+            startAutoplayActivity(false);
             return;
         }
         LogHelper.v(TAG, "--> Firebase: user not signed in");
