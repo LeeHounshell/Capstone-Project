@@ -25,6 +25,7 @@
 
         <android.support.v7.widget.AppCompatButton
             android:id="@+id/autoplay"
+            android:transitionName="PlayNow"
             android:soundEffectsEnabled="true"
             android:focusable="true"
             android:layout_width="@dimen/autoplay_width"

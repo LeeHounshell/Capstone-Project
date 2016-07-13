@@ -1,5 +1,6 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
@@ -208,15 +209,18 @@ public class EpisodeDetailFragment extends FragmentBase {
                     mPlayNow.setEnabled(false);
                     mPlayNow.setBackground(pleaseWaitButton);
                     //mp.start();
-                    LogHelper.v(TAG, "onClick - PLAY NOW");
-                    RadioControlIntentService.startActionPlay(baseActivity, "DETAIL", String.valueOf(mEpisodeId), null);
                     Intent autoplayIntent = new Intent(baseActivity, AutoplayActivity.class);
+                    // setup a shared-element transition..
+                    LogHelper.v(TAG, "onClick - PLAY NOW - using shared element transition");
+                    ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(baseActivity, mPlayNow, "PlayNow");
+                    startActivity(autoplayIntent, options.toBundle());
                     // close existing activity stack regardless of what's in there and create new root
                     //autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                    Bundle playInfo = new Bundle();
+                    Bundle playInfo = options.toBundle();
                     baseActivity.savePlayInfoToBundle(playInfo);
                     autoplayIntent.putExtras(playInfo);
-                    startActivity(autoplayIntent);
+                    autoplayIntent.putExtra("PLAY_NOW", String.valueOf(mEpisodeId));
+                    startActivity(autoplayIntent, playInfo);
                     baseActivity.overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
                     baseActivity.getHandler().postDelayed(new Runnable() {
                         @Override

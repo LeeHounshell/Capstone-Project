@@ -426,6 +426,17 @@ public class AutoplayActivity extends BaseActivity {
             }
         });
 
+        Intent intent = getIntent();
+        if (intent != null) {
+            String episodeId = intent.getStringExtra("PLAY_NOW");
+            if (episodeId != null) {
+                LogHelper.v(TAG, "setup PLAY_NOW");
+                sWaitForMedia = true;
+                showExpectedControls("onCreate");
+                RadioControlIntentService.startActionPlay(this, "MAIN", episodeId, null);
+            }
+        }
+
         setupAdMob();
 
         sLoadingScreenEnabled = true;
@@ -839,6 +850,7 @@ public class AutoplayActivity extends BaseActivity {
                         @Override
                         public void run() {
                             LogHelper.v(TAG, "*** RECEIVED BROADCAST: EPISODE DURATION");
+                            sWaitForMedia = false;
                             sAutoplayNextNow = false;
                             mDuration = Long.valueOf(message.substring(KEY_DURATION.length(), message.length()));
                             sHaveRealDuration = true;
