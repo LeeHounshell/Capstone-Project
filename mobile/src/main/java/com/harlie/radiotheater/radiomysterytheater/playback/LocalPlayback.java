@@ -77,6 +77,9 @@ public class LocalPlayback
     // we have full audio focus
     private static final int AUDIO_FOCUSED  = 2;
 
+    // NOTE: made this static to allow direct communications getting the seek-bar value
+    private static LocalPlayback theLocalPlayback;
+
     private final Context mContext;
     private final WifiManager.WifiLock mWifiLock;
     private int mState;
@@ -116,6 +119,7 @@ public class LocalPlayback
 
     public LocalPlayback(Context context, MusicProvider musicProvider) {
         LogHelper.v(TAG, "LocalPlayback");
+        theLocalPlayback = this;
         this.mContext = context;
         this.mMusicProvider = musicProvider;
         this.mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
@@ -124,6 +128,12 @@ public class LocalPlayback
                 .createWifiLock(WifiManager.WIFI_MODE_FULL, "uAmp_lock");
         this.mState = PlaybackStateCompat.STATE_NONE;
         setCurrentState(mState);
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        theLocalPlayback = null;
+        super.finalize();
     }
 
     @Override
@@ -184,6 +194,9 @@ public class LocalPlayback
     //-------- RADIO THEATER --------
     public static int getCurrentPosition() {
         LogHelper.v(TAG, "getCurrentPosition");
+        if (theLocalPlayback != null) {
+            sCurrentPosition = theLocalPlayback.getCurrentStreamPosition();
+        }
         return sCurrentPosition;
     }
 
@@ -464,13 +477,15 @@ public class LocalPlayback
             // If we were playing when we lost focus, we need to resume playing.
             if (mPlayOnFocusGain) {
                 if (mMediaPlayer != null && !mMediaPlayer.isPlaying()) {
-                    LogHelper.d(TAG,"configMediaPlayerState startMediaPlayer. seeking to ",
-                            sCurrentPosition);
+                    LogHelper.d(TAG, "configMediaPlayerState startMediaPlayer. seeking to "+sCurrentPosition);
                     if (sCurrentPosition == mMediaPlayer.getCurrentPosition()) {
+                        LogHelper.v(TAG, "********* START PLAYING *********");
                         mMediaPlayer.start();
                         mState = PlaybackStateCompat.STATE_PLAYING;
                         setCurrentState(mState);
                     } else {
+                        LogHelper.v(TAG, "********* BUFFERING *********");
+                        sCurrentPosition = mMediaPlayer.getCurrentPosition();
                         mMediaPlayer.seekTo(sCurrentPosition);
                         mState = PlaybackStateCompat.STATE_BUFFERING;
                         setCurrentState(mState);

@@ -27,7 +27,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.Toolbar;
 import android.telephony.TelephonyManager;
-import android.transition.Transition;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -511,6 +510,9 @@ public class AutoplayActivity extends BaseActivity {
                 if (getCircularSeekBar() != null && !getCircularSeekBar().isProcessingTouchEvents()) {
                     verifyPaidVersion(false);
                     LoadingAsyncTask.mDoneLoading = true;
+                    // we need to determine the current bar location and update the display
+                    mCurrentPosition = (long) LocalPlayback.getCurrentPosition();
+                    getCircularSeekBar().setProgress((int) mCurrentPosition);
                 }
             }
             else if (
@@ -966,80 +968,92 @@ public class AutoplayActivity extends BaseActivity {
 
     public void showExpectedControls(String log) {
         int playbackState = LocalPlayback.getCurrentState();
+        boolean visible = false;
         if (sWaitForMedia) {
             //LogHelper.v(TAG, "showExpectedControls: sWaitForMedia");
             showPleaseWaitButton(playbackState);
-        }
-        else {
+        } else {
             //LogHelper.w(TAG, "showExpectedControls: log="+log+", playbackState="+playbackState);
             switch (playbackState) {
                 case PlaybackStateCompat.STATE_BUFFERING: {
                     //LogHelper.v(TAG, "PlaybackStateCompat.STATE_BUFFERING");
-                    showPleaseWaitButton(playbackState);
+                    visible = showPleaseWaitButton(playbackState);
                     break;
                 }
                 case PlaybackStateCompat.STATE_CONNECTING: {
                     //LogHelper.v(TAG, "PlaybackStateCompat.STATE_CONNECTING");
-                    showPleaseWaitButton(playbackState);
+                    visible = showPleaseWaitButton(playbackState);
                     break;
                 }
                 case PlaybackStateCompat.STATE_ERROR: {
                     //LogHelper.v(TAG, "PlaybackStateCompat.STATE_ERROR");
-                    showAutoplayButton(playbackState);
+                    visible = showAutoplayButton(playbackState);
                     break;
                 }
                 case PlaybackStateCompat.STATE_FAST_FORWARDING: {
                     //LogHelper.v(TAG, "PlaybackStateCompat.STATE_FAST_FORWARDING");
-                    showPleaseWaitButton(playbackState);
+                    visible = showPleaseWaitButton(playbackState);
                     break;
                 }
                 case PlaybackStateCompat.STATE_NONE: {
                     //LogHelper.v(TAG, "PlaybackStateCompat.STATE_NONE");
-                    showAutoplayButton(playbackState);
+                    visible = showAutoplayButton(playbackState);
                     break;
                 }
                 case PlaybackStateCompat.STATE_PAUSED: {
                     //LogHelper.v(TAG, "PlaybackStateCompat.STATE_PAUSED");
-                    showAutoplayButton(playbackState);
+                    visible = showAutoplayButton(playbackState);
                     break;
                 }
                 case PlaybackStateCompat.STATE_PLAYING: {
                     //LogHelper.v(TAG, "PlaybackStateCompat.STATE_PLAYING");
-                    showPauseButton(playbackState);
+                    visible = showPauseButton(playbackState);
                     break;
                 }
                 case PlaybackStateCompat.STATE_REWINDING: {
                     //LogHelper.v(TAG, "PlaybackStateCompat.STATE_REWINDING");
-                    showPleaseWaitButton(playbackState);
+                    visible = showPleaseWaitButton(playbackState);
                     break;
                 }
                 case PlaybackStateCompat.STATE_SKIPPING_TO_NEXT: {
                     //LogHelper.v(TAG, "PlaybackStateCompat.STATE_SKIPPING_TO_NEXT");
-                    showPleaseWaitButton(playbackState);
+                    visible = showPleaseWaitButton(playbackState);
                     break;
                 }
                 case PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS: {
                     //LogHelper.v(TAG, "PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS");
-                    showPleaseWaitButton(playbackState);
+                    visible = showPleaseWaitButton(playbackState);
                     break;
                 }
                 case PlaybackStateCompat.STATE_SKIPPING_TO_QUEUE_ITEM: {
                     //LogHelper.v(TAG, "PlaybackStateCompat.STATE_SKIPPING_TO_QUEUE_ITEM");
-                    showPleaseWaitButton(playbackState);
+                    visible = showPleaseWaitButton(playbackState);
                     break;
                 }
                 case PlaybackStateCompat.STATE_STOPPED: {
                     //LogHelper.v(TAG, "PlaybackStateCompat.STATE_STOPPED");
-                    showAutoplayButton(playbackState);
+                    visible = showAutoplayButton(playbackState);
                     break;
                 }
             }
         }
         getAutoPlay().invalidate(); // fixes a draw bug in Android
+
+        if (visible) {
+            getHandler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    getCircularSeekBar().setVisibility(View.VISIBLE);
+                }
+            }, 1000);
+        }
+        else {
+            getCircularSeekBar().setVisibility(View.INVISIBLE);
+        }
     }
 
     // the player is currently paused
-    private void showAutoplayButton(int playbackState) {
+    private boolean showAutoplayButton(int playbackState) {
         //LogHelper.v(TAG, "showAutoplayButton: playbackState="+playbackState);
         if (sEnableFAB) {
             mFabActionButton.setVisibility(View.VISIBLE);
@@ -1052,16 +1066,16 @@ public class AutoplayActivity extends BaseActivity {
         if (mCurrentPosition > 0) {
             Drawable resumeButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_resume_button_selector, null);
             getAutoPlay().setBackground(resumeButton);
-            getCircularSeekBar().setVisibility(View.VISIBLE);
+            return true;
         }
         else {
             Drawable autoplayButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_autoplay_button_selector, null);
             getAutoPlay().setBackground(autoplayButton);
-            getCircularSeekBar().setVisibility(View.INVISIBLE);
+            return false;
         }
     }
 
-    private void showPleaseWaitButton(int playbackState) {
+    private boolean showPleaseWaitButton(int playbackState) {
         //LogHelper.v(TAG, "showPleaseWaitButton: playbackState="+playbackState);
         if (sEnableFAB) {
             mFabActionButton.setVisibility(View.VISIBLE);
@@ -1074,15 +1088,15 @@ public class AutoplayActivity extends BaseActivity {
         getAutoPlay().setBackground(pleaseWaitButton);
         sShowingButton = PLEASE_WAIT;
         if (mCurrentPosition > 0) {
-            getCircularSeekBar().setVisibility(View.VISIBLE);
+            return true;
         }
         else {
-            getCircularSeekBar().setVisibility(View.INVISIBLE);
+            return false;
         }
     }
 
     // the player is currently playing
-    private void showPauseButton(int playbackState) {
+    private boolean showPauseButton(int playbackState) {
         //LogHelper.v(TAG, "showPauseButton: playbackState="+playbackState);
         if (sEnableFAB) {
             mFabActionButton.setVisibility(View.VISIBLE);
@@ -1094,7 +1108,7 @@ public class AutoplayActivity extends BaseActivity {
         Drawable pauseButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_pause_button_selector, null);
         getAutoPlay().setBackground(pauseButton);
         sShowingButton = PAUSE;
-        getCircularSeekBar().setVisibility(View.VISIBLE);
+        return true;
     }
 
 }
