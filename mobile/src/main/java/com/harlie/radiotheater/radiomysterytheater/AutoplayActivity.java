@@ -360,33 +360,32 @@ public class AutoplayActivity extends BaseActivity {
         });
 
         mFabActionButton = (FloatingActionButton) findViewById(R.id.fab);
-        mFabActionButton.setFocusable(true);
-        mFabActionButton.setEnabled(false);
-        mFabActionButton.setVisibility(View.INVISIBLE);
-        if (getFabActionButton() != null) {
-            final AutoplayActivity activity = this;
-            getFabActionButton().setOnTouchListener(new OnSwipeTouchListener(this, getHandler(), getFabActionButton()) {
+        getFabActionButton().setFocusable(true);
+        getFabActionButton().setEnabled(false);
+        getFabActionButton().setVisibility(View.INVISIBLE);
 
-                @Override
-                public void onClick() {
-                    ConfigEpisodesCursor configCursor = getCursorForNextAvailableEpisode();
-                    getEpisodeData(configCursor);
-                    if (!getCircularSeekBar().isProcessingTouchEvents()) {
-                        LogHelper.v(TAG, "onClick - mFabActionButton");
-                        Intent episodeListIntent = new Intent(activity, EpisodeListActivity.class);
-                        Bundle playInfo = new Bundle();
-                        savePlayInfoToBundle(playInfo);
-                        episodeListIntent.putExtras(playInfo);
-                        episodeListIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(episodeListIntent);
-                        overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
-                    }
-                    else {
-                        LogHelper.v(TAG, "isProcessingTouchEvents or seeking - onClick ignored");
-                    }
+        final AutoplayActivity activity = this;
+        getFabActionButton().setOnTouchListener(new OnSwipeTouchListener(this, getHandler(), getFabActionButton()) {
+
+            @Override
+            public void onClick() {
+                ConfigEpisodesCursor configCursor = getCursorForNextAvailableEpisode();
+                getEpisodeData(configCursor);
+                if (!getCircularSeekBar().isProcessingTouchEvents()) {
+                    LogHelper.v(TAG, "onClick - mFabActionButton");
+                    Intent episodeListIntent = new Intent(activity, EpisodeListActivity.class);
+                    Bundle playInfo = new Bundle();
+                    savePlayInfoToBundle(playInfo);
+                    episodeListIntent.putExtras(playInfo);
+                    episodeListIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(episodeListIntent);
+                    overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
                 }
-            });
-        }
+                else {
+                    LogHelper.v(TAG, "isProcessingTouchEvents or seeking - onClick ignored");
+                }
+            }
+        });
 
         mCircleView = (CircleProgressView) findViewById(R.id.autoplay_circle_view);
         sProgressViewSpinning = false;
@@ -531,25 +530,17 @@ public class AutoplayActivity extends BaseActivity {
     private void enableButtons() {
         LogHelper.v(TAG, "enableButtons");
         if (getAutoPlay() != null) {
-            getHandler().post(new Runnable() {
+            mAutoPlay.setEnabled(true);
+            mAutoPlay.setVisibility(View.VISIBLE);
+            getHandler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     if (getAutoPlay() != null) {
-                        mAutoPlay.setEnabled(true);
-                        mAutoPlay.setVisibility(View.VISIBLE);
-                        getHandler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (getAutoPlay() != null) {
-                                    mFabActionButton.setEnabled(true);
-                                    mFabActionButton.setVisibility(View.VISIBLE);
-                                    sEnableFAB = true;
-                                }
-                            }
-                        }, 2000);
+                        sEnableFAB = true;
+                        showExpectedControls("enableButtons");
                     }
                 }
-            });
+            }, 2000);
         }
     }
 
@@ -967,6 +958,13 @@ public class AutoplayActivity extends BaseActivity {
     }
 
     public void showExpectedControls(String log) {
+        if (sEnableFAB) {
+            getFabActionButton().setEnabled(true);
+            getFabActionButton().setVisibility(View.VISIBLE);
+        }
+        else {
+            getFabActionButton().setVisibility(View.INVISIBLE);
+        }
         int playbackState = LocalPlayback.getCurrentState();
         boolean visible = false;
         if (sWaitForMedia) {
@@ -1055,12 +1053,6 @@ public class AutoplayActivity extends BaseActivity {
     // the player is currently paused
     private boolean showAutoplayButton(int playbackState) {
         //LogHelper.v(TAG, "showAutoplayButton: playbackState="+playbackState);
-        if (sEnableFAB) {
-            mFabActionButton.setVisibility(View.VISIBLE);
-        }
-        else {
-            mFabActionButton.setVisibility(View.INVISIBLE);
-        }
         mAutoPlay.setEnabled(true);
         sShowingButton = PLAY;
         if (mCurrentPosition > 0) {
@@ -1077,12 +1069,6 @@ public class AutoplayActivity extends BaseActivity {
 
     private boolean showPleaseWaitButton(int playbackState) {
         //LogHelper.v(TAG, "showPleaseWaitButton: playbackState="+playbackState);
-        if (sEnableFAB) {
-            mFabActionButton.setVisibility(View.VISIBLE);
-        }
-        else {
-            mFabActionButton.setVisibility(View.INVISIBLE);
-        }
         mAutoPlay.setEnabled(false);
         Drawable pleaseWaitButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_please_wait_button_selector, null);
         getAutoPlay().setBackground(pleaseWaitButton);
@@ -1098,12 +1084,6 @@ public class AutoplayActivity extends BaseActivity {
     // the player is currently playing
     private boolean showPauseButton(int playbackState) {
         //LogHelper.v(TAG, "showPauseButton: playbackState="+playbackState);
-        if (sEnableFAB) {
-            mFabActionButton.setVisibility(View.VISIBLE);
-        }
-        else {
-            mFabActionButton.setVisibility(View.INVISIBLE);
-        }
         mAutoPlay.setEnabled(true);
         Drawable pauseButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_pause_button_selector, null);
         getAutoPlay().setBackground(pauseButton);
