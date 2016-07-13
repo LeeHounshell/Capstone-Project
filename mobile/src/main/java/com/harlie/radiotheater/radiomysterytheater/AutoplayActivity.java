@@ -432,6 +432,7 @@ public class AutoplayActivity extends BaseActivity {
             if (episodeId != null) {
                 LogHelper.v(TAG, "setup PLAY_NOW");
                 sWaitForMedia = true;
+                mAutoPlay.setVisibility(View.VISIBLE);
                 showExpectedControls("onCreate");
                 RadioControlIntentService.startActionPlay(this, "MAIN", episodeId, null);
             }

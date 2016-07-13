@@ -326,6 +326,9 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     private void animateButtonsIn() {
+        if (bgViewGroup == null) {
+            return;
+        }
         for (int i = 0; i < bgViewGroup.getChildCount(); i++) {
             View child = bgViewGroup.getChildAt(i);
             child.animate()
@@ -350,6 +353,9 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     private void animateRevealShow(View viewRoot) {
+        if (viewRoot == null) {
+            return;
+        }
         int cx = (viewRoot.getLeft() + viewRoot.getRight()) / 2;
         int cy = (viewRoot.getTop() + viewRoot.getBottom()) / 2;
         int finalRadius = Math.max(viewRoot.getWidth(), viewRoot.getHeight());
