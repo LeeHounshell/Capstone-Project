@@ -24,7 +24,6 @@ public class RadioTheaterWidgetService extends Service {
     //private MediaPlayer mp;
 
     private static volatile boolean sPaidVersion;
-    private static volatile boolean sInitialized;
     private static volatile boolean sGotButtonPress;
 
     public RadioTheaterWidgetService() {
@@ -40,6 +39,17 @@ public class RadioTheaterWidgetService extends Service {
     private void handleCommand(Intent intent) {
         //mp = MediaPlayer.create(this, R.raw.click);
         //mp.start();
+
+        if (intent.getBooleanExtra("BUTTON_PRESS", false) == false) {
+            LogHelper.v(TAG, "handleCommand: IGNORE (visual update only)");
+            setGotButtonPress(false);
+        }
+        else {
+            LogHelper.v(TAG, "handleCommand: GOT WIDGET BUTTON PRESS!");
+            setGotButtonPress(true);
+        }
+
+
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this.getApplicationContext());
 
         int[] allWidgetIds = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS);
@@ -130,7 +140,6 @@ public class RadioTheaterWidgetService extends Service {
 
     public static void setPaidVersion(Context context, boolean isPaid) {
         LogHelper.v(TAG, "setPaidVersion: isPaid="+isPaid);
-        sInitialized = true;
         sPaidVersion = isPaid;
         // Build the intent to call the service
         Intent intent = new Intent(context, RadioTheaterWidgetService.class);
@@ -139,48 +148,74 @@ public class RadioTheaterWidgetService extends Service {
         context.startService(intent);
     }
 
-    // FIXME: need to call this
+    public static boolean isWidgetButtonPress() {
+        LogHelper.v(TAG, "isWidgetButtonPress: "+sGotButtonPress);
+        return sGotButtonPress;
+    }
+
     public static void setGotButtonPress(boolean buttonPress) {
         LogHelper.v(TAG, "setGotButtonPress: buttonPress="+buttonPress);
         sGotButtonPress = buttonPress;
     }
 
     private void Autoplay(RemoteViews remoteViews) {
-        LogHelper.v(TAG, "WIDGET: <set the widget to Autoplay>");
         if (sPaidVersion) {
-            LogHelper.v(TAG, "setting WIDGET to 'Autoplay'");
+            LogHelper.v(TAG, "PLAY: setting WIDGET to 'Autoplay'");
             remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_autoplay_button_selector);
-            if (sGotButtonPress) {
-                ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
-                if (AutoplayActivity.getEpisodeData(configCursor)) {
-                    RadioControlIntentService.startActionPlay(this.getApplicationContext(), "WIDGET", String.valueOf(BaseActivity.getEpisodeNumber()), BaseActivity.getEpisodeDownloadUrl());
-                }
+            if (isWidgetButtonPress()) {
+                startActionPlay();
             }
         }
         else {
-            LogHelper.v(TAG, "setting WIDGET to (disabled) 'Autoplay'");
-            remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_autoplay_disabled_button_selector);
+            if (isWidgetButtonPress()) {
+                LogHelper.v(TAG, "PLAY: setting WIDGET to Please Wait");
+                remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_please_wait_button_selector);
+                startActionPlay();
+            }
+            else {
+                LogHelper.v(TAG, "PLAY: setting WIDGET to (disabled) 'Autoplay'");
+                remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_autoplay_disabled_button_selector);
+            }
+        }
+    }
+
+    private void startActionPlay() {
+        ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
+        if (AutoplayActivity.getEpisodeData(configCursor)) {
+            LogHelper.v(TAG, "PLAY: RadioControlIntentService.startActionPlay");
+            RadioControlIntentService.startActionPlay(this.getApplicationContext(), "WIDGET", String.valueOf(BaseActivity.getEpisodeNumber()), BaseActivity.getEpisodeDownloadUrl());
         }
     }
 
     private void PleaseWait(RemoteViews remoteViews) {
-        LogHelper.v(TAG, "WIDGET: <set the widget to Please Wait>");
+        LogHelper.v(TAG, "WAIT: setting WIDGET to 'Please Wait'");
         remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_please_wait_button_selector);
     }
 
     private void Pause(RemoteViews remoteViews) {
-        LogHelper.v(TAG, "WIDGET: <set the widget to Pause>");
         if (sPaidVersion) {
-            LogHelper.v(TAG, "setting WIDGET to 'Please Wait'");
+            LogHelper.v(TAG, "PAUSE: setting WIDGET to 'Please Wait'");
             remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_pause_button_selector);
-            if (sGotButtonPress) {
-                RadioControlIntentService.startActionPause(this.getApplicationContext(), "WIDGET", String.valueOf(BaseActivity.getEpisodeNumber()), BaseActivity.getEpisodeDownloadUrl());
+            if (isWidgetButtonPress()) {
+                startActionPause();
             }
         }
         else {
-            LogHelper.v(TAG, "setting WIDGET to (disabled) 'Autoplay'");
-            remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_autoplay_disabled_button_selector);
+            if (isWidgetButtonPress()) {
+                LogHelper.v(TAG, "PAUSE: setting WIDGET to Please Wait");
+                remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_please_wait_button_selector);
+                startActionPause();
+            }
+            else {
+                LogHelper.v(TAG, "PAUSE: setting WIDGET to (disabled) 'Autoplay'");
+                remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_autoplay_disabled_button_selector);
+            }
         }
+    }
+
+    private void startActionPause() {
+        LogHelper.v(TAG, "PAUSE: RadioControlIntentService.startActionPause");
+        RadioControlIntentService.startActionPause(this.getApplicationContext(), "WIDGET", String.valueOf(BaseActivity.getEpisodeNumber()), BaseActivity.getEpisodeDownloadUrl());
     }
 
     @Override
