@@ -461,9 +461,11 @@ public class RadioControlIntentService extends IntentService {
         LogHelper.v(TAG, "---> handleActionPlay: episode="+episode+", episodeDownloadUrl="+episodeDownloadUrl);
         if (episode == null) {
             LogHelper.e(TAG, "FIXME: null episode");
+            return;
         }
         if (episodeDownloadUrl == null) {
             LogHelper.e(TAG, "FIXME: null episodeDownloadUrl");
+            return;
         }
         mMediaId = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.genre);
         LogHelper.d(TAG, "*** INITIALIZE PLAYBACK ***  mMediaId=" + mMediaId + ", episodeDownloadUrl=" + episodeDownloadUrl);
@@ -473,13 +475,6 @@ public class RadioControlIntentService extends IntentService {
         radioServiceCommandIntent.setAction(RadioTheaterService.ACTION_CMD);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_PLAY);
         context.startService(radioServiceCommandIntent);
-
-        /*
-        String id = String.valueOf(episodeDownloadUrl.hashCode());
-        String episodeMediaId = MediaIDHelper.createMediaID(id, MediaIDHelper.MEDIA_ID_MUSICS_BY_GENRE, mMediaId);
-        Bundle bundle = new Bundle();
-        getRadioMediaController().getTransportControls().playFromMediaId(episodeMediaId, bundle);
-        */
     }
 
     /**
@@ -503,7 +498,7 @@ public class RadioControlIntentService extends IntentService {
      */
     private void handleActionSeek(String episode, String position) {
         LogHelper.v(TAG, "---> handleActionSeek: episode="+episode+", position="+position);
-        // FIXME
+        // FIXME: need to seek to the position
     }
 
     /**
@@ -511,20 +506,8 @@ public class RadioControlIntentService extends IntentService {
      * parameters. Backup playback by the amount of seconds.
      */
     private void handleActionBackup(String episode, String amount) {
-        LogHelper.v(TAG, "---> handleActionBackup: episode="+episode+", amount="+amount);
- /* FIXME
-        if (mCurrentPosition > (THIRTY_SECONDS * 2)) {
-            getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    if (getRadioMediaController() != null) {
-                        mCurrentPosition -= (THIRTY_SECONDS * 2); // back up one-minute
-                        getRadioMediaController().getTransportControls().seekTo(mCurrentPosition);
-                    }
-                }
-            });
-        }
-*/
+        LogHelper.v(TAG, "---> FIXME: handleActionBackup episode="+episode+", amount="+amount);
+        // FIXME: need to backup the current play position by one minute
     }
 
     /**

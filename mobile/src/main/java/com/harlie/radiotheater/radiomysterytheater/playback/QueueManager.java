@@ -252,14 +252,7 @@ public class QueueManager {
         }
         Iterator<MediaMetadataCompat> tracks = title_list.iterator();
         if (! tracks.hasNext()) {
-            if (BaseActivity.isLoadedOK()) {
-                if (BaseActivity.isPlaying()) { // well, it is supposed to be playing
-                    LogHelper.e(TAG, "FAIL: no media for title: ", title);
-                }
-            }
-            else {
-                LogHelper.e(TAG, "LOADING MEDIA META-DATA? - found no media for title: ", title);
-            }
+            LogHelper.e(TAG, "LOADING MEDIA META-DATA? - found no media for title: ", title);
             return null;
         }
         MediaMetadataCompat theMedia = tracks.next();

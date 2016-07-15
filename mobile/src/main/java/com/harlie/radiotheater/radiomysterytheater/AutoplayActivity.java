@@ -1,5 +1,6 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
+import android.appwidget.AppWidgetManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -49,6 +50,7 @@ import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
 import com.harlie.radiotheater.radiomysterytheater.utils.CircularSeekBar;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.OnSwipeTouchListener;
+import com.harlie.radiotheater.radiomysterytheater.utils.RadioTheaterWidgetProvider;
 import com.harlie.radiotheater.radiomysterytheater.utils.ScrollingTextView;
 
 import java.util.concurrent.Executors;
@@ -66,7 +68,7 @@ import static com.harlie.radiotheater.radiomysterytheater.AutoplayActivity.Butto
 public class AutoplayActivity extends BaseActivity {
     private final static String TAG = "LEE: <" + AutoplayActivity.class.getSimpleName() + ">";
 
-    private static final int MAX_TRIAL_EPISODES = 19;
+    protected static final int MAX_TRIAL_EPISODES = 19;
     private static final int DELAY_BEFORE_NEXT_CLICK_ALLOWED = 5000;
 
     public enum ButtonState {
@@ -105,8 +107,6 @@ public class AutoplayActivity extends BaseActivity {
     private static final long PROGRESS_UPDATE_INITIAL_INTERVAL = 100;
     private static final long THIRTY_SECONDS = 30 * 1000;
     private static final long DEFAULT_DURATION = 60 * 60 * 1000;
-    private static boolean sEnableFAB = false;
-    private static boolean sWaitForMedia = false;
 
     private RadioControlIntentService.RadioControlServiceBinder mRadioControlIntentServiceBinder;
     private AppCompatButton mAutoPlay;
@@ -429,10 +429,12 @@ public class AutoplayActivity extends BaseActivity {
             String episodeId = intent.getStringExtra("PLAY_NOW");
             if (episodeId != null) {
                 LogHelper.v(TAG, "setup PLAY_NOW");
-                sWaitForMedia = true;
                 mAutoPlay.setVisibility(View.VISIBLE);
                 showExpectedControls("onCreate");
-                RadioControlIntentService.startActionPlay(this, "MAIN", episodeId, null);
+                if (sWaitForMedia == false) {
+                    sWaitForMedia = true;
+                    RadioControlIntentService.startActionPlay(this, "MAIN", episodeId, null);
+                }
             }
         }
 
@@ -453,6 +455,7 @@ public class AutoplayActivity extends BaseActivity {
                 public void run() {
                     LogHelper.v(TAG, "*** onClick - MAX_TRIAL_EPISODES - controls.stop()");
                     maxTrialEpisodesAreReached();
+                    RadioTheaterWidgetService.setPaidVersion(autoplayActivity, false);
                     if (handleClick) {
                         RadioControlIntentService.startActionPlay(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), getEpisodeDownloadUrl());
                     }
@@ -461,6 +464,7 @@ public class AutoplayActivity extends BaseActivity {
             return false;
         }
         //#ENDIF
+        RadioTheaterWidgetService.setPaidVersion(this, true);
         return true;
     }
 
@@ -824,6 +828,9 @@ public class AutoplayActivity extends BaseActivity {
                             enableButtons();
                             ConfigEpisodesCursor configCursor = getCursorForNextAvailableEpisode();
                             getEpisodeData(configCursor);
+                            if (mAllListenCount != null) {
+                                autoplayActivity.checkUpdateWidget(autoplayActivity, mAllListenCount.intValue());
+                            }
                         }
                     });
                 }

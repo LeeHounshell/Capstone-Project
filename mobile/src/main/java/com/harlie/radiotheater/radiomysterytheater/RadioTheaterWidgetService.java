@@ -3,8 +3,8 @@ package com.harlie.radiotheater.radiomysterytheater;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.appwidget.AppWidgetManager;
+import android.content.Context;
 import android.content.Intent;
-import android.media.MediaPlayer;
 import android.os.IBinder;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.widget.RemoteViews;
@@ -17,14 +17,19 @@ import com.harlie.radiotheater.radiomysterytheater.utils.RadioTheaterWidgetProvi
 public class RadioTheaterWidgetService extends Service {
     private final static String TAG = "LEE: <" + RadioTheaterWidgetService.class.getSimpleName() + ">";
 
+    public final static String RADIO_THEATER_WIDGET_CONTROL = "com.harlie.radiotheater.radiomystertheater.WIDGET_BUTTON_PRESS";
+
     //private MediaPlayer mp;
+
+    private static volatile boolean sPaidVersion;
+    private static volatile boolean sInitialized;
 
     public RadioTheaterWidgetService() {
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        //handleCommand(intent);
+        handleCommand(intent);
         // We want this service to continue running until it is explicitly stopped, so return sticky.
         return START_STICKY;
     }
@@ -35,87 +40,113 @@ public class RadioTheaterWidgetService extends Service {
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this.getApplicationContext());
 
         int[] allWidgetIds = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS);
+        if (allWidgetIds == null) {
+            LogHelper.w(TAG, "try to fix problem: null EXTRA_APPWIDGET_IDS");
+            allWidgetIds = new int[]{R.id.autoplay_widget};
+        }
 
         for (int widgetId : allWidgetIds)
         {
-            // this is a bit of a hack.. but i'm time pressed.
-            int playbackState = LocalPlayback.getCurrentState();
-            LogHelper.w(TAG, "playbackState="+playbackState);
+            RemoteViews theWidgetView = new RemoteViews(this.getApplicationContext().getPackageName(), R.layout.radio_theater_widget);
 
-            RemoteViews remoteViews =
-                    new RemoteViews(this.getApplicationContext().getPackageName(), R.layout.radio_theater_widget);
-
-            switch (playbackState) {
-                case PlaybackStateCompat.STATE_BUFFERING: {
-                    PleaseWait(remoteViews);
-                    break;
-                }
-                case PlaybackStateCompat.STATE_CONNECTING: {
-                    PleaseWait(remoteViews);
-                    break;
-                }
-                case PlaybackStateCompat.STATE_ERROR: {
-                    Autoplay(remoteViews);
-                    break;
-                }
-                case PlaybackStateCompat.STATE_FAST_FORWARDING: {
-                    PleaseWait(remoteViews);
-                    break;
-                }
-                case PlaybackStateCompat.STATE_NONE: {
-                    Autoplay(remoteViews);
-                    break;
-                }
-                case PlaybackStateCompat.STATE_PAUSED: {
-                    Autoplay(remoteViews);
-                    break;
-                }
-                case PlaybackStateCompat.STATE_PLAYING: {
-                    Pause(remoteViews);
-                    break;
-                }
-                case PlaybackStateCompat.STATE_REWINDING: {
-                    PleaseWait(remoteViews);
-                    break;
-                }
-                case PlaybackStateCompat.STATE_SKIPPING_TO_NEXT: {
-                    PleaseWait(remoteViews);
-                    break;
-                }
-                case PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS: {
-                    PleaseWait(remoteViews);
-                    break;
-                }
-                case PlaybackStateCompat.STATE_SKIPPING_TO_QUEUE_ITEM: {
-                    PleaseWait(remoteViews);
-                    break;
-                }
-                case PlaybackStateCompat.STATE_STOPPED: {
-                    Autoplay(remoteViews);
-                    break;
-                }
-            }
+            widgetButtonClick(theWidgetView);
 
             // Register an onClickListener
             Intent clickIntent = new Intent(this.getApplicationContext(), RadioTheaterWidgetProvider.class);
 
             clickIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+            clickIntent.putExtra(RADIO_THEATER_WIDGET_CONTROL, "true");
             clickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, allWidgetIds);
 
             PendingIntent pendingIntent = PendingIntent.getBroadcast(
                     getApplicationContext(), 0, clickIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT);
 
-            remoteViews.setOnClickPendingIntent(R.id.autoplay_widget, pendingIntent);
-            appWidgetManager.updateAppWidget(widgetId, remoteViews);
+            theWidgetView.setOnClickPendingIntent(R.id.autoplay_widget, pendingIntent);
+
+            appWidgetManager.updateAppWidget(widgetId, theWidgetView);
         }
         stopSelf();
     }
 
+    private void widgetButtonClick(RemoteViews theWidgetView) {
+        int playbackState = LocalPlayback.getCurrentState();
+        LogHelper.w(TAG, "playbackState="+playbackState);
+
+        switch (playbackState) {
+            case PlaybackStateCompat.STATE_BUFFERING: {
+                PleaseWait(theWidgetView);
+                break;
+            }
+            case PlaybackStateCompat.STATE_CONNECTING: {
+                PleaseWait(theWidgetView);
+                break;
+            }
+            case PlaybackStateCompat.STATE_ERROR: {
+                Autoplay(theWidgetView);
+                break;
+            }
+            case PlaybackStateCompat.STATE_FAST_FORWARDING: {
+                PleaseWait(theWidgetView);
+                break;
+            }
+            case PlaybackStateCompat.STATE_NONE: {
+                Autoplay(theWidgetView);
+                break;
+            }
+            case PlaybackStateCompat.STATE_PAUSED: {
+                Autoplay(theWidgetView);
+                break;
+            }
+            case PlaybackStateCompat.STATE_PLAYING: {
+                Pause(theWidgetView);
+                break;
+            }
+            case PlaybackStateCompat.STATE_REWINDING: {
+                PleaseWait(theWidgetView);
+                break;
+            }
+            case PlaybackStateCompat.STATE_SKIPPING_TO_NEXT: {
+                PleaseWait(theWidgetView);
+                break;
+            }
+            case PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS: {
+                PleaseWait(theWidgetView);
+                break;
+            }
+            case PlaybackStateCompat.STATE_SKIPPING_TO_QUEUE_ITEM: {
+                PleaseWait(theWidgetView);
+                break;
+            }
+            case PlaybackStateCompat.STATE_STOPPED: {
+                Autoplay(theWidgetView);
+                break;
+            }
+        }
+    }
+
+    public static void setPaidVersion(Context context, boolean isPaid) {
+        LogHelper.v(TAG, "setPaidVersion: isPaid="+isPaid);
+        sInitialized = true;
+        sPaidVersion = isPaid;
+        // Build the intent to call the service
+        Intent intent = new Intent(context, RadioTheaterWidgetService.class);
+        intent.putExtra("REFRESH_WIDGET", true);
+        // Update the widgets via the service!
+        context.startService(intent);
+    }
+
     private void Autoplay(RemoteViews remoteViews) {
         LogHelper.v(TAG, "WIDGET: <set the widget to Autoplay>");
-        remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_autoplay_button_selector);
-        RadioControlIntentService.startActionPlay(this.getApplicationContext(), "WIDGET", null, null);
+        if (sPaidVersion) {
+            LogHelper.v(TAG, "setting WIDGET to 'Autoplay'");
+            remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_autoplay_button_selector);
+            RadioControlIntentService.startActionPlay(this.getApplicationContext(), "WIDGET", null, null);
+        }
+        else {
+            LogHelper.v(TAG, "setting WIDGET to (disabled) 'Autoplay'");
+            remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_autoplay_disabled_button_selector);
+        }
     }
 
     private void PleaseWait(RemoteViews remoteViews) {
@@ -125,8 +156,15 @@ public class RadioTheaterWidgetService extends Service {
 
     private void Pause(RemoteViews remoteViews) {
         LogHelper.v(TAG, "WIDGET: <set the widget to Pause>");
-        remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_pause_button_selector);
-        RadioControlIntentService.startActionPause(this.getApplicationContext(), "WIDGET", null, null);
+        if (sPaidVersion) {
+            LogHelper.v(TAG, "setting WIDGET to 'Please Wait'");
+            remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_pause_button_selector);
+            RadioControlIntentService.startActionPause(this.getApplicationContext(), "WIDGET", null, null);
+        }
+        else {
+            LogHelper.v(TAG, "setting WIDGET to (disabled) 'Autoplay'");
+            remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_autoplay_disabled_button_selector);
+        }
     }
 
     @Override

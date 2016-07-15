@@ -91,6 +91,7 @@ public class LocalPlayback
     private volatile static int sCurrentPosition;
     private volatile static int sCurrentEpisode;
     private volatile static int sCurrentState;
+    private volatile static int sCurrentNotifyState;
     private volatile static String sCurrentMediaId;
 
     // Type of audio focus we have:
@@ -259,7 +260,10 @@ public class LocalPlayback
         LogHelper.v(TAG, "WIDGET: setCurrentState="+currentState);
         sCurrentState = currentState;
         Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
-        RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context));
+        if (sCurrentNotifyState != sCurrentState) {
+            sCurrentNotifyState = sCurrentState;
+            RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context));
+        }
     }
     static public int getCurrentState() {
         return sCurrentState;

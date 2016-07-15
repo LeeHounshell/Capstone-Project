@@ -4,7 +4,9 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
 import android.app.ActivityOptions;
+import android.appwidget.AppWidgetManager;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -82,6 +84,7 @@ import com.harlie.radiotheater.radiomysterytheater.utils.CheckPlayStore;
 import com.harlie.radiotheater.radiomysterytheater.utils.CircleViewHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.NetworkHelper;
+import com.harlie.radiotheater.radiomysterytheater.utils.RadioTheaterWidgetProvider;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -137,6 +140,8 @@ public class BaseActivity extends AppCompatActivity {
     protected static volatile boolean sBeginLoading;
     protected static volatile boolean sSeekUpdateRunning;
     protected static volatile boolean sAutoplayNextNow;
+    protected static volatile boolean sEnableFAB;
+    protected static volatile boolean sWaitForMedia;
 
     // need to save these across Activities
     protected static volatile boolean sPurchased;
@@ -144,7 +149,6 @@ public class BaseActivity extends AppCompatActivity {
     protected static volatile boolean sDownloaded;
     protected static volatile boolean sEpisodeHeard;
     protected static volatile boolean sHaveRealDuration;
-    protected static volatile boolean sPlaying;
     protected static volatile boolean sLoadedOK;
 
     public static volatile boolean sProgressViewSpinning;
@@ -194,13 +198,14 @@ public class BaseActivity extends AppCompatActivity {
             sBeginLoading = false;
             sSeekUpdateRunning = false;
             sAutoplayNextNow = false;
+            sEnableFAB = false;
+            sWaitForMedia = false;
 
             sPurchased = false;
             sNoAdsForShow = false;
             sDownloaded = false;
             sEpisodeHeard = false;
             sHaveRealDuration = false;
-            sPlaying = false;
             sLoadedOK = false;
 
             Bundle playInfo = getIntent().getExtras();
@@ -217,30 +222,32 @@ public class BaseActivity extends AppCompatActivity {
         final BaseActivity baseActivity = this;
 
         // capture the advertising id and save it
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                if (getEmail() != null) {
-                    try {
-                        AdvertisingIdClient.Info adInfo = AdvertisingIdClient.getAdvertisingIdInfo(baseActivity);
-                        mAdvId = adInfo != null ? adInfo.getId() : null;
-                    }
-                    catch (IOException | GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException exception) {
-                        LogHelper.e(TAG, "*** UNABLE TO LOAD ADVERT ID ***"); // and it is needed for my Firebase key...
-                    }
-                    finally {
-                        if (mAdvId == null) {
-                            mAdvId = getAdvertId(); // from shared pref
+        if (! isLoadedOK()) {
+            AsyncTask.execute(new Runnable() {
+                @Override
+                public void run() {
+                    if (getEmail() != null) {
+                        try {
+                            AdvertisingIdClient.Info adInfo = AdvertisingIdClient.getAdvertisingIdInfo(baseActivity);
+                            mAdvId = adInfo != null ? adInfo.getId() : null;
                         }
-                        if (mAdvId != null) {
-                            setAdvertId(mAdvId); // also in shared pref
+                        catch (IOException | GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException exception) {
+                            LogHelper.e(TAG, "*** UNABLE TO LOAD ADVERT ID ***"); // and it is needed for my Firebase key...
+                        }
+                        finally {
+                            if (mAdvId == null) {
+                                mAdvId = getAdvertId(); // from shared pref
+                            }
+                            if (mAdvId != null) {
+                                setAdvertId(mAdvId); // also in shared pref
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
 
-        setupWindowAnimations();
+            setupWindowAnimations();
+        }
     }
 
     protected void initializeFirebase() {
@@ -1478,6 +1485,7 @@ public class BaseActivity extends AppCompatActivity {
                     try {
                         decodedListenCount = Integer.parseInt(matcher.group(1));
                         LogHelper.v(TAG, "---> DECODED LISTEN_COUNT="+decodedListenCount);
+                        checkUpdateWidget(activity, decodedListenCount);
                     }
                     catch (NumberFormatException e) {
                         LogHelper.e(TAG, "*** UNABLE TO DECODE LISTEN_COUNT FROM FIREBASE *** - NumberFormatException: configuration="+configurationJSON);
@@ -1494,6 +1502,20 @@ public class BaseActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    public void checkUpdateWidget(Context context, int listenCount) {
+        boolean updateWidget = true;
+
+        //#IFDEF 'TRIAL'
+        updateWidget = (listenCount < AutoplayActivity.MAX_TRIAL_EPISODES);
+        //#ENDIF
+
+        LogHelper.v(TAG, "checkUpdateWidget: listenCount="+listenCount+", updateWidget="+updateWidget);
+        if (updateWidget && isLoadedOK()) {
+            LogHelper.v(TAG, "*** TURN ON WIDGET FUNCTIONALITY ***");
+            RadioTheaterWidgetService.setPaidVersion(context, updateWidget);
+        }
     }
 
     // the Configuration exists initially in SQLite, then in Firebase also.
@@ -1526,12 +1548,14 @@ public class BaseActivity extends AppCompatActivity {
                 //mConfiguration.putFieldAuthenticated(true);
                 //mConfiguration.putFieldPurchaseAccess(true);
                 //mConfiguration.putFieldPurchaseNoads(true);
+                //RadioTheaterWidgetService.setPaidVersion(this, true);
                 //#ENDIF
 
                 //#IFDEF 'TRIAL'
                 mConfiguration.putFieldAuthenticated(getEmail() != null);
                 mConfiguration.putFieldPurchaseAccess(false);
                 mConfiguration.putFieldPurchaseNoads(false);
+                RadioTheaterWidgetService.setPaidVersion(this, false);
                 //#ENDIF
 
                 mConfiguration.putFieldTotalListenCount(0);
@@ -1587,6 +1611,7 @@ public class BaseActivity extends AppCompatActivity {
         //firebasePaidVersion = true;
         //firebasePurchaseAccess = true;
         //firebasePurchaseNoads = true;
+        //RadioTheaterWidgetService.setPaidVersion(this, true);
         //#ENDIF
 
         try {
@@ -1705,6 +1730,15 @@ public class BaseActivity extends AppCompatActivity {
             mConfiguration.putFieldPurchaseNoads(true);
             dirty = true;
         }
+
+        //#IFDEF 'TRIAL'
+        boolean trialMode = ((paidVersion != null && paidVersion) || (purchaseAccess != null && purchaseAccess));
+        if (!trialMode) {
+            trialMode = ((mAllListenCount != null) && (mAllListenCount < AutoplayActivity.MAX_TRIAL_EPISODES));
+        }
+        RadioTheaterWidgetService.setPaidVersion(this, trialMode);
+        //#ENDIF
+
         return dirty;
     }
 
@@ -1963,10 +1997,6 @@ public class BaseActivity extends AppCompatActivity {
         return mRootView;
     }
 
-    public static boolean isPlaying() {
-        return sPlaying;
-    }
-
     public static boolean isLoadedOK() {
         return sLoadedOK;
     }
@@ -1976,26 +2006,21 @@ public class BaseActivity extends AppCompatActivity {
     //--------------------------------------------------------------------------------
 
     private static final String KEY_HANDLE_ROTATION_EVENT   = "rotationEvent";
-    private static final String KEY_NEED_RESTART_PLAYBACK   = "restartPlayback";
     private static final String KEY_LOADING_SCREEN_ENABLED  = "loadingEnabled";
     private static final String KEY_BEGIN_LOADING           = "beginLoading";
     private static final String KEY_SEEK_UPDATE_RUNNING     = "seekUpdateRunning";
     private static final String KEY_AUTOPLAY_NEXT_NOW       = "autoplayNextNow";
-    private static final String KEY_KICKSTART_OK            = "kickstartOk";
-    private static final String KEY_KICKSTART_TIME          = "kickstartTime";
+    private static final String KEY_ENABLE_FAB              = "enableFAB";
+    private static final String KEY_WAIT_FOR_MEDIA          = "waitForMedia";
 
-    private static final String KEY_MEDIA_ID                = "mediaId";
     private static final String KEY_EPISODE                 = "episodeNumber";
     private static final String KEY_PURCHASED               = "purchased";
     private static final String KEY_NOADS                   = "noads";
     private static final String KEY_DOWNLOADED              = "downloaded";
     private static final String KEY_HEARD                   = "heard";
-    private static final String KEY_AUDIO_FOCUS             = "audioFocus";
     private static final String KEY_DURATION                = "duration";
     private static final String KEY_REAL_DURATION           = "realDuration";
     private static final String KEY_CURRENT_POSITION        = "position";
-    private static final String KEY_SEEKING                 = "seeking";
-    private static final String KEY_PLAYING                 = "playing";
     private static final String KEY_LOADED_OK               = "loaded_ok";
     private static final String KEY_AIRDATE                 = "airdate";
     private static final String KEY_TITLE                   = "title";
@@ -2025,10 +2050,12 @@ public class BaseActivity extends AppCompatActivity {
         playInfoBundle.putBoolean(KEY_BEGIN_LOADING           , sBeginLoading);
         playInfoBundle.putBoolean(KEY_SEEK_UPDATE_RUNNING     , sSeekUpdateRunning);
         playInfoBundle.putBoolean(KEY_AUTOPLAY_NEXT_NOW       , sAutoplayNextNow);
+        playInfoBundle.putBoolean(KEY_ENABLE_FAB              , sEnableFAB);
+        playInfoBundle.putBoolean(KEY_WAIT_FOR_MEDIA          , sWaitForMedia);
 
         LogHelper.v(TAG, "APP-STATE (Autoplay): saveAutoplayInfoToBundle: sHandleRotationEvent="+sHandleRotationEvent
                 +", sLoadingScreenEnabled="+sLoadingScreenEnabled+", sBeginLoading="+sBeginLoading+", sSeekUpdateRunning="+sSeekUpdateRunning
-                +", sAutoplayNextNow="+sAutoplayNextNow+" <<<=========");
+                +", sAutoplayNextNow="+sAutoplayNextNow+", sEnableFAB="+sEnableFAB+", sWaitForMedia="+sWaitForMedia+" <<<=========");
 
         playInfoBundle.putLong(KEY_EPISODE, getEpisodeNumber());
         playInfoBundle.putBoolean(KEY_PURCHASED, sPurchased);
@@ -2038,7 +2065,6 @@ public class BaseActivity extends AppCompatActivity {
         playInfoBundle.putLong(KEY_DURATION, mDuration);
         playInfoBundle.putBoolean(KEY_REAL_DURATION, sHaveRealDuration);
         playInfoBundle.putLong(KEY_CURRENT_POSITION, mCurrentPosition);
-        playInfoBundle.putBoolean(KEY_PLAYING, sPlaying);
         playInfoBundle.putBoolean(KEY_LOADED_OK, sLoadedOK);
         playInfoBundle.putString(KEY_AIRDATE, getAirdate());
         playInfoBundle.putString(KEY_TITLE, getEpisodeTitle());
@@ -2049,7 +2075,7 @@ public class BaseActivity extends AppCompatActivity {
         LogHelper.v(TAG, "APP-STATE (Base): savePlayInfoToBundle: mEpisodeNumber="+mEpisodeNumber
                 +", sPurchased="+sPurchased+", sNoAdsForShow="+sNoAdsForShow+", sDownloaded="+sDownloaded
                 +", sEpisodeHeard="+sEpisodeHeard+", mDuration="+mDuration+", sHaveRealDuration="+sHaveRealDuration
-                +", mCurrentPosition="+mCurrentPosition+", sPlaying="+sPlaying+", sLoadedOK="+sLoadedOK
+                +", mCurrentPosition="+mCurrentPosition+", sLoadedOK="+sLoadedOK
                 +", mAirdate="+mAirdate+", mEpisodeTitle="+mEpisodeTitle+", mEpisodeDescription="+mEpisodeDescription
                 +", mEpisodeWeblinkUrl="+mEpisodeWeblinkUrl+", mEpisodeDownloadUrl="+mEpisodeDownloadUrl+" <<<=========");
     }
@@ -2063,10 +2089,12 @@ public class BaseActivity extends AppCompatActivity {
             sBeginLoading = playInfoBundle.getBoolean(KEY_BEGIN_LOADING);
             sSeekUpdateRunning = playInfoBundle.getBoolean(KEY_SEEK_UPDATE_RUNNING);
             sAutoplayNextNow = playInfoBundle.getBoolean(KEY_AUTOPLAY_NEXT_NOW);
+            sEnableFAB = playInfoBundle.getBoolean(KEY_ENABLE_FAB);
+            sWaitForMedia = playInfoBundle.getBoolean(KEY_WAIT_FOR_MEDIA);
 
             LogHelper.v(TAG, "APP-STATE (Autoplay): restoreAutoplayInfoFromBundle: sHandleRotationEvent="+sHandleRotationEvent
                     +", sLoadingScreenEnabled="+sLoadingScreenEnabled+", sBeginLoading="+sBeginLoading+", sSeekUpdateRunning="+sSeekUpdateRunning
-                    +", sAutoplayNextNow="+sAutoplayNextNow+" <<<=========");
+                    +", sAutoplayNextNow="+sAutoplayNextNow+", sEnableFAB="+sEnableFAB+", sWaitForMedia="+sWaitForMedia+" <<<=========");
 
             mEpisodeNumber = playInfoBundle.getLong(KEY_EPISODE);
             sPurchased = playInfoBundle.getBoolean(KEY_PURCHASED);
@@ -2076,7 +2104,6 @@ public class BaseActivity extends AppCompatActivity {
             mDuration = playInfoBundle.getLong(KEY_DURATION);
             sHaveRealDuration = playInfoBundle.getBoolean(KEY_REAL_DURATION);
             mCurrentPosition = playInfoBundle.getLong(KEY_CURRENT_POSITION);
-            sPlaying = playInfoBundle.getBoolean(KEY_PLAYING);
             sLoadedOK = playInfoBundle.getBoolean(KEY_LOADED_OK);
             mAirdate = playInfoBundle.getString(KEY_AIRDATE);
             mEpisodeTitle = playInfoBundle.getString(KEY_TITLE);
@@ -2087,7 +2114,7 @@ public class BaseActivity extends AppCompatActivity {
             LogHelper.v(TAG, "APP-STATE (Base): restorePlayInfoFromBundle: mEpisodeNumber="+mEpisodeNumber
                     +", sPurchased="+sPurchased+", sNoAdsForShow="+sNoAdsForShow+", sDownloaded="+sDownloaded
                     +", sEpisodeHeard="+sEpisodeHeard+", mDuration="+mDuration+", sHaveRealDuration="+sHaveRealDuration
-                    +", mCurrentPosition="+mCurrentPosition+", sPlaying="+sPlaying+", sLoadedOK="+sLoadedOK
+                    +", mCurrentPosition="+mCurrentPosition+", sLoadedOK="+sLoadedOK
                     +", mAirdate="+mAirdate+", mEpisodeTitle="+mEpisodeTitle+", mEpisodeDescription="+mEpisodeDescription
                     +", mEpisodeWeblinkUrl="+mEpisodeWeblinkUrl+", mEpisodeDownloadUrl="+mEpisodeDownloadUrl+" <<<=========");
 
