@@ -31,7 +31,10 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
         LogHelper.v(TAG, "onReceive: action="+intent.getAction());
         super.onReceive(context, intent);
         if (intent.getStringExtra(RadioTheaterWidgetService.RADIO_THEATER_WIDGET_CONTROL) != null) {
-            LogHelper.v(TAG, "*** WIDGET PRESS ***");
+            LogHelper.v(TAG, "*** WIDGET CONTROL ***");
+        }
+        if (intent.getBooleanExtra("BUTTON_PRESS", false) == true) {
+            LogHelper.v(TAG, "*** WIDGET BUTTON PRESS ***");
         }
         if (intent.getAction().equals(AppWidgetManager.ACTION_APPWIDGET_ENABLED)) {
             isInitialized = false;
@@ -49,6 +52,7 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
         if (!isInitialized) {
             LogHelper.v(TAG, "notifyWidget: (visual update only) - playback state="+LocalPlayback.getCurrentState()+", prior state="+lastPlaybackState);
             lastPlaybackState = LocalPlayback.getCurrentState();
+            intent.putExtra("BUTTON_PRESS", false);
         }
         else {
             LogHelper.v(TAG, "notifyWidget: (BUTTON_PRESS) - playback state="+LocalPlayback.getCurrentState()+", prior state="+lastPlaybackState);

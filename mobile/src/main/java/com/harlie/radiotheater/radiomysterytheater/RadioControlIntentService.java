@@ -33,6 +33,7 @@ public class RadioControlIntentService extends IntentService {
     }
 
     private static volatile int sLastRequest = 0;
+    private static volatile long sLastRequestTime = 0;
 
     private final IBinder mBinder = new RadioControlServiceBinder();
     private Messenger outMessenger;
@@ -78,6 +79,8 @@ public class RadioControlIntentService extends IntentService {
     // control parameters
     private static final String EXTRA_EPISODE = "com.harlie.radiotheater.radiomysterytheater.extra.EPISODE";
     private static final String EXTRA_PARAM2 = "com.harlie.radiotheater.radiomysterytheater.extra.PARAM2";
+
+    private static final long MIN_REQUEST_WAIT_TIME = 9000;
 
     public RadioControlIntentService() {
         super("RadioControlIntentService");
@@ -325,6 +328,7 @@ public class RadioControlIntentService extends IntentService {
      */
     public static void startActionStart(Context context, String from, String episode, String param2) {
         sLastRequest = 0;
+        sLastRequestTime = System.currentTimeMillis();
         LogHelper.v(TAG, "startActionStart: from="+from+", episode="+episode);
         Intent intent = new Intent(context, RadioControlIntentService.class);
         intent.setAction(ACTION_START);
@@ -340,8 +344,16 @@ public class RadioControlIntentService extends IntentService {
      * @see IntentService
      */
     public static void startActionPlay(Context context, String from, String episode, String param2) {
+        if (sLastRequest == 1) {
+            long now = System.currentTimeMillis();
+            if ((now - sLastRequest) > MIN_REQUEST_WAIT_TIME) {
+                LogHelper.w(TAG, "startActonPlay: REPEAT IGNORED - ((now - sLastRequest) > MIN_REQUEST_WAIT_TIME)");
+                return;
+            }
+        }
         LogHelper.v(TAG, "startActionPlay: from="+from+", episode="+episode);
         sLastRequest = 1;
+        sLastRequestTime = System.currentTimeMillis();
         Intent intent = new Intent(context, RadioControlIntentService.class);
         intent.setAction(ACTION_PLAY);
         intent.putExtra(EXTRA_EPISODE, episode);
@@ -357,6 +369,7 @@ public class RadioControlIntentService extends IntentService {
      */
     public static void startActionPause(Context context, String from, String episode, String param2) {
         sLastRequest = 2;
+        sLastRequestTime = System.currentTimeMillis();
         LogHelper.v(TAG, "startActionPause: from="+from+", episode="+episode);
         Intent intent = new Intent(context, RadioControlIntentService.class);
         intent.setAction(ACTION_PAUSE);
@@ -373,6 +386,7 @@ public class RadioControlIntentService extends IntentService {
      */
     public static void startActionSeek(Context context, String from, String episode, String position) {
         sLastRequest = 3;
+        sLastRequestTime = System.currentTimeMillis();
         LogHelper.v(TAG, "startActionBackup: from="+from+", episode="+episode+", position="+position);
         Intent intent = new Intent(context, RadioControlIntentService.class);
         intent.setAction(ACTION_SEEK);
@@ -389,6 +403,7 @@ public class RadioControlIntentService extends IntentService {
      */
     public static void startActionBackup(Context context, String from, String episode, String amount) {
         sLastRequest = 4;
+        sLastRequestTime = System.currentTimeMillis();
         LogHelper.v(TAG, "startActionBackup: from="+from+", episode="+episode+", amount="+amount);
         Intent intent = new Intent(context, RadioControlIntentService.class);
         intent.setAction(ACTION_BACKUP);
@@ -405,6 +420,7 @@ public class RadioControlIntentService extends IntentService {
      */
     public static void startActionStop(Context context, String from, String episode, String param2) {
         sLastRequest = 5;
+        sLastRequestTime = System.currentTimeMillis();
         LogHelper.v(TAG, "startActionStop: from="+from+", episode="+episode);
         Intent intent = new Intent(context, RadioControlIntentService.class);
         intent.setAction(ACTION_STOP);
@@ -421,6 +437,7 @@ public class RadioControlIntentService extends IntentService {
      */
     public static void startActionNext(Context context, String from, String episode, String param2) {
         sLastRequest = 6;
+        sLastRequestTime = System.currentTimeMillis();
         LogHelper.v(TAG, "startActionNext: from="+from+", episode="+episode);
         Intent intent = new Intent(context, RadioControlIntentService.class);
         intent.setAction(ACTION_NEXT);
@@ -437,6 +454,7 @@ public class RadioControlIntentService extends IntentService {
      */
     public static void startActionPrev(Context context, String from, String episode, String param2) {
         sLastRequest = 7;
+        sLastRequestTime = System.currentTimeMillis();
         LogHelper.v(TAG, "startActionPrev: from="+from+", episode="+episode);
         Intent intent = new Intent(context, RadioControlIntentService.class);
         intent.setAction(ACTION_PREV);

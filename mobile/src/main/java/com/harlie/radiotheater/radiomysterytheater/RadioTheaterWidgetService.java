@@ -143,12 +143,13 @@ public class RadioTheaterWidgetService extends Service {
         sPaidVersion = isPaid;
         // Build the intent to call the service
         Intent intent = new Intent(context, RadioTheaterWidgetService.class);
-        intent.putExtra("REFRESH_WIDGET", true);
+        intent.putExtra("BUTTON_PRESS", false);
         // Update the widgets via the service!
         context.startService(intent);
     }
 
     public static boolean isWidgetButtonPress() {
+        sGotButtonPress = false; // FIXME
         LogHelper.v(TAG, "isWidgetButtonPress: "+sGotButtonPress);
         return sGotButtonPress;
     }
