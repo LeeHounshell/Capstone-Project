@@ -92,9 +92,9 @@ public class EpisodeRecyclerViewAdapter
 //        DecimalFormat format = new DecimalFormat("####");
 //        int episodeNumber = position + 1;
 //        String formattedEpisodeNumber = format.format(episodeNumber);
-//        holder.mEpisodeNumber.setText(formattedEpisodeNumber);
-//        holder.mEpisodeTitle.setText(mValues.get(position).episode_title);
-//        holder.mEpisodeDescription.setText(mValues.get(position).episode_description);
+//        holder.sEpisodeNumber.setText(formattedEpisodeNumber);
+//        holder.sEpisodeTitle.setText(mValues.get(position).episode_title);
+//        holder.sEpisodeDescription.setText(mValues.get(position).episode_description);
 //        holderSetOnClickListener(holder);
 //        setFadeAnimation(holder.mItem);
 //    }

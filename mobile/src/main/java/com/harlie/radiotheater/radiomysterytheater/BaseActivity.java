@@ -4,7 +4,6 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
 import android.app.ActivityOptions;
-import android.appwidget.AppWidgetManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -53,38 +52,19 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.harlie.radiotheater.radiomysterytheater.data.RadioTheaterHelper;
-import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsColumns;
-import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsCursor;
-import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsSelection;
-import com.harlie.radiotheater.radiomysterytheater.data.actorsepisodes.ActorsEpisodesColumns;
-import com.harlie.radiotheater.radiomysterytheater.data.actorsepisodes.ActorsEpisodesCursor;
-import com.harlie.radiotheater.radiomysterytheater.data.actorsepisodes.ActorsEpisodesSelection;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesContentValues;
-import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
-import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesSelection;
 import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationContentValues;
 import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationCursor;
-import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationSelection;
-import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
-import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
-import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesSelection;
-import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersColumns;
-import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersCursor;
-import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersSelection;
-import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesColumns;
-import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesCursor;
-import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesSelection;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadingAsyncTask;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.SQLiteHelper;
 import com.harlie.radiotheater.radiomysterytheater.firebase.FirebaseConfigEpisode;
 import com.harlie.radiotheater.radiomysterytheater.firebase.FirebaseConfiguration;
 import com.harlie.radiotheater.radiomysterytheater.utils.CheckPlayStore;
 import com.harlie.radiotheater.radiomysterytheater.utils.CircleViewHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
-import com.harlie.radiotheater.radiomysterytheater.utils.NetworkHelper;
-import com.harlie.radiotheater.radiomysterytheater.utils.RadioTheaterWidgetProvider;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -101,12 +81,10 @@ import at.grabner.circleprogress.CircleProgressView;
 import at.grabner.circleprogress.TextMode;
 
 import static com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract.ActorsEntry;
-import static com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract.ActorsEpisodesEntry;
 import static com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract.ConfigEpisodesEntry;
 import static com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract.ConfigurationEntry;
 import static com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract.EpisodesEntry;
 import static com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract.WritersEntry;
-import static com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract.WritersEpisodesEntry;
 
 @SuppressLint("Registered")
 public class BaseActivity extends AppCompatActivity {
@@ -121,13 +99,19 @@ public class BaseActivity extends AppCompatActivity {
 
     protected long mDuration;
     protected long mCurrentPosition;
-    protected String mAirdate;
-    protected String mEpisodeTitle;
-    protected String mEpisodeDescription;
-    protected String mEpisodeWeblinkUrl;
-    protected String mEpisodeDownloadUrl;
 
-    protected long mEpisodeNumber;
+    protected static String sAdvId;
+    protected static String sName;
+    protected static String sEmail;
+    protected static String sUID;
+    protected static String sPassword;
+
+    protected static long sEpisodeNumber;
+    protected static String sAirdate;
+    protected static String sEpisodeTitle;
+    protected static String sEpisodeDescription;
+    protected static String sEpisodeWeblinkUrl;
+    protected static String sEpisodeDownloadUrl;
 
     protected static volatile boolean sOnRestoreInstanceComplete;
     protected static volatile boolean sFoundFirebaseDeviceId;
@@ -170,12 +154,6 @@ public class BaseActivity extends AppCompatActivity {
     private RelativeLayout bgViewGroup;
 
     private static int mCount;
-
-    private String mAdvId;
-    private String mName;
-    private String mEmail;
-    private String mUID;
-    private String mPassword;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -229,17 +207,20 @@ public class BaseActivity extends AppCompatActivity {
                     if (getEmail() != null) {
                         try {
                             AdvertisingIdClient.Info adInfo = AdvertisingIdClient.getAdvertisingIdInfo(baseActivity);
-                            mAdvId = adInfo != null ? adInfo.getId() : null;
+                            sAdvId = adInfo != null ? adInfo.getId() : null;
                         }
                         catch (IOException | GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException exception) {
                             LogHelper.e(TAG, "*** UNABLE TO LOAD ADVERT ID ***"); // and it is needed for my Firebase key...
                         }
                         finally {
-                            if (mAdvId == null) {
-                                mAdvId = getAdvertId(); // from shared pref
+                            if (sAdvId == null) {
+                                sAdvId = getAdvertId(); // from shared pref
                             }
-                            if (mAdvId != null) {
-                                setAdvertId(mAdvId); // also in shared pref
+                            if (sAdvId != null) {
+                                setAdvertId(sAdvId); // also in shared pref
+                                if (sOkLoadFirebaseConfiguration) {
+                                    loadAnyExistingFirebaseConfigurationValues(sAdvId);
+                                }
                             }
                         }
                     }
@@ -395,6 +376,16 @@ public class BaseActivity extends AppCompatActivity {
     public void onDestroy() {
         LogHelper.v(TAG, "onDestroy");
         super.onDestroy();
+        sAirdate = null;
+        sEpisodeTitle = null;
+        sEpisodeDescription = null;
+        sEpisodeWeblinkUrl = null;
+        sEpisodeDownloadUrl = null;
+        sAdvId = null;
+        sName = null;
+        sEmail = null;
+        sUID = null;
+        sPassword = null;
         mConfiguration = null;
         mAuth = null;
         mCircleView = null;
@@ -402,16 +393,6 @@ public class BaseActivity extends AppCompatActivity {
         mDatabase = null;
         mHandler = null;
         mRootView = null;
-        mAirdate = null;
-        mEpisodeTitle = null;
-        mEpisodeDescription = null;
-        mEpisodeWeblinkUrl = null;
-        mEpisodeDownloadUrl = null;
-        mAdvId = null;
-        mName = null;
-        mEmail = null;
-        mUID = null;
-        mPassword = null;
     }
 
     @Override
@@ -485,9 +466,10 @@ public class BaseActivity extends AppCompatActivity {
     //
     // FIREBASE COMMON USER AUTHENTICATION BLOCK
     //
-    protected void authenticateRadioMysteryTheaterFirebaseAccount(final String email, String pass) {
-        LogHelper.v(TAG, "authenticateRadioMysteryTheaterFirebaseAccount - Firebase Login using email="+email+", and password");
+    protected void authenticateRadioMysteryTheaterFirebaseAccount(final String email, final String pass) {
+        LogHelper.v(TAG, "authenticateRadioMysteryTheaterFirebaseAccount - Firebase Login using email="+email+", and password="+pass);
         if (mAuth != null && email != null && pass != null && isValid(email, pass)) {
+            LogHelper.v(TAG, "authenticateRadioMysteryTheaterFirebaseAccount: GOOD");
             final BaseActivity activity = this;
             mAuth.createUserWithEmailAndPassword(email, pass)
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -505,6 +487,7 @@ public class BaseActivity extends AppCompatActivity {
                             if (success) {
                                 String uid = mAuth.getCurrentUser().getUid();
                                 setEmail(email);
+                                setPass(pass);
                                 setUID(uid);
                                 trackSignupWithFirebaseAnalytics();
                                 // ok, we're in
@@ -518,6 +501,7 @@ public class BaseActivity extends AppCompatActivity {
                     });
         }
         else {
+            LogHelper.w(TAG, "authenticateRadioMysteryTheaterFirebaseAccount: problem authenticating - mAuth="+mAuth+", email="+email+", pass="+pass+", isValid="+isValid(email, pass));
             String message = getResources().getString(R.string.enter_email);
             Toast.makeText(this, message, Toast.LENGTH_LONG).show();
             startAuthenticationActivity();
@@ -582,103 +566,6 @@ public class BaseActivity extends AppCompatActivity {
         startActivity(authenticationIntent, bundle);
         overridePendingTransition(0,0);
         finish();
-    }
-
-    public String getName() {
-        if (mName == null) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            mName = sharedPreferences.getString("userName", "");
-            if (mName.length() == 0) {
-                mName = null;
-            }
-        }
-        return mName;
-    }
-
-    public void setName(String name) {
-        if (name != null && name.length() > 0) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("userName", name);
-            editor.apply();
-        }
-        this.mName = name;
-    }
-
-    public String getEmail() {
-        if (mEmail == null) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            mEmail = sharedPreferences.getString("userEmail", "");
-            if (mEmail.length() == 0) {
-                mEmail = null;
-            }
-        }
-        return mEmail;
-    }
-
-    public void setEmail(String email) {
-        if (email != null && email.length() > 0) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("userEmail", email);
-            editor.apply();
-        }
-        this.mEmail = email;
-    }
-
-    public String getUID() {
-        if (mUID == null) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            mUID = sharedPreferences.getString("userUID", "");
-            if (mUID.length() == 0) {
-                mUID = null;
-            }
-        }
-        return mUID;
-    }
-
-    public void setUID(String uid) {
-        if (uid != null && uid.length() > 0) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("userUID", uid);
-            editor.apply();
-        }
-        this.mUID = uid;
-    }
-
-    public String getAdvertId() {
-        if (mAdvId == null) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            String advertID = sharedPreferences.getString("advertID", mAdvId); // passing null object for default
-            if (advertID != null && advertID.length() != 0) {
-                mAdvId = advertID;
-            }
-        }
-        LogHelper.v(TAG, "get mAdvId="+mAdvId);
-        return mAdvId;
-    }
-
-    public void setAdvertId(String advId) {
-        if (advId != null && advId.length() > 0) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("advertID", advId);
-            editor.apply();
-            if (sOkLoadFirebaseConfiguration) {
-                loadAnyExistingFirebaseConfigurationValues(advId);
-            }
-        }
-        LogHelper.v(TAG, "set mAdvId="+advId);
-        this.mAdvId = advId;
-    }
-
-    public String getPass() {
-        return mPassword;
-    }
-
-    public void setPass(String password) {
-        this.mPassword = password;
     }
 
     public void startAutoplayActivity(boolean animate) {
@@ -858,7 +745,7 @@ public class BaseActivity extends AppCompatActivity {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
             isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
             if (!isPaid) {
-                ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
+                ConfigEpisodesContentValues existing = SQLiteHelper.getConfigForEpisode(episode);
                 if (existing != null && existing.values() != null && existing.values().size() != 0) {
                     ContentValues configEpisode = existing.values();
                     isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
@@ -884,7 +771,7 @@ public class BaseActivity extends AppCompatActivity {
         }
         else {
             // see if a record already exists for this episode
-            ConfigEpisodesContentValues existing = getConfigForEpisode(episode);
+            ConfigEpisodesContentValues existing = SQLiteHelper.getConfigForEpisode(episode);
             ContentValues configurationValues;
             try {
                 if (existing != null && existing.values() != null && existing.values().size() != 0) {
@@ -893,14 +780,14 @@ public class BaseActivity extends AppCompatActivity {
                     LogHelper.v(TAG, "FOUND: so update ConfigEntry for episode "+episode+" with paid="+paid);
                     configurationValues.put(ConfigEpisodesEntry.FIELD_EPISODE_NUMBER, episode);
                     configurationValues.put(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS, paid);
-                    updateConfigEntryValues(episode, configurationValues);
+                    SQLiteHelper.updateConfigEntryValues(episode, configurationValues);
                 } else {
                     // CREATE and mark an individual episode as paid
                     LogHelper.v(TAG, "NOT FOUND: so create ConfigEntry for episode "+episode+" with paid="+paid);
                     configurationValues = new ContentValues();
                     configurationValues.put(ConfigEpisodesEntry.FIELD_EPISODE_NUMBER, episode);
                     configurationValues.put(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS, paid);
-                    Uri result = insertConfigEntryValues(configurationValues);
+                    Uri result = SQLiteHelper.insertConfigEntryValues(configurationValues);
                 }
             }
             catch (Exception e) {
@@ -993,7 +880,7 @@ public class BaseActivity extends AppCompatActivity {
         alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        trackWithFirebaseAnalytics(String.valueOf(mEpisodeNumber), mCurrentPosition, "load sqlite failed");
+                        trackWithFirebaseAnalytics(String.valueOf(sEpisodeNumber), mCurrentPosition, "load sqlite failed");
                         dialog.dismiss();
                         runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state - slow via Internet, but it gets there.
                     }
@@ -1010,7 +897,7 @@ public class BaseActivity extends AppCompatActivity {
         alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        trackWithFirebaseAnalytics(String.valueOf(mEpisodeNumber), mCurrentPosition, "load sqlite failed");
+                        trackWithFirebaseAnalytics(String.valueOf(sEpisodeNumber), mCurrentPosition, "load sqlite failed");
                         dialog.dismiss();
                         runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state - slow via Internet, but it gets there.
                     }
@@ -1027,7 +914,7 @@ public class BaseActivity extends AppCompatActivity {
         alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        trackWithFirebaseAnalytics(String.valueOf(mEpisodeNumber), mCurrentPosition, "load sqlite failed");
+                        trackWithFirebaseAnalytics(String.valueOf(sEpisodeNumber), mCurrentPosition, "load sqlite failed");
                         dialog.dismiss();
                         runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state - slow via Internet, but it gets there.
                     }
@@ -1153,268 +1040,6 @@ public class BaseActivity extends AppCompatActivity {
         });
     }
 
-    public ConfigEpisodesContentValues getConfigForEpisode(String episode) {
-        ConfigEpisodesContentValues record = null;
-        ConfigEpisodesSelection where = new ConfigEpisodesSelection();
-        where.fieldEpisodeNumber(Long.parseLong(episode));
-        String order_limit = ConfigEpisodesEntry.FIELD_EPISODE_NUMBER + " ASC LIMIT 1";
-
-        Cursor cursor = getContentResolver().query(
-                ConfigEpisodesColumns.CONTENT_URI,  // the 'content://' Uri to query
-                null,                               // projection String[] - leaving "columns" null just returns all the columns.
-                where.sel(),                        // selection - SQL where
-                where.args(),                       // selection args String[] - values for the "where" clause
-                order_limit);                       // sort order and limit (String)
-
-        if (cursor != null && cursor.getCount() > 0) {
-            ConfigEpisodesCursor configEpisodesCursor = new ConfigEpisodesCursor(cursor);
-            record = getConfigEpisodesContentValues(configEpisodesCursor);
-            cursor.close();
-        }
-        else {
-            LogHelper.v(TAG, "SQL: episode "+episode+" not found");
-        }
-        return record;
-    }
-
-    public EpisodesCursor getEpisodesCursor(long episode) {
-        EpisodesSelection where = new EpisodesSelection();
-        where.fieldEpisodeNumber(episode);
-        String order_limit = EpisodesEntry.FIELD_EPISODE_NUMBER + " ASC LIMIT 1";
-
-        Cursor cursor = getContentResolver().query(
-                EpisodesColumns.CONTENT_URI,        // the 'content://' Uri to query
-                null,                               // projection String[] - leaving "columns" null just returns all the columns.
-                where.sel(),                        // selection - SQL where
-                where.args(),                       // selection args String[] - values for the "where" clause
-                order_limit);                       // sort order and limit (String)
-
-        return (cursor != null && cursor.getCount() > 0) ? new EpisodesCursor(cursor) : null;
-    }
-
-    public ActorsCursor getActorsCursor(long actor) {
-        ActorsSelection where = new ActorsSelection();
-        where.fieldActorId(actor);
-        String order_limit = ActorsEntry.FIELD_ACTOR_ID + " ASC LIMIT 1";
-
-        Cursor cursor = getContentResolver().query(
-                ActorsColumns.CONTENT_URI,          // the 'content://' Uri to query
-                null,                               // projection String[] - leaving "columns" null just returns all the columns.
-                where.sel(),                        // selection - SQL where
-                where.args(),                       // selection args String[] - values for the "where" clause
-                order_limit);                       // sort order and limit (String)
-
-        return (cursor != null && cursor.getCount() > 0) ? new ActorsCursor(cursor) : null;
-    }
-
-    public WritersCursor getWritersCursor(long writer) {
-        WritersSelection where = new WritersSelection();
-        where.fieldWriterId(writer);
-        String order_limit = WritersEntry.FIELD_WRITER_ID + " ASC LIMIT 1";
-
-        Cursor cursor = getContentResolver().query(
-                WritersColumns.CONTENT_URI,         // the 'content://' Uri to query
-                null,                               // projection String[] - leaving "columns" null just returns all the columns.
-                where.sel(),                        // selection - SQL where
-                where.args(),                       // selection args String[] - values for the "where" clause
-                order_limit);                       // sort order and limit (String)
-
-        return (cursor != null && cursor.getCount() > 0) ? new WritersCursor(cursor) : null;
-    }
-
-    public ActorsEpisodesCursor getActorsEpisodesCursor(long episode) {
-        ActorsEpisodesSelection where = new ActorsEpisodesSelection();
-        where.fieldEpisodeNumber(episode);
-        String order_limit = ActorsEpisodesEntry.FIELD_EPISODE_NUMBER + " ASC";
-
-        Cursor cursor = getContentResolver().query(
-                ActorsEpisodesColumns.CONTENT_URI,  // the 'content://' Uri to query
-                null,                               // projection String[] - leaving "columns" null just returns all the columns.
-                where.sel(),                        // selection - SQL where
-                where.args(),                       // selection args String[] - values for the "where" clause
-                order_limit);                       // sort order and limit (String)
-
-        return (cursor != null && cursor.getCount() > 0) ? new ActorsEpisodesCursor(cursor) : null;
-    }
-
-    public WritersEpisodesCursor getWritersEpisodesCursor(long episode) {
-        WritersEpisodesSelection where = new WritersEpisodesSelection();
-        where.fieldEpisodeNumber(episode);
-        String order_limit = WritersEpisodesEntry.FIELD_EPISODE_NUMBER + " ASC";
-
-        Cursor cursor = getContentResolver().query(
-                WritersEpisodesColumns.CONTENT_URI, // the 'content://' Uri to query
-                null,                               // projection String[] - leaving "columns" null just returns all the columns.
-                where.sel(),                        // selection - SQL where
-                where.args(),                       // selection args String[] - values for the "where" clause
-                order_limit);                       // sort order and limit (String)
-
-        return (cursor != null && cursor.getCount() > 0) ? new WritersEpisodesCursor(cursor) : null;
-    }
-
-    public ConfigurationCursor getCursorForConfigurationDevice(String deviceId) {
-        ConfigurationSelection where = new ConfigurationSelection();
-        // find the specified configuration
-        where.fieldDeviceId(deviceId);
-
-        String order_limit = ConfigurationEntry.FIELD_DEVICE_ID + " ASC LIMIT 1";
-
-        Cursor cursor = getContentResolver().query(
-                ConfigurationColumns.CONTENT_URI,  // the 'content://' Uri to query
-                null,                               // projection String[] - leaving "columns" null just returns all the columns.
-                where.sel(),                        // selection - SQL where
-                where.args(),                       // selection args String[] - values for the "where" clause
-                order_limit);                       // sort order and limit (String)
-
-        return (cursor != null) ? new ConfigurationCursor(cursor) : null;
-    }
-
-    public ConfigEpisodesCursor getCursorForNextAvailableEpisode() {
-        ConfigEpisodesSelection where = new ConfigEpisodesSelection();
-        // find the next unwatched episode, in airdate order
-        where.fieldEpisodeHeard(false);
-        if (! NetworkHelper.isOnline(this)) {
-            // find the next DOWNLOADED unwatched episode, in airdate order
-            where.fieldEpisodeDownloaded(true);
-        }
-
-        String order_limit = ConfigEpisodesEntry.FIELD_EPISODE_NUMBER + " ASC LIMIT 1";
-
-        Cursor cursor = getContentResolver().query(
-                ConfigEpisodesColumns.CONTENT_URI,  // the 'content://' Uri to query
-                null,                               // projection String[] - leaving "columns" null just returns all the columns.
-                where.sel(),                        // selection - SQL where
-                where.args(),                       // selection args String[] - values for the "where" clause
-                order_limit);                       // sort order and limit (String)
-
-        return (cursor != null) ? new ConfigEpisodesCursor(cursor) : null;
-    }
-
-    @NonNull
-    private ConfigurationContentValues getConfigurationContentValues(ConfigurationCursor cursor) {
-        LogHelper.v(TAG, "getConfigurationContentValues: SQL found "+cursor.getCount()+" records");
-        ConfigurationContentValues record = new ConfigurationContentValues();
-
-        if (cursor.moveToNext()) {
-            try {
-                record.putFieldUserEmail(getEmail());
-                record.putFieldUserName(getName() != null ? getName() : "unknown");
-                record.putFieldDeviceId(getAdvertId());
-
-                //#IFDEF 'PAID'
-                //boolean paidVersion = true;
-                //boolean purchased = true;
-                //boolean noAdsForShow = true;
-                //#ENDIF
-
-                //#IFDEF 'TRIAL'
-                boolean paidVersion = cursor.getFieldPaidVersion();
-                boolean purchased = cursor.getFieldPurchaseAccess();
-                boolean noAdsForShow = cursor.getFieldPurchaseNoads();
-                //#ENDIF
-
-                record.putFieldPaidVersion(paidVersion);
-                record.putFieldPurchaseAccess(purchased);
-                record.putFieldPurchaseNoads(noAdsForShow);
-
-                int listenCount = cursor.getFieldTotalListenCount();
-                record.putFieldTotalListenCount(listenCount);
-            } catch (Exception e) {
-                LogHelper.e(TAG, "RECORD NOT FOUND: Exception=" + e);
-                record = null;
-            }
-        }
-        cursor.close();
-        return record;
-    }
-
-    @NonNull
-    private ConfigEpisodesContentValues getConfigEpisodesContentValues(ConfigEpisodesCursor cursor) {
-        LogHelper.v(TAG, "getConfigEpisodesContentValues: SQL found "+cursor.getCount()+" records");
-        ConfigEpisodesContentValues record = new ConfigEpisodesContentValues();
-
-        if (cursor.moveToNext()) {
-            try {
-                long episodeNumber = cursor.getFieldEpisodeNumber();
-                record.putFieldEpisodeNumber(episodeNumber);
-
-                //#IFDEF 'PAID'
-                //boolean purchased = true;
-                //boolean noAdsForShow = true;
-                //#ENDIF
-
-                //#IFDEF 'TRIAL'
-                boolean purchased = cursor.getFieldPurchasedAccess();
-                boolean noAdsForShow = cursor.getFieldPurchasedNoads();
-                //#ENDIF
-
-                record.putFieldPurchasedAccess(purchased);
-                record.putFieldPurchasedNoads(noAdsForShow);
-
-                boolean downloaded = cursor.getFieldEpisodeDownloaded();
-                record.putFieldEpisodeDownloaded(downloaded);
-
-                boolean episodeHeard = cursor.getFieldEpisodeHeard();
-                record.putFieldEpisodeHeard(episodeHeard);
-
-                int listenCount = cursor.getFieldListenCount();
-                record.putFieldListenCount(listenCount);
-            } catch (Exception e) {
-                LogHelper.e(TAG, "RECORD NOT FOUND: Exception=" + e);
-                record = null;
-            }
-        }
-        return record;
-    }
-
-    public Uri insertConfiguration(ContentValues configurationValues) {
-        LogHelper.v(TAG, "insertConfigurationValues");
-        if (configurationValues == null || configurationValues.size() == 0) {
-            LogHelper.w(TAG, "unable to insertConfigurationValues! - null or empty values.");
-            return null;
-        }
-        Uri configurationEntry = ConfigurationEntry.buildConfigurationUri();
-        return this.getContentResolver().insert(configurationEntry, configurationValues);
-    }
-
-    // update local SQLite
-    public int updateConfigurationValues(String deviceId, ContentValues configurationValues) {
-        LogHelper.v(TAG, "updateConfigurationValues");
-        if (configurationValues == null || configurationValues.size() == 0) {
-            LogHelper.w(TAG, "unable to updateConfigurationValues! - null or empty values.");
-            return 0;
-        }
-        Uri configurationEntry = ConfigurationEntry.buildConfigurationUri();
-        String whereClause = ConfigurationEntry.FIELD_DEVICE_ID + "=?";
-        String whereCondition[] = new String[]{deviceId};
-        int rc = this.getContentResolver().update(configurationEntry, configurationValues, whereClause, whereCondition);
-        return rc;
-    }
-
-    public Uri insertConfigEntryValues(ContentValues configEntryValues) {
-        LogHelper.v(TAG, "insertConfigEntryValues");
-        if (configEntryValues == null || configEntryValues.size() == 0) {
-            LogHelper.w(TAG, "unable to insertConfigEntryValues! - null or empty values.");
-            return null;
-        }
-        Uri configEntry = ConfigEpisodesEntry.buildConfigEpisodesUri();
-        return this.getContentResolver().insert(configEntry, configEntryValues);
-    }
-
-    // update local SQLite
-    public int updateConfigEntryValues(String episode, ContentValues configEntryValues) {
-        LogHelper.v(TAG, "updateConfigEntryValues");
-        if (configEntryValues == null || configEntryValues.size() == 0) {
-            LogHelper.w(TAG, "unable to updateConfigurationValues! - null or empty values.");
-            return 0;
-        }
-        Uri configEntry = ConfigEpisodesEntry.buildConfigEpisodesUri();
-        String whereClause = ConfigEpisodesEntry.FIELD_EPISODE_NUMBER + "=?";
-        String whereCondition[] = new String[]{episode};
-        int rc = this.getContentResolver().update(configEntry, configEntryValues, whereClause, whereCondition);
-        return rc;
-    }
-
     public void loadAnyExistingFirebaseConfigurationValues(String deviceId) {
         LogHelper.v(TAG, "*** FIREBASE REQUEST *** - loadAnyExistingFirebaseConfigurationValues: deviceId="+deviceId);
         if (deviceId == null) {
@@ -1511,7 +1136,7 @@ public class BaseActivity extends AppCompatActivity {
         updateWidget = (listenCount < AutoplayActivity.MAX_TRIAL_EPISODES);
         //#ENDIF
 
-        LogHelper.v(TAG, "checkUpdateWidget: listenCount="+listenCount+", updateWidget="+updateWidget);
+        LogHelper.v(TAG, "--> checkUpdateWidget: listenCount="+listenCount+", updateWidget="+updateWidget);
         if (updateWidget && isLoadedOK()) {
             LogHelper.v(TAG, "*** TURN ON WIDGET FUNCTIONALITY ***");
             RadioTheaterWidgetService.setPaidVersion(context, updateWidget);
@@ -1526,10 +1151,10 @@ public class BaseActivity extends AppCompatActivity {
         ConfigurationContentValues configurationContent = null;
         ContentValues sqliteConfiguration = null;
         // 1) load local SQLite entry for deviceId
-        ConfigurationCursor configurationCursor = getCursorForConfigurationDevice(getAdvertId());
+        ConfigurationCursor configurationCursor = SQLiteHelper.getCursorForConfigurationDevice(getAdvertId());
         if (configurationCursor != null) {
             LogHelper.v(TAG, "found existing SQLite user Configuration");
-            configurationContent = getConfigurationContentValues(configurationCursor);
+            configurationContent = SQLiteHelper.getConfigurationContentValues(configurationCursor);
             sqliteConfiguration = configurationContent.values();
             configurationCursor.close();
         }
@@ -1559,7 +1184,7 @@ public class BaseActivity extends AppCompatActivity {
                 //#ENDIF
 
                 mConfiguration.putFieldTotalListenCount(0);
-                insertConfiguration(mConfiguration.values());
+                SQLiteHelper.insertConfiguration(mConfiguration.values());
                 // 3) update Firebase with the new deviceId entry
                 updateFirebaseConfigurationValues(getAdvertId(), mConfiguration.values());
                 return;
@@ -1583,7 +1208,7 @@ public class BaseActivity extends AppCompatActivity {
             if (dirty) {
                 sqliteConfiguration = mConfiguration.values();
                 LogHelper.v(TAG, "DIRTY: sqliteConfiguration="+sqliteConfiguration.toString());
-                updateConfigurationValues(getAdvertId(), sqliteConfiguration);
+                SQLiteHelper.updateConfigurationValues(getAdvertId(), sqliteConfiguration);
                 updateFirebaseConfigurationValues(getAdvertId(), mConfiguration.values());
             }
         }
@@ -1937,8 +1562,152 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     //--------------------------------------------------------------------------------
-    // Getters
+    // Getters and Setters
     //--------------------------------------------------------------------------------
+
+    public static String getName() {
+        if (sName == null) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            sName = sharedPreferences.getString("userName", "");
+            if (sName.length() == 0) {
+                sName = null;
+            }
+        }
+        return sName;
+    }
+
+    public static void setName(String name) {
+        if (name != null && name.length() > 0) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("userName", name);
+            editor.apply();
+        }
+        sName = name;
+    }
+
+    public static String getEmail() {
+        if (sEmail == null) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            sEmail = sharedPreferences.getString("userEmail", "");
+            if (sEmail.length() == 0) {
+                sEmail = null;
+            }
+        }
+        return sEmail;
+    }
+
+    public static void setEmail(String email) {
+        if (email != null && email.length() > 0) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("userEmail", email);
+            editor.apply();
+        }
+        sEmail = email;
+    }
+
+    public static String getPass() {
+        if (sPassword == null) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            sPassword = sharedPreferences.getString("userPass", "");
+            if (sPassword.length() == 0) {
+                sPassword = null;
+            }
+        }
+        return sPassword;
+    }
+
+    public static void setPass(String password) {
+        if (password != null && password.length() > 0) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("userPass", password);
+            editor.apply();
+        }
+        sPassword = password;
+    }
+
+    public static String getUID() {
+        if (sUID == null) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            sUID = sharedPreferences.getString("userUID", "");
+            if (sUID.length() == 0) {
+                sUID = null;
+            }
+        }
+        return sUID;
+    }
+
+    public static void setUID(String uid) {
+        if (uid != null && uid.length() > 0) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("userUID", uid);
+            editor.apply();
+        }
+        sUID = uid;
+    }
+
+    public static String getAdvertId() {
+        if (sAdvId == null) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            String advertID = sharedPreferences.getString("advertID", sAdvId); // passing null object for default
+            if (advertID != null && advertID.length() != 0) {
+                sAdvId = advertID;
+            }
+        }
+        LogHelper.v(TAG, "get sAdvId="+ sAdvId);
+        return sAdvId;
+    }
+
+    public static void setAdvertId(String advId) {
+        if (advId != null && advId.length() > 0) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("advertID", advId);
+            editor.apply();
+        }
+        LogHelper.v(TAG, "set sAdvId="+advId);
+        sAdvId = advId;
+    }
+
+    public static boolean isPurchased() {
+        return sPurchased;
+    }
+
+    public static String getAirdate() {
+        return sAirdate;
+    }
+
+    public static String getEpisodeTitle() {
+
+        return sEpisodeTitle;
+    }
+
+    public static long getEpisodeNumber() {
+        return sEpisodeNumber;
+    }
+
+    public static void setEpisodeNumber(long episodeNumber) {
+        sEpisodeNumber = episodeNumber;
+    }
+
+    public static String getEpisodeDescription() {
+        return sEpisodeDescription;
+    }
+
+    public static String getEpisodeWeblinkUrl() {
+        return sEpisodeWeblinkUrl;
+    }
+
+    public static String getEpisodeDownloadUrl() {
+        return sEpisodeDownloadUrl;
+    }
+
+    public static boolean isLoadedOK() {
+        return sLoadedOK;
+    }
 
     public Handler getHandler() {
         return mHandler;
@@ -1946,10 +1715,6 @@ public class BaseActivity extends AppCompatActivity {
 
     public FirebaseAuth getAuth() {
         return mAuth;
-    }
-
-    public boolean isPurchased() {
-        return sPurchased;
     }
 
     public Firebase getFirebase() {
@@ -1960,45 +1725,12 @@ public class BaseActivity extends AppCompatActivity {
         return mDatabase;
     }
 
-    public String getAirdate() {
-        return mAirdate;
-    }
-
-    public String getEpisodeTitle() {
-
-        return mEpisodeTitle;
-    }
-
-    public long getEpisodeNumber() {
-        return mEpisodeNumber;
-    }
-
-    public void setEpisodeNumber(long episodeNumber) {
-        this.mEpisodeNumber = episodeNumber;
-    }
-
-    public String getEpisodeDescription() {
-        return mEpisodeDescription;
-    }
-
-    public String getEpisodeWeblinkUrl() {
-        return mEpisodeWeblinkUrl;
-    }
-
-    public String getEpisodeDownloadUrl() {
-        return mEpisodeDownloadUrl;
-    }
-
     public CircleProgressView getCircleView() {
         return mCircleView;
     }
 
     public View getRootView() {
         return mRootView;
-    }
-
-    public static boolean isLoadedOK() {
-        return sLoadedOK;
     }
 
     //--------------------------------------------------------------------------------
@@ -2072,12 +1804,12 @@ public class BaseActivity extends AppCompatActivity {
         playInfoBundle.putString(KEY_WEBLINK, getEpisodeWeblinkUrl());
         playInfoBundle.putString(KEY_DOWNLOAD_URL, getEpisodeDownloadUrl());
 
-        LogHelper.v(TAG, "APP-STATE (Base): savePlayInfoToBundle: mEpisodeNumber="+mEpisodeNumber
+        LogHelper.v(TAG, "APP-STATE (Base): savePlayInfoToBundle: sEpisodeNumber="+ sEpisodeNumber
                 +", sPurchased="+sPurchased+", sNoAdsForShow="+sNoAdsForShow+", sDownloaded="+sDownloaded
                 +", sEpisodeHeard="+sEpisodeHeard+", mDuration="+mDuration+", sHaveRealDuration="+sHaveRealDuration
                 +", mCurrentPosition="+mCurrentPosition+", sLoadedOK="+sLoadedOK
-                +", mAirdate="+mAirdate+", mEpisodeTitle="+mEpisodeTitle+", mEpisodeDescription="+mEpisodeDescription
-                +", mEpisodeWeblinkUrl="+mEpisodeWeblinkUrl+", mEpisodeDownloadUrl="+mEpisodeDownloadUrl+" <<<=========");
+                +", sAirdate="+ sAirdate +", sEpisodeTitle="+ sEpisodeTitle +", sEpisodeDescription="+ sEpisodeDescription
+                +", sEpisodeWeblinkUrl="+ sEpisodeWeblinkUrl +", sEpisodeDownloadUrl="+ sEpisodeDownloadUrl +" <<<=========");
     }
 
     protected void restorePlayInfoFromBundle(Bundle playInfoBundle) {
@@ -2096,7 +1828,7 @@ public class BaseActivity extends AppCompatActivity {
                     +", sLoadingScreenEnabled="+sLoadingScreenEnabled+", sBeginLoading="+sBeginLoading+", sSeekUpdateRunning="+sSeekUpdateRunning
                     +", sAutoplayNextNow="+sAutoplayNextNow+", sEnableFAB="+sEnableFAB+", sWaitForMedia="+sWaitForMedia+" <<<=========");
 
-            mEpisodeNumber = playInfoBundle.getLong(KEY_EPISODE);
+            sEpisodeNumber = playInfoBundle.getLong(KEY_EPISODE);
             sPurchased = playInfoBundle.getBoolean(KEY_PURCHASED);
             sNoAdsForShow = playInfoBundle.getBoolean(KEY_NOADS);
             sDownloaded = playInfoBundle.getBoolean(KEY_DOWNLOADED);
@@ -2105,18 +1837,18 @@ public class BaseActivity extends AppCompatActivity {
             sHaveRealDuration = playInfoBundle.getBoolean(KEY_REAL_DURATION);
             mCurrentPosition = playInfoBundle.getLong(KEY_CURRENT_POSITION);
             sLoadedOK = playInfoBundle.getBoolean(KEY_LOADED_OK);
-            mAirdate = playInfoBundle.getString(KEY_AIRDATE);
-            mEpisodeTitle = playInfoBundle.getString(KEY_TITLE);
-            mEpisodeDescription = playInfoBundle.getString(KEY_DESCRIPTION);
-            mEpisodeWeblinkUrl = playInfoBundle.getString(KEY_WEBLINK);
-            mEpisodeDownloadUrl = playInfoBundle.getString(KEY_DOWNLOAD_URL);
+            sAirdate = playInfoBundle.getString(KEY_AIRDATE);
+            sEpisodeTitle = playInfoBundle.getString(KEY_TITLE);
+            sEpisodeDescription = playInfoBundle.getString(KEY_DESCRIPTION);
+            sEpisodeWeblinkUrl = playInfoBundle.getString(KEY_WEBLINK);
+            sEpisodeDownloadUrl = playInfoBundle.getString(KEY_DOWNLOAD_URL);
 
-            LogHelper.v(TAG, "APP-STATE (Base): restorePlayInfoFromBundle: mEpisodeNumber="+mEpisodeNumber
+            LogHelper.v(TAG, "APP-STATE (Base): restorePlayInfoFromBundle: sEpisodeNumber="+ sEpisodeNumber
                     +", sPurchased="+sPurchased+", sNoAdsForShow="+sNoAdsForShow+", sDownloaded="+sDownloaded
                     +", sEpisodeHeard="+sEpisodeHeard+", mDuration="+mDuration+", sHaveRealDuration="+sHaveRealDuration
                     +", mCurrentPosition="+mCurrentPosition+", sLoadedOK="+sLoadedOK
-                    +", mAirdate="+mAirdate+", mEpisodeTitle="+mEpisodeTitle+", mEpisodeDescription="+mEpisodeDescription
-                    +", mEpisodeWeblinkUrl="+mEpisodeWeblinkUrl+", mEpisodeDownloadUrl="+mEpisodeDownloadUrl+" <<<=========");
+                    +", sAirdate="+ sAirdate +", sEpisodeTitle="+ sEpisodeTitle +", sEpisodeDescription="+ sEpisodeDescription
+                    +", sEpisodeWeblinkUrl="+ sEpisodeWeblinkUrl +", sEpisodeDownloadUrl="+ sEpisodeDownloadUrl +" <<<=========");
 
             showCurrentInfo();
         }
@@ -2124,12 +1856,12 @@ public class BaseActivity extends AppCompatActivity {
 
     protected void showCurrentInfo() {
         LogHelper.v(TAG, "===> EPISODE INFO"
-                + ": mEpisodeTitle=" + getEpisodeTitle()
-                + ": mEpisodeNumber=" + getEpisodeNumber()
-                + ": mAirdate=" + getAirdate()
-                + ": mEpisodeDescription=" + getEpisodeDescription()
-                + ": mEpisodeWeblinkUrl=" + getEpisodeWeblinkUrl()
-                + ": mEpisodeDownloadUrl=" + getEpisodeDownloadUrl()
+                + ": sEpisodeTitle=" + getEpisodeTitle()
+                + ": sEpisodeNumber=" + getEpisodeNumber()
+                + ": sAirdate=" + getAirdate()
+                + ": sEpisodeDescription=" + getEpisodeDescription()
+                + ": sEpisodeWeblinkUrl=" + getEpisodeWeblinkUrl()
+                + ": sEpisodeDownloadUrl=" + getEpisodeDownloadUrl()
                 + ", sPurchased=" + sPurchased
                 + ", sNoAdsForShow=" + sNoAdsForShow
                 + ", sDownloaded=" + sDownloaded
@@ -2145,7 +1877,7 @@ public class BaseActivity extends AppCompatActivity {
         }
 
         // UPDATE SQLITE - mark SQLite config episode as "HEARD" and increment "PLAY COUNT" - Also send record to Firebase
-        ConfigEpisodesContentValues existing = getConfigForEpisode(episodeIndex);
+        ConfigEpisodesContentValues existing = SQLiteHelper.getConfigForEpisode(episodeIndex);
         long listenCount = 0;
         if (existing != null && existing.values() != null && existing.values().size() != 0) {
             ContentValues configEpisode = existing.values();
@@ -2155,7 +1887,7 @@ public class BaseActivity extends AppCompatActivity {
             ++listenCount;
 
             configEpisode.put(ConfigEpisodesEntry.FIELD_LISTEN_COUNT, listenCount);
-            updateConfigEntryValues(episodeIndex, configEpisode);
+            SQLiteHelper.updateConfigEntryValues(episodeIndex, configEpisode);
             updateFirebaseConfigEntryValues(episodeIndex, configEpisode, duration);
             LogHelper.d(TAG, "markEpisodeAsHeardAndIncrementPlayCount: new LISTEN-COUNT="+listenCount+" for Episode "+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
         }
@@ -2164,10 +1896,10 @@ public class BaseActivity extends AppCompatActivity {
         }
 
         // UPDATE SQLITE - mark SQLite configuration as "HEARD" and increment "PLAY COUNT"
-        ConfigurationCursor configurationCursor = getCursorForConfigurationDevice(getAdvertId());
+        ConfigurationCursor configurationCursor = SQLiteHelper.getCursorForConfigurationDevice(getAdvertId());
         ConfigurationContentValues existingConfiguration = null;
         if (configurationCursor != null) {
-            existingConfiguration = getConfigurationContentValues(configurationCursor);
+            existingConfiguration = SQLiteHelper.getConfigurationContentValues(configurationCursor);
             configurationCursor.close();
         }
         long total_listen_count = 0;
@@ -2185,7 +1917,7 @@ public class BaseActivity extends AppCompatActivity {
             }
 
             configurationValues.put(ConfigurationEntry.FIELD_TOTAL_LISTEN_COUNT, mAllListenCount);
-            updateConfigurationValues(getAdvertId(), configurationValues);
+            SQLiteHelper.updateConfigurationValues(getAdvertId(), configurationValues);
             updateFirebaseConfigurationValues(getAdvertId(), configurationValues);
             LogHelper.d(TAG, "---> markEpisodeAsHeardAndIncrementPlayCount: new ALL-LISTEN-COUNT="+ total_listen_count +" <---");
         }
@@ -2206,11 +1938,11 @@ public class BaseActivity extends AppCompatActivity {
         }
 
         // UPDATE SQLITE - mark SQLite config episode as "NOT HEARD" - Also send record to Firebase
-        ConfigEpisodesContentValues existing = getConfigForEpisode(episodeIndex);
+        ConfigEpisodesContentValues existing = SQLiteHelper.getConfigForEpisode(episodeIndex);
         if (existing != null && existing.values() != null && existing.values().size() != 0) {
             ContentValues configEpisode = existing.values();
             configEpisode.put(ConfigEpisodesEntry.FIELD_EPISODE_HEARD, false);
-            updateConfigEntryValues(episodeIndex, configEpisode);
+            SQLiteHelper.updateConfigEntryValues(episodeIndex, configEpisode);
             updateFirebaseConfigEntryValues(episodeIndex, configEpisode, duration);
             LogHelper.d(TAG, "markEpisodeAs_NOT_Heard: for Episode "+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
         }
@@ -2227,7 +1959,7 @@ public class BaseActivity extends AppCompatActivity {
             LogHelper.v(TAG, "ANALYTICS: trackWithFirebaseAnalytics: episode="+episodeIndex+", duration="+duration+", comment="+comment);
             Bundle bundle = new Bundle();
             bundle.putString(FirebaseAnalytics.Param.ITEM_ID, episodeIndex);
-            bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, mEpisodeTitle);
+            bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, sEpisodeTitle);
             bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "audio");
             bundle.putString("episode", episodeIndex);
 

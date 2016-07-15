@@ -36,7 +36,8 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
     }
 
     public static void notifyWidget(Context context, AppWidgetManager instance) {
-        if (LocalPlayback.getCurrentState() != lastPlaybackState) {
+        if (!isInitialized || LocalPlayback.getCurrentState() != lastPlaybackState) {
+            isInitialized = true;
             lastPlaybackState = LocalPlayback.getCurrentState();
             LogHelper.v(TAG, "notifyWidget - NEW PLAYBACK STATE="+lastPlaybackState);
             // Build the intent to call the service

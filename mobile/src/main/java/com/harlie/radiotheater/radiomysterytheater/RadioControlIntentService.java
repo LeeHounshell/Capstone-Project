@@ -99,17 +99,17 @@ public class RadioControlIntentService extends IntentService {
                     LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_LOSS <<---");
                     mAudioFocusRequstResult = 0;
                     Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
-                    startActionStop(context, "onAudioFocusChange", null, null);
+                    startActionStop(context, "onAudioFocusChange (loss)", null, null);
                 } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
                     LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_LOSS_TRANSIENT <<---");
                     mAudioFocusRequstResult = 0;
                     Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
-                    startActionPause(context, "onAudioFocusChange", null, null);
+                    startActionPause(context, "onAudioFocusChange (loss transient)", String.valueOf(BaseActivity.getEpisodeNumber()), BaseActivity.getEpisodeDownloadUrl());
                 } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
                     LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK <<---");
                     mAudioFocusRequstResult = 0;
                     Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
-                    startActionPause(context, "onAudioFocusChange", null, null);
+                    startActionPause(context, "onAudioFocusChange (loss can duck)", String.valueOf(BaseActivity.getEpisodeNumber()), BaseActivity.getEpisodeDownloadUrl());
                 }
             }
         };
@@ -486,9 +486,9 @@ public class RadioControlIntentService extends IntentService {
         LogHelper.v(TAG, "---> handleActionPause: episode="+episode+", param2="+param2);
         Intent radioServiceCommandIntent = new Intent(context, RadioTheaterService.class);
         radioServiceCommandIntent.setAction(RadioTheaterService.ACTION_CMD);
-        //radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_PAUSE);
+        radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_PAUSE);
         // NOTE: use STOP instead of PAUSE to prevent a screen-timeout from autostarting playback..
-        radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_STOP);
+        //radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_STOP);
         context.startService(radioServiceCommandIntent);
     }
 

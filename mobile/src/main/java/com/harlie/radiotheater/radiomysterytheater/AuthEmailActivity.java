@@ -69,8 +69,8 @@ public class AuthEmailActivity extends BaseActivity
 
         setName(null);
         setEmail(null);
-        setUID(null);
         setPass(null);
+        setUID(null);
 
         boolean found_login_info = true;
         if (intent.hasExtra("email")) {
@@ -95,7 +95,7 @@ public class AuthEmailActivity extends BaseActivity
             startAuthenticationActivity();
             return;
         }
-        LogHelper.v(TAG, "attempting signin for email="+getEmail());
+        LogHelper.v(TAG, "===> attempting signin for email="+getEmail());
 
         final AuthEmailActivity activity = this;
         getAuth().signInWithEmailAndPassword(getEmail(), getPass())
@@ -103,27 +103,32 @@ public class AuthEmailActivity extends BaseActivity
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         cancelTimer = true;
+                        boolean success = false;
+                        if (getEmail() != null && getPass() != null) {
+                            success = task.isSuccessful();
+                            LogHelper.d(TAG, "signInWithEmailAndPassword:onComplete: success=" + success);
 
-                        LogHelper.d(TAG, "signInWithEmailAndPassword:onComplete:" + task.isSuccessful());
-
-                        // If sign in fails, display a message to the user. If sign in succeeds
-                        // the auth state listener will be notified and logic to handle the
-                        // signed in user can be handled in the listener.
-                        boolean success = task.isSuccessful();
-                        if (!success) {
-                            success = checkExceptionReason(task, activity);
-                            if (! success) {
-                                LogHelper.v(TAG, "no success. signin failed.");
-                                startAuthenticationActivity();
-                                return;
+                            // If sign in fails, display a message to the user. If sign in succeeds
+                            // the auth state listener will be notified and logic to handle the
+                            // signed in user can be handled in the listener.
+                            if (!success) {
+                                success = checkExceptionReason(task, activity);
+                                if (!success) {
+                                    LogHelper.v(TAG, "no success. signin failed.");
+                                    startAuthenticationActivity();
+                                    return;
+                                }
+                            }
+                            if (success) {
+                                if (getUID() == null) {
+                                    String uid = mAuth.getCurrentUser().getUid();
+                                    setUID(uid);
+                                }
+                                trackLoginWithFirebaseAnalytics();
                             }
                         }
-                        if (success) {
-                            if (getUID() == null) {
-                                String uid = mAuth.getCurrentUser().getUid();
-                                setUID(uid);
-                            }
-                            trackLoginWithFirebaseAnalytics();
+                        else {
+                            LogHelper.e(TAG, "email or password is null!");
                         }
                         handleAuthenticationRequestResult(success);
                     }

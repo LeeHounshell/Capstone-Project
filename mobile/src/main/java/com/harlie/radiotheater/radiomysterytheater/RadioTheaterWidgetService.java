@@ -9,6 +9,8 @@ import android.os.IBinder;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.widget.RemoteViews;
 
+import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.SQLiteHelper;
 import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.RadioTheaterWidgetProvider;
@@ -23,6 +25,7 @@ public class RadioTheaterWidgetService extends Service {
 
     private static volatile boolean sPaidVersion;
     private static volatile boolean sInitialized;
+    private static volatile boolean sGotButtonPress;
 
     public RadioTheaterWidgetService() {
     }
@@ -136,12 +139,23 @@ public class RadioTheaterWidgetService extends Service {
         context.startService(intent);
     }
 
+    // FIXME: need to call this
+    public static void setGotButtonPress(boolean buttonPress) {
+        LogHelper.v(TAG, "setGotButtonPress: buttonPress="+buttonPress);
+        sGotButtonPress = buttonPress;
+    }
+
     private void Autoplay(RemoteViews remoteViews) {
         LogHelper.v(TAG, "WIDGET: <set the widget to Autoplay>");
         if (sPaidVersion) {
             LogHelper.v(TAG, "setting WIDGET to 'Autoplay'");
             remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_autoplay_button_selector);
-            RadioControlIntentService.startActionPlay(this.getApplicationContext(), "WIDGET", null, null);
+            if (sGotButtonPress) {
+                ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
+                if (AutoplayActivity.getEpisodeData(configCursor)) {
+                    RadioControlIntentService.startActionPlay(this.getApplicationContext(), "WIDGET", String.valueOf(BaseActivity.getEpisodeNumber()), BaseActivity.getEpisodeDownloadUrl());
+                }
+            }
         }
         else {
             LogHelper.v(TAG, "setting WIDGET to (disabled) 'Autoplay'");
@@ -159,7 +173,9 @@ public class RadioTheaterWidgetService extends Service {
         if (sPaidVersion) {
             LogHelper.v(TAG, "setting WIDGET to 'Please Wait'");
             remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_pause_button_selector);
-            RadioControlIntentService.startActionPause(this.getApplicationContext(), "WIDGET", null, null);
+            if (sGotButtonPress) {
+                RadioControlIntentService.startActionPause(this.getApplicationContext(), "WIDGET", String.valueOf(BaseActivity.getEpisodeNumber()), BaseActivity.getEpisodeDownloadUrl());
+            }
         }
         else {
             LogHelper.v(TAG, "setting WIDGET to (disabled) 'Autoplay'");

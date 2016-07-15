@@ -26,6 +26,7 @@ import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.EpisodeRecyclerViewItem;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.SQLiteHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.BitmapHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.FontPreferences;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
@@ -82,15 +83,13 @@ public class EpisodeDetailFragment extends FragmentBase {
             LogHelper.v(TAG, "onCreate: build EpisodeRecyclerViewItem for (RECEIVE) ARG_EPISODE_ID="+ mEpisodeId);
             mItem = getArguments().getParcelable(ARG_EPISODE_PARCELABLE);
 
-            BaseActivity activity = (BaseActivity) getActivity();
-
             // Load the actors for this episode
-            ActorsEpisodesCursor actorsEpisodesCursor = activity.getActorsEpisodesCursor(mEpisodeId);
+            ActorsEpisodesCursor actorsEpisodesCursor = SQLiteHelper.getActorsEpisodesCursor(mEpisodeId);
             int actorNumber = 0;
             while (actorsEpisodesCursor != null && actorsEpisodesCursor.moveToNext()) {
                 actorNumber += 1;
                 long actorId = actorsEpisodesCursor.getFieldActorId();
-                ActorsCursor actorsCursor = activity.getActorsCursor(actorId);
+                ActorsCursor actorsCursor = SQLiteHelper.getActorsCursor(actorId);
                 if (actorsCursor != null && actorsCursor.moveToNext()) {
                     String actorName = actorsCursor.getFieldActorName();
                     String actorImage = actorsCursor.getFieldActorUrl().replace(".jpg", "");
@@ -129,10 +128,10 @@ public class EpisodeDetailFragment extends FragmentBase {
             }
 
             // Load the writers for this episode
-            WritersEpisodesCursor writersEpisodesCursor = activity.getWritersEpisodesCursor(mEpisodeId);
+            WritersEpisodesCursor writersEpisodesCursor = SQLiteHelper.getWritersEpisodesCursor(mEpisodeId);
             while (writersEpisodesCursor != null && writersEpisodesCursor.moveToNext()) {
                 long writerId = writersEpisodesCursor.getFieldWriterId();
-                WritersCursor writersCursor = activity.getWritersCursor(writerId);
+                WritersCursor writersCursor = SQLiteHelper.getWritersCursor(writerId);
                 if (writersCursor != null && writersCursor.moveToNext()) {
                     String writerName = writersCursor.getFieldWriterName();
                     String writerImage = writersCursor.getFieldWriterUrl().replace(".jpg", "");

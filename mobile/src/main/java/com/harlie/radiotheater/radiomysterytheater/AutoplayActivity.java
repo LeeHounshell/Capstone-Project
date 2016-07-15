@@ -1,6 +1,5 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
-import android.appwidget.AppWidgetManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -21,7 +20,6 @@ import android.preference.PreferenceActivity;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.res.ResourcesCompat;
-import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
@@ -46,11 +44,11 @@ import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpi
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadingAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.SQLiteHelper;
 import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
 import com.harlie.radiotheater.radiomysterytheater.utils.CircularSeekBar;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.OnSwipeTouchListener;
-import com.harlie.radiotheater.radiomysterytheater.utils.RadioTheaterWidgetProvider;
 import com.harlie.radiotheater.radiomysterytheater.utils.ScrollingTextView;
 
 import java.util.concurrent.Executors;
@@ -256,8 +254,9 @@ public class AutoplayActivity extends BaseActivity {
                 }
                 //mp.start();
                 verifyPaidVersion(true);
-                ConfigEpisodesCursor configCursor = getCursorForNextAvailableEpisode();
+                ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
                 if (getEpisodeData(configCursor)) {
+                    displayScrollingText();
                     if (oldButtonState == PLAY) {
                         LogHelper.v(TAG, "START PLAYING..");
                         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -369,8 +368,10 @@ public class AutoplayActivity extends BaseActivity {
 
             @Override
             public void onClick() {
-                ConfigEpisodesCursor configCursor = getCursorForNextAvailableEpisode();
-                getEpisodeData(configCursor);
+                ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
+                if (getEpisodeData(configCursor)) {
+                    displayScrollingText();
+                }
                 if (!getCircularSeekBar().isProcessingTouchEvents()) {
                     LogHelper.v(TAG, "onClick - mFabActionButton");
                     Intent episodeListIntent = new Intent(activity, EpisodeListActivity.class);
@@ -429,11 +430,12 @@ public class AutoplayActivity extends BaseActivity {
             String episodeId = intent.getStringExtra("PLAY_NOW");
             if (episodeId != null) {
                 LogHelper.v(TAG, "setup PLAY_NOW");
+                getEpisodeInfoFor(Long.parseLong(episodeId));
                 mAutoPlay.setVisibility(View.VISIBLE);
                 showExpectedControls("onCreate");
                 if (sWaitForMedia == false) {
                     sWaitForMedia = true;
-                    RadioControlIntentService.startActionPlay(this, "MAIN", episodeId, null);
+                    RadioControlIntentService.startActionPlay(this, "MAIN", episodeId, getEpisodeDownloadUrl());
                 }
             }
         }
@@ -590,7 +592,7 @@ public class AutoplayActivity extends BaseActivity {
         alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        trackWithFirebaseAnalytics(String.valueOf(mEpisodeNumber), mCurrentPosition, "load metadata failed");
+                        trackWithFirebaseAnalytics(String.valueOf(sEpisodeNumber), mCurrentPosition, "load metadata failed");
                         dialog.dismiss();
                     }
                 });
@@ -606,56 +608,59 @@ public class AutoplayActivity extends BaseActivity {
         alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        trackWithFirebaseAnalytics(String.valueOf(mEpisodeNumber), mCurrentPosition, "playback failed");
+                        trackWithFirebaseAnalytics(String.valueOf(sEpisodeNumber), mCurrentPosition, "playback failed");
                         dialog.dismiss();
                     }
                 });
         alertDialog.show();
     }
 
-    private boolean getEpisodeData(ConfigEpisodesCursor configCursor) {
+    public static boolean getEpisodeData(ConfigEpisodesCursor configCursor) {
         LogHelper.v(TAG, "getEpisodeData");
         boolean foundEpisode = false;
         if (configCursor != null && configCursor.moveToNext()) {
             // found the next episode to listen to
-            mEpisodeNumber = configCursor.getFieldEpisodeNumber();
+            sEpisodeNumber = configCursor.getFieldEpisodeNumber();
             sPurchased = configCursor.getFieldPurchasedAccess();
             sNoAdsForShow = configCursor.getFieldPurchasedNoads();
             sDownloaded = configCursor.getFieldEpisodeDownloaded();
             sEpisodeHeard = configCursor.getFieldEpisodeHeard();
             configCursor.close();
-            foundEpisode = getEpisodeInfoFor(mEpisodeNumber);
+            foundEpisode = getEpisodeInfoFor(sEpisodeNumber);
         }
         return foundEpisode;
     }
 
-    private boolean getEpisodeInfoFor(long episodeId) {
+    public static boolean getEpisodeInfoFor(long episodeId) {
         LogHelper.v(TAG, "getEpisodeInfoFor: "+episodeId);
         // get this episode's detail info
         boolean foundEpisode = false;
-        EpisodesCursor episodesCursor = getEpisodesCursor(episodeId);
+        EpisodesCursor episodesCursor = SQLiteHelper.getEpisodesCursor(episodeId);
         if (episodesCursor != null && episodesCursor.moveToNext()) {
-            mEpisodeNumber = episodesCursor.getFieldEpisodeNumber();
-            mAirdate = episodesCursor.getFieldAirdate();
-            mEpisodeTitle = episodesCursor.getFieldEpisodeTitle();
-            mEpisodeDescription = episodesCursor.getFieldEpisodeDescription();
-            mEpisodeWeblinkUrl = Uri.parse(episodesCursor.getFieldWeblinkUrl()).getEncodedPath();
-            mEpisodeDownloadUrl = Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString();
+            sEpisodeNumber = episodesCursor.getFieldEpisodeNumber();
+            sAirdate = episodesCursor.getFieldAirdate();
+            sEpisodeTitle = episodesCursor.getFieldEpisodeTitle();
+            sEpisodeDescription = episodesCursor.getFieldEpisodeDescription();
+            sEpisodeWeblinkUrl = Uri.parse(episodesCursor.getFieldWeblinkUrl()).getEncodedPath();
+            sEpisodeDownloadUrl = Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString();
             episodesCursor.close();
             foundEpisode = true;
-            getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    ScrollingTextView horizontalScrollingText = getHorizontalScrollingText();
-                    if (horizontalScrollingText != null) {
-                        horizontalScrollingText.setText("         ... Airdate: " + RadioTheaterContract.airDate(mAirdate) + " ... Episode #" + mEpisodeNumber + " ... " + mEpisodeTitle + " ... " + mEpisodeDescription);
-                        horizontalScrollingText.setEnabled(true);
-                        horizontalScrollingText.setSelected(true);
-                    }
-                }
-            });
         }
         return foundEpisode;
+    }
+
+    protected void displayScrollingText() {
+        getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                ScrollingTextView horizontalScrollingText = getHorizontalScrollingText();
+                if (horizontalScrollingText != null) {
+                    horizontalScrollingText.setText("         ... Airdate: " + RadioTheaterContract.airDate(sAirdate) + " ... Episode #" + sEpisodeNumber + " ... " + sEpisodeTitle + " ... " + sEpisodeDescription);
+                    horizontalScrollingText.setEnabled(true);
+                    horizontalScrollingText.setSelected(true);
+                }
+            }
+        });
     }
 
     @Override
@@ -826,8 +831,10 @@ public class AutoplayActivity extends BaseActivity {
                             sLoadedOK = true;
                             sAutoplayNextNow = false;
                             enableButtons();
-                            ConfigEpisodesCursor configCursor = getCursorForNextAvailableEpisode();
-                            getEpisodeData(configCursor);
+                            ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
+                            if (getEpisodeData(configCursor)) {
+                                displayScrollingText();
+                            }
                             if (mAllListenCount != null) {
                                 autoplayActivity.checkUpdateWidget(autoplayActivity, mAllListenCount.intValue());
                             }
@@ -907,9 +914,9 @@ public class AutoplayActivity extends BaseActivity {
         mDuration = DEFAULT_DURATION; // one-hour in ms
         sHaveRealDuration = false;
         mCurrentPosition = 0;
-        mEpisodeDownloadUrl = null;
-        mEpisodeTitle = null;
-        mEpisodeDescription = null;
+        sEpisodeDownloadUrl = null;
+        sEpisodeTitle = null;
+        sEpisodeDescription = null;
     }
 
     @Override
