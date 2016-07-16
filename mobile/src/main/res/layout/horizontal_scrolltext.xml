@@ -6,6 +6,7 @@
     style="?android:attr/textAppearanceMedium"
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
+    android:visibility="invisible"
     android:layout_marginBottom="@dimen/scrolling_text_margin_bottom"
     android:ellipsize="marquee"
     android:gravity="bottom"

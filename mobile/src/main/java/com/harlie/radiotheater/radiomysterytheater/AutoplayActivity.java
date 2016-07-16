@@ -391,6 +391,7 @@ public class AutoplayActivity extends BaseActivity {
         mCircleView = (CircleProgressView) findViewById(R.id.autoplay_circle_view);
         sProgressViewSpinning = false;
         mHorizontalScrollingText = (ScrollingTextView) findViewById(R.id.horizontal_scrolling_text);
+        mHorizontalScrollingText.setVisibility(View.INVISIBLE);
 
         // create a new View for the seek-bar and add it into the main_frame
         FrameLayout theFrame = (FrameLayout) findViewById(R.id.main_frame);
@@ -538,6 +539,7 @@ public class AutoplayActivity extends BaseActivity {
         if (getAutoPlay() != null) {
             mAutoPlay.setEnabled(true);
             mAutoPlay.setVisibility(View.VISIBLE);
+            mHorizontalScrollingText.setVisibility(View.VISIBLE);
             getHandler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
