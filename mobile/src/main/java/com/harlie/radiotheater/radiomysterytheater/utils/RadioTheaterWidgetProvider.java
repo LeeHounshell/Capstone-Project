@@ -59,7 +59,7 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
             intent.putExtra("BUTTON_PRESS", true);
         }
         else {
-            LogHelper.v(TAG, "notifyWidget - NEW PLAYBACK STATE="+lastPlaybackState);
+            LogHelper.v(TAG, "notifyWidget - PLAYBACK STATE="+LocalPlayback.getCurrentState()+", prior state="+lastPlaybackState);
             intent.putExtra("BUTTON_PRESS", false);
         }
         isInitialized = true;

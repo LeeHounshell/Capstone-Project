@@ -103,7 +103,7 @@ public class AutoplayActivity extends BaseActivity {
     private static final long PROGRESS_UPDATE_INTERNAL = 1000;
     private static final long PROGRESS_UPDATE_INITIAL_INTERVAL = 100;
     private static final long THIRTY_SECONDS = 30 * 1000;
-    private static final long DEFAULT_DURATION = 60 * 60 * 1000;
+    private static final long DEFAULT_DURATION = 50 * 60 * 1000;
 
     private RadioControlIntentService.RadioControlServiceBinder mRadioControlIntentServiceBinder;
     private AppCompatButton mAutoPlay;
@@ -912,7 +912,7 @@ public class AutoplayActivity extends BaseActivity {
     }
 
     private void initializeForEpisode(String detailMessage) {
-        mDuration = DEFAULT_DURATION; // one-hour in ms
+        mDuration = DEFAULT_DURATION; // fifty-minutes in ms
         sHaveRealDuration = false;
         mCurrentPosition = 0;
         sEpisodeDownloadUrl = null;

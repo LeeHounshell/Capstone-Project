@@ -140,7 +140,7 @@ public class RemoteJSONSource implements MusicProviderSource {
         Drawable hauntedDrawable = ResourcesCompat.getDrawable(RadioTheaterApplication.getRadioTheaterApplicationContext().getResources(), R.drawable.haunted, null);
         Bitmap hauntedBitmap = BitmapHelper.drawableToBitmap(hauntedDrawable);
         int totalTrackCount = Integer.valueOf(RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.episodes_count));
-        int duration = 60 * 60 * 1000; // one-hour in ms
+        int duration = 50 * 60 * 1000; // fifty-minutes in ms
         String id = String.valueOf(episodeDownloadUrl.hashCode());
         //String episodeMediaId = MediaIDHelper.createMediaID(id, MediaIDHelper.MEDIA_ID_ROOT, mMediaId);
 

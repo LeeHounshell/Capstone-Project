@@ -80,7 +80,7 @@ public class RadioControlIntentService extends IntentService {
     private static final String EXTRA_EPISODE = "com.harlie.radiotheater.radiomysterytheater.extra.EPISODE";
     private static final String EXTRA_PARAM2 = "com.harlie.radiotheater.radiomysterytheater.extra.PARAM2";
 
-    private static final long MIN_REQUEST_WAIT_TIME = 9000;
+    private static final long MIN_REQUEST_WAIT_TIME = 6000;
 
     public RadioControlIntentService() {
         super("RadioControlIntentService");
@@ -368,9 +368,16 @@ public class RadioControlIntentService extends IntentService {
      * @see IntentService
      */
     public static void startActionPause(Context context, String from, String episode, String param2) {
+        if (sLastRequest == 2) {
+            long now = System.currentTimeMillis();
+            if ((now - sLastRequest) < (MIN_REQUEST_WAIT_TIME / 3)) {
+                LogHelper.w(TAG, "startActonPause: REPEAT IGNORED - ((now - sLastRequest) < (MIN_REQUEST_WAIT_TIME / 3))");
+                return;
+            }
+        }
+        LogHelper.v(TAG, "startActionPause: from="+from+", episode="+episode);
         sLastRequest = 2;
         sLastRequestTime = System.currentTimeMillis();
-        LogHelper.v(TAG, "startActionPause: from="+from+", episode="+episode);
         Intent intent = new Intent(context, RadioControlIntentService.class);
         intent.setAction(ACTION_PAUSE);
         intent.putExtra(EXTRA_EPISODE, episode);

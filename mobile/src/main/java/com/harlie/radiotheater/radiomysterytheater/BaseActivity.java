@@ -733,28 +733,28 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     public Boolean isPaidEpisode(String episode) {
-        Boolean isPaid = false;
+        Boolean isPaidEpi = false;
         //#IFDEF 'PAID'
-        //isPaid = true;
+        //isPaidEpi = true;
         //#ENDIF
 
         //#IFDEF 'TRIAL'
         if (mConfiguration != null) {
-            isPaid = mConfiguration.values().getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
+            isPaidEpi = mConfiguration.values().getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
         }
-        if (!isPaid) {
+        if (!isPaidEpi) {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            isPaid = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
-            if (!isPaid) {
+            isPaidEpi = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
+            if (!isPaidEpi) {
                 ConfigEpisodesContentValues existing = SQLiteHelper.getConfigForEpisode(episode);
                 if (existing != null && existing.values() != null && existing.values().size() != 0) {
                     ContentValues configEpisode = existing.values();
-                    isPaid = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
+                    isPaidEpi = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
                 }
             }
         }
         //#ENDIF
-        return isPaid;
+        return isPaidEpi;
     }
 
     public void setPaidEpisode(String episode, Boolean paid) {

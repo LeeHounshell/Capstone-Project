@@ -24,7 +24,7 @@ public class RadioTheaterWidgetService extends Service {
     //private MediaPlayer mp;
 
     private static volatile boolean sPaidVersion;
-    private static volatile boolean sGotButtonPress;
+    private static volatile boolean sGotWidgetButtonPress;
 
     public RadioTheaterWidgetService() {
     }
@@ -42,11 +42,11 @@ public class RadioTheaterWidgetService extends Service {
 
         if (intent.getBooleanExtra("BUTTON_PRESS", false) == false) {
             LogHelper.v(TAG, "handleCommand: IGNORE (visual update only)");
-            setGotButtonPress(false);
+            setGotWidgetButtonPress(false);
         }
         else {
             LogHelper.v(TAG, "handleCommand: GOT WIDGET BUTTON PRESS!");
-            setGotButtonPress(true);
+            setGotWidgetButtonPress(true);
         }
 
 
@@ -64,11 +64,11 @@ public class RadioTheaterWidgetService extends Service {
 
             boolean enabled = AutoplayActivity.isPurchased() || AutoplayActivity.isTrial();
             if (enabled) {
-                LogHelper.v(TAG, "handleCommand: enabled widget ok");
+                LogHelper.v(TAG, "handleCommand: enabled widget, click ok");
                 widgetButtonClick(theWidgetView);
             }
             else {
-                LogHelper.v(TAG, "handleCommand: not purchesed");
+                LogHelper.v(TAG, "handleCommand: not purchased");
                 disableWidgetButtons(theWidgetView);
             }
 
@@ -157,13 +157,13 @@ public class RadioTheaterWidgetService extends Service {
     }
 
     public static boolean isWidgetButtonPress() {
-        LogHelper.v(TAG, "isWidgetButtonPress: "+sGotButtonPress);
-        return sGotButtonPress;
+        LogHelper.v(TAG, "isWidgetButtonPress: "+ sGotWidgetButtonPress);
+        return sGotWidgetButtonPress;
     }
 
-    public static void setGotButtonPress(boolean buttonPress) {
-        LogHelper.v(TAG, "setGotButtonPress: buttonPress="+buttonPress);
-        sGotButtonPress = buttonPress;
+    public static void setGotWidgetButtonPress(boolean buttonPress) {
+        LogHelper.v(TAG, "setGotWidgetButtonPress: buttonPress="+buttonPress);
+        sGotWidgetButtonPress = buttonPress;
     }
 
     private void Autoplay(RemoteViews remoteViews) {

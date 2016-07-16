@@ -82,12 +82,12 @@ public class LocalPlayback
 
     private final Context mContext;
     private final WifiManager.WifiLock mWifiLock;
-    private int mState;
     private boolean mPlayOnFocusGain;
     private Callback mCallback;
     private final MusicProvider mMusicProvider;
 
-    private volatile static boolean mAudioNoisyReceiverRegistered;
+    private volatile static boolean sAudioNoisyReceiverRegistered;
+    private volatile static boolean sPlaybackRequested;
     private volatile static int sCurrentPosition;
     private volatile static int sCurrentEpisode;
     private volatile static int sCurrentState;
@@ -127,8 +127,7 @@ public class LocalPlayback
         // Create the Wifi lock (this does not acquire the lock, this just creates it)
         this.mWifiLock = ((WifiManager) context.getSystemService(Context.WIFI_SERVICE))
                 .createWifiLock(WifiManager.WIFI_MODE_FULL, "uAmp_lock");
-        this.mState = PlaybackStateCompat.STATE_NONE;
-        setCurrentState(mState);
+        setCurrentState(PlaybackStateCompat.STATE_NONE);
     }
 
     @Override
@@ -144,14 +143,14 @@ public class LocalPlayback
 
     @Override
     public void stop(boolean notifyListeners) {
+        sPlaybackRequested = false;
         if (getState() != PlaybackStateCompat.STATE_STOPPED) {
             LogHelper.v(TAG, "stop: notifyListeners=" + notifyListeners);
-            mState = PlaybackStateCompat.STATE_STOPPED;
-            setCurrentState(mState);
+            setCurrentState(PlaybackStateCompat.STATE_STOPPED);
             Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
             RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
             if (notifyListeners && mCallback != null) {
-                mCallback.onPlaybackStatusChanged(mState);
+                mCallback.onPlaybackStatusChanged(getCurrentState());
             }
             setCurrentStreamPosition(getCurrentStreamPosition());
             // Give up Audio focus
@@ -168,14 +167,13 @@ public class LocalPlayback
     @Override
     public void setState(int state) {
         LogHelper.v(TAG, "setState: state="+state);
-        this.mState = state;
-        setCurrentState(mState);
+        setCurrentState(state);
     }
 
     @Override
     public int getState() {
         LogHelper.v(TAG, "getState");
-        return mState;
+        return sCurrentState;
     }
 
     @Override
@@ -278,120 +276,116 @@ public class LocalPlayback
     //-------- RADIO THEATER --------
     @Override
     public void play(QueueItem item) {
-        if (getState() != PlaybackStateCompat.STATE_PLAYING && getState() != PlaybackStateCompat.STATE_BUFFERING) {
+        if (getCurrentState() == PlaybackStateCompat.STATE_PLAYING
+         || getCurrentState() == PlaybackStateCompat.STATE_BUFFERING) {
+            LogHelper.v(TAG, "*** IGNORED 'play' REQUEST *** - current state="+getCurrentState());
+            return;
+        }
+        LogHelper.v(TAG, "play ---> *** RADIO MYSTERY THEATER: PLAY EPISODE - " + item.getDescription().getTitle() + ", mediaId=" + item.getDescription().getMediaId());
+        sPlaybackRequested = true;
+        mPlayOnFocusGain = true;
+        tryToGetAudioFocus();
+        registerAudioNoisyReceiver();
+        String mediaId = item.getDescription().getMediaId();
+        boolean mediaHasChanged = !TextUtils.equals(mediaId, sCurrentMediaId);
+        if (mediaHasChanged) {
+            setCurrentStreamPosition(0);
+            sCurrentMediaId = mediaId;
+            notifyEpisodePlaying();
+        }
 
-            LogHelper.v(TAG, "play ---> *** RADIO MYSTERY THEATER: PLAY EPISODE - " + item.getDescription().getTitle() + ", mediaId=" + item.getDescription().getMediaId());
-            mPlayOnFocusGain = true;
-            tryToGetAudioFocus();
-            registerAudioNoisyReceiver();
-            String mediaId = item.getDescription().getMediaId();
-            boolean mediaHasChanged = !TextUtils.equals(mediaId, sCurrentMediaId);
-            if (mediaHasChanged) {
-                setCurrentStreamPosition(0);
-                sCurrentMediaId = mediaId;
-                notifyEpisodePlaying();
-            }
-
-            if (mState == PlaybackStateCompat.STATE_PAUSED && !mediaHasChanged && mMediaPlayer != null) {
-                configMediaPlayerState();
+        if (getCurrentState() == PlaybackStateCompat.STATE_PAUSED && !mediaHasChanged && mMediaPlayer != null) {
+            configMediaPlayerState();
+        } else {
+            setCurrentState(PlaybackStateCompat.STATE_STOPPED);
+            Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+            RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
+            relaxResources(false); // release everything except MediaPlayer
+            String musicId = MediaIDHelper.extractMusicIDFromMediaID(mediaId);
+            String source = null;
+            boolean error = false;
+            if (musicId == null) {
+                LogHelper.e(TAG, "*** UNABLE TO GET MUSIC ID *** - musicId=" + musicId + ", mediaId=" + mediaId);
+                error = true;
             } else {
-                mState = PlaybackStateCompat.STATE_STOPPED;
-                setCurrentState(mState);
-                Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
-                RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
-                relaxResources(false); // release everything except MediaPlayer
-                String musicId = MediaIDHelper.extractMusicIDFromMediaID(mediaId);
-                String source = null;
-                boolean error = false;
-                if (musicId == null) {
-                    LogHelper.e(TAG, "*** UNABLE TO GET MUSIC ID *** - musicId=" + musicId + ", mediaId=" + mediaId);
+                MediaMetadataCompat mediaMetadataCompat = mMusicProvider.getMusic(musicId);
+                if (mediaMetadataCompat == null) {
+                    LogHelper.e(TAG, "*** UNABLE TO GET MEDIA METADATA COMPAT *** - musicId=" + musicId + ", mediaId=" + mediaId);
                     error = true;
                 } else {
-                    MediaMetadataCompat mediaMetadataCompat = mMusicProvider.getMusic(musicId);
-                    if (mediaMetadataCompat == null) {
-                        LogHelper.e(TAG, "*** UNABLE TO GET MEDIA METADATA COMPAT *** - musicId=" + musicId + ", mediaId=" + mediaId);
+                    MediaMetadataCompat track = MediaMetadataCompat.fromMediaMetadata(mediaMetadataCompat.getMediaMetadata());
+                    if (track == null) {
+                        LogHelper.e(TAG, "*** UNABLE TO LOAD TRACK *** - musicId=" + musicId + ", mediaId=" + mediaId);
                         error = true;
                     } else {
-                        MediaMetadataCompat track = MediaMetadataCompat.fromMediaMetadata(mediaMetadataCompat.getMediaMetadata());
-                        if (track == null) {
-                            LogHelper.e(TAG, "*** UNABLE TO LOAD TRACK *** - musicId=" + musicId + ", mediaId=" + mediaId);
-                            error = true;
-                        } else {
-                            //noinspection ResourceType
-                            source = track.getString(MusicProviderSource.CUSTOM_METADATA_TRACK_SOURCE);
-                            LogHelper.v(TAG, "===> source=" + source);
-                        }
+                        //noinspection ResourceType
+                        source = track.getString(MusicProviderSource.CUSTOM_METADATA_TRACK_SOURCE);
+                        LogHelper.v(TAG, "===> source=" + source);
                     }
-                }
-                if (error) {
-                    LogHelper.v(TAG, "*** MEDIA METADATA NOT FOUND ***");
-                }
-
-                if (source != null) {
-                    try {
-                        createMediaPlayerIfNeeded();
-
-                        mState = PlaybackStateCompat.STATE_BUFFERING;
-                        setCurrentState(mState);
-
-                        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                        //Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
-                        //mMediaPlayer.setDataSource(context, Uri.parse(source));
-                        mMediaPlayer.setDataSource(source.replaceAll(" ", "%20"));
-
-                        // Starts preparing the media player in the background. When
-                        // it's done, it will call our OnPreparedListener (that is,
-                        // the onPrepared() method on this class, since we set the
-                        // listener to 'this'). Until the media player is prepared,
-                        // we *cannot* call start() on it!
-                        mMediaPlayer.prepareAsync();
-
-                        // If we are streaming from the internet, we want to hold a
-                        // Wifi lock, which prevents the Wifi radio from going to
-                        // sleep while the song is playing.
-                        mWifiLock.acquire();
-
-                        if (mCallback != null) {
-                            mCallback.onPlaybackStatusChanged(mState);
-                        }
-
-                    } catch (IOException ex) {
-                        LogHelper.e(TAG, ex, "Exception playing song");
-                        if (mCallback != null) {
-                            mCallback.onError(ex.getMessage());
-                            notifyIfUnableToPlay();
-                        }
-                    }
-                } else {
-                    LogHelper.w(TAG, "*** SOURCE is null ***");
                 }
             }
-        }
-        else {
-            LogHelper.v(TAG, "play (ignored - already playing or buffering): item=" + item.getDescription().getTitle());
+            if (error) {
+                LogHelper.v(TAG, "*** MEDIA METADATA NOT FOUND ***");
+            }
+
+            if (source != null) {
+                try {
+                    createMediaPlayerIfNeeded();
+
+                    setCurrentState(PlaybackStateCompat.STATE_BUFFERING);
+
+                    mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                    //Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+                    //mMediaPlayer.setDataSource(context, Uri.parse(source));
+                    mMediaPlayer.setDataSource(source.replaceAll(" ", "%20"));
+
+                    // Starts preparing the media player in the background. When
+                    // it's done, it will call our OnPreparedListener (that is,
+                    // the onPrepared() method on this class, since we set the
+                    // listener to 'this'). Until the media player is prepared,
+                    // we *cannot* call start() on it!
+                    mMediaPlayer.prepareAsync();
+
+                    // If we are streaming from the internet, we want to hold a
+                    // Wifi lock, which prevents the Wifi radio from going to
+                    // sleep while the song is playing.
+                    mWifiLock.acquire();
+
+                    if (mCallback != null) {
+                        mCallback.onPlaybackStatusChanged(getCurrentState());
+                    }
+
+                } catch (IOException ex) {
+                    LogHelper.e(TAG, ex, "Exception playing song");
+                    if (mCallback != null) {
+                        mCallback.onError(ex.getMessage());
+                        notifyIfUnableToPlay();
+                    }
+                }
+            } else {
+                LogHelper.w(TAG, "*** SOURCE is null ***");
+            }
         }
     }
 
     @Override
     public void pause() {
+        sPlaybackRequested = false;
         if (getState() == PlaybackStateCompat.STATE_PLAYING) {
             LogHelper.v(TAG, "pause - ok, stop playing");
-            if (mState == PlaybackStateCompat.STATE_PLAYING) {
-                // Pause media player and cancel the 'foreground service' state.
-                if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
-                    mMediaPlayer.pause();
-                    setCurrentStreamPosition(mMediaPlayer.getCurrentPosition());
-                }
-                // while paused, retain the MediaPlayer but give up audio focus
-                relaxResources(false);
-                giveUpAudioFocus();
+            // Pause media player and cancel the 'foreground service' state.
+            if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
+                mMediaPlayer.pause();
+                setCurrentStreamPosition(mMediaPlayer.getCurrentPosition());
             }
-            mState = PlaybackStateCompat.STATE_PAUSED;
-            setCurrentState(mState);
+            // while paused, retain the MediaPlayer but give up audio focus
+            relaxResources(false);
+            giveUpAudioFocus();
+            setCurrentState(PlaybackStateCompat.STATE_PAUSED);
             Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
             RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
             if (mCallback != null) {
-                mCallback.onPlaybackStatusChanged(mState);
+                mCallback.onPlaybackStatusChanged(getCurrentState());
             }
         }
         else {
@@ -410,12 +404,11 @@ public class LocalPlayback
                 setCurrentStreamPosition(position);
             } else {
                 if (mMediaPlayer.isPlaying()) {
-                    mState = PlaybackStateCompat.STATE_BUFFERING;
-                    setCurrentState(mState);
+                    setCurrentState(PlaybackStateCompat.STATE_BUFFERING);
                 }
                 mMediaPlayer.seekTo(position);
                 if (mCallback != null) {
-                    mCallback.onPlaybackStatusChanged(mState);
+                    mCallback.onPlaybackStatusChanged(getCurrentState());
                 }
             }
         }
@@ -488,7 +481,7 @@ public class LocalPlayback
         LogHelper.v(TAG, "configMediaPlayerState. mAudioFocus=", mAudioFocus);
         if (mAudioFocus == AUDIO_NO_FOCUS_NO_DUCK) {
             // If we don't have audio focus and can't duck, we have to pause,
-            if (mState == PlaybackStateCompat.STATE_PLAYING) {
+            if (getCurrentState() == PlaybackStateCompat.STATE_PLAYING) {
                 pause();
             }
         } else {  // we have audio focus:
@@ -501,28 +494,35 @@ public class LocalPlayback
             }
             // If we were playing when we lost focus, we need to resume playing.
             if (mPlayOnFocusGain) {
-                if (mMediaPlayer != null && !mMediaPlayer.isPlaying()) {
-                    LogHelper.d(TAG, "configMediaPlayerState startMediaPlayer. seeking to "+sCurrentPosition);
-                    if (sCurrentPosition == mMediaPlayer.getCurrentPosition()) {
-                        LogHelper.v(TAG, "********* START PLAYING *********");
-                        mMediaPlayer.start();
-                        mState = PlaybackStateCompat.STATE_PLAYING;
-                        setCurrentState(mState);
-                        Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
-                        RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
-                    } else {
-                        LogHelper.v(TAG, "********* BUFFERING *********");
-                        sCurrentPosition = mMediaPlayer.getCurrentPosition();
-                        mMediaPlayer.seekTo(sCurrentPosition);
-                        mState = PlaybackStateCompat.STATE_BUFFERING;
-                        setCurrentState(mState);
-                    }
-                }
+                LogHelper.v(TAG, "*** mPlayOnFocusGain ***");
+                startPlaying();
                 mPlayOnFocusGain = false;
             }
         }
         if (mCallback != null) {
-            mCallback.onPlaybackStatusChanged(mState);
+            mCallback.onPlaybackStatusChanged(getCurrentState());
+        }
+    }
+
+    private void startPlaying() {
+        if (sPlaybackRequested) {
+            LogHelper.v(TAG, "startPlaying");
+            sPlaybackRequested = false;
+            if (mMediaPlayer != null && !mMediaPlayer.isPlaying()) {
+                LogHelper.d(TAG, "startPlaying: configMediaPlayerState startMediaPlayer. seeking to " + sCurrentPosition);
+                if (sCurrentPosition == mMediaPlayer.getCurrentPosition()) {
+                    LogHelper.v(TAG, "startPlaying: ********* START PLAYING *********");
+                    mMediaPlayer.start();
+                    setCurrentState(PlaybackStateCompat.STATE_PLAYING);
+                    Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+                    RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
+                } else {
+                    LogHelper.v(TAG, "startPlaying: ********* BUFFERING *********");
+                    sCurrentPosition = mMediaPlayer.getCurrentPosition();
+                    mMediaPlayer.seekTo(sCurrentPosition);
+                    setCurrentState(PlaybackStateCompat.STATE_BUFFERING);
+                }
+            }
         }
     }
 
@@ -547,7 +547,7 @@ public class LocalPlayback
 
             // If we are playing, we need to reset media player by calling configMediaPlayerState
             // with mAudioFocus properly set.
-            if (mState == PlaybackStateCompat.STATE_PLAYING && !canDuck) {
+            if (getCurrentState() == PlaybackStateCompat.STATE_PLAYING && !canDuck) {
                 // If we don't have audio focus and can't duck, we save the information that
                 // we were playing, so that we can resume playback once we get the focus back.
                 mPlayOnFocusGain = true;
@@ -567,15 +567,14 @@ public class LocalPlayback
     public void onSeekComplete(MediaPlayer mp) {
         LogHelper.v(TAG, "onSeekComplete: position=", mp.getCurrentPosition());
         setCurrentStreamPosition(mp.getCurrentPosition());
-        if (mState == PlaybackStateCompat.STATE_BUFFERING) {
+        if (getCurrentState() == PlaybackStateCompat.STATE_BUFFERING) {
             mMediaPlayer.start();
-            mState = PlaybackStateCompat.STATE_PLAYING;
-            setCurrentState(mState);
+            setCurrentState(PlaybackStateCompat.STATE_PLAYING);
             Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
             RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
         }
         if (mCallback != null) {
-            mCallback.onPlaybackStatusChanged(mState);
+            mCallback.onPlaybackStatusChanged(getCurrentState());
         }
     }
 
@@ -684,17 +683,17 @@ public class LocalPlayback
 
     private void registerAudioNoisyReceiver() {
         LogHelper.v(TAG, "registerAudioNoisyReceiver");
-        if (!mAudioNoisyReceiverRegistered) {
+        if (!sAudioNoisyReceiverRegistered) {
             mContext.registerReceiver(mAudioNoisyReceiver, mAudioNoisyIntentFilter);
-            mAudioNoisyReceiverRegistered = true;
+            sAudioNoisyReceiverRegistered = true;
         }
     }
 
     private void unregisterAudioNoisyReceiver() {
         LogHelper.v(TAG, "unregisterAudioNoisyReceiver");
-        if (mAudioNoisyReceiverRegistered) {
+        if (sAudioNoisyReceiverRegistered) {
             mContext.unregisterReceiver(mAudioNoisyReceiver);
-            mAudioNoisyReceiverRegistered = false;
+            sAudioNoisyReceiverRegistered = false;
         }
     }
 }
