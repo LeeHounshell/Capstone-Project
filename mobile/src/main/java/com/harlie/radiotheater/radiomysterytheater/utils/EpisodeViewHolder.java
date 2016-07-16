@@ -96,7 +96,7 @@ public class EpisodeViewHolder extends RecyclerView.ViewHolder {
         }
     }
 
-    static final int LIST_SCALE_AMT = 9;
+    static final int LIST_SCALE_AMT = 5;
     public void setFontTypeAndSizes(BaseActivity activity) {
         //LogHelper.v(TAG, "setFontTypeAndSizes");
         FontPreferences fontPreferences = new FontPreferences(activity);
@@ -113,14 +113,14 @@ public class EpisodeViewHolder extends RecyclerView.ViewHolder {
         if (! EpisodeListActivity.isTwoPane()
                 || activity.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
         {
-            titleTextSize = getTextSize(ta, 2) + LIST_SCALE_AMT + 3;
-            descriptionTextSize = getTextSize(ta, 1) + LIST_SCALE_AMT + 2;
+            titleTextSize = getTextSize(ta, 2) + LIST_SCALE_AMT + 5;
+            descriptionTextSize = getTextSize(ta, 1) + LIST_SCALE_AMT + 3;
             airdateTextSize = getTextSize(ta, 1) + LIST_SCALE_AMT + 1;
             episodeNumberTextSize = getTextSize(ta, 1) + LIST_SCALE_AMT + 1;
         }
         else {
-            titleTextSize = getTextSize(ta, 1) + LIST_SCALE_AMT + 2;
-            descriptionTextSize = getTextSize(ta, 0) + LIST_SCALE_AMT + 1;
+            titleTextSize = getTextSize(ta, 1) + LIST_SCALE_AMT + 4;
+            descriptionTextSize = getTextSize(ta, 0) + LIST_SCALE_AMT + 2;
             airdateTextSize = getTextSize(ta, 0) + LIST_SCALE_AMT;
             episodeNumberTextSize = getTextSize(ta, 0) + LIST_SCALE_AMT;
         }

@@ -249,7 +249,7 @@ public class EpisodeDetailFragment extends FragmentBase {
         return rootView;
     }
 
-    static final int DETAIL_SCALE_AMT = 13;
+    static final int DETAIL_SCALE_AMT = 9;
     public void setFontTypeAndSizes(BaseActivity activity, View rootView) {
         //LogHelper.v(TAG, "setFontTypeAndSizes");
         FontPreferences fontPreferences = new FontPreferences(activity);
@@ -266,14 +266,14 @@ public class EpisodeDetailFragment extends FragmentBase {
         if (! EpisodeListActivity.isTwoPane()
                 || activity.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
         {
-            titleTextSize = getTextSize(ta, 3) + DETAIL_SCALE_AMT + 3;
-            descriptionTextSize = getTextSize(ta, 2) + DETAIL_SCALE_AMT + 2;
+            titleTextSize = getTextSize(ta, 3) + DETAIL_SCALE_AMT + 5;
+            descriptionTextSize = getTextSize(ta, 2) + DETAIL_SCALE_AMT + 3;
             airdateTextSize = getTextSize(ta, 2) + DETAIL_SCALE_AMT + 1;
             episodeNumberTextSize = getTextSize(ta, 2) + DETAIL_SCALE_AMT + 1;
         }
         else {
-            titleTextSize = getTextSize(ta, 3) + DETAIL_SCALE_AMT + 2;
-            descriptionTextSize = getTextSize(ta, 2) + DETAIL_SCALE_AMT + 1;
+            titleTextSize = getTextSize(ta, 3) + DETAIL_SCALE_AMT + 4;
+            descriptionTextSize = getTextSize(ta, 2) + DETAIL_SCALE_AMT + 2;
             airdateTextSize = getTextSize(ta, 1) + DETAIL_SCALE_AMT;
             episodeNumberTextSize = getTextSize(ta, 1) + DETAIL_SCALE_AMT;
         }
