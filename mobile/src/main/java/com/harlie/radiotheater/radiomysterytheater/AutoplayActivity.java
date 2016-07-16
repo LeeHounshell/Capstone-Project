@@ -66,7 +66,6 @@ import static com.harlie.radiotheater.radiomysterytheater.AutoplayActivity.Butto
 public class AutoplayActivity extends BaseActivity {
     private final static String TAG = "LEE: <" + AutoplayActivity.class.getSimpleName() + ">";
 
-    protected static final int MAX_TRIAL_EPISODES = 19;
     private static final int DELAY_BEFORE_NEXT_CLICK_ALLOWED = 5000;
 
     public enum ButtonState {
@@ -451,12 +450,12 @@ public class AutoplayActivity extends BaseActivity {
         LogHelper.v(TAG, "verifyPaidVersion");
         //#IFDEF 'TRIAL'
         final AutoplayActivity autoplayActivity = this;
-        if ((sPurchased != true) && (mAllListenCount != null) && (mAllListenCount >= MAX_TRIAL_EPISODES)) {
+        if ((sPurchased != true) && ! isTrial()) {
             RadioControlIntentService.startActionStop(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), getEpisodeDownloadUrl());
             getHandler().post(new Runnable() {
                 @Override
                 public void run() {
-                    LogHelper.v(TAG, "*** onClick - MAX_TRIAL_EPISODES - controls.stop()");
+                    LogHelper.v(TAG, "*** verifyPaidVersion - TRIAL EXPIRED ***");
                     maxTrialEpisodesAreReached();
                     RadioTheaterWidgetService.setPaidVersion(autoplayActivity, false);
                     if (handleClick) {
@@ -839,9 +838,7 @@ public class AutoplayActivity extends BaseActivity {
                                 displayScrollingText();
                             }
                             sLoadedOK = true; // placed after 'displayScrollingText' because i don't want to see Episode detail until after the first Autoplay click
-                            if (mAllListenCount != null) {
-                                autoplayActivity.checkUpdateWidget(autoplayActivity, mAllListenCount.intValue());
-                            }
+                            autoplayActivity.checkUpdateWidget(autoplayActivity, sAllListenCount);
                         }
                     });
                 }

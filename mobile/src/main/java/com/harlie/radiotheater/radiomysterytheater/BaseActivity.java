@@ -90,12 +90,16 @@ import static com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheat
 public class BaseActivity extends AppCompatActivity {
     private final static String TAG = "LEE: <" + BaseActivity.class.getSimpleName() + ">";
 
-    protected static final boolean COPY_PACKAGED_SQLITE_DATABASE = true;
+
+    protected static final int MAX_TRIAL_EPISODES = 19;
+    protected static final int MIN_EMAIL_LENGTH = 5;
+    protected static final int MIN_PASSWORD_LENGTH = 6;
     protected static final int TOTAL_SIZE_TO_COPY_IN_BYTES = 1347584;
     protected static final int ANIMATION_DELAY = 100;
     protected static final String FIREBASE_WRITERS_URL = "radiomysterytheater/0/writers";
     protected static final String FIREBASE_ACTORS_URL = "radiomysterytheater/1/actors";
     protected static final String FIREBASE_SHOWS_URL = "radiomysterytheater/2/shows";
+    protected static final boolean COPY_PACKAGED_SQLITE_DATABASE = true;
 
     protected long mDuration;
     protected long mCurrentPosition;
@@ -106,6 +110,7 @@ public class BaseActivity extends AppCompatActivity {
     protected static String sUID;
     protected static String sPassword;
 
+    protected static int sAllListenCount;
     protected static long sEpisodeNumber;
     protected static String sAirdate;
     protected static String sEpisodeTitle;
@@ -137,9 +142,6 @@ public class BaseActivity extends AppCompatActivity {
 
     public static volatile boolean sProgressViewSpinning;
 
-    protected static final int MIN_EMAIL_LENGTH = 3;
-    protected static final int MIN_PASSWORD_LENGTH = 6;
-
     protected ConfigurationContentValues mConfiguration;
     protected FirebaseAuth mAuth;
     protected Firebase mFirebase;
@@ -148,7 +150,6 @@ public class BaseActivity extends AppCompatActivity {
     protected Handler mHandler;
     protected View mRootView;
     protected CircleProgressView mCircleView;
-    protected Long mAllListenCount;
 
     private Interpolator interpolator;
     private RelativeLayout bgViewGroup;
@@ -1321,15 +1322,15 @@ public class BaseActivity extends AppCompatActivity {
         }
 
         if (sqlite_listen_count > firebase_listen_count) {
-            mAllListenCount = sqlite_listen_count.longValue();
-            LogHelper.v(TAG, "local listen count GREATER THAN firebase listen count: mAllListenCount="+mAllListenCount);
-            mConfiguration.putFieldTotalListenCount(mAllListenCount.intValue());
+            sAllListenCount = (int) sqlite_listen_count.longValue();
+            LogHelper.v(TAG, "local listen count GREATER THAN firebase listen count: sAllListenCount="+ sAllListenCount);
+            mConfiguration.putFieldTotalListenCount(sAllListenCount);
             dirty = true;
         }
         else {
-            mAllListenCount = firebase_listen_count.longValue();
-            LogHelper.v(TAG, "firebase listen count GREATER THAN local listen count: mAllListenCount="+mAllListenCount);
-            mConfiguration.putFieldTotalListenCount(mAllListenCount.intValue());
+            sAllListenCount = (int) firebase_listen_count.longValue();
+            LogHelper.v(TAG, "firebase listen count GREATER THAN local listen count: sAllListenCount="+ sAllListenCount);
+            mConfiguration.putFieldTotalListenCount(sAllListenCount);
             dirty = true;
         }
 
@@ -1357,10 +1358,7 @@ public class BaseActivity extends AppCompatActivity {
         }
 
         //#IFDEF 'TRIAL'
-        boolean trialMode = ((paidVersion != null && paidVersion) || (purchaseAccess != null && purchaseAccess));
-        if (!trialMode) {
-            trialMode = ((mAllListenCount != null) && (mAllListenCount < AutoplayActivity.MAX_TRIAL_EPISODES));
-        }
+        boolean trialMode = (paidVersion != null && paidVersion) || (purchaseAccess != null && purchaseAccess) || isTrial();
         RadioTheaterWidgetService.setPaidVersion(this, trialMode);
         //#ENDIF
 
@@ -1375,13 +1373,13 @@ public class BaseActivity extends AppCompatActivity {
         }
         String  email = getEmail();
         Boolean authenticated = email != null;
-        Long    total_listen_count = configurationValues.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
+        Long total_listen_count = configurationValues.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
 
-        if (total_listen_count < mAllListenCount) {
-            total_listen_count = mAllListenCount;
+        if (total_listen_count < sAllListenCount) {
+            total_listen_count = Long.valueOf(sAllListenCount);
         }
         else {
-            mAllListenCount = total_listen_count;
+            sAllListenCount = total_listen_count.intValue();
         }
 
         //#IFDEF 'PAID'
@@ -1672,6 +1670,13 @@ public class BaseActivity extends AppCompatActivity {
         sAdvId = advId;
     }
 
+    public static boolean isTrial() {
+        //#IFDEF 'PAID'
+        //return true;
+        //#ENDIF
+        return (sAllListenCount < MAX_TRIAL_EPISODES);
+    }
+
     public static boolean isPurchased() {
         return sPurchased;
     }
@@ -1909,14 +1914,14 @@ public class BaseActivity extends AppCompatActivity {
             total_listen_count = configurationValues.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
             ++total_listen_count;
 
-            if (total_listen_count < mAllListenCount) {
-                total_listen_count = mAllListenCount;
+            if (total_listen_count < sAllListenCount) {
+                total_listen_count = sAllListenCount;
             }
             else {
-                mAllListenCount = total_listen_count;
+                sAllListenCount = (int) total_listen_count;
             }
 
-            configurationValues.put(ConfigurationEntry.FIELD_TOTAL_LISTEN_COUNT, mAllListenCount);
+            configurationValues.put(ConfigurationEntry.FIELD_TOTAL_LISTEN_COUNT, Long.valueOf(sAllListenCount));
             SQLiteHelper.updateConfigurationValues(getAdvertId(), configurationValues);
             updateFirebaseConfigurationValues(getAdvertId(), configurationValues);
             LogHelper.d(TAG, "---> markEpisodeAsHeardAndIncrementPlayCount: new ALL-LISTEN-COUNT="+ total_listen_count +" <---");

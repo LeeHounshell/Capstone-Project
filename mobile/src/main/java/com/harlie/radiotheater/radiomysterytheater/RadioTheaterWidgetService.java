@@ -62,7 +62,15 @@ public class RadioTheaterWidgetService extends Service {
         {
             RemoteViews theWidgetView = new RemoteViews(this.getApplicationContext().getPackageName(), R.layout.radio_theater_widget);
 
-            widgetButtonClick(theWidgetView);
+            boolean enabled = AutoplayActivity.isPurchased() || AutoplayActivity.isTrial();
+            if (enabled) {
+                LogHelper.v(TAG, "handleCommand: enabled widget ok");
+                widgetButtonClick(theWidgetView);
+            }
+            else {
+                LogHelper.v(TAG, "handleCommand: not purchesed");
+                disableWidgetButtons(theWidgetView);
+            }
 
             // Register an onClickListener
             Intent clickIntent = new Intent(this.getApplicationContext(), RadioTheaterWidgetProvider.class);
@@ -112,7 +120,7 @@ public class RadioTheaterWidgetService extends Service {
                 break;
             }
             case PlaybackStateCompat.STATE_PLAYING: {
-                Pause(theWidgetView);
+                Stop(theWidgetView);
                 break;
             }
             case PlaybackStateCompat.STATE_REWINDING: {
@@ -159,23 +167,14 @@ public class RadioTheaterWidgetService extends Service {
     }
 
     private void Autoplay(RemoteViews remoteViews) {
-        if (sPaidVersion) {
-            LogHelper.v(TAG, "PLAY: setting WIDGET to 'Autoplay'");
-            remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_autoplay_button_selector);
-            if (isWidgetButtonPress()) {
-                startActionPlay();
-            }
+        if (isWidgetButtonPress()) {
+            LogHelper.v(TAG, "PLAY: setting WIDGET to Please Wait");
+            remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_please_wait_button_selector);
+            startActionPlay();
         }
         else {
-            if (isWidgetButtonPress()) {
-                LogHelper.v(TAG, "PLAY: setting WIDGET to Please Wait");
-                remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_please_wait_button_selector);
-                startActionPlay();
-            }
-            else {
-                LogHelper.v(TAG, "PLAY: setting WIDGET to (disabled) 'Autoplay'");
-                remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_autoplay_disabled_button_selector);
-            }
+            LogHelper.v(TAG, "PLAY: setting WIDGET to 'Autoplay'");
+            remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_autoplay_button_selector);
         }
     }
 
@@ -192,30 +191,26 @@ public class RadioTheaterWidgetService extends Service {
         remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_please_wait_button_selector);
     }
 
-    private void Pause(RemoteViews remoteViews) {
-        if (sPaidVersion) {
-            LogHelper.v(TAG, "PAUSE: setting WIDGET to 'Please Wait'");
-            remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_pause_button_selector);
-            if (isWidgetButtonPress()) {
-                startActionPause();
-            }
+    private void Stop(RemoteViews remoteViews) {
+        if (isWidgetButtonPress()) {
+            LogHelper.v(TAG, "STOP: setting WIDGET to Please Wait");
+            remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_please_wait_button_selector);
+            startActionStop();
         }
         else {
-            if (isWidgetButtonPress()) {
-                LogHelper.v(TAG, "PAUSE: setting WIDGET to Please Wait");
-                remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_please_wait_button_selector);
-                startActionPause();
-            }
-            else {
-                LogHelper.v(TAG, "PAUSE: setting WIDGET to (disabled) 'Autoplay'");
-                remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_autoplay_disabled_button_selector);
-            }
+            LogHelper.v(TAG, "STOP: setting WIDGET to 'Stop'");
+            remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_stop_button_selector);
         }
     }
 
-    private void startActionPause() {
-        LogHelper.v(TAG, "PAUSE: RadioControlIntentService.startActionPause");
-        RadioControlIntentService.startActionPause(this.getApplicationContext(), "WIDGET", String.valueOf(BaseActivity.getEpisodeNumber()), BaseActivity.getEpisodeDownloadUrl());
+    private void startActionStop() {
+        LogHelper.v(TAG, "STOP: RadioControlIntentService.startActionStop");
+        RadioControlIntentService.startActionStop(this.getApplicationContext(), "WIDGET", String.valueOf(BaseActivity.getEpisodeNumber()), BaseActivity.getEpisodeDownloadUrl());
+    }
+
+    public void disableWidgetButtons(RemoteViews remoteViews) {
+        LogHelper.v(TAG, "DISABLE: setting WIDGET to (disabled) 'Autoplay'");
+        remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_autoplay_disabled_button_selector);
     }
 
     @Override
