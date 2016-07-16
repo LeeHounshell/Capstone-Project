@@ -96,7 +96,7 @@ public class EpisodeViewHolder extends RecyclerView.ViewHolder {
         }
     }
 
-    static final int LIST_SCALE_AMT = 5;
+    static final int LIST_SCALE_AMT = 3;
     public void setFontTypeAndSizes(BaseActivity activity) {
         //LogHelper.v(TAG, "setFontTypeAndSizes");
         FontPreferences fontPreferences = new FontPreferences(activity);

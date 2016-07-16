@@ -249,7 +249,7 @@ public class EpisodeDetailFragment extends FragmentBase {
         return rootView;
     }
 
-    static final int DETAIL_SCALE_AMT = 9;
+    static final int DETAIL_SCALE_AMT = 7;
     public void setFontTypeAndSizes(BaseActivity activity, View rootView) {
         //LogHelper.v(TAG, "setFontTypeAndSizes");
         FontPreferences fontPreferences = new FontPreferences(activity);
