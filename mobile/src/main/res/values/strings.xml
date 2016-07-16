@@ -5,17 +5,16 @@
     <string name="app_id">FAEC6D3F</string>
     <string name="app_description">
         This app provides an easy, quality listening experience for the CBS Radio Mystery Theater.
-        There are <b>1399</b> ~one-hour \'Radio Mystery Theatre\' episodes for you to listen to.\n\n
+        There are <b>1399</b> fifty-minute \'Radio Mystery Theatre\' episodes for you to listen to.\n\n
         <b>Autoplay</b> will begin with the oldest unheard episode and keep playing.
         After one episode finishes, the next automatically starts. Press Autoplay again to Pause.
         Swipe right for next episode, left for previous episode. Long-press to Stop.
-        Once playback begins, a ring will appear. Use the button on that ring to adjust play position.
-        The ring-seekbar and/or FAB can be removed from Options -> Settings, for impaired users.
-        Also an option to download, and change text size + font selection.
+        Once playback begins, a seek ring will appear. Use the button on that ring to adjust play position.
+        Use Options -> Settings to change text size and/or font selection.
         \n\nThank you! to CBS Corporation for providing these full-cast radio dramas to the public.
         All episodes can be downloaded for free from <b>http://www.cbsrmt.com</b>
         \n\nThis is my Capstone Project for the <b>Udacity Android Nanodegree</b> program.
-        I hope you like it. - Lee Hounshell, June 26, 2016.\n
+        I hope you like it. - Lee Hounshell, July 15, 2016.\n
         \n
         CREDITS:\n
                     - Firebase for backend processing\n

@@ -650,17 +650,19 @@ public class AutoplayActivity extends BaseActivity {
     }
 
     protected void displayScrollingText() {
-        getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                ScrollingTextView horizontalScrollingText = getHorizontalScrollingText();
-                if (horizontalScrollingText != null) {
-                    horizontalScrollingText.setText("         ... Airdate: " + RadioTheaterContract.airDate(sAirdate) + " ... Episode #" + sEpisodeNumber + " ... " + sEpisodeTitle + " ... " + sEpisodeDescription);
-                    horizontalScrollingText.setEnabled(true);
-                    horizontalScrollingText.setSelected(true);
+        if (isLoadedOK()) {
+            getHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    ScrollingTextView horizontalScrollingText = getHorizontalScrollingText();
+                    if (horizontalScrollingText != null) {
+                        horizontalScrollingText.setText("         ... Airdate: " + RadioTheaterContract.airDate(sAirdate) + " ... Episode #" + sEpisodeNumber + " ... " + sEpisodeTitle + " ... " + sEpisodeDescription);
+                        horizontalScrollingText.setEnabled(true);
+                        horizontalScrollingText.setSelected(true);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     @Override
@@ -828,13 +830,13 @@ public class AutoplayActivity extends BaseActivity {
                         @Override
                         public void run() {
                             LogHelper.v(TAG, "*** RECEIVED BROADCAST: LOAD_OK");
-                            sLoadedOK = true;
                             sAutoplayNextNow = false;
                             enableButtons();
                             ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
                             if (getEpisodeData(configCursor)) {
                                 displayScrollingText();
                             }
+                            sLoadedOK = true; // placed here because i don't want to see the Episode detail until after the first Autoplay click
                             if (mAllListenCount != null) {
                                 autoplayActivity.checkUpdateWidget(autoplayActivity, mAllListenCount.intValue());
                             }
