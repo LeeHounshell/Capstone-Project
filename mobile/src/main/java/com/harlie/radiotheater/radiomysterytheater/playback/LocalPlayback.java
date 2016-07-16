@@ -333,7 +333,6 @@ public class LocalPlayback
 
                         mState = PlaybackStateCompat.STATE_BUFFERING;
                         setCurrentState(mState);
-                        RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
 
                         mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
                         //Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
@@ -413,8 +412,6 @@ public class LocalPlayback
                 if (mMediaPlayer.isPlaying()) {
                     mState = PlaybackStateCompat.STATE_BUFFERING;
                     setCurrentState(mState);
-                    Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
-                    RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
                 }
                 mMediaPlayer.seekTo(position);
                 if (mCallback != null) {
@@ -519,8 +516,6 @@ public class LocalPlayback
                         mMediaPlayer.seekTo(sCurrentPosition);
                         mState = PlaybackStateCompat.STATE_BUFFERING;
                         setCurrentState(mState);
-                        Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
-                        RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
                     }
                 }
                 mPlayOnFocusGain = false;
