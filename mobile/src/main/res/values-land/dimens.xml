@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="appbar_layout_height">150dp</dimen>
-    <dimen name="autoplay_height">60dp</dimen>
-    <dimen name="autoplay_width">110dp</dimen>
-    <dimen name="play_now_height">35dp</dimen>
-    <dimen name="play_now_width">85dp</dimen>
+    <dimen name="autoplay_height">100dp</dimen>
+    <dimen name="autoplay_width">170dp</dimen>
+    <dimen name="play_now_height">70dp</dimen>
+    <dimen name="play_now_width">100dp</dimen>
     <dimen name="weblink_height">30dp</dimen>
     <dimen name="weblink_width">85dp</dimen>
 </resources>
