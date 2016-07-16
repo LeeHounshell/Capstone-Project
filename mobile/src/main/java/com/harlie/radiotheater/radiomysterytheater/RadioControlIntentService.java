@@ -346,8 +346,8 @@ public class RadioControlIntentService extends IntentService {
     public static void startActionPlay(Context context, String from, String episode, String param2) {
         if (sLastRequest == 1) {
             long now = System.currentTimeMillis();
-            if ((now - sLastRequest) > MIN_REQUEST_WAIT_TIME) {
-                LogHelper.w(TAG, "startActonPlay: REPEAT IGNORED - ((now - sLastRequest) > MIN_REQUEST_WAIT_TIME)");
+            if ((now - sLastRequest) < MIN_REQUEST_WAIT_TIME) {
+                LogHelper.w(TAG, "startActonPlay: REPEAT IGNORED - ((now - sLastRequest) < MIN_REQUEST_WAIT_TIME)");
                 return;
             }
         }

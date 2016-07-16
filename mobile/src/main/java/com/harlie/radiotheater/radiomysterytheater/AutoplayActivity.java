@@ -794,7 +794,7 @@ public class AutoplayActivity extends BaseActivity {
 //            doBindService();
 //        }
         super.onResume();
-        if (sLoadedOK) {
+        if (isLoadedOK()) {
             enableButtons();
         }
         IntentFilter intentFilter = new IntentFilter("android.intent.action.MAIN");
@@ -836,7 +836,7 @@ public class AutoplayActivity extends BaseActivity {
                             if (getEpisodeData(configCursor)) {
                                 displayScrollingText();
                             }
-                            sLoadedOK = true; // placed here because i don't want to see the Episode detail until after the first Autoplay click
+                            sLoadedOK = true; // placed after 'displayScrollingText' because i don't want to see Episode detail until after the first Autoplay click
                             if (mAllListenCount != null) {
                                 autoplayActivity.checkUpdateWidget(autoplayActivity, mAllListenCount.intValue());
                             }

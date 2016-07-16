@@ -148,6 +148,8 @@ public class LocalPlayback
             LogHelper.v(TAG, "stop: notifyListeners=" + notifyListeners);
             mState = PlaybackStateCompat.STATE_STOPPED;
             setCurrentState(mState);
+            Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+            RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
             if (notifyListeners && mCallback != null) {
                 mCallback.onPlaybackStatusChanged(mState);
             }
@@ -267,7 +269,6 @@ public class LocalPlayback
         Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
         if (sCurrentNotifyState != sCurrentState) {
             sCurrentNotifyState = sCurrentState;
-            RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context));
         }
     }
     static public int getCurrentState() {
@@ -296,6 +297,8 @@ public class LocalPlayback
             } else {
                 mState = PlaybackStateCompat.STATE_STOPPED;
                 setCurrentState(mState);
+                Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+                RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
                 relaxResources(false); // release everything except MediaPlayer
                 String musicId = MediaIDHelper.extractMusicIDFromMediaID(mediaId);
                 String source = null;
@@ -330,6 +333,7 @@ public class LocalPlayback
 
                         mState = PlaybackStateCompat.STATE_BUFFERING;
                         setCurrentState(mState);
+                        RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
 
                         mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
                         //Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
@@ -385,6 +389,8 @@ public class LocalPlayback
             }
             mState = PlaybackStateCompat.STATE_PAUSED;
             setCurrentState(mState);
+            Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+            RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
             if (mCallback != null) {
                 mCallback.onPlaybackStatusChanged(mState);
             }
@@ -407,6 +413,8 @@ public class LocalPlayback
                 if (mMediaPlayer.isPlaying()) {
                     mState = PlaybackStateCompat.STATE_BUFFERING;
                     setCurrentState(mState);
+                    Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+                    RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
                 }
                 mMediaPlayer.seekTo(position);
                 if (mCallback != null) {
@@ -503,12 +511,16 @@ public class LocalPlayback
                         mMediaPlayer.start();
                         mState = PlaybackStateCompat.STATE_PLAYING;
                         setCurrentState(mState);
+                        Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+                        RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
                     } else {
                         LogHelper.v(TAG, "********* BUFFERING *********");
                         sCurrentPosition = mMediaPlayer.getCurrentPosition();
                         mMediaPlayer.seekTo(sCurrentPosition);
                         mState = PlaybackStateCompat.STATE_BUFFERING;
                         setCurrentState(mState);
+                        Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+                        RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
                     }
                 }
                 mPlayOnFocusGain = false;
@@ -564,6 +576,8 @@ public class LocalPlayback
             mMediaPlayer.start();
             mState = PlaybackStateCompat.STATE_PLAYING;
             setCurrentState(mState);
+            Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+            RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
         }
         if (mCallback != null) {
             mCallback.onPlaybackStatusChanged(mState);

@@ -149,7 +149,6 @@ public class RadioTheaterWidgetService extends Service {
     }
 
     public static boolean isWidgetButtonPress() {
-        sGotButtonPress = false; // FIXME
         LogHelper.v(TAG, "isWidgetButtonPress: "+sGotButtonPress);
         return sGotButtonPress;
     }

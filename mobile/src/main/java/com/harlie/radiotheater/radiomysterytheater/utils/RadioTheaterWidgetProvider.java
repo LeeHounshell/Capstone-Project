@@ -23,7 +23,7 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
     {
         LogHelper.v(TAG, "onUpdate");
         super.onUpdate(context, appWidgetManager, appWidgetIds);
-        notifyWidget(context, appWidgetManager);
+        notifyWidget(context, appWidgetManager, true);
     }
 
     @Override
@@ -47,19 +47,22 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
 //        }
     }
 
-    public static void notifyWidget(Context context, AppWidgetManager instance) {
+    public static void notifyWidget(Context context, AppWidgetManager instance, boolean isWidgetButtonPress) {
         Intent intent = new Intent(context.getApplicationContext(), RadioTheaterWidgetService.class);
         if (!isInitialized) {
             LogHelper.v(TAG, "notifyWidget: (visual update only) - playback state="+LocalPlayback.getCurrentState()+", prior state="+lastPlaybackState);
             lastPlaybackState = LocalPlayback.getCurrentState();
             intent.putExtra("BUTTON_PRESS", false);
         }
-        else {
+        else if (isWidgetButtonPress) {
             LogHelper.v(TAG, "notifyWidget: (BUTTON_PRESS) - playback state="+LocalPlayback.getCurrentState()+", prior state="+lastPlaybackState);
             intent.putExtra("BUTTON_PRESS", true);
         }
+        else {
+            LogHelper.v(TAG, "notifyWidget - NEW PLAYBACK STATE="+lastPlaybackState);
+            intent.putExtra("BUTTON_PRESS", false);
+        }
         isInitialized = true;
-        LogHelper.v(TAG, "notifyWidget - NEW PLAYBACK STATE="+lastPlaybackState);
         // Build the intent to call the service
         ComponentName thisWidget = new ComponentName(context, RadioTheaterWidgetProvider.class);
         int[] allWidgetIds = instance.getAppWidgetIds(thisWidget);
