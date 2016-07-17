@@ -66,7 +66,7 @@ import static com.harlie.radiotheater.radiomysterytheater.AutoplayActivity.Butto
 public class AutoplayActivity extends BaseActivity {
     private final static String TAG = "LEE: <" + AutoplayActivity.class.getSimpleName() + ">";
 
-    private static final int DELAY_BEFORE_NEXT_CLICK_ALLOWED = 5000;
+    private static final int DELAY_BEFORE_NEXT_CLICK_ALLOWED = 3000;
 
     public enum ButtonState {
         PLAY, PLEASE_WAIT, PAUSE

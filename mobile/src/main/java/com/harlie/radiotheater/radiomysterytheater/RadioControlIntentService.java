@@ -17,6 +17,7 @@ import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 
+import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import java.util.List;
@@ -297,9 +298,7 @@ public class RadioControlIntentService extends IntentService {
     public int onStartCommand(Intent intent, int flags, int startId) {
         LogHelper.v(TAG, "onStartCommand: intent="+intent.toString());
         super.onStartCommand(intent, flags, startId);
-        onHandleIntent(intent);
-        // We want this service to continue running until it is explicitly stopped, so return sticky.
-        return START_STICKY;
+        return START_STICKY; // sticky hint for service to run until explicitly stopped
     }
 
     @Override
@@ -319,6 +318,10 @@ public class RadioControlIntentService extends IntentService {
         mRadioMediaBrowser = null;
         mRadioMediaController = null;
     }
+
+    //================================================================================
+    // PUBLIC API
+    //================================================================================
 
     /**
      * Starts this service to perform action Start with the given parameters. If
@@ -344,6 +347,7 @@ public class RadioControlIntentService extends IntentService {
      * @see IntentService
      */
     public static void startActionPlay(Context context, String from, String episode, String param2) {
+        LocalPlayback.setPlaybackEnabled(true);
         if (sLastRequest == 1) {
             long now = System.currentTimeMillis();
             if ((now - sLastRequest) < MIN_REQUEST_WAIT_TIME) {
@@ -368,6 +372,7 @@ public class RadioControlIntentService extends IntentService {
      * @see IntentService
      */
     public static void startActionPause(Context context, String from, String episode, String param2) {
+        LocalPlayback.setPlaybackEnabled(false);
         if (sLastRequest == 2) {
             long now = System.currentTimeMillis();
             if ((now - sLastRequest) < (MIN_REQUEST_WAIT_TIME / 3)) {
@@ -426,6 +431,7 @@ public class RadioControlIntentService extends IntentService {
      * @see IntentService
      */
     public static void startActionStop(Context context, String from, String episode, String param2) {
+        LocalPlayback.setPlaybackEnabled(false);
         sLastRequest = 5;
         sLastRequestTime = System.currentTimeMillis();
         LogHelper.v(TAG, "startActionStop: from="+from+", episode="+episode);
@@ -443,6 +449,7 @@ public class RadioControlIntentService extends IntentService {
      * @see IntentService
      */
     public static void startActionNext(Context context, String from, String episode, String param2) {
+        LocalPlayback.setPlaybackEnabled(true);
         sLastRequest = 6;
         sLastRequestTime = System.currentTimeMillis();
         LogHelper.v(TAG, "startActionNext: from="+from+", episode="+episode);
@@ -460,6 +467,7 @@ public class RadioControlIntentService extends IntentService {
      * @see IntentService
      */
     public static void startActionPrev(Context context, String from, String episode, String param2) {
+        LocalPlayback.setPlaybackEnabled(true);
         sLastRequest = 7;
         sLastRequestTime = System.currentTimeMillis();
         LogHelper.v(TAG, "startActionPrev: from="+from+", episode="+episode);
@@ -469,6 +477,8 @@ public class RadioControlIntentService extends IntentService {
         intent.putExtra(EXTRA_PARAM2, param2);
         context.startService(intent);
     }
+
+    //================================================================================
 
     /**
      * Handle action Start in the provided background thread with the provided
