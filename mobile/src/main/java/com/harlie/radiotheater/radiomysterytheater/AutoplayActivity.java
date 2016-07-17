@@ -67,6 +67,8 @@ public class AutoplayActivity extends BaseActivity {
     private final static String TAG = "LEE: <" + AutoplayActivity.class.getSimpleName() + ">";
 
     private static final int DELAY_BEFORE_NEXT_CLICK_ALLOWED = 1000;
+    private static final int DELAY_BEFORE_NEXT_VERIFY = (15 * 60 * 60);
+    private static long lastVerifyTime;
 
     public enum ButtonState {
         PLAY, PLEASE_WAIT, PAUSE
@@ -162,6 +164,7 @@ public class AutoplayActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         LogHelper.v(TAG, "onCreate");
+        lastVerifyTime = System.currentTimeMillis(); // allow 15-minute play-time buffer until automatic verifyPaidVersion check
         getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
         //mp = MediaPlayer.create(this, R.raw.click);
 
@@ -279,7 +282,7 @@ public class AutoplayActivity extends BaseActivity {
             }
 
             @Override
-            public void onDoubleClick() { // FIXME: OnSwipeTouchListener issue
+            public void onDoubleClick() { // FIXME: OnSwipeTouchListener issue, low priority
                 if (! isTimePassed()) {
                     return;
                 }
@@ -702,12 +705,17 @@ public class AutoplayActivity extends BaseActivity {
             }
             showExpectedControls("updateCircularSeekbar (playing)");
             if (getCircularSeekBar() != null && !getCircularSeekBar().isProcessingTouchEvents()) {
-                // FIXME: performance issue: verifyPaidVersion(false);
                 LoadingAsyncTask.mDoneLoading = true;
                 // we need to determine the current bar location and update the display
                 mCurrentPosition = (long) LocalPlayback.getCurrentPosition();
-                LogHelper.v(TAG, "...updateCircularSeekbar... "+mCurrentPosition);
                 getCircularSeekBar().setProgress((int) mCurrentPosition);
+                // NOTE: a performance impact exists with the verifyPaidVersion operation, so every seekbar update is too much
+                long now = System.currentTimeMillis();
+                if ((now - lastVerifyTime) > DELAY_BEFORE_NEXT_VERIFY) {
+                    LogHelper.v(TAG, "...updateCircularSeekbar... "+mCurrentPosition);
+                    lastVerifyTime = now;
+                    verifyPaidVersion(false);
+                }
             }
         }
         else if (

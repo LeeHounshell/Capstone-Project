@@ -133,10 +133,20 @@ public interface Playback {
          * @param mediaId being currently played
          */
         void setCurrentMediaId(String mediaId);
+
+        public void switchToPlayback(Playback playback, boolean resumePlaying);
+
+        //-------- RADIO THEATER SERVICE API --------
+        public Playback getPlayback();
+        public void handlePlayRequest();
+        public void handlePauseRequest();
+        public void handleSeekRequest(int position);
+        public void handleStopRequest(String withError);
     }
 
     /**
      * @param callback to be called
      */
     void setCallback(Callback callback);
+
 }

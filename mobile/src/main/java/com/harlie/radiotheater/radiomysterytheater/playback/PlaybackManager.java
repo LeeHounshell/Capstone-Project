@@ -78,6 +78,7 @@ public class PlaybackManager implements Playback.Callback {
         return mMediaSessionCallback;
     }
 
+    //-------- RADIO THEATER --------
     /**
      * Handle a request to play music
      */
@@ -90,6 +91,7 @@ public class PlaybackManager implements Playback.Callback {
         }
     }
 
+    //-------- RADIO THEATER --------
     /**
      * Handle a request to pause music
      */
@@ -101,6 +103,7 @@ public class PlaybackManager implements Playback.Callback {
         }
     }
 
+    //-------- RADIO THEATER --------
     /**
      * Handle a request to seek to a specified position and continue playback
      */
@@ -114,6 +117,7 @@ public class PlaybackManager implements Playback.Callback {
         }
     }
 
+    //-------- RADIO THEATER --------
     /**
      * Handle a request to stop music
      *
