@@ -22,17 +22,22 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
     public void onReceive(Context context, Intent intent) {
         LogHelper.v(TAG, "onReceive: action="+intent.getAction());
         super.onReceive(context, intent);
-        if (intent.getStringExtra(RadioTheaterWidgetService.RADIO_THEATER_WIDGET_CONTROL) != null) {
-            LogHelper.v(TAG, "*** WIDGET CONTROL ***");
-        }
         if (intent.getBooleanExtra("BUTTON_PRESS", false) == true) {
             LogHelper.v(TAG, "*** WIDGET BUTTON PRESS ***");
+            isInitialized = true;
         }
         if (intent.getAction().equals(AppWidgetManager.ACTION_APPWIDGET_UPDATE)) {
-            isInitialized = false; // just update the display, don't press anything
+            if (intent.getBooleanExtra(RadioTheaterWidgetService.RADIO_THEATER_WIDGET_CONTROL, false) == true) {
+                LogHelper.v(TAG, "*** WIDGET CONTROL BUTTON PRESS ***");
+                isInitialized = true;
+            }
+            else {
+                LogHelper.v(TAG, "*** WIDGET CONTROL VISUAL UPDATE ***");
+                isInitialized = false;
+            }
         }
         if (intent.getAction().equals(AppWidgetManager.ACTION_APPWIDGET_ENABLED)) {
-            isInitialized = false; // just update the display, don't press anything
+            isInitialized = false;
         }
 //        if (intent.getAction().equals(AppWidgetManager.ACTION_APPWIDGET_DELETED)) {
 //            isInitialized = false;

@@ -42,6 +42,7 @@ public class RadioTheaterWidgetService extends Service {
         //mp = MediaPlayer.create(this, R.raw.click);
         //mp.start();
 
+        boolean isButtonPress = false;
         if (intent.getBooleanExtra("BUTTON_PRESS", false) == false) {
             LogHelper.v(TAG, "handleCommand: *** VISUAL BUTTON UPDATE ONLY ***");
             setGotWidgetButtonPress(false);
@@ -51,10 +52,10 @@ public class RadioTheaterWidgetService extends Service {
             RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
         }
         else {
+            isButtonPress = true;
             LogHelper.v(TAG, "handleCommand: GOT WIDGET BUTTON PRESS!");
             setGotWidgetButtonPress(true);
         }
-
 
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this.getApplicationContext());
 
@@ -82,7 +83,7 @@ public class RadioTheaterWidgetService extends Service {
             Intent clickIntent = new Intent(this.getApplicationContext(), RadioTheaterWidgetProvider.class);
 
             clickIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-            clickIntent.putExtra(RADIO_THEATER_WIDGET_CONTROL, "true");
+            clickIntent.putExtra(RADIO_THEATER_WIDGET_CONTROL, Boolean.valueOf(isButtonPress));
             clickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, allWidgetIds);
 
             PendingIntent pendingIntent = PendingIntent.getBroadcast(

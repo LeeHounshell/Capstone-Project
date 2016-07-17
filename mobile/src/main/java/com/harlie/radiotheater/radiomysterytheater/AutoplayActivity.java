@@ -261,6 +261,9 @@ public class AutoplayActivity extends BaseActivity {
                         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
                             appBarLayout.setExpanded(false);
                         }
+//                        if (mCurrentPosition == 0) {
+//                            loadingScreen();
+//                        }
                         RadioControlIntentService.startActionPlay(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), getEpisodeDownloadUrl());
                     }
                     else if (oldButtonState == PAUSE) {
@@ -417,11 +420,6 @@ public class AutoplayActivity extends BaseActivity {
                 LogHelper.v(TAG, "onProgressChange: newProgress:" + newProgress);
                 sBeginLoading = true;
                 RadioControlIntentService.startActionSeek(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), String.valueOf(newProgress));
-                if (!getCircularSeekBar().isProcessingTouchEvents()) {
-                    mCurrentPosition = newProgress;
-                    scheduleSeekbarUpdate();
-                    showExpectedControls("setSeekBarChangeListener");
-                }
             }
         });
 
@@ -504,6 +502,7 @@ public class AutoplayActivity extends BaseActivity {
         super.onRestoreInstanceState(savedInstanceState);
     }
 
+    //--------------------------------------------------------------------------------
     // UPDATE THE CIRCULAR SEEK BAR
     private final Runnable mUpdateProgressTask = new Runnable() {
         @Override
@@ -511,6 +510,7 @@ public class AutoplayActivity extends BaseActivity {
             updateCircularSeekbar();
         }
     };
+    //--------------------------------------------------------------------------------
 
     private void enableButtons() {
         LogHelper.v(TAG, "enableButtons");
@@ -524,6 +524,7 @@ public class AutoplayActivity extends BaseActivity {
                     if (getAutoPlay() != null) {
                         sEnableFAB = true;
                         showExpectedControls("enableButtons");
+                        scheduleSeekbarUpdate();
                     }
                 }
             }, 2000);
@@ -671,6 +672,8 @@ public class AutoplayActivity extends BaseActivity {
         }
     }
 
+    //--------------------------------------------------------------------------------
+    // UPDATE THE CIRCULAR SEEK BAR
     private void scheduleSeekbarUpdate() {
         if (!sSeekUpdateRunning) {
             LogHelper.v(TAG, "scheduleSeekbarUpdate");
@@ -679,7 +682,7 @@ public class AutoplayActivity extends BaseActivity {
                     new Runnable() {
                         @Override
                         public void run() {
-                            LogHelper.v(TAG, "...invoke updateCircularSeekbar...");
+                            //LogHelper.v(TAG, "...invoke updateCircularSeekbar...");
                             sSeekUpdateRunning = true;
                             getHandler().post(mUpdateProgressTask);
                         }
@@ -692,18 +695,18 @@ public class AutoplayActivity extends BaseActivity {
     }
 
     protected void updateCircularSeekbar() {
-        LogHelper.v(TAG, "...updateCircularSeekbar...");
         int lastPlaybackState = LocalPlayback.getCurrentState();
         if (PlaybackStateCompat.STATE_PLAYING == lastPlaybackState) {
             if (getExpectedPlayState() == 1) {
                 sWaitForMedia = false;
             }
-            showExpectedControls("updateCircularSeekbar");
+            showExpectedControls("updateCircularSeekbar (playing)");
             if (getCircularSeekBar() != null && !getCircularSeekBar().isProcessingTouchEvents()) {
                 verifyPaidVersion(false);
                 LoadingAsyncTask.mDoneLoading = true;
                 // we need to determine the current bar location and update the display
                 mCurrentPosition = (long) LocalPlayback.getCurrentPosition();
+                LogHelper.v(TAG, "...updateCircularSeekbar... "+mCurrentPosition);
                 getCircularSeekBar().setProgress((int) mCurrentPosition);
             }
         }
@@ -715,9 +718,9 @@ public class AutoplayActivity extends BaseActivity {
             if (getExpectedPlayState() == 3) {
                 sWaitForMedia = false;
             }
-            showExpectedControls("updateCircularSeekbar");
         }
     }
+    //--------------------------------------------------------------------------------
 
     private void updateDuration(long duration) {
         LogHelper.d(TAG, "updateDuration: duration="+duration);
@@ -729,18 +732,18 @@ public class AutoplayActivity extends BaseActivity {
         showExpectedControls("updateDuration");
     }
 
-//    protected void loadingScreen() {
-//        LogHelper.d(TAG, "loadingScreen: enabled="+ sLoadingScreenEnabled);
-//        if (sLoadingScreenEnabled && !LoadingAsyncTask.mLoadingNow) {
-//            sBeginLoading = true;
-//            showExpectedControls("loadingScreen");
-//            LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
-//            LoadingAsyncTask asyncTask = new LoadingAsyncTask(this, mCircleView, getCircularSeekBar(), getAutoPlay());
-//            asyncTask.execute();
-//            sProgressViewSpinning = true;
-//            LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
-//        }
-//    }
+    protected void loadingScreen() {
+        LogHelper.d(TAG, "loadingScreen: enabled="+ sLoadingScreenEnabled);
+        if (sLoadingScreenEnabled && !LoadingAsyncTask.mLoadingNow) {
+            sBeginLoading = true;
+            showExpectedControls("loadingScreen");
+            LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
+            LoadingAsyncTask asyncTask = new LoadingAsyncTask(this, mCircleView, getCircularSeekBar(), getAutoPlay());
+            asyncTask.execute();
+            sProgressViewSpinning = true;
+            LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
+        }
+    }
 
     @Override
     public void setCircleViewValue(float value) {
