@@ -19,14 +19,6 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
     private static volatile int lastPlaybackState = -1;
 
     @Override
-    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds)
-    {
-        LogHelper.v(TAG, "onUpdate");
-        super.onUpdate(context, appWidgetManager, appWidgetIds);
-        notifyWidget(context, appWidgetManager, true);
-    }
-
-    @Override
     public void onReceive(Context context, Intent intent) {
         LogHelper.v(TAG, "onReceive: action="+intent.getAction());
         super.onReceive(context, intent);
@@ -36,8 +28,11 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
         if (intent.getBooleanExtra("BUTTON_PRESS", false) == true) {
             LogHelper.v(TAG, "*** WIDGET BUTTON PRESS ***");
         }
+        if (intent.getAction().equals(AppWidgetManager.ACTION_APPWIDGET_UPDATE)) {
+            isInitialized = false; // just update the display, don't press anything
+        }
         if (intent.getAction().equals(AppWidgetManager.ACTION_APPWIDGET_ENABLED)) {
-            isInitialized = false;
+            isInitialized = false; // just update the display, don't press anything
         }
 //        if (intent.getAction().equals(AppWidgetManager.ACTION_APPWIDGET_DELETED)) {
 //            isInitialized = false;
@@ -45,6 +40,14 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
 //        else if (intent.getAction().equals(AppWidgetManager.ACTION_APPWIDGET_DISABLED)) {
 //            isInitialized = false;
 //        }
+    }
+
+    @Override
+    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds)
+    {
+        LogHelper.v(TAG, "onUpdate");
+        super.onUpdate(context, appWidgetManager, appWidgetIds);
+        notifyWidget(context, appWidgetManager, true);
     }
 
     public static void notifyWidget(Context context, AppWidgetManager instance, boolean isWidgetButtonPress) {
