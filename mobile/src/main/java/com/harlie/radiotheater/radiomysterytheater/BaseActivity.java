@@ -737,24 +737,24 @@ public class BaseActivity extends AppCompatActivity {
     public Boolean isPaidEpisode(String episode) {
         Boolean isPaidEpi = false;
         //#IFDEF 'PAID'
-        //isPaidEpi = true;
+        isPaidEpi = true;
         //#ENDIF
 
         //#IFDEF 'TRIAL'
-        if (mConfiguration != null) {
-            isPaidEpi = mConfiguration.values().getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
-        }
-        if (!isPaidEpi) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            isPaidEpi = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
-            if (!isPaidEpi) {
-                ConfigEpisodesContentValues existing = SQLiteHelper.getConfigForEpisode(episode);
-                if (existing != null && existing.values() != null && existing.values().size() != 0) {
-                    ContentValues configEpisode = existing.values();
-                    isPaidEpi = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
-                }
-            }
-        }
+        //if (mConfiguration != null) {
+            //isPaidEpi = mConfiguration.values().getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
+        //}
+        //if (!isPaidEpi) {
+            //SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
+            //isPaidEpi = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
+            //if (!isPaidEpi) {
+                //ConfigEpisodesContentValues existing = SQLiteHelper.getConfigForEpisode(episode);
+                //if (existing != null && existing.values() != null && existing.values().size() != 0) {
+                    //ContentValues configEpisode = existing.values();
+                    //isPaidEpi = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
+                //}
+            //}
+        //}
         //#ENDIF
         return isPaidEpi;
     }
@@ -815,13 +815,13 @@ public class BaseActivity extends AppCompatActivity {
                 // for performance reasons, I have included a prebuilt-sqlite database
 
                 //#IFDEF 'PAID'
-                //String error_db_ok = copyFileFromAssets("paid/" + DB_NAME, DB_NAME);
-                //String error_jr_ok = copyFileFromAssets("paid/" + DB_NAME + "-journal", DB_NAME + "-journal");
+                String error_db_ok = copyFileFromAssets("paid/" + DB_NAME, DB_NAME);
+                String error_jr_ok = copyFileFromAssets("paid/" + DB_NAME + "-journal", DB_NAME + "-journal");
                 //#ENDIF
 
                 //#IFDEF 'TRIAL'
-                String error_db_ok = copyFileFromAssets("trial/" + DB_NAME, DB_NAME);
-                String error_jr_ok = copyFileFromAssets("trial/" + DB_NAME + "-journal", DB_NAME + "-journal");
+                //String error_db_ok = copyFileFromAssets("trial/" + DB_NAME, DB_NAME);
+                //String error_jr_ok = copyFileFromAssets("trial/" + DB_NAME + "-journal", DB_NAME + "-journal");
                 //#ENDIF
 
                 if (error_db_ok != null || error_jr_ok != null) {
@@ -1116,15 +1116,15 @@ public class BaseActivity extends AppCompatActivity {
                 LogHelper.v(TAG, "===> Firebase configurationJSON="+configurationJSON);
 
                 //#IFDEF 'PAID'
-                //boolean paidVersion = true;
-                //boolean purchaseAccess = true;
-                //boolean purchaseNoads = true;
+                boolean paidVersion = true;
+                boolean purchaseAccess = true;
+                boolean purchaseNoads = true;
                 //#ENDIF
 
                 //#IFDEF 'TRIAL'
-                boolean paidVersion = false;
-                boolean purchaseAccess = false;
-                boolean purchaseNoads = false;
+                //boolean paidVersion = false;
+                //boolean purchaseAccess = false;
+                //boolean purchaseNoads = false;
                 //#ENDIF
 
                 mConfiguration = new ConfigurationContentValues();
@@ -1170,7 +1170,7 @@ public class BaseActivity extends AppCompatActivity {
         boolean updateWidget = true;
 
         //#IFDEF 'TRIAL'
-        updateWidget = (listenCount < AutoplayActivity.MAX_TRIAL_EPISODES);
+        //updateWidget = (listenCount < AutoplayActivity.MAX_TRIAL_EPISODES);
         //#ENDIF
 
         LogHelper.v(TAG, "--> checkUpdateWidget: listenCount="+listenCount+", updateWidget="+updateWidget);
@@ -1207,17 +1207,17 @@ public class BaseActivity extends AppCompatActivity {
                 mConfiguration.putFieldDeviceId(getAdvertId());
 
                 //#IFDEF 'PAID'
-                //mConfiguration.putFieldAuthenticated(true);
-                //mConfiguration.putFieldPurchaseAccess(true);
-                //mConfiguration.putFieldPurchaseNoads(true);
-                //RadioTheaterWidgetService.setPaidVersion(this, true);
+                mConfiguration.putFieldAuthenticated(true);
+                mConfiguration.putFieldPurchaseAccess(true);
+                mConfiguration.putFieldPurchaseNoads(true);
+                RadioTheaterWidgetService.setPaidVersion(this, true);
                 //#ENDIF
 
                 //#IFDEF 'TRIAL'
-                mConfiguration.putFieldAuthenticated(getEmail() != null);
-                mConfiguration.putFieldPurchaseAccess(false);
-                mConfiguration.putFieldPurchaseNoads(false);
-                RadioTheaterWidgetService.setPaidVersion(this, false);
+                //mConfiguration.putFieldAuthenticated(getEmail() != null);
+                //mConfiguration.putFieldPurchaseAccess(false);
+                //mConfiguration.putFieldPurchaseNoads(false);
+                //RadioTheaterWidgetService.setPaidVersion(this, false);
                 //#ENDIF
 
                 mConfiguration.putFieldTotalListenCount(0);
@@ -1267,13 +1267,13 @@ public class BaseActivity extends AppCompatActivity {
         Long firebase_listen_count = Long.valueOf(0);
 
         //#IFDEF 'PAID'
-        //paidVersion = true;
-        //purchaseAccess = true;
-        //purchaseNoads = true;
-        //firebasePaidVersion = true;
-        //firebasePurchaseAccess = true;
-        //firebasePurchaseNoads = true;
-        //RadioTheaterWidgetService.setPaidVersion(this, true);
+        paidVersion = true;
+        purchaseAccess = true;
+        purchaseNoads = true;
+        firebasePaidVersion = true;
+        firebasePurchaseAccess = true;
+        firebasePurchaseNoads = true;
+        RadioTheaterWidgetService.setPaidVersion(this, true);
         //#ENDIF
 
         try {
@@ -1294,42 +1294,42 @@ public class BaseActivity extends AppCompatActivity {
 
         //--------------------------------------------------------------------------------
         //#IFDEF 'TRIAL'
-        try {
-            paidVersion = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
-            if (!paidVersion && firebaseConfiguration != null) {
-                firebasePaidVersion = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
-                if (firebasePaidVersion != null) {
-                    paidVersion = firebasePaidVersion;
-                }
-            }
-        }
-        catch (Exception e) {
-            LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PAID_VERSION, e="+e.getMessage());
-        }
-        try {
-            purchaseAccess = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
-            if (!purchaseAccess && firebaseConfiguration != null) {
-                firebasePurchaseAccess = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
-                if (firebasePurchaseAccess != null) {
-                    purchaseAccess = firebasePurchaseAccess;
-                }
-            }
-        }
-        catch (Exception e) {
-            LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PURCHASE_ACCESS, e="+e.getMessage());
-        }
-        try {
-            purchaseNoads = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
-            if (!purchaseNoads && firebaseConfiguration != null) {
-                firebasePurchaseNoads = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
-                if (firebasePurchaseNoads != null) {
-                    purchaseNoads = firebasePurchaseNoads;
-                }
-            }
-        }
-        catch (Exception e) {
-            LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PURCHASE_NOADS, e="+e.getMessage());
-        }
+        //try {
+            //paidVersion = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
+            //if (!paidVersion && firebaseConfiguration != null) {
+                //firebasePaidVersion = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
+                //if (firebasePaidVersion != null) {
+                    //paidVersion = firebasePaidVersion;
+                //}
+            //}
+        //}
+        //catch (Exception e) {
+            //LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PAID_VERSION, e="+e.getMessage());
+        //}
+        //try {
+            //purchaseAccess = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
+            //if (!purchaseAccess && firebaseConfiguration != null) {
+                //firebasePurchaseAccess = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
+                //if (firebasePurchaseAccess != null) {
+                    //purchaseAccess = firebasePurchaseAccess;
+                //}
+            //}
+        //}
+        //catch (Exception e) {
+            //LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PURCHASE_ACCESS, e="+e.getMessage());
+        //}
+        //try {
+            //purchaseNoads = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
+            //if (!purchaseNoads && firebaseConfiguration != null) {
+                //firebasePurchaseNoads = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
+                //if (firebasePurchaseNoads != null) {
+                    //purchaseNoads = firebasePurchaseNoads;
+                //}
+            //}
+        //}
+        //catch (Exception e) {
+            //LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PURCHASE_NOADS, e="+e.getMessage());
+        //}
         //#ENDIF
         //--------------------------------------------------------------------------------
 
@@ -1394,8 +1394,8 @@ public class BaseActivity extends AppCompatActivity {
         }
 
         //#IFDEF 'TRIAL'
-        boolean trialMode = (paidVersion != null && paidVersion) || (purchaseAccess != null && purchaseAccess) || isTrial();
-        RadioTheaterWidgetService.setPaidVersion(this, trialMode);
+        //boolean trialMode = (paidVersion != null && paidVersion) || (purchaseAccess != null && purchaseAccess) || isTrial();
+        //RadioTheaterWidgetService.setPaidVersion(this, trialMode);
         //#ENDIF
 
         return dirty;
@@ -1419,15 +1419,15 @@ public class BaseActivity extends AppCompatActivity {
         }
 
         //#IFDEF 'PAID'
-        //Boolean paid_version = true;
-        //Boolean purchase_access = true;
-        //Boolean purchase_noads = true;
+        Boolean paid_version = true;
+        Boolean purchase_access = true;
+        Boolean purchase_noads = true;
         //#ENDIF
 
         //#IFDEF 'TRIAL'
-        Boolean paid_version = configurationValues.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
-        Boolean purchase_access = configurationValues.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
-        Boolean purchase_noads = configurationValues.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
+        //Boolean paid_version = configurationValues.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
+        //Boolean purchase_access = configurationValues.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
+        //Boolean purchase_noads = configurationValues.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
         //#ENDIF
 
         FirebaseConfiguration firebaseConfiguration = new FirebaseConfiguration(
@@ -1455,13 +1455,13 @@ public class BaseActivity extends AppCompatActivity {
         Long    episode_count = configEntryValues.getAsLong(ConfigEpisodesColumns.FIELD_LISTEN_COUNT);
 
         //#IFDEF 'PAID'
-        //Boolean purchased_access = true;
-        //Boolean purchased_noads = true;
+        Boolean purchased_access = true;
+        Boolean purchased_noads = true;
         //#ENDIF
 
         //#IFDEF 'TRIAL'
-        Boolean purchased_access = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_PURCHASED_ACCESS);
-        Boolean purchased_noads = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_PURCHASED_NOADS);
+        //Boolean purchased_access = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_PURCHASED_ACCESS);
+        //Boolean purchased_noads = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_PURCHASED_NOADS);
         //#ENDIF
 
         FirebaseConfigEpisode firebaseConfigEpisode = new FirebaseConfigEpisode(
@@ -1707,10 +1707,11 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     public static boolean isTrial() {
-        //#IFDEF 'PAID'
-        //return true;
+        boolean trial = true;
+        //#IFDEF 'TRIAL'
+        trial = (sAllListenCount < MAX_TRIAL_EPISODES);
         //#ENDIF
-        return (sAllListenCount < MAX_TRIAL_EPISODES);
+        return trial;
     }
 
     public static boolean isPurchased() {
@@ -2005,11 +2006,11 @@ public class BaseActivity extends AppCompatActivity {
             bundle.putString("episode", episodeIndex);
 
             //#IFDEF 'PAID'
-            //bundle.putString("user_action", "PAID: "+comment);
+            bundle.putString("user_action", "PAID: "+comment);
             //#ENDIF
 
             //#IFDEF 'TRIAL'
-            bundle.putString("user_action", "TRIAL: "+comment);
+            //bundle.putString("user_action", "TRIAL: "+comment);
             //#ENDIF
 
             bundle.putLong("listen_duration", duration);
@@ -2027,11 +2028,11 @@ public class BaseActivity extends AppCompatActivity {
             bundle.putString(FirebaseAnalytics.Param.ORIGIN, email);
 
             //#IFDEF 'PAID'
-            //bundle.putString("user_action", "PAID: "+comment);
+            bundle.putString("user_action", "PAID: "+comment);
             //#ENDIF
 
             //#IFDEF 'TRIAL'
-            bundle.putString("user_action", "TRIAL: "+comment);
+            //bundle.putString("user_action", "TRIAL: "+comment);
             //#ENDIF
 
             mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
