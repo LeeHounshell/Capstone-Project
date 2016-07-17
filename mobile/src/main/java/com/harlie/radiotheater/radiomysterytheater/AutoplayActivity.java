@@ -702,7 +702,7 @@ public class AutoplayActivity extends BaseActivity {
             }
             showExpectedControls("updateCircularSeekbar (playing)");
             if (getCircularSeekBar() != null && !getCircularSeekBar().isProcessingTouchEvents()) {
-                verifyPaidVersion(false);
+                // FIXME: performance issue: verifyPaidVersion(false);
                 LoadingAsyncTask.mDoneLoading = true;
                 // we need to determine the current bar location and update the display
                 mCurrentPosition = (long) LocalPlayback.getCurrentPosition();

@@ -102,6 +102,19 @@ public class PlaybackManager implements Playback.Callback {
     }
 
     /**
+     * Handle a request to seek to a specified position and continue playback
+     */
+    public void handleSeekRequest(int position) {
+        LogHelper.v(TAG, "handleSeekRequest: position=" + position);
+        mPlayback.seekTo(position);
+        LogHelper.v(TAG, "handleSeekRequest: need to resume playback");
+        MediaSessionCompat.QueueItem currentMusic = getQueueManager().getCurrentMusic();
+        if (currentMusic != null) {
+            mPlayback.play(currentMusic);
+        }
+    }
+
+    /**
      * Handle a request to stop music
      *
      * @param withError Error message in case the stop has an unexpected cause. The error
@@ -121,7 +134,7 @@ public class PlaybackManager implements Playback.Callback {
      * @param error if not null, error message to present to the user.
      */
     public void updatePlaybackState(String error) {
-        LogHelper.v(TAG, "updatePlaybackState, playback state=" + mPlayback.getState());
+        LogHelper.v(TAG, "updatePlaybackState, playback state=" + mPlayback.getState()+", error="+error);
         long position = PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN;
         if (mPlayback != null && mPlayback.isConnected()) {
             position = mPlayback.getCurrentStreamPosition();

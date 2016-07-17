@@ -135,7 +135,8 @@ public class LocalPlayback
 
     @Override
     protected void finalize() throws Throwable {
-        theLocalPlayback = null;
+        LogHelper.v(TAG, "finalize");
+        //theLocalPlayback = null;
         super.finalize();
     }
 
@@ -193,19 +194,19 @@ public class LocalPlayback
 
     @Override
     public int getCurrentStreamPosition() {
-        LogHelper.v(TAG, "getCurrentStreamPosition");
         if (mMediaPlayer != null) {
             sCurrentPosition = mMediaPlayer.getCurrentPosition();
         }
+        LogHelper.v(TAG, "getCurrentStreamPosition: "+sCurrentPosition);
         return sCurrentPosition;
     }
 
     //-------- RADIO THEATER --------
     public static int getCurrentPosition() {
-        LogHelper.v(TAG, "getCurrentPosition");
         if (theLocalPlayback != null) {
             sCurrentPosition = theLocalPlayback.getCurrentStreamPosition();
         }
+        LogHelper.v(TAG, "getCurrentPosition: "+sCurrentPosition);
         return sCurrentPosition;
     }
 

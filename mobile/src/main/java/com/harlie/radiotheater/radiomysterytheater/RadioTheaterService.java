@@ -122,6 +122,11 @@ public class RadioTheaterService
     public static final String CMD_PAUSE = "CMD_PAUSE";
 
     // A value of a CMD_NAME key in the extras of the incoming Intent that
+    // indicates that the music playback should be paused (see {@link #onStartCommand})
+    public static final String CMD_SEEK = "CMD_SEEK";
+    public static final String CMD_SEEK_POSITION = "CMD_SEEK_POSITION";
+
+    // A value of a CMD_NAME key in the extras of the incoming Intent that
     // indicates that the music playback should be stopped (see {@link #onStartCommand})
     public static final String CMD_STOP = "CMD_STOP";
 
@@ -296,6 +301,10 @@ public class RadioTheaterService
                 }
                 else if (CMD_PAUSE.equals(command)) {
                     mPlaybackManager.handlePauseRequest();
+                }
+                else if (CMD_SEEK.equals(command)) {
+                    Integer position = startIntent.getIntExtra(CMD_SEEK_POSITION, 0);
+                    mPlaybackManager.handleSeekRequest(position);
                 }
                 else if (CMD_STOP.equals(command)) {
                     mPlaybackManager.handleStopRequest(null);

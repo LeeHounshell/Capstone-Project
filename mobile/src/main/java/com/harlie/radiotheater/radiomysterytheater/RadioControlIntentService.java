@@ -533,8 +533,13 @@ public class RadioControlIntentService extends IntentService {
      * parameters. Seek playback to the specified position.
      */
     private void handleActionSeek(String episode, String position) {
+        Context context = this.getBaseContext();
         LogHelper.v(TAG, "---> handleActionSeek: episode="+episode+", position="+position);
-        // FIXME: need to seek to the position
+        Intent radioServiceCommandIntent = new Intent(context, RadioTheaterService.class);
+        radioServiceCommandIntent.setAction(RadioTheaterService.ACTION_CMD);
+        radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_SEEK);
+        radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_SEEK_POSITION, Integer.valueOf(position));
+        context.startService(radioServiceCommandIntent);
     }
 
     /**
