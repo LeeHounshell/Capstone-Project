@@ -54,9 +54,11 @@ import com.google.firebase.database.ValueEventListener;
 import com.harlie.radiotheater.radiomysterytheater.data.RadioTheaterHelper;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesContentValues;
+import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationContentValues;
 import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationCursor;
+import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadingAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.SQLiteHelper;
@@ -853,6 +855,40 @@ public class BaseActivity extends AppCompatActivity {
         // this will create a new SQLite database using Firebase source JSON
         // a circle progress view progresses as the database loads - takes a few minutes to run tho
         runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state
+    }
+
+    public static boolean getEpisodeData(ConfigEpisodesCursor configCursor) {
+        LogHelper.v(TAG, "getEpisodeData");
+        boolean foundEpisode = false;
+        if (configCursor != null && configCursor.moveToNext()) {
+            // found the next episode to listen to
+            sEpisodeNumber = configCursor.getFieldEpisodeNumber();
+            sPurchased = configCursor.getFieldPurchasedAccess();
+            sNoAdsForShow = configCursor.getFieldPurchasedNoads();
+            sDownloaded = configCursor.getFieldEpisodeDownloaded();
+            sEpisodeHeard = configCursor.getFieldEpisodeHeard();
+            configCursor.close();
+            foundEpisode = getEpisodeInfoFor(sEpisodeNumber);
+        }
+        return foundEpisode;
+    }
+
+    public static boolean getEpisodeInfoFor(long episodeId) {
+        LogHelper.v(TAG, "getEpisodeInfoFor: "+episodeId);
+        // get this episode's detail info
+        boolean foundEpisode = false;
+        EpisodesCursor episodesCursor = SQLiteHelper.getEpisodesCursor(episodeId);
+        if (episodesCursor != null && episodesCursor.moveToNext()) {
+            sEpisodeNumber = episodesCursor.getFieldEpisodeNumber();
+            sAirdate = episodesCursor.getFieldAirdate();
+            sEpisodeTitle = episodesCursor.getFieldEpisodeTitle();
+            sEpisodeDescription = episodesCursor.getFieldEpisodeDescription();
+            sEpisodeWeblinkUrl = Uri.parse(episodesCursor.getFieldWeblinkUrl()).getEncodedPath();
+            sEpisodeDownloadUrl = Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString();
+            episodesCursor.close();
+            foundEpisode = true;
+        }
+        return foundEpisode;
     }
 
     protected void startProgressViewSpinning() {

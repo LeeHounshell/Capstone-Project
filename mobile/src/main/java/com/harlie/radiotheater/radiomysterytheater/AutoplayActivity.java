@@ -503,9 +503,11 @@ public class AutoplayActivity extends BaseActivity {
         super.onRestoreInstanceState(savedInstanceState);
     }
 
+    // UPDATE THE CIRCULAR SEEK BAR
     private final Runnable mUpdateProgressTask = new Runnable() {
         @Override
         public void run() {
+            LogHelper.v(TAG, "...mUpdateProgressTask...");
             int lastPlaybackState = LocalPlayback.getCurrentState();
             if (PlaybackStateCompat.STATE_PLAYING == lastPlaybackState) {
                 if (getExpectedPlayState() == 1) {
@@ -616,40 +618,6 @@ public class AutoplayActivity extends BaseActivity {
         alertDialog.show();
     }
 
-    public static boolean getEpisodeData(ConfigEpisodesCursor configCursor) {
-        LogHelper.v(TAG, "getEpisodeData");
-        boolean foundEpisode = false;
-        if (configCursor != null && configCursor.moveToNext()) {
-            // found the next episode to listen to
-            sEpisodeNumber = configCursor.getFieldEpisodeNumber();
-            sPurchased = configCursor.getFieldPurchasedAccess();
-            sNoAdsForShow = configCursor.getFieldPurchasedNoads();
-            sDownloaded = configCursor.getFieldEpisodeDownloaded();
-            sEpisodeHeard = configCursor.getFieldEpisodeHeard();
-            configCursor.close();
-            foundEpisode = getEpisodeInfoFor(sEpisodeNumber);
-        }
-        return foundEpisode;
-    }
-
-    public static boolean getEpisodeInfoFor(long episodeId) {
-        LogHelper.v(TAG, "getEpisodeInfoFor: "+episodeId);
-        // get this episode's detail info
-        boolean foundEpisode = false;
-        EpisodesCursor episodesCursor = SQLiteHelper.getEpisodesCursor(episodeId);
-        if (episodesCursor != null && episodesCursor.moveToNext()) {
-            sEpisodeNumber = episodesCursor.getFieldEpisodeNumber();
-            sAirdate = episodesCursor.getFieldAirdate();
-            sEpisodeTitle = episodesCursor.getFieldEpisodeTitle();
-            sEpisodeDescription = episodesCursor.getFieldEpisodeDescription();
-            sEpisodeWeblinkUrl = Uri.parse(episodesCursor.getFieldWeblinkUrl()).getEncodedPath();
-            sEpisodeDownloadUrl = Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString();
-            episodesCursor.close();
-            foundEpisode = true;
-        }
-        return foundEpisode;
-    }
-
     protected void displayScrollingText() {
         if (isLoadedOK()) {
             getHandler().post(new Runnable() {
@@ -734,6 +702,7 @@ public class AutoplayActivity extends BaseActivity {
                     new Runnable() {
                         @Override
                         public void run() {
+                            LogHelper.v(TAG, "...update the seekbar...");
                             sSeekUpdateRunning = true;
                             getHandler().post(mUpdateProgressTask);
                         }
@@ -995,7 +964,8 @@ public class AutoplayActivity extends BaseActivity {
         boolean visible = false;
         if (sWaitForMedia) {
             //LogHelper.v(TAG, "showExpectedControls: sWaitForMedia");
-            showPleaseWaitButton(playbackState);
+            Drawable autoplayDisabledButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_autoplay_disabled_button_selector, null);
+            getAutoPlay().setBackground(autoplayDisabledButton);
         } else {
             //LogHelper.w(TAG, "showExpectedControls: log="+log+", playbackState="+playbackState);
             switch (playbackState) {
@@ -1063,7 +1033,7 @@ public class AutoplayActivity extends BaseActivity {
         }
         getAutoPlay().invalidate(); // fixes a draw bug in Android
 
-        if (visible) {
+        if (visible && mCurrentPosition > 0) {
             getHandler().postDelayed(new Runnable() {
                 @Override
                 public void run() {

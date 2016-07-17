@@ -33,6 +33,7 @@ public class RadioControlIntentService extends IntentService {
         return sLastRequest;
     }
 
+    private static volatile boolean sAlreadyStarted = false;
     private static volatile int sLastRequest = 0;
     private static volatile long sLastRequestTime = 0;
 
@@ -80,8 +81,6 @@ public class RadioControlIntentService extends IntentService {
     // control parameters
     private static final String EXTRA_EPISODE = "com.harlie.radiotheater.radiomysterytheater.extra.EPISODE";
     private static final String EXTRA_PARAM2 = "com.harlie.radiotheater.radiomysterytheater.extra.PARAM2";
-
-    private static final long MIN_REQUEST_WAIT_TIME = 1234;
 
     public RadioControlIntentService() {
         super("RadioControlIntentService");
@@ -330,14 +329,20 @@ public class RadioControlIntentService extends IntentService {
      * @see IntentService
      */
     public static void startActionStart(Context context, String from, String episode, String param2) {
-        sLastRequest = 0;
-        sLastRequestTime = System.currentTimeMillis();
-        LogHelper.v(TAG, "startActionStart: from="+from+", episode="+episode);
-        Intent intent = new Intent(context, RadioControlIntentService.class);
-        intent.setAction(ACTION_START);
-        intent.putExtra(EXTRA_EPISODE, episode);
-        intent.putExtra(EXTRA_PARAM2, "hello, world!");
-        context.startService(intent);
+        if (! sAlreadyStarted) {
+            sAlreadyStarted = true;
+            sLastRequest = 0;
+            sLastRequestTime = System.currentTimeMillis();
+            LogHelper.v(TAG, "startActionStart: from=" + from + ", episode=" + episode);
+            Intent intent = new Intent(context, RadioControlIntentService.class);
+            intent.setAction(ACTION_START);
+            intent.putExtra(EXTRA_EPISODE, episode);
+            intent.putExtra(EXTRA_PARAM2, "hello, world!");
+            context.startService(intent);
+        }
+        else {
+            LogHelper.v(TAG, "*** startActionStart *** - ALREADY!");
+        }
     }
 
     /**
@@ -347,15 +352,8 @@ public class RadioControlIntentService extends IntentService {
      * @see IntentService
      */
     public static void startActionPlay(Context context, String from, String episode, String param2) {
-        LocalPlayback.setPlaybackEnabled(true);
-        if (sLastRequest == 1) {
-            long now = System.currentTimeMillis();
-            if ((now - sLastRequest) < MIN_REQUEST_WAIT_TIME) {
-                LogHelper.w(TAG, "startActonPlay: REPEAT IGNORED - ((now - sLastRequest) < MIN_REQUEST_WAIT_TIME)");
-                return;
-            }
-        }
         LogHelper.v(TAG, "startActionPlay: from="+from+", episode="+episode);
+        LocalPlayback.setPlaybackEnabled(true);
         sLastRequest = 1;
         sLastRequestTime = System.currentTimeMillis();
         Intent intent = new Intent(context, RadioControlIntentService.class);
@@ -373,21 +371,19 @@ public class RadioControlIntentService extends IntentService {
      */
     public static void startActionPause(Context context, String from, String episode, String param2) {
         LocalPlayback.setPlaybackEnabled(false);
-        if (sLastRequest == 2) {
-            long now = System.currentTimeMillis();
-            if ((now - sLastRequest) < MIN_REQUEST_WAIT_TIME) {
-                LogHelper.w(TAG, "startActonPause: REPEAT IGNORED - ((now - sLastRequest) < MIN_REQUEST_WAIT_TIME)");
-                return;
-            }
+        if (LocalPlayback.getCurrentState() == PlaybackStateCompat.STATE_PLAYING) {
+            LogHelper.v(TAG, "startActionPause: from=" + from + ", episode=" + episode);
+            sLastRequest = 2;
+            sLastRequestTime = System.currentTimeMillis();
+            Intent intent = new Intent(context, RadioControlIntentService.class);
+            intent.setAction(ACTION_PAUSE);
+            intent.putExtra(EXTRA_EPISODE, episode);
+            intent.putExtra(EXTRA_PARAM2, param2);
+            context.startService(intent);
         }
-        LogHelper.v(TAG, "startActionPause: from="+from+", episode="+episode);
-        sLastRequest = 2;
-        sLastRequestTime = System.currentTimeMillis();
-        Intent intent = new Intent(context, RadioControlIntentService.class);
-        intent.setAction(ACTION_PAUSE);
-        intent.putExtra(EXTRA_EPISODE, episode);
-        intent.putExtra(EXTRA_PARAM2, param2);
-        context.startService(intent);
+        else {
+            LogHelper.v(TAG, "*** ignored startActionPause (not playing) ***");
+        }
     }
 
     /**
@@ -432,14 +428,19 @@ public class RadioControlIntentService extends IntentService {
      */
     public static void startActionStop(Context context, String from, String episode, String param2) {
         LocalPlayback.setPlaybackEnabled(false);
-        sLastRequest = 5;
-        sLastRequestTime = System.currentTimeMillis();
-        LogHelper.v(TAG, "startActionStop: from="+from+", episode="+episode);
-        Intent intent = new Intent(context, RadioControlIntentService.class);
-        intent.setAction(ACTION_STOP);
-        intent.putExtra(EXTRA_EPISODE, episode);
-        intent.putExtra(EXTRA_PARAM2, param2);
-        context.startService(intent);
+        if (LocalPlayback.getCurrentState() == PlaybackStateCompat.STATE_PLAYING) {
+            sLastRequest = 5;
+            sLastRequestTime = System.currentTimeMillis();
+            LogHelper.v(TAG, "startActionStop: from=" + from + ", episode=" + episode);
+            Intent intent = new Intent(context, RadioControlIntentService.class);
+            intent.setAction(ACTION_STOP);
+            intent.putExtra(EXTRA_EPISODE, episode);
+            intent.putExtra(EXTRA_PARAM2, param2);
+            context.startService(intent);
+        }
+        else {
+            LogHelper.v(TAG, "*** ignored startActionStop (not playing) ***");
+        }
     }
 
     /**

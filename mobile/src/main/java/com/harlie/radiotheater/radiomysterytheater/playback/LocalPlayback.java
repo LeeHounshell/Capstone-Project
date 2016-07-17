@@ -33,7 +33,9 @@ import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
 
+import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
 import com.harlie.radiotheater.radiomysterytheater.R;
+import com.harlie.radiotheater.radiomysterytheater.RadioControlIntentService;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterService;
 import com.harlie.radiotheater.radiomysterytheater.model.MusicProvider;
@@ -277,6 +279,7 @@ public class LocalPlayback
     //-------- RADIO THEATER --------
     @Override
     public void play(QueueItem item) {
+        sPlaybackRequested = true;
         if (! sPlaybackEnabled
                 || getCurrentState() == PlaybackStateCompat.STATE_PLAYING
                 || getCurrentState() == PlaybackStateCompat.STATE_BUFFERING)
@@ -287,7 +290,6 @@ public class LocalPlayback
             return;
         }
         LogHelper.v(TAG, "play ---> *** RADIO MYSTERY THEATER: PLAY EPISODE - " + item.getDescription().getTitle() + ", mediaId=" + item.getDescription().getMediaId());
-        sPlaybackRequested = true;
         mPlayOnFocusGain = true;
         tryToGetAudioFocus();
         registerAudioNoisyReceiver();
@@ -651,6 +653,13 @@ public class LocalPlayback
         }
         if (mCallback != null) {
             mCallback.onError("MediaPlayer error " + what + " (" + extra + ")");
+        }
+        if (what == -38) {
+            LogHelper.v(TAG, "*** MEDIA PLAYER NEEDS RESET - ERROR=-38 ***");
+            Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+            stop(true);
+            relaxResources(true);
+            RadioControlIntentService.startActionStop(context, "ERROR", String.valueOf(BaseActivity.getEpisodeNumber()), BaseActivity.getEpisodeDownloadUrl());
         }
         return true; // true indicates we handled the error
     }

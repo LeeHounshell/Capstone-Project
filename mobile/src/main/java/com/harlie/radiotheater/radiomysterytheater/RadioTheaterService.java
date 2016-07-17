@@ -301,10 +301,12 @@ public class RadioTheaterService
                     mPlaybackManager.handleStopRequest(null);
                 }
                 else if (CMD_NEXT.equals(command)) {
-                    // FIXME
+                    // FIXME: CMD_NEXT
+                    LogHelper.v(TAG, "FIXME: CMD_NEXT");
                 }
                 else if (CMD_PREV.equals(command)) {
-                    // FIXME
+                    // FIXME: CMD_PREV
+                    LogHelper.v(TAG, "FIXME: CMD_PREV");
                 }
                 else if (CMD_STOP_CASTING.equals(command)) {
                     VideoCastManager.getInstance().disconnect();

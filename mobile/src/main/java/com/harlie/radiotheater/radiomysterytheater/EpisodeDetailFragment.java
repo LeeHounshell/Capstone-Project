@@ -83,6 +83,9 @@ public class EpisodeDetailFragment extends FragmentBase {
             LogHelper.v(TAG, "onCreate: build EpisodeRecyclerViewItem for (RECEIVE) ARG_EPISODE_ID="+ mEpisodeId);
             mItem = getArguments().getParcelable(ARG_EPISODE_PARCELABLE);
 
+            // need the download URL too
+            baseActivity.getEpisodeInfoFor(mEpisodeId);
+
             // Load the actors for this episode
             ActorsEpisodesCursor actorsEpisodesCursor = SQLiteHelper.getActorsEpisodesCursor(mEpisodeId);
             int actorNumber = 0;
@@ -208,6 +211,7 @@ public class EpisodeDetailFragment extends FragmentBase {
                     mPlayNow.setEnabled(false);
                     mPlayNow.setBackground(pleaseWaitButton);
                     //mp.start();
+                    RadioControlIntentService.startActionStop(baseActivity, "DETAIL", String.valueOf(baseActivity.getEpisodeNumber()), baseActivity.getEpisodeDownloadUrl());
                     Intent autoplayIntent = new Intent(baseActivity, AutoplayActivity.class);
                     // setup a shared-element transition..
                     LogHelper.v(TAG, "onClick - PLAY NOW - using shared element transition");
