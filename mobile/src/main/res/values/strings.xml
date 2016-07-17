@@ -87,6 +87,7 @@
 
     // Autoplay BROADCAST messages
     <string name="initialization">Radio-Mystery-Theater:</string>
+    <string name="update_buttons">buttons.</string>
     <string name="metadata_loaded">loaded.</string>
     <string name="request_play">request:</string>
     <string name="duration">duration:</string>

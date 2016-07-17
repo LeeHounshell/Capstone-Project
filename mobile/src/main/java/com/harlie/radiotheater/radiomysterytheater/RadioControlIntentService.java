@@ -81,7 +81,7 @@ public class RadioControlIntentService extends IntentService {
     private static final String EXTRA_EPISODE = "com.harlie.radiotheater.radiomysterytheater.extra.EPISODE";
     private static final String EXTRA_PARAM2 = "com.harlie.radiotheater.radiomysterytheater.extra.PARAM2";
 
-    private static final long MIN_REQUEST_WAIT_TIME = 6000;
+    private static final long MIN_REQUEST_WAIT_TIME = 1234;
 
     public RadioControlIntentService() {
         super("RadioControlIntentService");
@@ -375,8 +375,8 @@ public class RadioControlIntentService extends IntentService {
         LocalPlayback.setPlaybackEnabled(false);
         if (sLastRequest == 2) {
             long now = System.currentTimeMillis();
-            if ((now - sLastRequest) < (MIN_REQUEST_WAIT_TIME / 3)) {
-                LogHelper.w(TAG, "startActonPause: REPEAT IGNORED - ((now - sLastRequest) < (MIN_REQUEST_WAIT_TIME / 3))");
+            if ((now - sLastRequest) < MIN_REQUEST_WAIT_TIME) {
+                LogHelper.w(TAG, "startActonPause: REPEAT IGNORED - ((now - sLastRequest) < MIN_REQUEST_WAIT_TIME)");
                 return;
             }
         }

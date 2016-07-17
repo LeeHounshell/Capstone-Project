@@ -66,7 +66,7 @@ import static com.harlie.radiotheater.radiomysterytheater.AutoplayActivity.Butto
 public class AutoplayActivity extends BaseActivity {
     private final static String TAG = "LEE: <" + AutoplayActivity.class.getSimpleName() + ">";
 
-    private static final int DELAY_BEFORE_NEXT_CLICK_ALLOWED = 3000;
+    private static final int DELAY_BEFORE_NEXT_CLICK_ALLOWED = 1000;
 
     public enum ButtonState {
         PLAY, PLEASE_WAIT, PAUSE
@@ -817,12 +817,13 @@ public class AutoplayActivity extends BaseActivity {
                     return;
                 }
 
-                final String KEY_LOAD_FAIL = getResources().getString(R.string.error_no_metadata);
                 final String KEY_LOAD_OK = getResources().getString(R.string.metadata_loaded);
+                final String KEY_LOAD_FAIL = getResources().getString(R.string.error_no_metadata);
+                final String KEY_UPDATE_BUTTONS = getResources().getString(R.string.update_buttons);
                 final String KEY_DURATION = getResources().getString(R.string.duration);
-                final String KEY_NOPLAY = getResources().getString(R.string.noplay);
                 final String KEY_REQUEST = getResources().getString(R.string.request_play);
                 final String KEY_PLAY = getResources().getString(R.string.play);
+                final String KEY_NOPLAY = getResources().getString(R.string.noplay);
                 final String KEY_COMPLETION = getResources().getString(R.string.complete);
 
                 if (message.equals(KEY_LOAD_OK)) {
@@ -850,6 +851,16 @@ public class AutoplayActivity extends BaseActivity {
                             LogHelper.v(TAG, "*** RECEIVED BROADCAST: LOAD_FAIL");
                             sAutoplayNextNow = false;
                             problemLoadingMetadata();
+                        }
+                    });
+                }
+                else if (message.equals(KEY_UPDATE_BUTTONS)) {
+                    LogHelper.v(TAG, KEY_UPDATE_BUTTONS);
+                    getHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            LogHelper.v(TAG, "*** RECEIVED BROADCAST: UPDATE_BUTTONS");
+                            showExpectedControls("UPDATE_BUTTONS");
                         }
                     });
                 }

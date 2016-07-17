@@ -15,6 +15,8 @@ import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.RadioTheaterWidgetProvider;
 
+import static com.harlie.radiotheater.radiomysterytheater.R.string.initialization;
+
 // from: http://www.vogella.com/tutorials/AndroidWidgets/article.html
 public class RadioTheaterWidgetService extends Service {
     private final static String TAG = "LEE: <" + RadioTheaterWidgetService.class.getSimpleName() + ">";
@@ -41,8 +43,12 @@ public class RadioTheaterWidgetService extends Service {
         //mp.start();
 
         if (intent.getBooleanExtra("BUTTON_PRESS", false) == false) {
-            LogHelper.v(TAG, "handleCommand: IGNORE (visual update only)");
+            LogHelper.v(TAG, "handleCommand: *** VISUAL BUTTON UPDATE ONLY ***");
             setGotWidgetButtonPress(false);
+            String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
+            String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.update_buttons);
+            Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
+            RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
         }
         else {
             LogHelper.v(TAG, "handleCommand: GOT WIDGET BUTTON PRESS!");
