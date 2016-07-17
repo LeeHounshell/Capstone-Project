@@ -134,14 +134,14 @@ public interface Playback {
          */
         void setCurrentMediaId(String mediaId);
 
-        public void switchToPlayback(Playback playback, boolean resumePlaying);
+        void switchToPlayback(Playback playback, boolean resumePlaying);
 
         //-------- RADIO THEATER SERVICE API --------
-        public Playback getPlayback();
-        public void handlePlayRequest();
-        public void handlePauseRequest();
-        public void handleSeekRequest(int position);
-        public void handleStopRequest(String withError);
+        Playback getPlayback();
+        void handlePlayRequest();
+        void handlePauseRequest();
+        void handleSeekRequest(int position);
+        void handleStopRequest(String withError);
     }
 
     /**
