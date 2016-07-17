@@ -508,31 +508,7 @@ public class AutoplayActivity extends BaseActivity {
     private final Runnable mUpdateProgressTask = new Runnable() {
         @Override
         public void run() {
-            LogHelper.v(TAG, "...mUpdateProgressTask...");
-            int lastPlaybackState = LocalPlayback.getCurrentState();
-            if (PlaybackStateCompat.STATE_PLAYING == lastPlaybackState) {
-                if (getExpectedPlayState() == 1) {
-                    sWaitForMedia = false;
-                }
-                showExpectedControls("mUpdateProgressTask");
-                if (getCircularSeekBar() != null && !getCircularSeekBar().isProcessingTouchEvents()) {
-                    verifyPaidVersion(false);
-                    LoadingAsyncTask.mDoneLoading = true;
-                    // we need to determine the current bar location and update the display
-                    mCurrentPosition = (long) LocalPlayback.getCurrentPosition();
-                    getCircularSeekBar().setProgress((int) mCurrentPosition);
-                }
-            }
-            else if (
-                        PlaybackStateCompat.STATE_PAUSED == lastPlaybackState ||
-                        PlaybackStateCompat.STATE_STOPPED == lastPlaybackState
-                    )
-            {
-                if (getExpectedPlayState() == 3) {
-                    sWaitForMedia = false;
-                }
-                showExpectedControls("mUpdateProgressTask");
-            }
+            updateCircularSeekbar();
         }
     };
 
@@ -703,12 +679,43 @@ public class AutoplayActivity extends BaseActivity {
                     new Runnable() {
                         @Override
                         public void run() {
-                            LogHelper.v(TAG, "...update the seekbar...");
+                            LogHelper.v(TAG, "...invoke updateCircularSeekbar...");
                             sSeekUpdateRunning = true;
                             getHandler().post(mUpdateProgressTask);
                         }
-                    }, PROGRESS_UPDATE_INITIAL_INTERVAL, PROGRESS_UPDATE_INTERNAL, TimeUnit.MILLISECONDS);
+                    },
+                        PROGRESS_UPDATE_INITIAL_INTERVAL,
+                        PROGRESS_UPDATE_INTERNAL,
+                        TimeUnit.MILLISECONDS);
             }
+        }
+    }
+
+    protected void updateCircularSeekbar() {
+        LogHelper.v(TAG, "...updateCircularSeekbar...");
+        int lastPlaybackState = LocalPlayback.getCurrentState();
+        if (PlaybackStateCompat.STATE_PLAYING == lastPlaybackState) {
+            if (getExpectedPlayState() == 1) {
+                sWaitForMedia = false;
+            }
+            showExpectedControls("updateCircularSeekbar");
+            if (getCircularSeekBar() != null && !getCircularSeekBar().isProcessingTouchEvents()) {
+                verifyPaidVersion(false);
+                LoadingAsyncTask.mDoneLoading = true;
+                // we need to determine the current bar location and update the display
+                mCurrentPosition = (long) LocalPlayback.getCurrentPosition();
+                getCircularSeekBar().setProgress((int) mCurrentPosition);
+            }
+        }
+        else if (
+                PlaybackStateCompat.STATE_PAUSED == lastPlaybackState ||
+                        PlaybackStateCompat.STATE_STOPPED == lastPlaybackState
+                )
+        {
+            if (getExpectedPlayState() == 3) {
+                sWaitForMedia = false;
+            }
+            showExpectedControls("updateCircularSeekbar");
         }
     }
 

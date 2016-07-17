@@ -47,7 +47,7 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
     {
         LogHelper.v(TAG, "onUpdate");
         super.onUpdate(context, appWidgetManager, appWidgetIds);
-        notifyWidget(context, appWidgetManager, true);
+        notifyWidget(context, appWidgetManager, isInitialized);
     }
 
     public static void notifyWidget(Context context, AppWidgetManager instance, boolean isWidgetButtonPress) {
