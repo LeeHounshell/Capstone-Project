@@ -197,16 +197,7 @@ public class LocalPlayback
         if (mMediaPlayer != null) {
             sCurrentPosition = mMediaPlayer.getCurrentPosition();
         }
-        LogHelper.v(TAG, "getCurrentStreamPosition: "+sCurrentPosition);
-        return sCurrentPosition;
-    }
-
-    //-------- RADIO THEATER --------
-    public static int getCurrentPosition() {
-        if (theLocalPlayback != null) {
-            sCurrentPosition = theLocalPlayback.getCurrentStreamPosition();
-        }
-        LogHelper.v(TAG, "getCurrentPosition: "+sCurrentPosition);
+        //LogHelper.v(TAG, "getCurrentStreamPosition: "+sCurrentPosition);
         return sCurrentPosition;
     }
 
@@ -216,6 +207,15 @@ public class LocalPlayback
         if (mMediaPlayer != null) {
             setCurrentStreamPosition(mMediaPlayer.getCurrentPosition());
         }
+    }
+
+    //-------- RADIO THEATER --------
+    public static int getCurrentPosition() {
+        if (theLocalPlayback != null) {
+            sCurrentPosition = theLocalPlayback.getCurrentStreamPosition();
+        }
+        //LogHelper.v(TAG, "getCurrentPosition: "+sCurrentPosition);
+        return sCurrentPosition;
     }
 
     //-------- RADIO THEATER --------

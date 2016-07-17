@@ -165,7 +165,7 @@
          https://www.youtube.com/watch?v=FBC1FgWe5X4&utm_campaign=adp_series_mediabrowserservicecompat_030116&utm_source=medium&utm_medium=blog
         -->
         <receiver
-            android:name=".RadioTheaterReceiver"
+            android:name=".utils.RadioTheaterReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>

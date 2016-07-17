@@ -1,11 +1,11 @@
-package com.harlie.radiotheater.radiomysterytheater;
+package com.harlie.radiotheater.radiomysterytheater.utils;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.view.KeyEvent;
 
-import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
+import com.harlie.radiotheater.radiomysterytheater.RadioTheaterService;
 
 public class RadioTheaterReceiver extends BroadcastReceiver {
     private final static String TAG = "LEE: <" + RadioTheaterReceiver.class.getSimpleName() + ">";
