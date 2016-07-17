@@ -433,6 +433,7 @@ public class AutoplayActivity extends BaseActivity {
                 getEpisodeInfoFor(Long.parseLong(episodeId));
                 mAutoPlay.setVisibility(View.VISIBLE);
                 showExpectedControls("onCreate");
+                enableButtons();
                 if (sWaitForMedia == false) {
                     sWaitForMedia = true;
                     RadioControlIntentService.startActionPlay(this, "MAIN", episodeId, getEpisodeDownloadUrl());
