@@ -214,6 +214,8 @@ public class AutoplayActivity extends BaseActivity {
 
         OnSwipeTouchListener.reset();
 
+        createCircularSeekBar(autoplayActivity);
+
         setupAutoplayButton(autoplayActivity);
 
         initializeFloatingActionButton();
@@ -222,8 +224,6 @@ public class AutoplayActivity extends BaseActivity {
 
         mHorizontalScrollingText = (ScrollingTextView) findViewById(R.id.horizontal_scrolling_text);
         mHorizontalScrollingText.setVisibility(View.INVISIBLE);
-
-        createCircularSeekBar(autoplayActivity);
 
         Intent intent = getIntent();
         if (intent != null) {
@@ -248,10 +248,41 @@ public class AutoplayActivity extends BaseActivity {
         scheduleSeekbarUpdate(); // THREAD TO UPDATE THE CIRCULAR SEEK BAR
     }
 
+    // create a new View for the seek-bar and add it into the main_frame
+    protected void createCircularSeekBar(final AutoplayActivity autoplayActivity) {
+        LogHelper.v(TAG, "createCircularSeekBar");
+        FrameLayout theFrame = (FrameLayout) findViewById(R.id.main_frame);
+        mCircularSeekBar = new CircularSeekBar(this);
+        getCircularSeekBar().setEnabled(false);
+        getCircularSeekBar().setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        getCircularSeekBar().setBarWidth(5);
+        getCircularSeekBar().setMaxProgress((int) mDuration);
+        getCircularSeekBar().setProgress(0);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getCircularSeekBar().setBackgroundColor(getResources().getColor(R.color.transparent, null));
+        }
+        else {
+            getCircularSeekBar().setBackgroundColor(getResources().getColor(R.color.transparent));
+        }
+        getCircularSeekBar().setVisibility(View.INVISIBLE);
+        getCircularSeekBar().invalidate();
+        theFrame.addView(getCircularSeekBar());
+
+        getCircularSeekBar().setSeekBarChangeListener(new CircularSeekBar.OnSeekChangeListener() {
+
+            @Override
+            public void onProgressChange(CircularSeekBar view, final int newProgress) {
+                LogHelper.v(TAG, "onProgressChange: newProgress:" + newProgress);
+                sBeginLoading = true;
+                RadioControlIntentService.startActionSeek(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), String.valueOf(newProgress));
+            }
+        });
+    }
+
     protected void setupAutoplayButton(final AutoplayActivity autoplayActivity) {
         mAutoPlay = (AppCompatButton) findViewById(R.id.autoplay);
         mAutoPlay.setFocusable(true);
-        mAutoPlay.setEnabled(false);
+        showPleaseWaitButton(0);
         mAutoPlay.setVisibility(View.INVISIBLE);
         mAutoPlay.playSoundEffect(SoundEffectConstants.CLICK);
 
@@ -421,8 +452,15 @@ public class AutoplayActivity extends BaseActivity {
         LogHelper.v(TAG, "initializeFloatingActionButton");
         mFabActionButton = (FloatingActionButton) findViewById(R.id.fab);
         getFabActionButton().setFocusable(true);
-        getFabActionButton().setEnabled(false);
-        getFabActionButton().setVisibility(View.INVISIBLE);
+        if (isLoadedOK()) {
+            sEnableFAB = true;
+            getFabActionButton().setEnabled(true);
+            getFabActionButton().setVisibility(View.VISIBLE);
+        }
+        else {
+            getFabActionButton().setEnabled(false);
+            getFabActionButton().setVisibility(View.INVISIBLE);
+        }
 
         final AutoplayActivity activity = this;
         getFabActionButton().setOnTouchListener(new OnSwipeTouchListener(this, getHandler(), getFabActionButton()) {
@@ -447,37 +485,6 @@ public class AutoplayActivity extends BaseActivity {
                 else {
                     LogHelper.v(TAG, "isProcessingTouchEvents or seeking - onClick ignored");
                 }
-            }
-        });
-    }
-
-    // create a new View for the seek-bar and add it into the main_frame
-    protected void createCircularSeekBar(final AutoplayActivity autoplayActivity) {
-        LogHelper.v(TAG, "createCircularSeekBar");
-        FrameLayout theFrame = (FrameLayout) findViewById(R.id.main_frame);
-        mCircularSeekBar = new CircularSeekBar(this);
-        getCircularSeekBar().setEnabled(false);
-        getCircularSeekBar().setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-        getCircularSeekBar().setBarWidth(5);
-        getCircularSeekBar().setMaxProgress((int) mDuration);
-        getCircularSeekBar().setProgress(0);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            getCircularSeekBar().setBackgroundColor(getResources().getColor(R.color.transparent, null));
-        }
-        else {
-            getCircularSeekBar().setBackgroundColor(getResources().getColor(R.color.transparent));
-        }
-        getCircularSeekBar().setVisibility(View.INVISIBLE);
-        getCircularSeekBar().invalidate();
-        theFrame.addView(getCircularSeekBar());
-
-        getCircularSeekBar().setSeekBarChangeListener(new CircularSeekBar.OnSeekChangeListener() {
-
-            @Override
-            public void onProgressChange(CircularSeekBar view, final int newProgress) {
-                LogHelper.v(TAG, "onProgressChange: newProgress:" + newProgress);
-                sBeginLoading = true;
-                RadioControlIntentService.startActionSeek(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), String.valueOf(newProgress));
             }
         });
     }
@@ -745,13 +752,14 @@ public class AutoplayActivity extends BaseActivity {
                 // we need to determine the current bar location and update the display
                 mCurrentPosition = (long) LocalPlayback.getCurrentPosition();
                 getCircularSeekBar().setProgress((int) mCurrentPosition);
-                if (mCurrentPosition > 0) {
-                    LogHelper.v(TAG, "...updateCircularSeekbar (visible)... "+mCurrentPosition);
-                    getCircularSeekBar().setVisibility(View.VISIBLE);
-                }
-                else {
-                    LogHelper.v(TAG, "...updateCircularSeekbar (invisible)... "+mCurrentPosition);
-                    getCircularSeekBar().setVisibility(View.INVISIBLE);
+                if (sShowingButton != PLEASE_WAIT) {
+                    if (mCurrentPosition > 0) {
+                        LogHelper.v(TAG, "...updateCircularSeekbar (visible)... " + mCurrentPosition);
+                        getCircularSeekBar().setVisibility(View.VISIBLE);
+                    } else {
+                        LogHelper.v(TAG, "...updateCircularSeekbar (invisible)... " + mCurrentPosition);
+                        getCircularSeekBar().setVisibility(View.INVISIBLE);
+                    }
                 }
                 // NOTE: a performance impact exists with the verifyPaidVersion operation, so every seekbar update is too much
                 long now = System.currentTimeMillis();
@@ -1052,8 +1060,7 @@ public class AutoplayActivity extends BaseActivity {
         if (sWaitForMedia) {
             //LogHelper.v(TAG, "showExpectedControls: sWaitForMedia");
             if (mCurrentPosition > 0) {
-                Drawable pleaseWaitButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_please_wait_button_selector, null);
-                getAutoPlay().setBackground(pleaseWaitButton);
+                showPleaseWaitButton(0);
             }
             else {
                 Drawable autoplayDisabledButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_autoplay_disabled_button_selector, null);
@@ -1150,6 +1157,7 @@ public class AutoplayActivity extends BaseActivity {
         Drawable pleaseWaitButton = ResourcesCompat.getDrawable(getResources(), R.drawable.radio_theater_please_wait_button_selector, null);
         getAutoPlay().setBackground(pleaseWaitButton);
         sShowingButton = PLEASE_WAIT;
+        getCircularSeekBar().setVisibility(View.INVISIBLE);
         if (mCurrentPosition > 0) {
             return true;
         }

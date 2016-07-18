@@ -35,22 +35,24 @@ public class RadioTheaterWidgetService extends Service {
     }
 
     private void handleCommand(Intent intent) {
+        LogHelper.v(TAG, "handleCommand: intent="+intent.getAction());
         //mp = MediaPlayer.create(this, R.raw.click);
         //mp.start();
 
-        boolean isButtonPress = false;
-        if (intent.getBooleanExtra("BUTTON_PRESS", false) == false) {
+        setGotWidgetButtonPress(false);
+        if (intent.getBooleanExtra("BUTTON_PRESS", false) == true) {
+            LogHelper.v(TAG, "handleCommand: GOT WIDGET BUTTON PRESS!");
+            setGotWidgetButtonPress(true);
+        }
+        else if (intent.getBooleanExtra("VISUAL_ONLY", false) == true) {
             LogHelper.v(TAG, "handleCommand: *** VISUAL BUTTON UPDATE ONLY ***");
-            setGotWidgetButtonPress(false);
             String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
             String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.update_buttons);
             Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
             RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
         }
         else {
-            isButtonPress = true;
-            LogHelper.v(TAG, "handleCommand: GOT WIDGET BUTTON PRESS!");
-            setGotWidgetButtonPress(true);
+            LogHelper.v(TAG, "handleCommand: not BUTTON_PRESS and not VISUAL_ONLY");
         }
 
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this.getApplicationContext());

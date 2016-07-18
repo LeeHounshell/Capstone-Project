@@ -19,7 +19,6 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
     public static final String ACTION_APPWIDGET_BUTTON_CLICK = "BUTTON_CLICK";
 
     private static volatile boolean isFirstTime = true;
-    private static volatile boolean isReset = false;
     private static volatile int lastPlaybackState = -1;
     private static BroadcastReceiver buttonClickReceiver = null;
 
@@ -31,25 +30,24 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
 
         if (action.equals(RadioTheaterWidgetProvider.ACTION_APPWIDGET_BUTTON_CLICK)) {
             LogHelper.v(TAG, "*** RadioTheaterWidgetProvider.ACTION_APPWIDGET_BUTTON_CLICK ***");
-            isReset = true;
-            notifyWidget(context, AppWidgetManager.getInstance(context), isReset); // <<--- DO BUTTON CLICK!
+            notifyWidget(context, AppWidgetManager.getInstance(context), true); // <<--- DO BUTTON CLICK!
         }
 
         else if (action.equals(AppWidgetManager.ACTION_APPWIDGET_UPDATE)) {
-            LogHelper.v(TAG, "*** WIDGET CONTROL VISUAL UPDATE ***");
-            isReset = false;
+            LogHelper.v(TAG, "*** ACTION_APPWIDGET_UPDATE ***");
         }
 
         else if (action.equals(AppWidgetManager.ACTION_APPWIDGET_ENABLED)) {
-            isReset = false;
+            LogHelper.v(TAG, "*** ACTION_APPWIDGET_ENABLED ***");
         }
 
-//        if (action.equals(AppWidgetManager.ACTION_APPWIDGET_DELETED)) {
-//            isReset = false;
-//        }
-//        else if (action.equals(AppWidgetManager.ACTION_APPWIDGET_DISABLED)) {
-//            isReset = false;
-//        }
+        else if (action.equals(AppWidgetManager.ACTION_APPWIDGET_DELETED)) {
+            LogHelper.v(TAG, "*** ACTION_APPWIDGET_DELETED ***");
+        }
+
+        else if (action.equals(AppWidgetManager.ACTION_APPWIDGET_DISABLED)) {
+            LogHelper.v(TAG, "*** ACTION_APPWIDGET_DISABLED ***");
+        }
     }
 
     @Override
@@ -57,10 +55,10 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
     {
         LogHelper.v(TAG, "onUpdate");
         super.onUpdate(context, appWidgetManager, appWidgetIds);
-        notifyWidget(context, appWidgetManager, isReset);
+        notifyWidget(context, appWidgetManager, false);
     }
 
-    public static void notifyWidget(Context context, AppWidgetManager instance, boolean isWidgetButtonPress) {
+    public static void notifyWidget(Context context, AppWidgetManager instance, boolean isClick) {
         if (isFirstTime) {
             isFirstTime = false;
             LogHelper.v(TAG, "*** CREATE A RECEIVER TO COLLECT ANY WIDGET BUTTON PRESS ***");
@@ -76,19 +74,16 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
         }
 
         Intent intent = new Intent(context.getApplicationContext(), RadioTheaterWidgetService.class);
-        if (!isReset) {
-            isReset = true;
-            LogHelper.v(TAG, "notifyWidget: (visual update only) - playback state="+LocalPlayback.getCurrentState()+", prior state="+lastPlaybackState);
+        if (! isClick) {
+            LogHelper.v(TAG, "===> notifyWidget: (VISUAL_ONLY) - playback state="+LocalPlayback.getCurrentState()+", prior state="+lastPlaybackState);
             lastPlaybackState = LocalPlayback.getCurrentState();
             intent.putExtra("BUTTON_PRESS", false);
-        }
-        else if (isWidgetButtonPress) {
-            LogHelper.v(TAG, "notifyWidget: (BUTTON_PRESS) - playback state="+LocalPlayback.getCurrentState()+", prior state="+lastPlaybackState);
-            intent.putExtra("BUTTON_PRESS", true);
+            intent.putExtra("VISUAL_ONLY", true);
         }
         else {
-            LogHelper.v(TAG, "notifyWidget - PLAYBACK STATE="+LocalPlayback.getCurrentState()+", prior state="+lastPlaybackState);
-            intent.putExtra("BUTTON_PRESS", false);
+            LogHelper.v(TAG, "===> notifyWidget: (BUTTON_PRESS) - playback state="+LocalPlayback.getCurrentState()+", prior state="+lastPlaybackState);
+            intent.putExtra("BUTTON_PRESS", true);
+            intent.putExtra("VISUAL_ONLY", false);
         }
         // Build the intent to call the service
         ComponentName thisWidget = new ComponentName(context, RadioTheaterWidgetProvider.class);
