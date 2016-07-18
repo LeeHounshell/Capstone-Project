@@ -15,13 +15,9 @@ import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.RadioTheaterWidgetProvider;
 
-import static com.harlie.radiotheater.radiomysterytheater.R.string.initialization;
-
 // from: http://www.vogella.com/tutorials/AndroidWidgets/article.html
 public class RadioTheaterWidgetService extends Service {
     private final static String TAG = "LEE: <" + RadioTheaterWidgetService.class.getSimpleName() + ">";
-
-    public final static String RADIO_THEATER_WIDGET_CONTROL = "com.harlie.radiotheater.radiomystertheater.WIDGET_BUTTON_PRESS";
 
     //private MediaPlayer mp;
 
@@ -82,8 +78,7 @@ public class RadioTheaterWidgetService extends Service {
             // Register an onClickListener
             Intent clickIntent = new Intent(this.getApplicationContext(), RadioTheaterWidgetProvider.class);
 
-            clickIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-            clickIntent.putExtra(RADIO_THEATER_WIDGET_CONTROL, Boolean.valueOf(isButtonPress));
+            clickIntent.setAction(RadioTheaterWidgetProvider.ACTION_APPWIDGET_BUTTON_CLICK);
             clickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, allWidgetIds);
 
             PendingIntent pendingIntent = PendingIntent.getBroadcast(
@@ -127,7 +122,8 @@ public class RadioTheaterWidgetService extends Service {
                 break;
             }
             case PlaybackStateCompat.STATE_PLAYING: {
-                Stop(theWidgetView);
+                Pause(theWidgetView);
+                //Stop(theWidgetView);
                 break;
             }
             case PlaybackStateCompat.STATE_REWINDING: {
@@ -196,6 +192,23 @@ public class RadioTheaterWidgetService extends Service {
     private void PleaseWait(RemoteViews remoteViews) {
         LogHelper.v(TAG, "WAIT: setting WIDGET to 'Please Wait'");
         remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_please_wait_button_selector);
+    }
+
+    private void Pause(RemoteViews remoteViews) {
+        if (isWidgetButtonPress()) {
+            LogHelper.v(TAG, "PAUSE: setting WIDGET to Please Wait");
+            remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_please_wait_button_selector);
+            startActionPause();
+        }
+        else {
+            LogHelper.v(TAG, "PAUSE: setting WIDGET to 'Pause'");
+            remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_pause_button_selector);
+        }
+    }
+
+    private void startActionPause() {
+        LogHelper.v(TAG, "PAUSE: RadioControlIntentService.startActionPause");
+        RadioControlIntentService.startActionPause(this.getApplicationContext(), "WIDGET", String.valueOf(BaseActivity.getEpisodeNumber()), BaseActivity.getEpisodeDownloadUrl());
     }
 
     private void Stop(RemoteViews remoteViews) {
