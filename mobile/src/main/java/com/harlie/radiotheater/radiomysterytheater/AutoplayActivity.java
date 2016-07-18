@@ -192,6 +192,7 @@ public class AutoplayActivity extends BaseActivity {
             Intent tvIntent = new Intent(this, TvPlaybackActivity.class);
             tvIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION");
             tvIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            stopSeekbarUpdate();
             startActivity(tvIntent);
             overridePendingTransition((R.anim.abc_fade_in, R.anim.abc_fade_out,R.anim.abc_fade_in, R.anim.abc_fade_out);
             finish();
@@ -224,10 +225,6 @@ public class AutoplayActivity extends BaseActivity {
 
         createCircularSeekBar(autoplayActivity);
 
-        //
-        // NOTE: a bug is preventing the circular seekbar from appearing after a PLAY_NOW transition
-        //       possibly related to the back-stack, custom transition code and 'R.id.main_frame'
-        //
         Intent intent = getIntent();
         if (intent != null) {
             final String episodeId = intent.getStringExtra("PLAY_NOW");
@@ -246,6 +243,9 @@ public class AutoplayActivity extends BaseActivity {
 
         sLoadingScreenEnabled = true;
         RadioControlIntentService.startActionStart(this, "MAIN", String.valueOf(getEpisodeNumber()), null);
+
+        sSeekUpdateRunning = false;
+        scheduleSeekbarUpdate(); // THREAD TO UPDATE THE CIRCULAR SEEK BAR
     }
 
     protected void setupAutoplayButton(final AutoplayActivity autoplayActivity) {
@@ -440,6 +440,7 @@ public class AutoplayActivity extends BaseActivity {
                     savePlayInfoToBundle(playInfo);
                     episodeListIntent.putExtras(playInfo);
                     episodeListIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    stopSeekbarUpdate();
                     startActivity(episodeListIntent);
                     overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
                 }
@@ -450,13 +451,9 @@ public class AutoplayActivity extends BaseActivity {
         });
     }
 
-    //
-    // NOTE: a bug is preventing the circular seekbar from appearing after a PLAY_NOW transition
-    //       possibly related to the back-stack, custom transition code and 'R.id.main_frame'
-    //
+    // create a new View for the seek-bar and add it into the main_frame
     protected void createCircularSeekBar(final AutoplayActivity autoplayActivity) {
         LogHelper.v(TAG, "createCircularSeekBar");
-        // create a new View for the seek-bar and add it into the main_frame
         FrameLayout theFrame = (FrameLayout) findViewById(R.id.main_frame);
         mCircularSeekBar = new CircularSeekBar(this);
         getCircularSeekBar().setEnabled(false);
@@ -553,7 +550,6 @@ public class AutoplayActivity extends BaseActivity {
                     if (getAutoPlay() != null) {
                         sEnableFAB = true;
                         showExpectedControls("enableButtons #2");
-                        scheduleSeekbarUpdate(); // UPDATE THE CIRCULAR SEEK BAR
                     }
                     else {
                         LogHelper.w(TAG, "*** UNABLE TO GET AUTOPLAY BUTTON!? ***");
@@ -676,6 +672,7 @@ public class AutoplayActivity extends BaseActivity {
                 intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT, SettingsActivity.GeneralPreferenceFragment.class.getName());
                 intent.putExtra(PreferenceActivity.EXTRA_NO_HEADERS, true);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                stopSeekbarUpdate();
                 startActivity(intent);
                 overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
                 trackSettingsWithFirebaseAnalytics();
@@ -688,6 +685,7 @@ public class AutoplayActivity extends BaseActivity {
                 savePlayInfoToBundle(playInfo);
                 intent.putExtras(playInfo);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                stopSeekbarUpdate();
                 startActivity(intent);
                 overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
                 trackAboutWithFirebaseAnalytics();
@@ -726,6 +724,12 @@ public class AutoplayActivity extends BaseActivity {
                         PROGRESS_UPDATE_INTERNAL,
                         TimeUnit.MILLISECONDS);
             }
+            else {
+                LogHelper.w(TAG, "mExecutorService is running!");
+            }
+        }
+        else {
+            LogHelper.w(TAG, "seekbar update thread is running!");
         }
     }
 
