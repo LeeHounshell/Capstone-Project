@@ -14,8 +14,8 @@ import at.grabner.circleprogress.CircleProgressView;
 public class LoadingAsyncTask extends AsyncTask<AutoplayActivity, Void, Boolean> {
     private final static String TAG = "LEE: <" + LoadingAsyncTask.class.getSimpleName() + ">";
 
-    public static volatile boolean mLoadingNow;
-    public static volatile boolean mDoneLoading;
+    public static volatile boolean sLoadingNow;
+    public static volatile boolean sDoneLoading;
 
     private static int mCount;
     private final static int sMaxCount = 100;
@@ -27,13 +27,13 @@ public class LoadingAsyncTask extends AsyncTask<AutoplayActivity, Void, Boolean>
 
     public LoadingAsyncTask(AutoplayActivity activity, CircleProgressView circleProgressView, CircularSeekBar circularSeekBar, AppCompatButton autoPlay) {
         LogHelper.v(TAG, "new LoadingAsyncTask");
-        mLoadingNow = true;
+        sLoadingNow = true;
         this.mActivity = activity;
         this.mAutoPlay = autoPlay;
         this.mCircleProgressView = circleProgressView;
         this.mCircularSeekBar = circularSeekBar;
         mCount = 0;
-        mDoneLoading = false;
+        sDoneLoading = false;
     }
 
     @Override
@@ -56,7 +56,7 @@ public class LoadingAsyncTask extends AsyncTask<AutoplayActivity, Void, Boolean>
                 Thread.sleep(1000);
             }
             catch (InterruptedException e) { }
-            if (mCount == sMaxCount || mDoneLoading) {
+            if (mCount == sMaxCount || sDoneLoading) {
                 rc = true;
             }
         }
@@ -67,7 +67,7 @@ public class LoadingAsyncTask extends AsyncTask<AutoplayActivity, Void, Boolean>
     protected void onPostExecute(Boolean success) {
         LogHelper.v(TAG, "onPostExecute: success="+success);
         super.onPostExecute(success);
-        mLoadingNow = false;
+        sLoadingNow = false;
         mCircleProgressView.stopSpinning();
         mCircleProgressView.setVisibility(View.INVISIBLE);
         mActivity.getHandler().postDelayed(new Runnable() {
