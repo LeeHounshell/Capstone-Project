@@ -477,20 +477,15 @@ public class AutoplayActivity extends BaseActivity {
                 if (getEpisodeData(configCursor)) {
                     displayScrollingText();
                 }
-                if (!getCircularSeekBar().isProcessingTouchEvents()) {
-                    LogHelper.v(TAG, "onClick - mFabActionButton");
-                    Intent episodeListIntent = new Intent(activity, EpisodeListActivity.class);
-                    Bundle playInfo = new Bundle();
-                    savePlayInfoToBundle(playInfo);
-                    episodeListIntent.putExtras(playInfo);
-                    episodeListIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    stopSeekbarUpdate();
-                    startActivity(episodeListIntent);
-                    overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
-                }
-                else {
-                    LogHelper.v(TAG, "isProcessingTouchEvents or seeking - onClick ignored");
-                }
+                LogHelper.v(TAG, "onClick - mFabActionButton");
+                Intent episodeListIntent = new Intent(activity, EpisodeListActivity.class);
+                Bundle playInfo = new Bundle();
+                savePlayInfoToBundle(playInfo);
+                episodeListIntent.putExtras(playInfo);
+                episodeListIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                stopSeekbarUpdate();
+                startActivity(episodeListIntent);
+                overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
             }
         });
     }

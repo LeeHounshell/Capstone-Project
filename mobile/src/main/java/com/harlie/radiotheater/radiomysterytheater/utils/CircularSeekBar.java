@@ -547,6 +547,10 @@ public class CircularSeekBar extends View {
                 }
                 break;
             }
+            case MotionEvent.ACTION_CANCEL: {
+                processingTouchEvents = false;
+                needToPostProgressChange = false;
+            }
         }
         return true;
     }
