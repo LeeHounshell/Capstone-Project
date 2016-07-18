@@ -92,7 +92,6 @@ import static com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheat
 public class BaseActivity extends AppCompatActivity {
     private final static String TAG = "LEE: <" + BaseActivity.class.getSimpleName() + ">";
 
-
     protected static final int MAX_TRIAL_EPISODES = 19;
     protected static final int MIN_EMAIL_LENGTH = 5;
     protected static final int MIN_PASSWORD_LENGTH = 6;
@@ -141,6 +140,8 @@ public class BaseActivity extends AppCompatActivity {
     protected static volatile boolean sHaveRealDuration;
     protected static volatile boolean sLoadedOK;
 
+    private static int mCount;
+
     public static volatile boolean sProgressViewSpinning;
 
     protected ConfigurationContentValues mConfiguration;
@@ -154,8 +155,6 @@ public class BaseActivity extends AppCompatActivity {
 
     private Interpolator interpolator;
     private RelativeLayout bgViewGroup;
-
-    private static int mCount;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -383,16 +382,42 @@ public class BaseActivity extends AppCompatActivity {
     public void onDestroy() {
         LogHelper.v(TAG, "onDestroy");
         super.onDestroy();
-        sAirdate = null;
-        sEpisodeTitle = null;
-        sEpisodeDescription = null;
-        sEpisodeWeblinkUrl = null;
-        sEpisodeDownloadUrl = null;
+
         sAdvId = null;
         sName = null;
         sEmail = null;
         sUID = null;
         sPassword = null;
+
+        sAllListenCount = 0;
+        sEpisodeNumber = 0L;
+        sAirdate = null;
+        sEpisodeTitle = null;
+        sEpisodeDescription = null;
+        sEpisodeWeblinkUrl = null;
+        sEpisodeDownloadUrl = null;
+
+        sOnRestoreInstanceComplete = false;
+        sFoundFirebaseDeviceId = false;
+        sOkLoadFirebaseConfiguration = false;
+        sShowPercentUnit = false;
+
+        sHandleRotationEvent = false;
+        sLoadingScreenEnabled = false;
+        sBeginLoading = false;
+        sAutoplayNextNow = false;
+        sEnableFAB = false;
+        sWaitForMedia = false;
+
+        sPurchased = false;
+        sNoAdsForShow = false;
+        sDownloaded = false;
+        sEpisodeHeard = false;
+        sHaveRealDuration = false;
+        sLoadedOK = false;
+
+        mCount = 0;
+        sProgressViewSpinning = false;
     }
 
     @Override

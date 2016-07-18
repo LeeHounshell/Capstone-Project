@@ -1016,6 +1016,8 @@ public class AutoplayActivity extends BaseActivity {
         stopSeekbarUpdate();
         mExecutorService.shutdown();
         super.onDestroy();
+        lastVerifyTime = 0L;
+        onCreateTime = 0L;
     }
 
     public AppCompatButton getAutoPlay() {
