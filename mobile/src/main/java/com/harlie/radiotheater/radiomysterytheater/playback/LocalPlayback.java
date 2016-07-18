@@ -214,7 +214,7 @@ public class LocalPlayback
         if (theLocalPlayback != null) {
             sCurrentPosition = theLocalPlayback.getCurrentStreamPosition();
         }
-        //LogHelper.v(TAG, "getCurrentPosition: "+sCurrentPosition);
+        LogHelper.v(TAG, "getCurrentPosition: "+sCurrentPosition);
         return sCurrentPosition;
     }
 

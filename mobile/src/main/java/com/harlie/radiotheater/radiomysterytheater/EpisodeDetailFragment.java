@@ -10,7 +10,9 @@ import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.res.ResourcesCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.widget.AppCompatButton;
 import android.view.LayoutInflater;
 import android.view.SoundEffectConstants;
@@ -27,6 +29,7 @@ import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersE
 import com.harlie.radiotheater.radiomysterytheater.data_helper.EpisodeRecyclerViewItem;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.SQLiteHelper;
+import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
 import com.harlie.radiotheater.radiomysterytheater.utils.BitmapHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.FontPreferences;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
@@ -211,14 +214,17 @@ public class EpisodeDetailFragment extends FragmentBase {
                     mPlayNow.setEnabled(false);
                     mPlayNow.setBackground(pleaseWaitButton);
                     //mp.start();
-                    RadioControlIntentService.startActionStop(baseActivity, "DETAIL", String.valueOf(baseActivity.getEpisodeNumber()), baseActivity.getEpisodeDownloadUrl());
+                    if (LocalPlayback.getCurrentState() == PlaybackStateCompat.STATE_PLAYING) {
+                        LogHelper.v(TAG, "*** STOP PLAYING CURRENT EPISODE BEFORE STARING WITH A FRESH ONE ***");
+                        RadioControlIntentService.startActionStop(baseActivity, "DETAIL", String.valueOf(baseActivity.getEpisodeNumber()), baseActivity.getEpisodeDownloadUrl());
+                    }
                     Intent autoplayIntent = new Intent(baseActivity, AutoplayActivity.class);
                     // setup a shared-element transition..
                     LogHelper.v(TAG, "onClick - PLAY NOW - using shared element transition");
                     ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(baseActivity, mPlayNow, "PlayNow");
                     startActivity(autoplayIntent, options.toBundle());
                     // close existing activity stack regardless of what's in there and create new root
-                    //autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                     Bundle playInfo = options.toBundle();
                     baseActivity.savePlayInfoToBundle(playInfo);
                     autoplayIntent.putExtras(playInfo);

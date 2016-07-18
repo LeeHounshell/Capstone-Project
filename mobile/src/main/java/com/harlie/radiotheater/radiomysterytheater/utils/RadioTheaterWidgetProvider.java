@@ -29,11 +29,6 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
         super.onReceive(context, intent);
         String action = intent.getAction();
 
-        if (intent.getBooleanExtra("BUTTON_PRESS", false) == true) {
-            LogHelper.v(TAG, "*** WIDGET BUTTON PRESS ***");
-            isReset = true;
-        }
-
         if (action.equals(RadioTheaterWidgetProvider.ACTION_APPWIDGET_BUTTON_CLICK)) {
             LogHelper.v(TAG, "*** RadioTheaterWidgetProvider.ACTION_APPWIDGET_BUTTON_CLICK ***");
             isReset = true;
@@ -82,6 +77,7 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
 
         Intent intent = new Intent(context.getApplicationContext(), RadioTheaterWidgetService.class);
         if (!isReset) {
+            isReset = true;
             LogHelper.v(TAG, "notifyWidget: (visual update only) - playback state="+LocalPlayback.getCurrentState()+", prior state="+lastPlaybackState);
             lastPlaybackState = LocalPlayback.getCurrentState();
             intent.putExtra("BUTTON_PRESS", false);
@@ -94,7 +90,6 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
             LogHelper.v(TAG, "notifyWidget - PLAYBACK STATE="+LocalPlayback.getCurrentState()+", prior state="+lastPlaybackState);
             intent.putExtra("BUTTON_PRESS", false);
         }
-        isReset = true;
         // Build the intent to call the service
         ComponentName thisWidget = new ComponentName(context, RadioTheaterWidgetProvider.class);
         int[] allWidgetIds = instance.getAppWidgetIds(thisWidget);

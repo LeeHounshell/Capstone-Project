@@ -332,6 +332,9 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     private void animateButtonsOut() {
+        if (bgViewGroup == null) {
+            return;
+        }
         for (int i = 0; i < bgViewGroup.getChildCount(); i++) {
             View child = bgViewGroup.getChildAt(i);
             child.animate()
@@ -359,6 +362,9 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     private void animateRevealHide(final View viewRoot) {
+        if (viewRoot == null) {
+            return;
+        }
         int cx = (viewRoot.getLeft() + viewRoot.getRight()) / 2;
         int cy = (viewRoot.getTop() + viewRoot.getBottom()) / 2;
         int initialRadius = viewRoot.getWidth();
@@ -389,13 +395,6 @@ public class BaseActivity extends AppCompatActivity {
         sEmail = null;
         sUID = null;
         sPassword = null;
-        mConfiguration = null;
-        mAuth = null;
-        mCircleView = null;
-        mFirebaseAnalytics = null;
-        mDatabase = null;
-        mHandler = null;
-        mRootView = null;
     }
 
     @Override
@@ -608,7 +607,7 @@ public class BaseActivity extends AppCompatActivity {
 
             Intent autoplayIntent = new Intent(this, AutoplayActivity.class);
             // close existing activity stack regardless of what's in there and create new root
-            //autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             // Transition Effects..
             Bundle bundle;
             if (animate) {
@@ -1148,6 +1147,12 @@ public class BaseActivity extends AppCompatActivity {
                         decodedListenCount = Integer.parseInt(matcher.group(1));
                         LogHelper.v(TAG, "---> DECODED LISTEN_COUNT="+decodedListenCount);
                         checkUpdateWidget(activity, decodedListenCount);
+                        getHandler().post(new Runnable() {
+                            @Override
+                            public void run() {
+                                enableButtons();
+                            }
+                        });
                     }
                     catch (NumberFormatException e) {
                         LogHelper.e(TAG, "*** UNABLE TO DECODE LISTEN_COUNT FROM FIREBASE *** - NumberFormatException: configuration="+configurationJSON);
@@ -1164,6 +1169,10 @@ public class BaseActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    protected void enableButtons() {
+        LogHelper.v(TAG, "enableButtons");
     }
 
     public void checkUpdateWidget(Context context, int listenCount) {
