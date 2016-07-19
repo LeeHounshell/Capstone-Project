@@ -298,9 +298,6 @@ public class PlaybackManager implements Playback.Callback {
         @Override
         public void onPlay() {
             LogHelper.v(TAG, "play");
-            if (getQueueManager().getCurrentMusic() == null) {
-                getQueueManager().setOrderedQueue();
-            }
             handlePlayRequest();
         }
 

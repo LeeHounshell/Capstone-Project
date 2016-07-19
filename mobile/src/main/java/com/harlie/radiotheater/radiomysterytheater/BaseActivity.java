@@ -131,7 +131,6 @@ public class BaseActivity extends AppCompatActivity {
     protected static volatile boolean sHandleRotationEvent;
     protected static volatile boolean sLoadingScreenEnabled;
     protected static volatile boolean sBeginLoading;
-    protected static volatile boolean sAutoplayNextNow;
     protected static volatile boolean sEnableFAB;
     protected static volatile boolean sWaitForMedia;
 
@@ -178,7 +177,6 @@ public class BaseActivity extends AppCompatActivity {
             sHandleRotationEvent = false;
             sLoadingScreenEnabled = false;
             sBeginLoading = false;
-            sAutoplayNextNow = false;
             sEnableFAB = false;
             sWaitForMedia = false;
 
@@ -408,7 +406,6 @@ public class BaseActivity extends AppCompatActivity {
         sHandleRotationEvent = false;
         sLoadingScreenEnabled = false;
         sBeginLoading = false;
-        sAutoplayNextNow = false;
         sEnableFAB = false;
         sWaitForMedia = false;
 
@@ -1884,13 +1881,12 @@ public class BaseActivity extends AppCompatActivity {
         playInfoBundle.putBoolean(KEY_HANDLE_ROTATION_EVENT   , sHandleRotationEvent);
         playInfoBundle.putBoolean(KEY_LOADING_SCREEN_ENABLED  , sLoadingScreenEnabled);
         playInfoBundle.putBoolean(KEY_BEGIN_LOADING           , sBeginLoading);
-        playInfoBundle.putBoolean(KEY_AUTOPLAY_NEXT_NOW       , sAutoplayNextNow);
         playInfoBundle.putBoolean(KEY_ENABLE_FAB              , sEnableFAB);
         playInfoBundle.putBoolean(KEY_WAIT_FOR_MEDIA          , sWaitForMedia);
 
         LogHelper.v(TAG, "APP-STATE (Autoplay): saveAutoplayInfoToBundle: sHandleRotationEvent="+sHandleRotationEvent
                 +", sLoadingScreenEnabled="+sLoadingScreenEnabled+", sBeginLoading="+sBeginLoading
-                +", sAutoplayNextNow="+sAutoplayNextNow+", sEnableFAB="+sEnableFAB+", sWaitForMedia="+sWaitForMedia+" <<<=========");
+                +", sEnableFAB="+sEnableFAB+", sWaitForMedia="+sWaitForMedia+" <<<=========");
 
         playInfoBundle.putLong(KEY_EPISODE, getEpisodeNumber());
         playInfoBundle.putBoolean(KEY_PURCHASED, sPurchased);
@@ -1922,13 +1918,12 @@ public class BaseActivity extends AppCompatActivity {
             sHandleRotationEvent = playInfoBundle.getBoolean(KEY_HANDLE_ROTATION_EVENT);
             sLoadingScreenEnabled = playInfoBundle.getBoolean(KEY_LOADING_SCREEN_ENABLED);
             sBeginLoading = playInfoBundle.getBoolean(KEY_BEGIN_LOADING);
-            sAutoplayNextNow = playInfoBundle.getBoolean(KEY_AUTOPLAY_NEXT_NOW);
             sEnableFAB = playInfoBundle.getBoolean(KEY_ENABLE_FAB);
             sWaitForMedia = playInfoBundle.getBoolean(KEY_WAIT_FOR_MEDIA);
 
             LogHelper.v(TAG, "APP-STATE (Autoplay): restoreAutoplayInfoFromBundle: sHandleRotationEvent="+sHandleRotationEvent
                     +", sLoadingScreenEnabled="+sLoadingScreenEnabled+", sBeginLoading="+sBeginLoading
-                    +", sAutoplayNextNow="+sAutoplayNextNow+", sEnableFAB="+sEnableFAB+", sWaitForMedia="+sWaitForMedia+" <<<=========");
+                    +", sEnableFAB="+sEnableFAB+", sWaitForMedia="+sWaitForMedia+" <<<=========");
 
             sEpisodeNumber = playInfoBundle.getLong(KEY_EPISODE);
             sPurchased = playInfoBundle.getBoolean(KEY_PURCHASED);

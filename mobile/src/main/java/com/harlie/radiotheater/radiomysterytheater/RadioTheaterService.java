@@ -326,6 +326,7 @@ public class RadioTheaterService
                 LogHelper.v(TAG, "=========>>> ACTION: "+action+", COMMAND="+command+", EPISODE="+episode);
 
                 if (CMD_PLAY.equals(command)) {
+                    LocalPlayback.setCurrentEpisode(Integer.parseInt(episode));
                     String title = startIntent.getStringExtra(CMD_PARAM_TITLE);
                     String episodeDownloadUrl = startIntent.getStringExtra(CMD_PARAM_DOWNLOAD_URL);
                     String mediaId = queueManager.setCurrentIndexFromEpisodeId(Integer.parseInt(episode), title, episodeDownloadUrl);

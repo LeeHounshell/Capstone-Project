@@ -188,19 +188,6 @@ public class QueueManager {
     }
 
     //-------- RADIO THEATER --------
-    public void setOrderedQueue() {
-        LogHelper.v(TAG, "*** setOrderedQueue ***");
-        int episodeId = getNextAvailableEpisode();
-        String mediaId = setCurrentIndexFromEpisodeId(episodeId, null, null);
-        if (mediaId != null && getPlayingQueue() != null) {
-            setCurrentQueue(mResources.getString(R.string.next_queue_title), getPlayingQueue()); // WATCHME
-        }
-        else {
-            LogHelper.e(TAG, "unable to determine next mediaId - wait a bit - mediaId="+mediaId);
-        }
-    }
-
-    //-------- RADIO THEATER --------
     public MediaSessionCompat.QueueItem getCurrentMusic() {
         LogHelper.v(TAG, "*** getCurrentMusic ***");
         if (getPlayingQueue() == null) {
@@ -244,12 +231,7 @@ public class QueueManager {
 
         LogHelper.v(TAG, "---> wakeup! setCurrentIndexFromEpisodeId: episodeId="+episodeId+", title="+title+", downloadUrl="+downloadUrl);
 
-        if (downloadUrl != null) {
-            sDownloadUrl = downloadUrl;
-        }
-        if (title == null || sDownloadUrl == null) {
-            title = getTitleAndDownloadUrlForEpisode(episodeId); // this also sets sDownloadUrl
-        }
+        sDownloadUrl = downloadUrl;
 
         Iterable<MediaMetadataCompat> title_list = mMusicProvider.searchMusicBySongTitle(title);
         if (title_list == null) {

@@ -221,8 +221,8 @@ public class LocalPlayback
     //-------- RADIO THEATER --------
     private void notifyEpisodePlaying() {
         String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
-        String play = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.play);
-        String message = play + getCurrentEpisode();
+        String playing = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.playing);
+        String message = playing + getCurrentEpisode();
         LogHelper.v(TAG, "notifyEpisodePlaying: message="+message);
         Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
         RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
@@ -258,7 +258,7 @@ public class LocalPlayback
         RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
     }
 
-    static void setCurrentEpisode(int currentEpisode) {
+    static public void setCurrentEpisode(int currentEpisode) {
         sCurrentEpisode = currentEpisode;
     }
     static public int getCurrentEpisode() {

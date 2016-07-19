@@ -91,7 +91,7 @@
     <string name="metadata_loaded">loaded.</string>
     <string name="request_play">request:</string>
     <string name="duration">duration:</string>
-    <string name="play">play:</string>
+    <string name="playing">playing:</string>
     <string name="noplay">noplay:</string>
     <string name="complete">complete:</string>
     <string name="error_no_metadata">load failed.</string>
