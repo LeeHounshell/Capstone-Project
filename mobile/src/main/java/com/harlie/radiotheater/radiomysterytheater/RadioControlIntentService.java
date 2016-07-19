@@ -30,7 +30,7 @@ public class RadioControlIntentService extends IntentService {
     private final static String TAG = "LEE: <" + RadioControlIntentService.class.getSimpleName() + ">";
 
     private static volatile boolean sAlreadyStarted = false;
-    private static volatile int sEpisodeId = 1; // preload episode #1
+    private static volatile int sEpisodeId = 0;
 
     private final IBinder mBinder = new RadioControlServiceBinder();
     private Messenger outMessenger;

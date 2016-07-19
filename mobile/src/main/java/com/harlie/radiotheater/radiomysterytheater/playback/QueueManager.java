@@ -204,6 +204,7 @@ public class QueueManager {
     public MediaSessionCompat.QueueItem getCurrentMusic() {
         LogHelper.v(TAG, "*** getCurrentMusic ***");
         if (getPlayingQueue() == null) {
+            LogHelper.v(TAG, "getCurrentMusic: *** THE PLAYING QUEUE IS NULL! ***");
             return null;
         }
         if (getPlayingQueue().size() == 1) {
@@ -212,9 +213,13 @@ public class QueueManager {
         }
         else if (getPlayingQueue().size() == 0) {
             LogHelper.v(TAG, "getCurrentMusic: *** THE PLAYING QUEUE IS EMPTY ***");
-            waitabit();
+            while (MusicProvider.isMediaLoaded() == false && MusicProvider.isOnMusicCatalogReady() == false) {
+                LogHelper.v(TAG, "getCurrentMusic: goto sleep (waiting for MusicProvider Media and catalog..)");
+                waitabit();
+            }
             return null;
         }
+        LogHelper.v(TAG, "getCurrentMusic: *** THE PLAYING QUEUE HAS ITEMS *** sCurrentIndex="+getCurrentIndex()+", size="+ getPlayingQueue().size());
         return getPlayingQueue().get(getCurrentIndex());
     }
 
