@@ -99,11 +99,17 @@ public class QueueManager {
     public boolean isSameBrowsingCategory(@NonNull String mediaId) {
         LogHelper.v(TAG, "isSameBrowsingCategory");
         String[] newBrowseHierarchy = MediaIDHelper.getHierarchy(mediaId);
+        if (newBrowseHierarchy == null) {
+            return false;
+        }
         MediaSessionCompat.QueueItem current = getCurrentMusic();
         if (current == null) {
             return false;
         }
         String[] currentBrowseHierarchy = MediaIDHelper.getHierarchy(current.getDescription().getMediaId());
+        if (currentBrowseHierarchy == null) {
+            return false;
+        }
         return Arrays.equals(newBrowseHierarchy, currentBrowseHierarchy);
     }
 
@@ -184,7 +190,8 @@ public class QueueManager {
     //-------- RADIO THEATER --------
     public void setOrderedQueue() {
         LogHelper.v(TAG, "*** setOrderedQueue ***");
-        String mediaId = setCurrentIndexFromEpisodeId();
+        int episodeId = getNextAvailableEpisode();
+        String mediaId = setCurrentIndexFromEpisodeId(episodeId, null, null);
         if (mediaId != null && getPlayingQueue() != null) {
             setCurrentQueue(mResources.getString(R.string.next_queue_title), getPlayingQueue()); // WATCHME
         }
@@ -199,23 +206,12 @@ public class QueueManager {
         if (getPlayingQueue() == null) {
             return null;
         }
-        if (sPreviousIndex != getCurrentIndex()) {
-            sPreviousIndex = getCurrentIndex();
-            setCurrentIndexFromEpisodeId();
-        }
         if (getPlayingQueue().size() == 1) {
             LogHelper.v(TAG, "getCurrentMusic: *** THE PLAYING QUEUE HAS A SINGLE ITEM *** sCurrentIndex="+getCurrentIndex()+", size="+ getPlayingQueue().size());
             return getPlayingQueue().get(0);
         }
         else if (getPlayingQueue().size() == 0) {
             LogHelper.v(TAG, "getCurrentMusic: *** THE PLAYING QUEUE IS EMPTY ***");
-//            MusicProvider.Callback queueLoadedCallback = new MusicProvider.Callback() {
-//                @Override
-//                public void onMusicCatalogReady(boolean success) {
-//                    LogHelper.v(TAG, "*** THE PLAYING QUEUE IS LOADED ***");
-//                }
-//            };
-//            mMusicProvider.retrieveMediaAsync(queueLoadedCallback);
             waitabit();
             return null;
         }
@@ -233,17 +229,23 @@ public class QueueManager {
     }
 
     //-------- RADIO THEATER --------
-    public String setCurrentIndexFromEpisodeId() {
+    public String setCurrentIndexFromEpisodeId(int episodeId, String title, String downloadUrl) {
+        LogHelper.v(TAG, "setCurrentIndexFromEpisodeId: episodeId="+episodeId);
         while (MusicProvider.isMediaLoaded() == false && MusicProvider.isOnMusicCatalogReady() == false) {
             LogHelper.v(TAG, "setCurrentIndexFromEpisodeId: goto sleep (waiting for MusicProvider Media and catalog..)");
             waitabit();
         }
         waitabit();
-        LogHelper.v(TAG, "setCurrentIndexFromEpisodeId: wakeup! - MusicProvider INITIALIZED ... lastRequest="+RadioControlIntentService.lastRequest());
-        int episodeId = getNextAvailableEpisode();
-        LocalPlayback.setCurrentEpisode(episodeId);
-        LogHelper.v(TAG, "---> setCurrentIndexFromEpisodeId: episodeId="+episodeId);
-        String title = getTitleAndDownloadUrlForEpisode(episodeId); // this also sets sDownloadUrl - needed below or else NPE
+
+        LogHelper.v(TAG, "---> wakeup! setCurrentIndexFromEpisodeId: episodeId="+episodeId+", title="+title+", downloadUrl="+downloadUrl);
+
+        if (downloadUrl != null) {
+            sDownloadUrl = downloadUrl;
+        }
+        if (title == null || sDownloadUrl == null) {
+            title = getTitleAndDownloadUrlForEpisode(episodeId); // this also sets sDownloadUrl
+        }
+
         Iterable<MediaMetadataCompat> title_list = mMusicProvider.searchMusicBySongTitle(title);
         if (title_list == null) {
             LogHelper.e(TAG, "FAIL: could not locate media for title: ", title);

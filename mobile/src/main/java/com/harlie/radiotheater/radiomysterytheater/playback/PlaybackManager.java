@@ -126,7 +126,7 @@ public class PlaybackManager implements Playback.Callback {
      *                  MediaController clients.
      */
     public void handleStopRequest(String withError) {
-        LogHelper.v(TAG, "handleStopRequest: mState=" + mPlayback.getState() + " error=", withError);
+        LogHelper.v(TAG, "handleStopRequest: mState=" + mPlayback.getState() + ((withError != null) ? (" error="+withError) : ""));
         mPlayback.stop(true);
         mServiceCallback.onPlaybackStop();
         updatePlaybackState(withError);
@@ -135,10 +135,10 @@ public class PlaybackManager implements Playback.Callback {
     /**
      * Update the current media player state, optionally showing an error message.
      *
-     * @param error if not null, error message to present to the user.
+     * @param withError if not null, error message to present to the user.
      */
-    public void updatePlaybackState(String error) {
-        LogHelper.v(TAG, "updatePlaybackState, playback state=" + mPlayback.getState()+", error="+error);
+    public void updatePlaybackState(String withError) {
+        LogHelper.v(TAG, "updatePlaybackState: playback state=" + mPlayback.getState() + ((withError != null) ? (" error="+withError) : ""));
         long position = PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN;
         if (mPlayback != null && mPlayback.isConnected()) {
             position = mPlayback.getCurrentStreamPosition();
@@ -152,10 +152,10 @@ public class PlaybackManager implements Playback.Callback {
         int state = mPlayback.getState();
 
         // If there is an error message, send it to the playback state:
-        if (error != null) {
+        if (withError != null) {
             // Error states are really only supposed to be used for errors that cause playback to
             // stop unexpectedly and persist until the user takes action to fix it.
-            stateBuilder.setErrorMessage(error);
+            stateBuilder.setErrorMessage(withError);
             state = PlaybackStateCompat.STATE_ERROR;
         }
         //noinspection ResourceType

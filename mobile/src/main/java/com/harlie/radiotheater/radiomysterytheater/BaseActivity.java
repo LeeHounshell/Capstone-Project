@@ -22,8 +22,10 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.Toolbar;
 import android.transition.Fade;
 import android.transition.Transition;
@@ -64,6 +66,7 @@ import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadingAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.SQLiteHelper;
 import com.harlie.radiotheater.radiomysterytheater.firebase.FirebaseConfigEpisode;
 import com.harlie.radiotheater.radiomysterytheater.firebase.FirebaseConfiguration;
+import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
 import com.harlie.radiotheater.radiomysterytheater.utils.CheckPlayStore;
 import com.harlie.radiotheater.radiomysterytheater.utils.CircleViewHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
@@ -648,6 +651,34 @@ public class BaseActivity extends AppCompatActivity {
             startActivity(autoplayIntent, bundle);
             finish();
         }
+    }
+
+    public void playNow() {
+        String episodeNumber = String.valueOf(getEpisodeNumber());
+        LogHelper.v(TAG, "playNow: episodeNumber="+episodeNumber);
+        if (LocalPlayback.getCurrentState() == PlaybackStateCompat.STATE_PLAYING) {
+            LogHelper.v(TAG, "*** STOP PLAYING CURRENT EPISODE BEFORE STARING WITH A FRESH ONE ***");
+            RadioControlIntentService.startActionStop(this, "DETAIL", episodeNumber, getEpisodeDownloadUrl());
+        }
+        Intent autoplayIntent = new Intent(this, AutoplayActivity.class);
+        // setup a shared-element transition..
+        LogHelper.v(TAG, "onClick - PLAY NOW - using shared element transition");
+        AppCompatButton playNow = (AppCompatButton) findViewById(R.id.play_now);
+        Bundle playInfo = new Bundle();
+        if (playNow != null) {
+            ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this, playNow, "PlayNow");
+            playInfo = options.toBundle();
+        }
+
+        // NOTE: there is an Android problem setting these intent flags with a shared-element transition:
+        //autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        //
+        // to get around this problem, I have over-ridden onBackPressed in AutoplayActivity so that it clears the back stack before exiting.
+
+        savePlayInfoToBundle(playInfo);
+        autoplayIntent.putExtras(playInfo);
+        autoplayIntent.putExtra("PLAY_NOW", String.valueOf(episodeNumber));
+        startActivity(autoplayIntent, playInfo);
     }
 
     private String copyFileFromAssets(String inFileName, String outFileName) throws Exception {

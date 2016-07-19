@@ -59,7 +59,6 @@ public class RadioTheaterWidgetService extends Service {
 
         int[] allWidgetIds = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS);
         if (allWidgetIds == null) {
-            LogHelper.w(TAG, "try to fix problem: null EXTRA_APPWIDGET_IDS");
             allWidgetIds = new int[]{R.id.autoplay_widget};
         }
 
@@ -187,7 +186,11 @@ public class RadioTheaterWidgetService extends Service {
         ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
         if (AutoplayActivity.getEpisodeData(configCursor)) {
             LogHelper.v(TAG, "PLAY: RadioControlIntentService.startActionPlay");
-            RadioControlIntentService.startActionPlay(this.getApplicationContext(), "WIDGET", String.valueOf(BaseActivity.getEpisodeNumber()), BaseActivity.getEpisodeDownloadUrl());
+            RadioControlIntentService.startActionPlay(this.getApplicationContext(),
+                    "WIDGET",
+                    String.valueOf(BaseActivity.getEpisodeNumber()),
+                    BaseActivity.getEpisodeDownloadUrl(),
+                    BaseActivity.getEpisodeTitle());
         }
     }
 

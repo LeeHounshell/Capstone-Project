@@ -44,9 +44,13 @@ public class QueueHelper {
     {
         LogHelper.v(TAG, "getPlayingQueue: mediaId="+mediaId+", musicProvider="+musicProvider);
 
+        if (mediaId == null) {
+            LogHelper.e(TAG, "could not build a playing queue for null mediaId");
+            return null;
+        }
         // extract the browsing hierarchy from the media ID:
         String[] hierarchy = MediaIDHelper.getHierarchy(mediaId);
-        if (hierarchy.length < 2) {
+        if (hierarchy == null || hierarchy.length < 2) {
             LogHelper.e(TAG, "could not build a playing queue for this mediaId: ", mediaId);
             return null;
         }

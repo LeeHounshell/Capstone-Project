@@ -218,7 +218,7 @@ public class MusicProvider {
     public MediaMetadataCompat getMusic(String musicId) {
         LogHelper.v(TAG, "getMusic: musicId="+musicId);
         MediaMetadataCompat item = sMusicListById.containsKey(musicId) ? sMusicListById.get(musicId).metadata : null;
-        LogHelper.v(TAG, "getMusic("+musicId+") found "+((item == null) ? "nothing" : item.getDescription().getTitle()));
+        LogHelper.v(TAG, "getMusic(" + musicId + ") found " + ((item == null) ? "nothing" : item.getDescription().getTitle()));
         return item;
     }
 
@@ -308,17 +308,21 @@ public class MusicProvider {
         LogHelper.v(TAG, "buildListsByGenre");
         ConcurrentMap<String, List<MediaMetadataCompat>> newMusicListByGenre = new ConcurrentHashMap<>();
 
+        int episodeCount = 0;
         for (MutableMediaMetadata m : sMusicListById.values()) {
             String genre = m.metadata.getString(MediaMetadataCompat.METADATA_KEY_GENRE);
             List<MediaMetadataCompat> list = newMusicListByGenre.get(genre);
-            //LogHelper.v(TAG, "==========> buildListsByGenre: genre="+genre+", mediaId="+m.metadata.getDescription().getMediaId()+", title="+m.metadata.getDescription().getTitle());
+            //String mediaId = m.metadata.getDescription().getMediaId();
+            //String title = (String) m.metadata.getDescription().getTitle();
+            //LogHelper.v(TAG, "==========> buildListsByGenre: genre="+genre+", mediaId="+mediaId+", title="+title);
             if (list == null) {
                 list = new ArrayList<>();
                 newMusicListByGenre.put(genre, list);
             }
             list.add(m.metadata);
+            ++episodeCount;
         }
-        LogHelper.v(TAG, "==========> buildListsByGenre: found "+newMusicListByGenre.size()+" episodes");
+        LogHelper.v(TAG, "==========> buildListsByGenre: found "+newMusicListByGenre.size()+", episodeCount="+episodeCount);
         mMusicListByGenre = newMusicListByGenre;
     }
 
@@ -376,9 +380,12 @@ public class MusicProvider {
             }
         }
         else if (mediaId.startsWith(MEDIA_ID_MUSICS_BY_GENRE)) {
-            String genre = MediaIDHelper.getHierarchy(mediaId)[1];
-            for (MediaMetadataCompat metadata : getMusicsByGenre(genre)) {
-                mediaItems.add(createMediaItem(metadata));
+            String[] hierarchy = MediaIDHelper.getHierarchy(mediaId);
+            if (hierarchy != null) {
+                String genre = hierarchy[1];
+                for (MediaMetadataCompat metadata : getMusicsByGenre(genre)) {
+                    mediaItems.add(createMediaItem(metadata));
+                }
             }
         }
         else {

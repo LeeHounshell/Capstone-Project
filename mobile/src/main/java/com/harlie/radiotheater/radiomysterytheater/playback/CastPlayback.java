@@ -221,7 +221,8 @@ public class CastPlayback implements Playback {
     }
 
     private void loadMedia(String mediaId, boolean autoPlay) throws
-            TransientNetworkDisconnectionException, NoConnectionException, JSONException {
+            TransientNetworkDisconnectionException, NoConnectionException, JSONException
+    {
         String musicId = MediaIDHelper.extractMusicIDFromMediaID(mediaId);
         MediaMetadataCompat track = mMusicProvider.getMusic(musicId);
         if (track == null) {

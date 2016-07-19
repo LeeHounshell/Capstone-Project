@@ -105,6 +105,7 @@
     <string name="search_queue_title">Search results</string>
     <string name="random_queue_title">Random episode</string>
     <string name="next_queue_title">Next episode</string>
+    <string name="current_queue_title">Episode</string>
 
     <!-- Strings related to Episodes -->
     <string name="title_episode_detail">Episode Detail</string>

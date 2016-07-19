@@ -41,7 +41,7 @@
 
     <application
         android:name=".RadioTheaterApplication"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:fullBackupContent="@xml/mybackupscheme"
         android:banner="@drawable/banner_tv"
         android:icon="@mipmap/ic_launcher"

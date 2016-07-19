@@ -280,20 +280,8 @@ public class LocalPlayback
     //-------- RADIO THEATER --------
     @Override
     public void play(QueueItem item) {
+        LogHelper.v(TAG, "PLAY: item="+item.getDescription().getMediaId()+", title="+item.getDescription().getTitle());
         sPlaybackRequested = true;
-        if (! sPlaybackEnabled
-                || getCurrentState() == PlaybackStateCompat.STATE_PLAYING
-                || getCurrentState() == PlaybackStateCompat.STATE_BUFFERING)
-        {
-            LogHelper.v(TAG, "*** IGNORED 'play' REQUEST *** - enabled="+sPlaybackEnabled+", current state="+getCurrentState());
-            Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
-            RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
-            return;
-        }
-        LogHelper.v(TAG, "play ---> *** RADIO MYSTERY THEATER: PLAY EPISODE - " + item.getDescription().getTitle() + ", mediaId=" + item.getDescription().getMediaId());
-        mPlayOnFocusGain = true;
-        tryToGetAudioFocus();
-        registerAudioNoisyReceiver();
         String mediaId = item.getDescription().getMediaId();
         boolean mediaHasChanged = !TextUtils.equals(mediaId, sCurrentMediaId);
         if (mediaHasChanged) {
@@ -301,31 +289,50 @@ public class LocalPlayback
             sCurrentMediaId = mediaId;
             notifyEpisodePlaying();
         }
+        if (! sPlaybackEnabled
+                || (getCurrentState() == PlaybackStateCompat.STATE_PLAYING && ! mediaHasChanged)
+                || (getCurrentState() == PlaybackStateCompat.STATE_BUFFERING && ! mediaHasChanged))
+        {
+            LogHelper.v(TAG, "PLAY: *** IGNORED 'play' REQUEST *** - mediaId="+mediaId+", enabled="+sPlaybackEnabled+", current state="+getCurrentState());
+            Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+            RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
+            return;
+        }
+
+        LogHelper.v(TAG, "PLAY: ---> *** RADIO MYSTERY THEATER: PLAY EPISODE - " + item.getDescription().getTitle() + ", mediaId=" + item.getDescription().getMediaId());
+        mPlayOnFocusGain = true;
+        tryToGetAudioFocus();
+        registerAudioNoisyReceiver();
 
         if (getCurrentState() == PlaybackStateCompat.STATE_PAUSED && !mediaHasChanged && mMediaPlayer != null) {
             configMediaPlayerState();
-        } else {
+        }
+        else {
             setCurrentState(PlaybackStateCompat.STATE_STOPPED);
             Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
             RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
             relaxResources(false); // release everything except MediaPlayer
-            String musicId = MediaIDHelper.extractMusicIDFromMediaID(mediaId);
+
             String source = null;
+            String musicId = MediaIDHelper.extractMusicIDFromMediaID(mediaId);
             boolean error = false;
             if (musicId == null) {
                 LogHelper.e(TAG, "*** UNABLE TO GET MUSIC ID *** - musicId=" + musicId + ", mediaId=" + mediaId);
                 error = true;
-            } else {
+            }
+            else {
                 MediaMetadataCompat mediaMetadataCompat = mMusicProvider.getMusic(musicId);
                 if (mediaMetadataCompat == null) {
                     LogHelper.e(TAG, "*** UNABLE TO GET MEDIA METADATA COMPAT *** - musicId=" + musicId + ", mediaId=" + mediaId);
                     error = true;
-                } else {
+                }
+                else {
                     MediaMetadataCompat track = MediaMetadataCompat.fromMediaMetadata(mediaMetadataCompat.getMediaMetadata());
                     if (track == null) {
                         LogHelper.e(TAG, "*** UNABLE TO LOAD TRACK *** - musicId=" + musicId + ", mediaId=" + mediaId);
                         error = true;
-                    } else {
+                    }
+                    else {
                         //noinspection ResourceType
                         source = track.getString(MusicProviderSource.CUSTOM_METADATA_TRACK_SOURCE);
                         LogHelper.v(TAG, "===> source=" + source);
@@ -337,6 +344,7 @@ public class LocalPlayback
             }
 
             if (source != null) {
+                LogHelper.v(TAG, "PLAY: source="+source);
                 try {
                     createMediaPlayerIfNeeded();
 
@@ -363,14 +371,16 @@ public class LocalPlayback
                         mCallback.onPlaybackStatusChanged(getCurrentState());
                     }
 
-                } catch (IOException ex) {
+                }
+                catch (IOException ex) {
                     LogHelper.e(TAG, ex, "Exception playing song");
                     if (mCallback != null) {
                         mCallback.onError(ex.getMessage());
                         notifyIfUnableToPlay();
                     }
                 }
-            } else {
+            }
+            else {
                 LogHelper.w(TAG, "*** SOURCE is null ***");
             }
         }

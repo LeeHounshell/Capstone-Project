@@ -29,16 +29,16 @@ import java.util.List;
 public class RadioControlIntentService extends IntentService {
     private final static String TAG = "LEE: <" + RadioControlIntentService.class.getSimpleName() + ">";
 
-    public static int lastRequest() {
-        return sLastRequest;
-    }
-
     private static volatile boolean sAlreadyStarted = false;
-    private static volatile int sLastRequest = 0;
-    private static volatile long sLastRequestTime = 0;
+    private static volatile int sEpisodeId = 1; // preload episode #1
 
     private final IBinder mBinder = new RadioControlServiceBinder();
     private Messenger outMessenger;
+
+    // so QueueManager can create the correct Q easily
+    public static int getEpisodeId() {
+        return sEpisodeId;
+    }
 
     public IBinder onBind(Intent arg0) {
         Bundle extras = arg0.getExtras();
@@ -73,7 +73,7 @@ public class RadioControlIntentService extends IntentService {
     private static final String ACTION_PLAY = "com.harlie.radiotheater.radiomysterytheater.action.PLAY";
     private static final String ACTION_PAUSE = "com.harlie.radiotheater.radiomysterytheater.action.PAUSE";
     private static final String ACTION_SEEK = "com.harlie.radiotheater.radiomysterytheater.action.SEEK";
-    private static final String ACTION_BACKUP = "com.harlie.radiotheater.radiomysterytheater.action.BACKUP";
+    private static final String ACTION_GOBACK = "com.harlie.radiotheater.radiomysterytheater.action.GOBACK";
     private static final String ACTION_STOP = "com.harlie.radiotheater.radiomysterytheater.action.STOP";
     private static final String ACTION_NEXT = "com.harlie.radiotheater.radiomysterytheater.action.NEXT";
     private static final String ACTION_PREV = "com.harlie.radiotheater.radiomysterytheater.action.PREV";
@@ -81,6 +81,7 @@ public class RadioControlIntentService extends IntentService {
     // control parameters
     private static final String EXTRA_EPISODE = "com.harlie.radiotheater.radiomysterytheater.extra.EPISODE";
     private static final String EXTRA_PARAM2 = "com.harlie.radiotheater.radiomysterytheater.extra.PARAM2";
+    private static final String EXTRA_TITLE = "com.harlie.radiotheater.radiomysterytheater.extra.TITLE";
 
     public RadioControlIntentService() {
         super("RadioControlIntentService");
@@ -235,8 +236,9 @@ public class RadioControlIntentService extends IntentService {
                 handleActionStart(episode, param2);
             } else if (ACTION_PLAY.equals(action)) {
                 final String episode = intent.getStringExtra(EXTRA_EPISODE);
-                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
-                handleActionPlay(episode, param2);
+                final String downloadUrl = intent.getStringExtra(EXTRA_PARAM2);
+                final String title = intent.getStringExtra(EXTRA_TITLE);
+                handleActionPlay(episode, downloadUrl, title);
             } else if (ACTION_PAUSE.equals(action)) {
                 final String episode = intent.getStringExtra(EXTRA_EPISODE);
                 final String param2 = intent.getStringExtra(EXTRA_PARAM2);
@@ -245,10 +247,10 @@ public class RadioControlIntentService extends IntentService {
                 final String episode = intent.getStringExtra(EXTRA_EPISODE);
                 final String position = intent.getStringExtra(EXTRA_PARAM2);
                 handleActionSeek(episode, position);
-            } else if (ACTION_BACKUP.equals(action)) {
+            } else if (ACTION_GOBACK.equals(action)) {
                 final String episode = intent.getStringExtra(EXTRA_EPISODE);
                 final String amount = intent.getStringExtra(EXTRA_PARAM2);
-                handleActionBackup(episode, amount);
+                handleActionGoback(episode, amount);
             } else if (ACTION_STOP.equals(action)) {
                 final String episode = intent.getStringExtra(EXTRA_EPISODE);
                 final String param2 = intent.getStringExtra(EXTRA_PARAM2);
@@ -323,7 +325,7 @@ public class RadioControlIntentService extends IntentService {
     //================================================================================
 
     /**
-     * Starts this service to perform action Start with the given parameters. If
+     * Starts this service to perform action START with the given parameters. If
      * the service is already performing a task this action will be queued.
      *
      * @see IntentService
@@ -331,8 +333,7 @@ public class RadioControlIntentService extends IntentService {
     public static void startActionStart(Context context, String from, String episode, String param2) {
         if (! sAlreadyStarted) {
             sAlreadyStarted = true;
-            sLastRequest = 0;
-            sLastRequestTime = System.currentTimeMillis();
+            sEpisodeId = Integer.valueOf(episode);
             LogHelper.v(TAG, "startActionStart: from=" + from + ", episode=" + episode);
             Intent intent = new Intent(context, RadioControlIntentService.class);
             intent.setAction(ACTION_START);
@@ -346,25 +347,25 @@ public class RadioControlIntentService extends IntentService {
     }
 
     /**
-     * Starts this service to perform action Play with the given parameters. If
+     * Starts this service to perform action PLAY with the given parameters. If
      * the service is already performing a task this action will be queued.
      *
      * @see IntentService
      */
-    public static void startActionPlay(Context context, String from, String episode, String param2) {
+    public static void startActionPlay(Context context, String from, String episode, String downloadUrl, String title) {
         LogHelper.v(TAG, "startActionPlay: from="+from+", episode="+episode);
         LocalPlayback.setPlaybackEnabled(true);
-        sLastRequest = 1;
-        sLastRequestTime = System.currentTimeMillis();
+        sEpisodeId = Integer.valueOf(episode);
         Intent intent = new Intent(context, RadioControlIntentService.class);
         intent.setAction(ACTION_PLAY);
         intent.putExtra(EXTRA_EPISODE, episode);
-        intent.putExtra(EXTRA_PARAM2, param2);
+        intent.putExtra(EXTRA_PARAM2, downloadUrl);
+        intent.putExtra(EXTRA_TITLE, title);
         context.startService(intent);
     }
 
     /**
-     * Starts this service to perform action Pause with the given parameters. If
+     * Starts this service to perform action PAUSE with the given parameters. If
      * the service is already performing a task this action will be queued.
      *
      * @see IntentService
@@ -373,8 +374,7 @@ public class RadioControlIntentService extends IntentService {
         LocalPlayback.setPlaybackEnabled(false);
         if (LocalPlayback.getCurrentState() == PlaybackStateCompat.STATE_PLAYING) {
             LogHelper.v(TAG, "startActionPause: from=" + from + ", episode=" + episode);
-            sLastRequest = 2;
-            sLastRequestTime = System.currentTimeMillis();
+            sEpisodeId = Integer.valueOf(episode);
             Intent intent = new Intent(context, RadioControlIntentService.class);
             intent.setAction(ACTION_PAUSE);
             intent.putExtra(EXTRA_EPISODE, episode);
@@ -387,15 +387,14 @@ public class RadioControlIntentService extends IntentService {
     }
 
     /**
-     * Starts this service to perform action Backup with the given parameters. If
+     * Starts this service to perform action SEEK with the given parameters. If
      * the service is already performing a task this action will be queued.
      *
      * @see IntentService
      */
     public static void startActionSeek(Context context, String from, String episode, String position) {
-        sLastRequest = 3;
-        sLastRequestTime = System.currentTimeMillis();
-        LogHelper.v(TAG, "startActionBackup: from="+from+", episode="+episode+", position="+position);
+        sEpisodeId = Integer.valueOf(episode);
+        LogHelper.v(TAG, "startActionSeek: from="+from+", episode="+episode+", position="+position);
         Intent intent = new Intent(context, RadioControlIntentService.class);
         intent.setAction(ACTION_SEEK);
         intent.putExtra(EXTRA_EPISODE, episode);
@@ -404,24 +403,23 @@ public class RadioControlIntentService extends IntentService {
     }
 
     /**
-     * Starts this service to perform action Backup with the given parameters. If
+     * Starts this service to perform action GOBACK with the given parameters. If
      * the service is already performing a task this action will be queued.
      *
      * @see IntentService
      */
-    public static void startActionBackup(Context context, String from, String episode, String amount) {
-        sLastRequest = 4;
-        sLastRequestTime = System.currentTimeMillis();
-        LogHelper.v(TAG, "startActionBackup: from="+from+", episode="+episode+", amount="+amount);
+    public static void startActionGoback(Context context, String from, String episode, String amount) {
+        sEpisodeId = Integer.valueOf(episode);
+        LogHelper.v(TAG, "startActionGoback: from="+from+", episode="+episode+", amount="+amount);
         Intent intent = new Intent(context, RadioControlIntentService.class);
-        intent.setAction(ACTION_BACKUP);
+        intent.setAction(ACTION_GOBACK);
         intent.putExtra(EXTRA_EPISODE, episode);
         intent.putExtra(EXTRA_PARAM2, amount);
         context.startService(intent);
     }
 
     /**
-     * Starts this service to perform action Stop with the given parameters. If
+     * Starts this service to perform action STOP with the given parameters. If
      * the service is already performing a task this action will be queued.
      *
      * @see IntentService
@@ -429,8 +427,7 @@ public class RadioControlIntentService extends IntentService {
     public static void startActionStop(Context context, String from, String episode, String param2) {
         LocalPlayback.setPlaybackEnabled(false);
         if (LocalPlayback.getCurrentState() == PlaybackStateCompat.STATE_PLAYING) {
-            sLastRequest = 5;
-            sLastRequestTime = System.currentTimeMillis();
+            sEpisodeId = Integer.valueOf(episode);
             LogHelper.v(TAG, "startActionStop: from=" + from + ", episode=" + episode);
             Intent intent = new Intent(context, RadioControlIntentService.class);
             intent.setAction(ACTION_STOP);
@@ -444,15 +441,14 @@ public class RadioControlIntentService extends IntentService {
     }
 
     /**
-     * Starts this service to perform action Next with the given parameters. If
+     * Starts this service to perform action NEXT with the given parameters. If
      * the service is already performing a task this action will be queued.
      *
      * @see IntentService
      */
     public static void startActionNext(Context context, String from, String episode, String param2) {
+        sEpisodeId = Integer.valueOf(episode);
         LocalPlayback.setPlaybackEnabled(true);
-        sLastRequest = 6;
-        sLastRequestTime = System.currentTimeMillis();
         LogHelper.v(TAG, "startActionNext: from="+from+", episode="+episode);
         Intent intent = new Intent(context, RadioControlIntentService.class);
         intent.setAction(ACTION_NEXT);
@@ -462,15 +458,14 @@ public class RadioControlIntentService extends IntentService {
     }
 
     /**
-     * Starts this service to perform action Prev with the given parameters. If
+     * Starts this service to perform action PREV with the given parameters. If
      * the service is already performing a task this action will be queued.
      *
      * @see IntentService
      */
     public static void startActionPrev(Context context, String from, String episode, String param2) {
+        sEpisodeId = Integer.valueOf(episode);
         LocalPlayback.setPlaybackEnabled(true);
-        sLastRequest = 7;
-        sLastRequestTime = System.currentTimeMillis();
         LogHelper.v(TAG, "startActionPrev: from="+from+", episode="+episode);
         Intent intent = new Intent(context, RadioControlIntentService.class);
         intent.setAction(ACTION_PREV);
@@ -482,7 +477,7 @@ public class RadioControlIntentService extends IntentService {
     //================================================================================
 
     /**
-     * Handle action Start in the provided background thread with the provided
+     * Handle action START in the provided background thread with the provided
      * parameters.
      */
     private void handleActionStart(String episode, String param2) {
@@ -490,31 +485,38 @@ public class RadioControlIntentService extends IntentService {
     }
 
     /**
-     * Handle action Play in the provided background thread with the provided
+     * Handle action PLAY in the provided background thread with the provided
      * parameters.
      */
-    private void handleActionPlay(String episode, String episodeDownloadUrl) {
+    private void handleActionPlay(String episode, String episodeDownloadUrl, String title) {
         LogHelper.v(TAG, "---> handleActionPlay: episode="+episode+", episodeDownloadUrl="+episodeDownloadUrl);
         if (episode == null) {
-            LogHelper.e(TAG, "FIXME: null episode");
+            LogHelper.e(TAG, "handleActionPlay: null episode");
             return;
         }
         if (episodeDownloadUrl == null) {
-            LogHelper.e(TAG, "FIXME: null episodeDownloadUrl");
+            LogHelper.e(TAG, "handleActionPlay: null episodeDownloadUrl");
+            return;
+        }
+        if (title == null) {
+            LogHelper.e(TAG, "handleActionPlay: null title");
             return;
         }
         mMediaId = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.genre);
-        LogHelper.d(TAG, "*** INITIALIZE PLAYBACK ***  mMediaId=" + mMediaId + ", episodeDownloadUrl=" + episodeDownloadUrl);
+        LogHelper.d(TAG, "*** INITIALIZE PLAYBACK ***  mMediaId=" + mMediaId + ", episodeDownloadUrl=" + episodeDownloadUrl + ", title=" + title);
 
         Context context = this.getBaseContext();
         Intent radioServiceCommandIntent = new Intent(context, RadioTheaterService.class);
         radioServiceCommandIntent.setAction(RadioTheaterService.ACTION_CMD);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_PLAY);
+        radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_EPISODE, episode);
+        radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_DOWNLOAD_URL, episodeDownloadUrl);
+        radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_TITLE, title);
         context.startService(radioServiceCommandIntent);
     }
 
     /**
-     * Handle action Pause in the provided background thread with the provided
+     * Handle action PAUSE in the provided background thread with the provided
      * parameters.
      */
     private void handleActionPause(String episode, String param2) {
@@ -523,13 +525,12 @@ public class RadioControlIntentService extends IntentService {
         Intent radioServiceCommandIntent = new Intent(context, RadioTheaterService.class);
         radioServiceCommandIntent.setAction(RadioTheaterService.ACTION_CMD);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_PAUSE);
-        // NOTE: use STOP instead of PAUSE to prevent a screen-timeout from autostarting playback..
-        //radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_STOP);
+        radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_EPISODE, episode);
         context.startService(radioServiceCommandIntent);
     }
 
     /**
-     * Handle action Seek in the provided background thread with the provided
+     * Handle action SEEK in the provided background thread with the provided
      * parameters. Seek playback to the specified position.
      */
     private void handleActionSeek(String episode, String position) {
@@ -538,21 +539,28 @@ public class RadioControlIntentService extends IntentService {
         Intent radioServiceCommandIntent = new Intent(context, RadioTheaterService.class);
         radioServiceCommandIntent.setAction(RadioTheaterService.ACTION_CMD);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_SEEK);
-        radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_SEEK_POSITION, Integer.valueOf(position));
+        radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_EPISODE, episode);
+        radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_SEEK_POSITION, Integer.valueOf(position));
         context.startService(radioServiceCommandIntent);
     }
 
     /**
-     * Handle action Backup in the provided background thread with the provided
+     * Handle action GOBACK in the provided background thread with the provided
      * parameters. Backup playback by the amount of seconds.
      */
-    private void handleActionBackup(String episode, String amount) {
-        LogHelper.v(TAG, "---> FIXME: handleActionBackup episode="+episode+", amount="+amount);
-        // FIXME: need to backup the current play position by one minute
+    private void handleActionGoback(String episode, String amount) {
+        Context context = this.getBaseContext();
+        LogHelper.v(TAG, "---> handleActionGoback: episode="+episode+", amount="+amount);
+        Intent radioServiceCommandIntent = new Intent(context, RadioTheaterService.class);
+        radioServiceCommandIntent.setAction(RadioTheaterService.ACTION_CMD);
+        radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_GOBACK);
+        radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_EPISODE, episode);
+        radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_GOBACK_AMOUNT, Integer.valueOf(amount));
+        context.startService(radioServiceCommandIntent);
     }
 
     /**
-     * Handle action Stop in the provided background thread with the provided
+     * Handle action STOP in the provided background thread with the provided
      * parameters.
      */
     private void handleActionStop(String episode, String param2) {
@@ -561,11 +569,12 @@ public class RadioControlIntentService extends IntentService {
         Intent radioServiceCommandIntent = new Intent(context, RadioTheaterService.class);
         radioServiceCommandIntent.setAction(RadioTheaterService.ACTION_CMD);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_STOP);
+        radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_EPISODE, episode);
         context.startService(radioServiceCommandIntent);
     }
 
     /**
-     * Handle action Next in the provided background thread with the provided
+     * Handle action NEXT in the provided background thread with the provided
      * parameters.
      */
     private void handleActionNext(String episode, String param2) {
@@ -574,11 +583,12 @@ public class RadioControlIntentService extends IntentService {
         Intent radioServiceCommandIntent = new Intent(context, RadioTheaterService.class);
         radioServiceCommandIntent.setAction(RadioTheaterService.ACTION_CMD);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_NEXT);
+        radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_EPISODE, episode);
         context.startService(radioServiceCommandIntent);
     }
 
     /**
-     * Handle action Next in the provided background thread with the provided
+     * Handle action PREV in the provided background thread with the provided
      * parameters.
      */
     private void handleActionPrev(String episode, String param2) {
@@ -587,6 +597,7 @@ public class RadioControlIntentService extends IntentService {
         Intent radioServiceCommandIntent = new Intent(context, RadioTheaterService.class);
         radioServiceCommandIntent.setAction(RadioTheaterService.ACTION_CMD);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_PREV);
+        radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_EPISODE, episode);
         context.startService(radioServiceCommandIntent);
     }
 

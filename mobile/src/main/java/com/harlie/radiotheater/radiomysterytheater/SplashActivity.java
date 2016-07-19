@@ -18,27 +18,34 @@ public class SplashActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Intent intent = getIntent();
+        if (intent != null && getIntent().getStringExtra("EXIT_NOW") != null) {
+            LogHelper.v(TAG, "exiting.");
+            finish();
+            return;
+        }
+
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
         String email = sharedPreferences.getString("userEmail", "");
         String authenticated = sharedPreferences.getString("authentication", "");
         if (authenticated.length() > 0 && authenticated.equals(email)) {
             LogHelper.v(TAG, "Authenticated.");
-            Intent intent = new Intent(this, AutoplayActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            Intent autoplayIntent = new Intent(this, AutoplayActivity.class);
+            autoplayIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             // setup the primary app-startup Transition effect
             LogHelper.v(TAG, "Transitioning using animation..");
             Transition exitTransition = new android.transition.Fade();
             getWindow().setExitTransition(exitTransition);
             ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this);
             Bundle bundle = options.toBundle();
-            startActivity(intent, bundle);
+            startActivity(autoplayIntent, bundle);
         }
         else {
             LogHelper.v(TAG, "Need to Authenticate.");
-            Intent intent = new Intent(this, AuthenticationActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
+            Intent authenticationIntent = new Intent(this, AuthenticationActivity.class);
+            authenticationIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            authenticationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(authenticationIntent);
         }
         finish();
     }

@@ -234,7 +234,7 @@ public class AutoplayActivity extends BaseActivity {
                 mAutoPlay.setVisibility(View.VISIBLE);
                 if (sWaitForMedia == false) {
                     sWaitForMedia = true;
-                    RadioControlIntentService.startActionPlay(autoplayActivity, "MAIN", episodeId, getEpisodeDownloadUrl());
+                    RadioControlIntentService.startActionPlay(autoplayActivity, "MAIN", episodeId, getEpisodeDownloadUrl(), getEpisodeTitle());
                 }
             }
         }
@@ -344,7 +344,7 @@ public class AutoplayActivity extends BaseActivity {
 //                        if (mCurrentPosition == 0) {
 //                            loadingScreen();
 //                        }
-                        RadioControlIntentService.startActionPlay(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), getEpisodeDownloadUrl());
+                        RadioControlIntentService.startActionPlay(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), getEpisodeDownloadUrl(), getEpisodeTitle());
                     }
                     else if (oldButtonState == PAUSE) {
                         LogHelper.v(TAG, "PAUSE PLAYBACK..");
@@ -365,7 +365,7 @@ public class AutoplayActivity extends BaseActivity {
                 }
                 //mp.start();
                 LogHelper.v(TAG, "onDoubleClick");
-                RadioControlIntentService.startActionBackup(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), String.valueOf((THIRTY_SECONDS * 2)));
+                RadioControlIntentService.startActionGoback(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), String.valueOf((THIRTY_SECONDS * 2)));
             }
 
             @Override
@@ -641,7 +641,7 @@ public class AutoplayActivity extends BaseActivity {
                 @Override
                 public void run() {
                     ScrollingTextView horizontalScrollingText = getHorizontalScrollingText();
-                    if (horizontalScrollingText != null) {
+                    if (horizontalScrollingText != null && sAirdate != null) {
                         horizontalScrollingText.setText("         ... Airdate: " + RadioTheaterContract.airDate(sAirdate) + " ... Episode #" + sEpisodeNumber + " ... " + sEpisodeTitle + " ... " + sEpisodeDescription);
                         horizontalScrollingText.setEnabled(true);
                         horizontalScrollingText.setSelected(true);
@@ -924,7 +924,7 @@ public class AutoplayActivity extends BaseActivity {
                     LogHelper.v(TAG,  "*** RECEIVED BROADCAST: REQUEST TO PLAY EPISODE "+episodeIndex);
                     sAutoplayNextNow = false;
                     getEpisodeInfoFor(Long.parseLong(episodeIndex));
-                    RadioControlIntentService.startActionPlay(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), getEpisodeDownloadUrl());
+                    RadioControlIntentService.startActionPlay(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), getEpisodeDownloadUrl(), getEpisodeTitle());
                 }
                 else if (message.length() > KEY_PLAY.length() && message.substring(0, KEY_PLAY.length()).equals(KEY_PLAY)) {
                     String episodeIndex = message.substring(KEY_PLAY.length(), message.length());
@@ -950,7 +950,14 @@ public class AutoplayActivity extends BaseActivity {
                     sAutoplayNextNow = true;
                     markEpisodeAsHeardAndIncrementPlayCount(getEpisodeNumber(), episodeIndex, mDuration);
                     initializeForEpisode("playback completed for episode "+episodeIndex);
-                    verifyPaidVersion(true);
+                    mCurrentPosition = 0;
+                    getHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            showPleaseWaitButton(0);
+                            verifyPaidVersion(true);
+                        }
+                    });
                 }
                 else {
                     LogHelper.v(TAG, "*** UNKNOWN MESSAGE VIA INTENT: "+message);
@@ -982,7 +989,7 @@ public class AutoplayActivity extends BaseActivity {
                     maxTrialEpisodesAreReached();
                     RadioTheaterWidgetService.setPaidVersion(autoplayActivity, false);
                     if (handleClick) {
-                        RadioControlIntentService.startActionPlay(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), getEpisodeDownloadUrl());
+                        RadioControlIntentService.startActionPlay(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), getEpisodeDownloadUrl(), getEpisodeTitle());
                     }
                 }
             });
@@ -1170,6 +1177,24 @@ public class AutoplayActivity extends BaseActivity {
         getAutoPlay().setBackground(pauseButton);
         sShowingButton = PAUSE;
         return true;
+    }
+
+    //
+    // NOTE: there is an Android problem setting these 3 intent flags together with a shared-element transition that destroys the transition effect:
+    //autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+    //
+    // see: BaseActivity.playNow()
+    // to get around this problem, I have over-ridden onBackPressed in AutoplayActivity so that it clears the back stack before exiting.
+    //
+    @Override
+    public void onBackPressed() {
+        LogHelper.v(TAG, "onBackPressed - exiting");
+        super.onBackPressed();
+        Intent intent = new Intent(this, SplashActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra("EXIT_NOW", "exit");
+        startActivity(intent);
+        finish();
     }
 
 }

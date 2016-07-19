@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.v4.media.MediaBrowserCompat.MediaItem;
@@ -33,10 +32,11 @@ import com.harlie.radiotheater.radiomysterytheater.playback.PlaybackManager;
 import com.harlie.radiotheater.radiomysterytheater.playback.QueueManager;
 import com.harlie.radiotheater.radiomysterytheater.utils.CarHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
+import com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.PackageValidator;
+import com.harlie.radiotheater.radiomysterytheater.utils.QueueHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.WearHelper;
 
-import java.lang.ref.WeakReference;
 import java.util.List;
 
 import static com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper.MEDIA_ID_ROOT;
@@ -116,6 +116,9 @@ public class RadioTheaterService
     // A value of a CMD_NAME key in the extras of the incoming Intent that
     // indicates that the music playback should be started (see {@link #onStartCommand})
     public static final String CMD_PLAY = "CMD_PLAY";
+    public static final String CMD_PARAM_EPISODE = "CMD_PARAM_EPISODE";
+    public static final String CMD_PARAM_DOWNLOAD_URL = "CMD_PARAM_DOWNLOAD_URL";
+    public static final String CMD_PARAM_TITLE = "CMD_PARAM_TITLE";
 
     // A value of a CMD_NAME key in the extras of the incoming Intent that
     // indicates that the music playback should be paused (see {@link #onStartCommand})
@@ -124,7 +127,12 @@ public class RadioTheaterService
     // A value of a CMD_NAME key in the extras of the incoming Intent that
     // indicates that the music playback should be paused (see {@link #onStartCommand})
     public static final String CMD_SEEK = "CMD_SEEK";
-    public static final String CMD_SEEK_POSITION = "CMD_SEEK_POSITION";
+    public static final String CMD_PARAM_SEEK_POSITION = "CMD_PARAM_SEEK_POSITION";
+
+    // A value of a CMD_NAME key in the extras of the incoming Intent that
+    // indicates that the music playback should backup by specified amount (see {@link #onStartCommand})
+    public static final String CMD_GOBACK = "CMD_GOBACK";
+    public static final String CMD_PARAM_GOBACK_AMOUNT = "CMD_PARAM_GOBACK_AMOUNT";
 
     // A value of a CMD_NAME key in the extras of the incoming Intent that
     // indicates that the music playback should be stopped (see {@link #onStartCommand})
@@ -144,6 +152,7 @@ public class RadioTheaterService
 
     // Delay stopSelf by using a handler.
     private static final int STOP_DELAY = 30000;
+    private static final int DEFAULT_GOBACK_AMOUNT = (60 * 1000); // one minute
 
     private MusicProvider mMusicProvider;
     private PlaybackManager mPlaybackManager;
@@ -151,9 +160,10 @@ public class RadioTheaterService
     private MediaSessionCompat mSession;
     private MediaNotificationManager mMediaNotificationManager;
     private Bundle mSessionExtras;
-    private final DelayedStopHandler mDelayedStopHandler = new DelayedStopHandler(this);
     private MediaRouter mMediaRouter;
     private PackageValidator mPackageValidator;
+    private QueueManager queueManager;
+    private Handler handler;
 
     private boolean mIsConnectedToCar;
     private BroadcastReceiver mCarConnectionReceiver;
@@ -166,7 +176,6 @@ public class RadioTheaterService
 
         @Override
         public void onApplicationConnected(ApplicationMetadata appMetadata, String sessionId, boolean wasLaunched) {
-            LogHelper.v(TAG, "onApplicationConnected");
             // In case we are casting, send the device name as an extra on MediaSession metadata.
             mSessionExtras.putString(EXTRA_CONNECTED_CAST, VideoCastManager.getInstance().getDeviceName());
             mSession.setExtras(mSessionExtras);
@@ -178,7 +187,6 @@ public class RadioTheaterService
 
         @Override
         public void onDisconnectionReason(int reason) {
-            LogHelper.v(TAG, "onDisconnectionReason");
             // This is our final chance to update the underlying stream position
             // In onDisconnected(), the underlying CastPlayback#mVideoCastConsumer
             // is disconnected and hence we update our local value of stream position
@@ -198,6 +206,7 @@ public class RadioTheaterService
     };
 
     /*
+     * FIXME: THIS METHOD IS PERFORMANCE-HEAVY ON THE MAIN THREAD!
      * (non-Javadoc)
      * @see android.app.Service#onCreate()
      */
@@ -205,12 +214,17 @@ public class RadioTheaterService
     public void onCreate() {
         super.onCreate();
         LogHelper.v(TAG, "onCreate");
+        final RadioTheaterService radioTheaterService = this;
+        handler = new Handler();
 
+        LogHelper.v(TAG, "*** CREATE THE MUSIC PROVIDER ***");
         mMusicProvider = new MusicProvider();
 
-        mPackageValidator = new PackageValidator(this);
+        LogHelper.v(TAG, "*** CREATE THE PACKAGE VALIDATOR ***");
+        mPackageValidator = new PackageValidator(radioTheaterService);
 
-        QueueManager queueManager = new QueueManager(mMusicProvider, getResources(),
+        LogHelper.v(TAG, "*** CREATE THE QUEUE MANAGER ***");
+        queueManager = new QueueManager(mMusicProvider, getResources(),
                 new QueueManager.MetadataUpdateListener() {
                     @Override
                     public void onMetadataChanged(MediaMetadataCompat metadata) {
@@ -232,25 +246,27 @@ public class RadioTheaterService
 
                     @Override
                     public void onQueueUpdated(String title, List<MediaSessionCompat.QueueItem> newQueue) {
-                        LogHelper.v(TAG, "===> onQueueUpdated <===");
+                        LogHelper.v(TAG, "===> onQueueUpdated <=== - title='"+title+"'");
                         mSession.setQueue(newQueue);
                         mSession.setQueueTitle(title);
                     }
                 });
 
-        LocalPlayback playback = new LocalPlayback(this, mMusicProvider);
-        mPlaybackManager = new PlaybackManager(this, getResources(), mMusicProvider, queueManager, playback);
+        LogHelper.v(TAG, "*** CREATE THE LOCAL PLAYBACK ***");
+        LocalPlayback playback = new LocalPlayback(radioTheaterService, mMusicProvider);
+        mPlaybackManager = new PlaybackManager(radioTheaterService, getResources(), mMusicProvider, queueManager, playback);
 
-        // Start a new MediaSession
-        mSession = new MediaSessionCompat(this, "RadioTheaterService");
+        LogHelper.v(TAG, "*** START A MEDIA SESSION ***");
+        mSession = new MediaSessionCompat(radioTheaterService, "RadioTheaterService");
         setSessionToken(mSession.getSessionToken());
-        mSession.setCallback(mPlaybackManager.getMediaSessionCallback());
+
         mSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
                 MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
 
         // To make the app more responsive, fetch and cache catalog information now.
         // This can help improve the response time in the method
         // {@link #onLoadChildren(String, Result<List<MediaItem>>) onLoadChildren()}.
+        LogHelper.v(TAG, "*** RETRIEVE MEDIA ASYNC ***");
         mMusicProvider.retrieveMediaAsync(new MusicProvider.Callback() {
             @Override
             public void onMusicCatalogReady(boolean success) {
@@ -258,30 +274,41 @@ public class RadioTheaterService
             }
         });
 
+        LogHelper.v(TAG, "*** AUTOPLAY INTENT FLAG_UPDATE_CURRENT ***");
         Context context = getApplicationContext();
         Intent intent = new Intent(context, AutoplayActivity.class);
         PendingIntent pi = PendingIntent.getActivity(context, 99 /*request code*/,
                 intent, PendingIntent.FLAG_UPDATE_CURRENT);
         mSession.setSessionActivity(pi);
 
+        LogHelper.v(TAG, "*** ANDROID WEAR SETUP ***");
         mSessionExtras = new Bundle();
         CarHelper.setSlotReservationFlags(mSessionExtras, true, true, true);
         WearHelper.setSlotReservationFlags(mSessionExtras, true, true);
         WearHelper.setUseBackgroundFromTheme(mSessionExtras, true);
         mSession.setExtras(mSessionExtras);
 
-        mPlaybackManager.updatePlaybackState(null);
-
+        LogHelper.v(TAG, "*** ADD VIDEO CAST CONSUMER ***");
         try {
-            mMediaNotificationManager = new MediaNotificationManager(this);
+            mMediaNotificationManager = new MediaNotificationManager(radioTheaterService);
         } catch (RemoteException e) {
             throw new IllegalStateException("Could not create a MediaNotificationManager", e);
         }
         VideoCastManager.getInstance().addVideoCastConsumer(mCastConsumer);
-        mMediaRouter = MediaRouter.getInstance(getApplicationContext());
 
+        LogHelper.v(TAG, "*** REGISTER CAR RECEIVER ***");
         registerCarConnectionReceiver();
 
+        LogHelper.v(TAG, "*** set the session callback ***");
+        mSession.setCallback(mPlaybackManager.getMediaSessionCallback());
+
+        LogHelper.v(TAG, "*** get the media router ***");
+        mMediaRouter = MediaRouter.getInstance(getApplicationContext());
+
+        LogHelper.v(TAG, "*** UPDATE PLAYBACK STATE ***");
+        mPlaybackManager.updatePlaybackState(null);
+
+        LogHelper.v(TAG, "*** RadioTheaterService is initialized ***");
     }
 
     /**
@@ -294,32 +321,53 @@ public class RadioTheaterService
         if (startIntent != null) {
             String action = startIntent.getAction();
             String command = startIntent.getStringExtra(CMD_NAME);
+            String episode = startIntent.getStringExtra(CMD_PARAM_EPISODE);
             if (ACTION_CMD.equals(action)) {
-                LogHelper.v(TAG, "=========>>> ACTION: "+action+", COMMAND="+command);
+                LogHelper.v(TAG, "=========>>> ACTION: "+action+", COMMAND="+command+", EPISODE="+episode);
+
                 if (CMD_PLAY.equals(command)) {
+                    String title = startIntent.getStringExtra(CMD_PARAM_TITLE);
+                    String episodeDownloadUrl = startIntent.getStringExtra(CMD_PARAM_DOWNLOAD_URL);
+                    String mediaId = queueManager.setCurrentIndexFromEpisodeId(Integer.parseInt(episode), title, episodeDownloadUrl);
+                    mPlaybackManager.setCurrentMediaId(mediaId);
                     mPlaybackManager.handlePlayRequest();
                 }
+
                 else if (CMD_PAUSE.equals(command)) {
                     mPlaybackManager.handlePauseRequest();
                 }
+
                 else if (CMD_SEEK.equals(command)) {
-                    Integer position = startIntent.getIntExtra(CMD_SEEK_POSITION, 0);
+                    Integer position = startIntent.getIntExtra(CMD_PARAM_SEEK_POSITION, 0);
                     mPlaybackManager.handleSeekRequest(position);
                 }
+
+                else if (CMD_GOBACK.equals(command)) {
+                    Integer amount = startIntent.getIntExtra(CMD_PARAM_GOBACK_AMOUNT, 0);
+                    int position = LocalPlayback.getCurrentPosition();
+                    position -= DEFAULT_GOBACK_AMOUNT;
+                    if (position < 0) {
+                        position = 0;
+                    }
+                    mPlaybackManager.handleSeekRequest(position);
+                }
+
                 else if (CMD_STOP.equals(command)) {
                     mPlaybackManager.handleStopRequest(null);
                 }
+
                 else if (CMD_NEXT.equals(command)) {
                     // FIXME: CMD_NEXT
-                    LogHelper.v(TAG, "FIXME: CMD_NEXT");
                 }
+
                 else if (CMD_PREV.equals(command)) {
                     // FIXME: CMD_PREV
-                    LogHelper.v(TAG, "FIXME: CMD_PREV");
                 }
+
                 else if (CMD_STOP_CASTING.equals(command)) {
                     VideoCastManager.getInstance().disconnect();
                 }
+
                 else {
                     LogHelper.w(TAG, "*** UNKNOWN ACTION="+action+" for COMMAND="+command);
                 }
@@ -329,12 +377,6 @@ public class RadioTheaterService
             }
         }
 
-/*
-        // Reset the delay handler to enqueue a message to stop the service if
-        // nothing is playing.
-        mDelayedStopHandler.removeCallbacksAndMessages(null);
-        mDelayedStopHandler.sendEmptyMessageDelayed(0, STOP_DELAY);
-*/
         return START_STICKY;
     }
 
@@ -350,7 +392,6 @@ public class RadioTheaterService
         mPlaybackManager.handleStopRequest(null);
         mMediaNotificationManager.stopNotification();
         VideoCastManager.getInstance().removeVideoCastConsumer(mCastConsumer);
-        mDelayedStopHandler.removeCallbacksAndMessages(null);
         mSession.release();
     }
 
@@ -379,14 +420,13 @@ public class RadioTheaterService
             // Wear device, you should return a different MEDIA ROOT here, and then,
             // on onLoadChildren, handle it accordingly.
         }
-
         return new BrowserRoot(MEDIA_ID_ROOT, null);
     }
 
     @Override
     public void onLoadChildren(@NonNull final String parentMediaId,
-                               @NonNull final Result<List<MediaItem>> result) {
-        LogHelper.v(TAG, "onLoadChildren: parentMediaId=", parentMediaId);
+                               @NonNull final Result<List<MediaItem>> result)
+    {
         result.sendResult(mMusicProvider.getChildren(parentMediaId, getResources()));
     }
 
@@ -395,13 +435,10 @@ public class RadioTheaterService
      */
     @Override
     public void onPlaybackStart() {
-        LogHelper.v(TAG, "onPlaybackStart");
         if (!mSession.isActive()) {
             LogHelper.v(TAG, "*** WE ARE THE DEFAULT MEDIA RECEIVER NOW ***");
             mSession.setActive(true);
         }
-
-        mDelayedStopHandler.removeCallbacksAndMessages(null);
 
         // The service needs to continue running even after the bound client (usually a
         // MediaController) disconnects, otherwise the music playback will stop.
@@ -409,32 +446,27 @@ public class RadioTheaterService
         startService(new Intent(getApplicationContext(), RadioTheaterService.class));
     }
 
-
     /**
      * Callback method called from PlaybackManager whenever the music stops playing.
      */
     @Override
     public void onPlaybackStop() {
-        LogHelper.v(TAG, "onPlaybackStop");
-/*
-        // Reset the delayed stop handler, so after STOP_DELAY it will be executed again,
-        // potentially stopping the service.
-        mDelayedStopHandler.removeCallbacksAndMessages(null);
-        mDelayedStopHandler.sendEmptyMessageDelayed(0, STOP_DELAY);
-*/
         stopForeground(true);
     }
 
     @Override
     public void onNotificationRequired() {
-        LogHelper.v(TAG, "onNotificationRequired");
         mMediaNotificationManager.startNotification();
     }
 
     @Override
     public void onPlaybackStateUpdated(PlaybackStateCompat newState) {
-        LogHelper.v(TAG, "onPlaybackStateUpdated");
-        mSession.setPlaybackState(newState);
+        if (mSession != null) {
+            mSession.setPlaybackState(newState);
+        }
+        else {
+            LogHelper.e(TAG, "*** unable to setPlaybackState("+newState+") ***");
+        }
     }
 
     private void registerCarConnectionReceiver() {
@@ -455,33 +487,6 @@ public class RadioTheaterService
     private void unregisterCarConnectionReceiver() {
         LogHelper.v(TAG, "unregisterCarConnectionReceiver");
         unregisterReceiver(mCarConnectionReceiver);
-    }
-
-    /**
-     * A simple handler that stops the service if playback is not active (playing)
-     */
-    private static class DelayedStopHandler extends Handler {
-        private final WeakReference<RadioTheaterService> mWeakReference;
-
-        private DelayedStopHandler(RadioTheaterService service) {
-            mWeakReference = new WeakReference<>(service);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            LogHelper.v(TAG, "handleMessage: msg="+msg);
-            RadioTheaterService service = mWeakReference.get();
-            if (service != null && service.mPlaybackManager.getPlayback() != null) {
-/*
-                if (service.mPlaybackManager.getPlayback().isPlaying()) {
-                    LogHelper.d(TAG, "=========>>> ignoring delayed stop since the media player is in use.");
-                    return;
-                }
-*/
-                LogHelper.d(TAG, "Stopping service with delay handler.");
-                service.stopSelf();
-            }
-        }
     }
 
 }
