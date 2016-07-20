@@ -510,8 +510,10 @@ public class AutoplayActivity extends BaseActivity {
                 LogHelper.v(TAG, "STARTACTIVITY: EpisodeListActivity.class");
                 startActivity(episodeListIntent);
                 overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
-                FragmentManager fragmentManager = activity.getSupportFragmentManager();
-                fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                if (!sHandleRotationEvent && EpisodeListActivity.isTwoPane() && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    FragmentManager fragmentManager = activity.getSupportFragmentManager();
+                    fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                }
             }
         });
     }

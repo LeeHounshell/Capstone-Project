@@ -59,7 +59,7 @@ public class EpisodeDetailActivity extends BaseActivity {
                     LogHelper.v(TAG, "STARTACTIVITY: AutoplayActivity.class");
                     startActivity(autoplayIntent);
                     overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
-                    if (isTwoPane() && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    if (! sHandleRotationEvent && isTwoPane() && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
                         FragmentManager fragmentManager = activity.getSupportFragmentManager();
                         fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
                     }
