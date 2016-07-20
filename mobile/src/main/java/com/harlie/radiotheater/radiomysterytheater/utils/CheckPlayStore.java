@@ -73,7 +73,7 @@ public class CheckPlayStore {
     }
 
     // from: http://stackoverflow.com/questions/15401748/how-to-detect-if-google-play-is-installed-not-market
-    private static boolean isGooglePlayInstalled(Context context) {
+    public static boolean isGooglePlayInstalled(Context context) {
         PackageManager pm = context.getPackageManager();
         boolean app_installed;
         try

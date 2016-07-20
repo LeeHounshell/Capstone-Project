@@ -81,8 +81,8 @@ public class EpisodeDetailFragment extends FragmentBase {
             LogHelper.v(TAG, "onCreate: build EpisodeRecyclerViewItem for (RECEIVE) ARG_EPISODE_ID="+ mEpisodeId);
             mItem = getArguments().getParcelable(ARG_EPISODE_PARCELABLE);
 
-            // need the download URL too
-            baseActivity.getEpisodeInfoFor(mEpisodeId);
+            // this will also set the episode display info
+            baseActivity.setShareIntentForEpisode(mEpisodeId);
 
             // Load the actors for this episode
             ActorsEpisodesCursor actorsEpisodesCursor = SQLiteHelper.getActorsEpisodesCursor(mEpisodeId);

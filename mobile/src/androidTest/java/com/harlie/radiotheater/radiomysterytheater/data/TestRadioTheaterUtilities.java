@@ -28,8 +28,13 @@ import android.support.test.runner.AndroidJUnit4;
 import android.test.RenamingDelegatingContext;
 import android.util.Log;
 
+import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
+import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersColumns;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.SQLiteHelper;
 import com.harlie.radiotheater.radiomysterytheater.util.PollingCheck;
+import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import org.junit.After;
 import org.junit.Before;
@@ -81,7 +86,10 @@ public class TestRadioTheaterUtilities {
             String columnName = entry.getKey();
             int idx = valueCursor.getColumnIndex(columnName);
             assertFalse("Column '" + columnName + "' not found. " + error, idx == -1);
+            // NOTE: these tests currently create episodes with id's 10001 and 20001, for example
             String expectedValue = entry.getValue().toString();
+            LogHelper.v(TAG, "-> #"+idx+" COLUMN "+columnName+" expect="+expectedValue+" actual="+valueCursor.getString(idx));
+
             assertEquals("Value '" + entry.getValue().toString() +
                     "' did not match the expected value '" +
                     expectedValue + "'. " + error, expectedValue, valueCursor.getString(idx));
@@ -91,10 +99,12 @@ public class TestRadioTheaterUtilities {
     // setup content for a default episode row for database tests.
     static ContentValues createEpisodeValues(int testNumber) {
         Log.v(TAG, "createEpisodeValues");
+        int episodeNumber;
         ContentValues episodeValues = new ContentValues();
         switch (testNumber) {
             case 1:
-                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, "0001");
+                episodeNumber = 1;
+                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, episodeNumber);
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_AIRDATE, "1974-01-06");
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_TITLE, "The Old Ones Are Hard to Kill");
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_DESCRIPTION, "An old lady rents a room to a sick boarder. She runs into problems with his strange deathbed confession.");
@@ -104,7 +114,8 @@ public class TestRadioTheaterUtilities {
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_VOTE_COUNT, 1);
                 break;
             case 2:
-                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, "0002");
+                episodeNumber = 2;
+                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, episodeNumber);
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_AIRDATE, "1974-01-07");
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_TITLE, "The Return of the Moresbys");
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_DESCRIPTION, "A husband kills his wife for donating all their money. Now, he is certain that she has been reincarnated in the form of a cat to wreak revenge on him.");
@@ -114,7 +125,8 @@ public class TestRadioTheaterUtilities {
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_VOTE_COUNT, 1);
                 break;
             case 3:
-                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, "0003");
+                episodeNumber = 3;
+                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, episodeNumber);
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_AIRDATE, "1974-01-08");
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_TITLE, "The Bullet");
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_DESCRIPTION, "An accident kills a man but he is made to return to Earth to trade places with the fated victim.");
@@ -124,7 +136,8 @@ public class TestRadioTheaterUtilities {
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_VOTE_COUNT, 1);
                 break;
             case 4:
-                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, "0004");
+                episodeNumber = 4;
+                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, episodeNumber);
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_AIRDATE, "1974-01-09");
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_TITLE, "Lost Dog");
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_DESCRIPTION, "A husband cannot appreciate his wife's phobia of dogs. Once he gets one home, his wife sets it against him.");
@@ -134,7 +147,8 @@ public class TestRadioTheaterUtilities {
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_VOTE_COUNT, 1);
                 break;
             case 5:
-                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, "0005");
+                episodeNumber = 5;
+                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, episodeNumber);
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_AIRDATE, "1974-01-10");
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_TITLE, "No Hiding Place");
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_DESCRIPTION, "The would-be CEO of his father-in-law's corporation is threatened with the revelation of a dark deed in his past.");
@@ -144,7 +158,8 @@ public class TestRadioTheaterUtilities {
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_VOTE_COUNT, 1);
                 break;
             case 6:
-                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, "0006");
+                episodeNumber = 6;
+                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, episodeNumber);
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_AIRDATE, "1974-01-11");
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_TITLE, "Honeymoon with Death");
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_DESCRIPTION, "Her husband disappears after their return from the honeymoon and the young wife's sister insists that the nuptial was a mere fantasy. She attempts to persuade a cop that her husband was indeed killed.");
@@ -154,7 +169,8 @@ public class TestRadioTheaterUtilities {
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_VOTE_COUNT, 1);
                 break;
             case 7:
-                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, "0007");
+                episodeNumber = 7;
+                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, episodeNumber);
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_AIRDATE, "1974-01-12");
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_TITLE, "I Warn You Three Times");
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_DESCRIPTION, "A daring attempt to clear their car windows during a snowstorm leads to the mysterious disappearance of a woman's husband. The reasons turn out to be increasingly intriguing.");
@@ -164,7 +180,8 @@ public class TestRadioTheaterUtilities {
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_VOTE_COUNT, 1);
                 break;
             case 8:
-                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, "0008");
+                episodeNumber = 8;
+                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, episodeNumber);
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_AIRDATE, "1974-01-13");
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_DESCRIPTION, "Dr. Ryan Stone (Sandra Bullock), a brilliant medical engineer on her first Shuttle mission, with veteran astronaut Matt Kowalsky (George Clooney) in command of his last flight before retiring.");
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_TITLE, "Cold Storage");
@@ -174,7 +191,8 @@ public class TestRadioTheaterUtilities {
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_VOTE_COUNT, 1);
                 break;
             case 9:
-                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, "0009");
+                episodeNumber = 9;
+                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, episodeNumber);
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_AIRDATE, "1974-01-14");
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_TITLE, "WALL*E");
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_DESCRIPTION, "An old flame torments a playboy after her death in a horse riding accident.");
@@ -184,7 +202,8 @@ public class TestRadioTheaterUtilities {
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_VOTE_COUNT, 1);
                 break;
             case 10:
-                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, "0010");
+                episodeNumber = 9 + 10000;
+                episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, episodeNumber);
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_AIRDATE, "1974-01-15");
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_TITLE, "The Resident");
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_DESCRIPTION, "A move from the countryside to town leaves a retired lady prey to a cat named Evil and a young girl who forcefully moves in with her!");
@@ -205,7 +224,15 @@ public class TestRadioTheaterUtilities {
         SQLiteDatabase db = helper.getWritableDatabase();
         assertFalse("getWriteableDatabase must be WRITABLE!", db.isReadOnly());
         ContentValues testValues = TestRadioTheaterUtilities.createEpisodeValues(testNumber);
-        long episodeRowId = db.insert(RadioTheaterContract.EpisodesEntry.TABLE_NAME, null, testValues);
+        Uri episode = RadioTheaterContract.EpisodesEntry.buildEpisodesUri();
+
+        // these tests can create duplicate objects, delete any pre-existing first
+        String where = EpisodesColumns.FIELD_EPISODE_NUMBER + "=?";
+        String[] args = {testValues.getAsString(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER)};
+        context.getContentResolver().delete(episode, where, args);
+
+        Uri result = context.getContentResolver().insert(episode, testValues);
+        long episodeRowId = Long.valueOf(result.toString().lastIndexOf('/')+1);
         // Verify we got a row back.
         Log.v(TAG, "insertEpisodeValues: episodeRowId=" + episodeRowId);
         assertTrue("Error: Failure to insert Episode Values", episodeRowId != -1);
@@ -308,7 +335,14 @@ public class TestRadioTheaterUtilities {
         // insert test record into the database
         SQLiteDatabase db = helper.getWritableDatabase();
         assertFalse("getWriteableDatabase must be WRITABLE!", db.isReadOnly());
+        Uri actor = RadioTheaterContract.ActorsEntry.buildActorsUri();
         ContentValues testValues = TestRadioTheaterUtilities.createActorValues(episode_id, testNumber);
+
+        // these tests can create duplicate objects, delete any pre-existing first
+        String where = ActorsColumns.FIELD_ACTOR_NAME + "=?";
+        String[] args = {testValues.getAsString(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_NAME)};
+        context.getContentResolver().delete(actor, where, args);
+
         long actorRowId = db.insert(RadioTheaterContract.ActorsEntry.TABLE_NAME, null, testValues);
         Log.v(TAG, "insertActorValues: actorRowId=" + actorRowId);
         // Verify we got a row back.
@@ -362,7 +396,14 @@ public class TestRadioTheaterUtilities {
         // insert test record into the database
         SQLiteDatabase db = helper.getWritableDatabase();
         assertFalse("getWriteableDatabase must be WRITABLE!", db.isReadOnly());
+        Uri writer = RadioTheaterContract.WritersEntry.buildWritersUri();
         ContentValues testValues = TestRadioTheaterUtilities.createWritersValues(episode_id, testNumber);
+
+        // these tests can create duplicate objects, delete any pre-existing first
+        String where = WritersColumns.FIELD_WRITER_NAME + "=?";
+        String[] args = {testValues.getAsString(RadioTheaterContract.WritersEntry.FIELD_WRITER_NAME)};
+        context.getContentResolver().delete(writer, where, args);
+
         long writerRowId = db.insert(RadioTheaterContract.WritersEntry.TABLE_NAME, null, testValues);
         // Verify we got a row back.
         Log.v(TAG, "insertWriterValues: writerRowId=" + writerRowId);

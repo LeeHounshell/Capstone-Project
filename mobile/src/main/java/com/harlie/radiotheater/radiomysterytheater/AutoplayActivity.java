@@ -20,11 +20,14 @@ import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.AppCompatButton;
+import android.support.v7.widget.ShareActionProvider;
 import android.support.v7.widget.Toolbar;
 import android.telephony.TelephonyManager;
+import android.text.Html;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -32,6 +35,7 @@ import android.view.SoundEffectConstants;
 import android.view.View;
 import android.view.Window;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 //#IFDEF 'TRIAL'
 import com.google.android.gms.ads.AdRequest;
@@ -44,6 +48,7 @@ import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadingAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.SQLiteHelper;
 import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
+import com.harlie.radiotheater.radiomysterytheater.utils.CheckPlayStore;
 import com.harlie.radiotheater.radiomysterytheater.utils.CircularSeekBar;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.OnSwipeTouchListener;
@@ -231,7 +236,7 @@ public class AutoplayActivity extends BaseActivity {
             final String episodeId = intent.getStringExtra("PLAY_NOW");
             if (episodeId != null) {
                 LogHelper.v(TAG, "---> PLAY_NOW "+episodeId+" <---");
-                getEpisodeInfoFor(Long.parseLong(episodeId));
+                setShareIntentForEpisode(Long.parseLong(episodeId));
                 displayScrollingText();
                 mAutoPlay.setVisibility(View.VISIBLE);
                 if (sWaitForMedia == false) {
@@ -341,7 +346,7 @@ public class AutoplayActivity extends BaseActivity {
                 verifyPaidVersion(true);
                 if (getEpisodeNumber() != 0) {
                     LogHelper.v(TAG, "onClick: need to getEpisodeInfoFor(" + getEpisodeNumber() + ")");
-                    getEpisodeInfoFor(getEpisodeNumber());
+                    setShareIntentForEpisode(getEpisodeNumber());
                     displayScrollingText();
                 }
                 else {
@@ -664,6 +669,7 @@ public class AutoplayActivity extends BaseActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         LogHelper.v(TAG, "onCreateOptionsMenu");
+        super.onCreateOptionsMenu(menu);
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main, menu);
         return true;
@@ -675,6 +681,7 @@ public class AutoplayActivity extends BaseActivity {
         switch (item.getItemId()) {
 /*
             case R.id.search: {
+                LogHelper.v(TAG, "-> SEARCH <-");
                 // FIXME: voice search
                 // FIXME: this 'search' button needs to build a new playlist and then submit that to be the new active playlist.
                 // FIXME: because of time-limitations, this feature will be built last, time permitting.
@@ -682,7 +689,35 @@ public class AutoplayActivity extends BaseActivity {
                 return true;
             }
 */
+
+            case R.id.share: {
+                LogHelper.v(TAG, "-> SHARE <-");
+                long episode = getEpisodeNumber();
+                if (episode == 0) {
+                    ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
+                    getEpisodeData(configCursor);
+                    episode = getEpisodeNumber();
+                    if (episode == 0) {
+                        return true;
+                    }
+                }
+                sShareActionProvider = new ShareActionProvider(this);
+                Intent shareIntent = setShareIntentForEpisode(episode);
+                sShareActionProvider.setShareIntent(shareIntent);
+                MenuItemCompat.setActionProvider(item, sShareActionProvider);
+                LogHelper.v(TAG, "onCreateOptionsMenu: sShareActionProvider="+sShareActionProvider);
+                if (shareIntent != null) {
+                    startActivity(Intent.createChooser(shareIntent, "Share via"));
+                }
+                else {
+                    String message = getResources().getString(R.string.unable_to_share);
+                    Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+                }
+                return true;
+            }
+
             case R.id.settings: {
+                LogHelper.v(TAG, "-> SETTINGS <-");
                 Intent intent = new Intent(this, SettingsActivity.class);
                 Bundle playInfo = new Bundle();
                 savePlayInfoToBundle(playInfo);
@@ -694,10 +729,11 @@ public class AutoplayActivity extends BaseActivity {
                 startActivity(intent);
                 overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
                 trackSettingsWithFirebaseAnalytics();
-                // FIXME: need to make Settings pass back the playInfo Bundle somehow.
                 return true;
             }
+
             case R.id.about: {
+                LogHelper.v(TAG, "-> ABOUT <-");
                 Intent intent = new Intent(this, AboutActivity.class);
                 Bundle playInfo = new Bundle();
                 savePlayInfoToBundle(playInfo);
@@ -709,10 +745,52 @@ public class AutoplayActivity extends BaseActivity {
                 trackAboutWithFirebaseAnalytics();
                 return true;
             }
+
             default: {
                 return super.onOptionsItemSelected(item);
             }
         }
+    }
+
+    @Override
+    protected Intent getShareIntent(String episodeTitle, String episodeDescription, String episodeNumber, String episodeDownloadUrl, String webLinkUrl) {
+        LogHelper.v(TAG, "getShareIntent");
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            // FIXED: only set this for API 21+
+            shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
+        } else {
+            // from: http://stackoverflow.com/questions/32941254/is-there-anything-similar-to-flag-activity-new-document-for-older-apis
+            shareIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        }
+
+        shareIntent.setType("text/html");
+
+        String packageId = getApplicationContext().getPackageName();
+        // send a link to the free version
+        packageId = packageId.replace(".radiomysterytheater.paid", ".radiomysterytheater");
+        String appLink = "http://market.android.com/details?id=" + packageId;
+//        if (CheckPlayStore.isGooglePlayInstalled(getApplicationContext())) {
+//            appLink = "market://details?id=" + packageId;
+//        }
+
+        String share_body = "\n<body>\n<br>Check it out!\n\n"
+                + "Episode #" + episodeNumber + " - \"" + episodeTitle + "\""
+                + "\n<br>\n<br>\n" + episodeDescription
+                + "\n<br>\n<br> <a href=\""+appLink+"\">Click to hear '"+episodeTitle+"' with the 'Radio Mystery Theater' Android App</a>"
+                + "\n<br>\n<br> Here is the <a href=\"" + webLinkUrl.replace("_name", "") + "\">episode's webpage.</a>"
+                + "\n<br>\n<br> And here is the episode's mp3 <a href=\"" + episodeDownloadUrl + "\">download link.</a>"
+                + "\n</body>\n";
+
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.share_text));
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            shareIntent.putExtra(Intent.EXTRA_TEXT, Html.fromHtml(share_body, Html.FROM_HTML_MODE_LEGACY));
+        }
+        else {
+            //noinspection deprecation
+            shareIntent.putExtra(Intent.EXTRA_TEXT, Html.fromHtml(share_body));
+        }
+        return shareIntent;
     }
 
     //--------------------------------------------------------------------------------
@@ -935,7 +1013,7 @@ public class AutoplayActivity extends BaseActivity {
                 else if (message.length() > KEY_REQUEST.length() && message.substring(0, KEY_REQUEST.length()).equals(KEY_REQUEST)) {
                     String episodeIndex = message.substring(KEY_REQUEST.length(), message.length());
                     LogHelper.v(TAG,  "*** RECEIVED BROADCAST: REQUEST TO PLAY EPISODE "+episodeIndex);
-                    getEpisodeInfoFor(Long.parseLong(episodeIndex));
+                    setShareIntentForEpisode(Long.parseLong(episodeIndex));
                     if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
                         mAppBarLayout.setExpanded(false);
                     }
@@ -947,7 +1025,7 @@ public class AutoplayActivity extends BaseActivity {
                 else if (message.length() > KEY_PLAYING.length() && message.substring(0, KEY_PLAYING.length()).equals(KEY_PLAYING)) {
                     String episodeIndex = message.substring(KEY_PLAYING.length(), message.length());
                     LogHelper.v(TAG,  "*** RECEIVED BROADCAST: NOW PLAYING EPISODE "+episodeIndex);
-                    getEpisodeInfoFor(Long.parseLong(episodeIndex));
+                    setShareIntentForEpisode(Long.parseLong(episodeIndex));
                     getHandler().post(new Runnable() {
                         @Override
                         public void run() {
@@ -1008,7 +1086,7 @@ public class AutoplayActivity extends BaseActivity {
                 initializeForEpisode();
                 mCurrentPosition = 0;
                 showPleaseWaitButton(0);
-                getEpisodeInfoFor(Long.parseLong(episodeIndex));
+                setShareIntentForEpisode(Long.parseLong(episodeIndex));
                 displayScrollingText();
                 verifyPaidVersion(true);
                 RadioControlIntentService.startActionPlay(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), getEpisodeDownloadUrl(), getEpisodeTitle());

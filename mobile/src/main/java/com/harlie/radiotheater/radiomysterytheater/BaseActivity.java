@@ -23,13 +23,18 @@ import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatButton;
+import android.support.v7.widget.ShareActionProvider;
 import android.support.v7.widget.Toolbar;
 import android.transition.Fade;
 import android.transition.Transition;
 import android.transition.TransitionInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.view.WindowManager;
@@ -121,6 +126,9 @@ public class BaseActivity extends AppCompatActivity {
     protected static String sEpisodeDescription;
     protected static String sEpisodeWeblinkUrl;
     protected static String sEpisodeDownloadUrl;
+
+    protected static ShareActionProvider sShareActionProvider;
+    protected static Intent sShareIntent;
 
     protected static volatile boolean sOnRestoreInstanceComplete;
     protected static volatile boolean sFoundFirebaseDeviceId;
@@ -380,6 +388,13 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        LogHelper.v(TAG, "onCreateOptionsMenu");
+        super.onCreateOptionsMenu(menu);
+        return true;
+    }
+
+    @Override
     public void onDestroy() {
         LogHelper.v(TAG, "onDestroy");
         super.onDestroy();
@@ -397,6 +412,9 @@ public class BaseActivity extends AppCompatActivity {
         sEpisodeDescription = null;
         sEpisodeWeblinkUrl = null;
         sEpisodeDownloadUrl = null;
+
+        sShareActionProvider = null;
+        sShareIntent = null;
 
         sOnRestoreInstanceComplete = false;
         sFoundFirebaseDeviceId = false;
@@ -940,6 +958,25 @@ public class BaseActivity extends AppCompatActivity {
         }
         return foundEpisode;
     }
+
+    public Intent setShareIntentForEpisode(long episodeId) {
+        LogHelper.v(TAG, "setShareIntentForEpisode");
+        getEpisodeInfoFor(episodeId);
+        // share button setup
+        if (sShareActionProvider != null) {
+            sShareIntent = getShareIntent(getEpisodeTitle(), getEpisodeDescription(), String.valueOf(getEpisodeNumber()), getEpisodeDownloadUrl(), getEpisodeWeblinkUrl());
+            if (sShareIntent != null) {
+                sShareActionProvider.setShareIntent(sShareIntent);
+            }
+            return sShareIntent;
+        }
+        LogHelper.w(TAG, "*** sShareActionProvider is null! ***");
+        return null;
+    }
+
+    // allow each activity to define a custom share message that is only used when sShareActionProvider is set
+    // method would be labeled 'abstract' except I don't want implementation to be required
+    protected Intent getShareIntent(String episodeTitle, String episodeDescription, String episodeNumber, String episodeDownloadUrl, String webLinkUrl) {return null;}
 
     protected void startProgressViewSpinning() {
         LogHelper.v(TAG, "startProgressViewSpinning");
@@ -1833,6 +1870,10 @@ public class BaseActivity extends AppCompatActivity {
 
     public View getRootView() {
         return mRootView;
+    }
+
+    public static Intent getShareIntent() {
+        return sShareIntent;
     }
 
     //--------------------------------------------------------------------------------

@@ -27,9 +27,18 @@ FIXME: because of time-limitations, the voice-search and play-now functionality 
         <menu>
 
             <item
+                android:id="@+id/share"
+                android:icon="@drawable/ic_share"
+                android:actionProviderClass="android.widget.ShareActionProvider"
+                android:orderInCategory="102"
+                app:showAsAction="collapseActionView"
+                android:title="@string/action_share"
+            />
+
+            <item
                 android:id="@+id/settings"
                 android:icon="@drawable/ic_settings_black_24dp"
-                android:orderInCategory="102"
+                android:orderInCategory="103"
                 app:showAsAction="collapseActionView"
                 android:title="@string/action_settings"
             />
@@ -37,7 +46,7 @@ FIXME: because of time-limitations, the voice-search and play-now functionality 
             <item
                 android:id="@+id/about"
                 android:icon="@drawable/ic_info_black_24dp"
-                android:orderInCategory="103"
+                android:orderInCategory="104"
                 app:showAsAction="collapseActionView"
                 android:title="@string/action_about"
             />

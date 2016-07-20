@@ -276,28 +276,89 @@ public class TestRadioTheaterDb {
         assertTrue("Error: The database doesn't contain all of the required columns!", columnsHashSet.isEmpty());
     }
 
-    private void validateDatabase(SQLiteDatabase db, String tableName, ContentValues someValues) {
-        Log.v(TAG, "validateDatabase");
+    private void validateActorsDatabase(SQLiteDatabase db, ContentValues someValues) {
+        Log.v(TAG, "validateActorsDatabase");
 
         // Query the database and receive a Cursor back
+        String where = ActorsColumns.FIELD_ACTOR_NAME + "=?";
+        String[] args = {someValues.getAsString(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_NAME)};
+        String order = RadioTheaterContract.ActorsEntry.FIELD_ACTOR_NAME + " ASC";
         Cursor someCursor = db.query(
-                tableName, // Table to Query
+                RadioTheaterContract.ActorsEntry.TABLE_NAME, // Table to Query
                 null,      // leaving "columns" null just returns all the columns.
-                null,      // cols for "where" clause
-                null,      // values for "where" clause
+                where,     // cols for "where" clause
+                args,      // values for "where" clause
                 null,      // columns to group by
                 null,      // columns to filter by row groups
-                null       // sort order
+                order      // sort order
         );
 
         // Move the cursor to the first valid database row and check to see if we have any rows
-        assertTrue("Error: No Records returned from query for table " + tableName, someCursor.moveToFirst());
+        assertTrue("Error: No Records returned from query for Actors", someCursor.moveToFirst());
 
         // Validate the Query
-        TestRadioTheaterUtilities.validateCurrentRecord("testInsertReadDb row failed to validate for " + tableName, someCursor, someValues);
+        TestRadioTheaterUtilities.validateCurrentRecord("testInsertReadDb row failed to validate Actors", someCursor, someValues);
 
         // Move the cursor to demonstrate that there is only one record in the database
-        assertFalse("Error: More than one record returned from query for table " + tableName, someCursor.moveToNext());
+        assertFalse("Error: More than one record returned from query for Actors", someCursor.moveToNext());
+
+        someCursor.close();
+    }
+
+    private void validateWritersDatabase(SQLiteDatabase db, ContentValues someValues) {
+        Log.v(TAG, "validateWritersDatabase");
+
+        // Query the database and receive a Cursor back
+        String where = WritersColumns.FIELD_WRITER_NAME + "=?";
+        String[] args = {someValues.getAsString(RadioTheaterContract.WritersEntry.FIELD_WRITER_NAME)};
+        String order = RadioTheaterContract.WritersEntry.FIELD_WRITER_NAME + " ASC";
+        Cursor someCursor = db.query(
+                RadioTheaterContract.WritersEntry.TABLE_NAME, // Table to Query
+                null,      // leaving "columns" null just returns all the columns.
+                where,     // cols for "where" clause
+                args,      // values for "where" clause
+                null,      // columns to group by
+                null,      // columns to filter by row groups
+                order      // sort order
+        );
+
+        // Move the cursor to the first valid database row and check to see if we have any rows
+        assertTrue("Error: No Records returned from query for Writers", someCursor.moveToFirst());
+
+        // Validate the Query
+        TestRadioTheaterUtilities.validateCurrentRecord("testInsertReadDb row failed to validate Writers", someCursor, someValues);
+
+        // Move the cursor to demonstrate that there is only one record in the database
+        assertFalse("Error: More than one record returned from query for Writers", someCursor.moveToNext());
+
+        someCursor.close();
+    }
+
+    private void validateEpisodesDatabase(SQLiteDatabase db, ContentValues someValues) {
+        Log.v(TAG, "validateEpisodesDatabase");
+
+        // Query the database and receive a Cursor back
+        String where = EpisodesColumns.FIELD_EPISODE_TITLE + "=?";
+        String[] args = {someValues.getAsString(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_TITLE)};
+        String order = RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER + " ASC";
+        Cursor someCursor = db.query(
+                RadioTheaterContract.EpisodesEntry.TABLE_NAME, // Table to Query
+                null,      // leaving "columns" null just returns all the columns.
+                where,     // cols for "where" clause
+                args,      // values for "where" clause
+                null,      // columns to group by
+                null,      // columns to filter by row groups
+                order      // sort order
+        );
+
+        // Move the cursor to the first valid database row and check to see if we have any rows
+        assertTrue("Error: No Records returned from query for Episodes", someCursor.moveToFirst());
+
+        // Validate the Query
+        TestRadioTheaterUtilities.validateCurrentRecord("testInsertReadDb row failed to validate Episodes", someCursor, someValues);
+
+        // Move the cursor to demonstrate that there is only one record in the database
+        assertFalse("Error: More than one record returned from query for Episodes", someCursor.moveToNext());
 
         someCursor.close();
     }
@@ -360,9 +421,9 @@ public class TestRadioTheaterDb {
 
         Log.i(TAG, "NOTE: If the above writes for Episode, Actor and Writer worked, then we have a working Content Provider.");
 
-        validateDatabase(db, RadioTheaterContract.EpisodesEntry.TABLE_NAME, episodeValues);
-        validateDatabase(db, RadioTheaterContract.ActorsEntry.TABLE_NAME, actorValues);
-        validateDatabase(db, RadioTheaterContract.WritersEntry.TABLE_NAME, writerValues);
+        validateEpisodesDatabase(db, episodeValues);
+        validateActorsDatabase(db, actorValues);
+        validateWritersDatabase(db, writerValues);
     }
 
     private long insertAndVerifyEpisode(ContentValues episodeValues) {
@@ -383,14 +444,17 @@ public class TestRadioTheaterDb {
         assertTrue(episodeRowId != -1);
 
         // verify the data inserted properly..
+        String where = EpisodesColumns.FIELD_EPISODE_TITLE + "=?";
+        String[] args = {episodeValues.getAsString(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_TITLE)};
+        String order = RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER + " ASC";
         Cursor cursor = db.query(
                 RadioTheaterContract.EpisodesEntry.TABLE_NAME,  // Table to Query
-                null, // all columns
-                null, // Columns for the "where" clause
-                null, // Values for the "where" clause
-                null, // columns to group by
-                null, // columns to filter by row groups
-                null // sort order
+                null,  // all columns
+                where, // Columns for the "where" clause
+                args,  // Values for the "where" clause
+                null,  // columns to group by
+                null,  // columns to filter by row groups
+                order  // sort order
         );
 
         // Move the cursor to a valid database row and check to see if we got any records back from the query
@@ -410,18 +474,36 @@ public class TestRadioTheaterDb {
     private Uri insertEpisodeValues(ContentValues episodeValues) {
         Log.v(TAG, "insertEpisodeValues=");
         Uri episode = RadioTheaterContract.EpisodesEntry.buildEpisodesUri();
+
+        // these tests can create duplicate objects, delete any pre-existing first
+        String where = EpisodesColumns.FIELD_EPISODE_NUMBER + "=?";
+        String[] args = {episodeValues.getAsString(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER)};
+        context.getContentResolver().delete(episode, where, args);
+
         return context.getContentResolver().insert(episode, episodeValues);
     }
 
     private Uri insertActorValues(ContentValues actorValues) {
         Log.v(TAG, "insertActorValues");
         Uri actor = RadioTheaterContract.ActorsEntry.buildActorsUri();
+
+        // these tests can create duplicate objects, delete any pre-existing first
+        String where = ActorsColumns.FIELD_ACTOR_NAME + "=?";
+        String[] args = {actorValues.getAsString(RadioTheaterContract.ActorsEntry.FIELD_ACTOR_NAME)};
+        context.getContentResolver().delete(actor, where, args);
+
         return context.getContentResolver().insert(actor, actorValues);
     }
 
     private Uri insertWriterValues(ContentValues writerValues) {
         Log.v(TAG, "insertWriterValues");
         Uri writer = RadioTheaterContract.WritersEntry.buildWritersUri();
+
+        // these tests can create duplicate objects, delete any pre-existing first
+        String where = WritersColumns.FIELD_WRITER_NAME + "=?";
+        String[] args = {writerValues.getAsString(RadioTheaterContract.WritersEntry.FIELD_WRITER_NAME)};
+        context.getContentResolver().delete(writer, where, args);
+
         return context.getContentResolver().insert(writer, writerValues);
     }
 
