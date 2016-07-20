@@ -184,7 +184,7 @@ public class RadioTheaterWidgetService extends Service {
 
     private void startActionPlay() {
         ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
-        if (AutoplayActivity.getEpisodeData(configCursor)) {
+        if (AutoplayActivity.getEpisodeDataForCursor(configCursor)) {
             LogHelper.v(TAG, "PLAY: RadioControlIntentService.startActionPlay");
             RadioControlIntentService.startActionPlay(this.getApplicationContext(),
                     "WIDGET",

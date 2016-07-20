@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
@@ -24,6 +25,8 @@ import android.support.v7.media.MediaRouter;
 import com.google.android.gms.cast.ApplicationMetadata;
 import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
 import com.google.android.libraries.cast.companionlibrary.cast.callbacks.VideoCastConsumerImpl;
+import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.SQLiteHelper;
 import com.harlie.radiotheater.radiomysterytheater.model.MusicProvider;
 import com.harlie.radiotheater.radiomysterytheater.playback.CastPlayback;
 import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
@@ -322,16 +325,15 @@ public class RadioTheaterService
             String action = startIntent.getAction();
             String command = startIntent.getStringExtra(CMD_NAME);
             String episode = startIntent.getStringExtra(CMD_PARAM_EPISODE);
+            long episodeId = (episode != null && !episode.equals("null")) ? Long.valueOf(episode) : 0L;
+
             if (ACTION_CMD.equals(action)) {
                 LogHelper.v(TAG, "=========>>> ACTION: "+action+", COMMAND="+command+", EPISODE="+episode);
 
                 if (CMD_PLAY.equals(command)) {
-                    LocalPlayback.setCurrentEpisode(Integer.parseInt(episode));
                     String title = startIntent.getStringExtra(CMD_PARAM_TITLE);
-                    String episodeDownloadUrl = startIntent.getStringExtra(CMD_PARAM_DOWNLOAD_URL);
-                    String mediaId = queueManager.setCurrentIndexFromEpisodeId(Integer.parseInt(episode), title, episodeDownloadUrl);
-                    mPlaybackManager.setCurrentMediaId(mediaId);
-                    mPlaybackManager.handlePlayRequest();
+                    String downloadUrl = startIntent.getStringExtra(CMD_PARAM_DOWNLOAD_URL);
+                    startPlaying(episodeId, title, downloadUrl);
                 }
 
                 else if (CMD_PAUSE.equals(command)) {
@@ -358,11 +360,33 @@ public class RadioTheaterService
                 }
 
                 else if (CMD_NEXT.equals(command)) {
-                    // FIXME: CMD_NEXT
+                    long max_episodes = Long.valueOf(getResources().getString(R.string.episodes_count)); // 1399
+                    episodeId += 1;
+                    if (episodeId > max_episodes) {
+                        episodeId = 1;
+                    }
+                    EpisodesCursor episodesCursor = SQLiteHelper.getEpisodesCursor(episodeId);
+                    if (episodesCursor != null && episodesCursor.moveToNext()) {
+                        String title = episodesCursor.getFieldEpisodeTitle();
+                        String downloadUrl = Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString();
+                        episodesCursor.close();
+                        startPlaying(episodeId, title, downloadUrl);
+                    }
                 }
 
                 else if (CMD_PREV.equals(command)) {
-                    // FIXME: CMD_PREV
+                    long max_episodes = Long.valueOf(getResources().getString(R.string.episodes_count)); // 1399
+                    episodeId -= 1;
+                    if (episodeId <= 0) {
+                        episodeId = max_episodes;
+                    }
+                    EpisodesCursor episodesCursor = SQLiteHelper.getEpisodesCursor(episodeId);
+                    if (episodesCursor != null && episodesCursor.moveToNext()) {
+                        String title = episodesCursor.getFieldEpisodeTitle();
+                        String downloadUrl = Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString();
+                        episodesCursor.close();
+                        startPlaying(episodeId, title, downloadUrl);
+                    }
                 }
 
                 else if (CMD_STOP_CASTING.equals(command)) {
@@ -379,6 +403,13 @@ public class RadioTheaterService
         }
 
         return START_STICKY;
+    }
+
+    protected void startPlaying(long episode, String title, String episodeDownloadUrl) {
+        LocalPlayback.setCurrentEpisode((int) episode);
+        String mediaId = queueManager.setCurrentIndexFromEpisodeId((int) episode, title, episodeDownloadUrl);
+        mPlaybackManager.setCurrentMediaId(mediaId);
+        mPlaybackManager.handlePlayRequest();
     }
 
     /**

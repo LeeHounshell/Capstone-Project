@@ -13,8 +13,10 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Window;
 
+import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.SQLiteHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.EpisodeRecyclerViewAdapter;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
@@ -67,7 +69,7 @@ public class EpisodeListActivity extends BaseActivity
                     LogHelper.v(TAG, "CLICK - fab");
                     Intent autoplayIntent = new Intent(activity, AutoplayActivity.class);
                     // close existing activity stack regardless of what's in there and create new root
-                    autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    autoplayIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                     Bundle playInfo = new Bundle();
                     savePlayInfoToBundle(playInfo);
                     autoplayIntent.putExtras(playInfo);
@@ -91,14 +93,36 @@ public class EpisodeListActivity extends BaseActivity
         }
 
         if (savedInstanceState == null) {
-            final int activePosition = (int) getEpisodeNumber() - 1;
-            ((RecyclerView) recyclerView).scrollToPosition(activePosition);
+            Intent intent = getIntent();
+            String playing = intent.getStringExtra("ACTIVE_PLAYING");
+            long position = Long.valueOf(getEpisodeNumber());
+            if (playing != null) {
+                position = Long.valueOf(playing);
+                LogHelper.v(TAG, "---> currently playing="+playing+", position="+position);
+            }
+            final int activePosition = (int) position - 1;
+            LogHelper.v(TAG, "===> LIST: SET INITIAL SCROLL POSITION TO: "+activePosition);
+            ((RecyclerView) recyclerView).scrollToPosition((int) activePosition);
             if (mTwoPane) {
                 getHandler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         LogHelper.v(TAG, "*** AUTO CLICK TO SHOW EPISODE DETAIL ***");
-                        ((RecyclerView) recyclerView).findViewHolderForAdapterPosition(activePosition).itemView.performClick();
+                        RecyclerView.ViewHolder viewHolder = ((RecyclerView) recyclerView).findViewHolderForAdapterPosition(activePosition);
+                        if (viewHolder != null && viewHolder.itemView != null) {
+                            viewHolder.itemView.performClick();
+                        }
+                        else {
+                            // Android bug??
+                            LogHelper.e(TAG, "*** UNABLE TO AUTO CLICK ON ITEM FOR POSITION "+activePosition+" ***");
+                            ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
+                            getEpisodeDataForCursor(configCursor);
+                            int newActivePosition = (int) (getEpisodeNumber() - 1);
+                            viewHolder = ((RecyclerView) recyclerView).findViewHolderForAdapterPosition(newActivePosition);
+                            if (viewHolder != null && viewHolder.itemView != null) {
+                                viewHolder.itemView.performClick();
+                            }
+                        }
                     }
                 }, 1000);
             }

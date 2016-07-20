@@ -30,15 +30,9 @@ public class RadioControlIntentService extends IntentService {
     private final static String TAG = "LEE: <" + RadioControlIntentService.class.getSimpleName() + ">";
 
     private static volatile boolean sAlreadyStarted = false;
-    private static volatile int sEpisodeId = 0;
 
     private final IBinder mBinder = new RadioControlServiceBinder();
     private Messenger outMessenger;
-
-    // so QueueManager can create the correct Q easily
-    public static int getEpisodeId() {
-        return sEpisodeId;
-    }
 
     public IBinder onBind(Intent arg0) {
         Bundle extras = arg0.getExtras();
@@ -333,7 +327,6 @@ public class RadioControlIntentService extends IntentService {
     public static void startActionStart(Context context, String from, String episode, String param2) {
         if (! sAlreadyStarted) {
             sAlreadyStarted = true;
-            sEpisodeId = Integer.valueOf(episode);
             LogHelper.v(TAG, "startActionStart: from=" + from + ", episode=" + episode);
             Intent intent = new Intent(context, RadioControlIntentService.class);
             intent.setAction(ACTION_START);
@@ -355,7 +348,6 @@ public class RadioControlIntentService extends IntentService {
     public static void startActionPlay(Context context, String from, String episode, String downloadUrl, String title) {
         LogHelper.v(TAG, "startActionPlay: from="+from+", episode="+episode);
         LocalPlayback.setPlaybackEnabled(true);
-        sEpisodeId = Integer.valueOf(episode);
         Intent intent = new Intent(context, RadioControlIntentService.class);
         intent.setAction(ACTION_PLAY);
         intent.putExtra(EXTRA_EPISODE, episode);
@@ -374,7 +366,6 @@ public class RadioControlIntentService extends IntentService {
         LocalPlayback.setPlaybackEnabled(false);
         if (LocalPlayback.getCurrentState() == PlaybackStateCompat.STATE_PLAYING) {
             LogHelper.v(TAG, "startActionPause: from=" + from + ", episode=" + episode);
-            sEpisodeId = Integer.valueOf(episode);
             Intent intent = new Intent(context, RadioControlIntentService.class);
             intent.setAction(ACTION_PAUSE);
             intent.putExtra(EXTRA_EPISODE, episode);
@@ -393,7 +384,6 @@ public class RadioControlIntentService extends IntentService {
      * @see IntentService
      */
     public static void startActionSeek(Context context, String from, String episode, String position) {
-        sEpisodeId = Integer.valueOf(episode);
         LogHelper.v(TAG, "startActionSeek: from="+from+", episode="+episode+", position="+position);
         Intent intent = new Intent(context, RadioControlIntentService.class);
         intent.setAction(ACTION_SEEK);
@@ -409,7 +399,6 @@ public class RadioControlIntentService extends IntentService {
      * @see IntentService
      */
     public static void startActionGoback(Context context, String from, String episode, String amount) {
-        sEpisodeId = Integer.valueOf(episode);
         LogHelper.v(TAG, "startActionGoback: from="+from+", episode="+episode+", amount="+amount);
         Intent intent = new Intent(context, RadioControlIntentService.class);
         intent.setAction(ACTION_GOBACK);
@@ -427,7 +416,6 @@ public class RadioControlIntentService extends IntentService {
     public static void startActionStop(Context context, String from, String episode, String param2) {
         LocalPlayback.setPlaybackEnabled(false);
         if (LocalPlayback.getCurrentState() == PlaybackStateCompat.STATE_PLAYING) {
-            sEpisodeId = Integer.valueOf(episode);
             LogHelper.v(TAG, "startActionStop: from=" + from + ", episode=" + episode);
             Intent intent = new Intent(context, RadioControlIntentService.class);
             intent.setAction(ACTION_STOP);
@@ -447,7 +435,6 @@ public class RadioControlIntentService extends IntentService {
      * @see IntentService
      */
     public static void startActionNext(Context context, String from, String episode, String param2) {
-        sEpisodeId = Integer.valueOf(episode);
         LocalPlayback.setPlaybackEnabled(true);
         LogHelper.v(TAG, "startActionNext: from="+from+", episode="+episode);
         Intent intent = new Intent(context, RadioControlIntentService.class);
@@ -464,7 +451,6 @@ public class RadioControlIntentService extends IntentService {
      * @see IntentService
      */
     public static void startActionPrev(Context context, String from, String episode, String param2) {
-        sEpisodeId = Integer.valueOf(episode);
         LocalPlayback.setPlaybackEnabled(true);
         LogHelper.v(TAG, "startActionPrev: from="+from+", episode="+episode);
         Intent intent = new Intent(context, RadioControlIntentService.class);

@@ -599,7 +599,7 @@ public class BaseActivity extends AppCompatActivity {
         LogHelper.v(TAG, "---> startAuthenticationActivity <---");
         Intent authenticationIntent = new Intent(this, AuthenticationActivity.class);
         // close existing activity stack regardless of what's in there and create new root
-        authenticationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        authenticationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         authenticationIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         Bundle playInfo = new Bundle();
         savePlayInfoToBundle(playInfo);
@@ -648,7 +648,7 @@ public class BaseActivity extends AppCompatActivity {
 
             Intent autoplayIntent = new Intent(this, AutoplayActivity.class);
             // close existing activity stack regardless of what's in there and create new root
-            autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            autoplayIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             // Transition Effects..
             Bundle bundle;
             if (animate) {
@@ -686,7 +686,7 @@ public class BaseActivity extends AppCompatActivity {
         }
 
         // NOTE: there is an Android problem setting these intent flags with a shared-element transition:
-        //autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        //autoplayIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         //
         // to get around this problem, I have over-ridden onBackPressed in AutoplayActivity so that it clears the back stack before exiting.
 
@@ -925,8 +925,8 @@ public class BaseActivity extends AppCompatActivity {
         runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state
     }
 
-    public static boolean getEpisodeData(ConfigEpisodesCursor configCursor) {
-        LogHelper.v(TAG, "getEpisodeData");
+    public static boolean getEpisodeDataForCursor(ConfigEpisodesCursor configCursor) {
+        LogHelper.v(TAG, "getEpisodeDataForCursor");
         boolean foundEpisode = false;
         if (configCursor != null && configCursor.moveToNext()) {
             // found the next episode to listen to
@@ -2008,6 +2008,10 @@ public class BaseActivity extends AppCompatActivity {
 
     public void markEpisodeAsHeardAndIncrementPlayCount(long episodeNumber, String episodeIndex, long duration) {
         LogHelper.v(TAG, "markEpisodeAsHeardAndIncrementPlayCount: episodeNumber="+episodeNumber+", episodeIndex="+episodeIndex+", duration="+duration);
+        if (episodeNumber == 0) {
+            LogHelper.w(TAG, "unable to markEpisodeAsHeardAndIncrementPlayCount - episodeNumber is zero!");
+            return;
+        }
         boolean matchError = false;
         if (! String.valueOf(episodeNumber).equals(episodeIndex)) {
             LogHelper.e(TAG, "markEpisodeAsHeardAndIncrementPlayCount: The episodeNumber="+episodeNumber+" and episodeIndex "+episodeIndex+" DONT MATCH");
@@ -2030,7 +2034,7 @@ public class BaseActivity extends AppCompatActivity {
             LogHelper.d(TAG, "markEpisodeAsHeardAndIncrementPlayCount: new LISTEN-COUNT="+listenCount+" for Episode "+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
         }
         else {
-            LogHelper.e(TAG, "*** SQLITE FAILURE - unable to getConfigForEpisode="+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
+            LogHelper.e(TAG, "*** SQLITE: - unable to getConfigForEpisode="+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
         }
 
         // UPDATE SQLITE - mark SQLite configuration as "HEARD" and increment "PLAY COUNT"
@@ -2060,7 +2064,7 @@ public class BaseActivity extends AppCompatActivity {
             LogHelper.d(TAG, "---> markEpisodeAsHeardAndIncrementPlayCount: new ALL-LISTEN-COUNT="+ total_listen_count +" <---");
         }
         else {
-            LogHelper.e(TAG, "*** SQLITE FAILURE - unable to getConfiguration email="+getEmail()+", deviceId="+getAdvertId());
+            LogHelper.e(TAG, "*** SQLITE: - unable to getConfigurationDevice info, email="+getEmail()+", deviceId="+getAdvertId());
         }
 
         // send Analytics record to Firebase for Episode+Heard+Count
@@ -2069,6 +2073,10 @@ public class BaseActivity extends AppCompatActivity {
 
     public void markEpisodeAs_NOT_Heard(long episodeNumber, String episodeIndex, long duration) {
         LogHelper.v(TAG, "markEpisodeAs_NOT_Heard: episodeNumber="+episodeNumber+", episodeIndex="+episodeIndex+", duration="+duration);
+        if (episodeNumber == 0) {
+            LogHelper.w(TAG, "unable to markEpisodeAs_NOT_Heard - episodeNumber is zero!");
+            return;
+        }
         boolean matchError = false;
         if (! String.valueOf(episodeNumber).equals(episodeIndex)) {
             LogHelper.e(TAG, "markEpisodeAs_NOT_Heard: The episodeNumber="+episodeNumber+" and episodeIndex "+episodeIndex+" DONT MATCH");
@@ -2085,7 +2093,7 @@ public class BaseActivity extends AppCompatActivity {
             LogHelper.d(TAG, "markEpisodeAs_NOT_Heard: for Episode "+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
         }
         else {
-            LogHelper.e(TAG, "*** SQLITE FAILURE - unable to getConfigForEpisode="+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
+            LogHelper.e(TAG, "*** SQLITE: - unable to getConfigForEpisode="+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
         }
 
         // send Analytics record to Firebase for Episode+Heard+Count
@@ -2095,6 +2103,10 @@ public class BaseActivity extends AppCompatActivity {
     protected void trackWithFirebaseAnalytics(String episodeIndex, long duration, String comment) {
         if (mFirebaseAnalytics != null && episodeIndex != null && comment != null) {
             LogHelper.v(TAG, "ANALYTICS: trackWithFirebaseAnalytics: episode="+episodeIndex+", duration="+duration+", comment="+comment);
+            if (Long.valueOf(episodeIndex) == 0) {
+                LogHelper.w(TAG, "unable to logToFirebase - episodeIndex is zero!");
+                return;
+            }
             Bundle bundle = new Bundle();
             bundle.putString(FirebaseAnalytics.Param.ITEM_ID, episodeIndex);
             bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, sEpisodeTitle);
@@ -2118,6 +2130,10 @@ public class BaseActivity extends AppCompatActivity {
     protected void trackWithFirebaseAnalytics(String event, String email, String comment) {
         if (mFirebaseAnalytics != null && event != null && email != null && comment != null) {
             LogHelper.v(TAG, "ANALYTICS: trackWithFirebaseAnalytics: event="+event+", email="+email);
+            if (getEmail() == null) {
+                LogHelper.w(TAG, "unable to logToFirebase - Firebase user is not logged in!");
+                return;
+            }
             Bundle bundle = new Bundle();
             bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "event");
             bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, event);

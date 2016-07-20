@@ -38,7 +38,10 @@ public class SQLiteHelper {
     private final static String TAG = "LEE: <" + SQLiteHelper.class.getSimpleName() + ">";
 
     public static ConfigEpisodesContentValues getConfigForEpisode(String episode) {
-        LogHelper.v(TAG, "getConfigForEpisode: episode="+episode);
+        LogHelper.v(TAG, "SQLITE: getConfigForEpisode: episode="+episode);
+        if (Long.valueOf(episode) == 0) {
+            return null;
+        }
         ConfigEpisodesContentValues record = null;
         ConfigEpisodesSelection where = new ConfigEpisodesSelection();
         where.fieldEpisodeNumber(Long.parseLong(episode));
@@ -57,13 +60,16 @@ public class SQLiteHelper {
             cursor.close();
         }
         else {
-            LogHelper.v(TAG, "SQL: episode "+episode+" not found");
+            LogHelper.v(TAG, "SQLITE: episode "+episode+" not found");
         }
         return record;
     }
 
     public static EpisodesCursor getEpisodesCursor(long episode) {
-        LogHelper.v(TAG, "getEpisodesCursor: episode="+episode);
+        LogHelper.v(TAG, "SQLITE: getEpisodesCursor: episode="+episode);
+        if (Long.valueOf(episode) == 0) {
+            return null;
+        }
         EpisodesSelection where = new EpisodesSelection();
         where.fieldEpisodeNumber(episode);
         String order_limit = RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER + " ASC LIMIT 1";
@@ -79,7 +85,10 @@ public class SQLiteHelper {
     }
 
     public static ActorsCursor getActorsCursor(long actor) {
-        LogHelper.v(TAG, "getActorsCursor: actor="+actor);
+        LogHelper.v(TAG, "SQLITE: getActorsCursor: actor="+actor);
+        if (Long.valueOf(actor) == 0) {
+            return null;
+        }
         ActorsSelection where = new ActorsSelection();
         where.fieldActorId(actor);
         String order_limit = RadioTheaterContract.ActorsEntry.FIELD_ACTOR_ID + " ASC LIMIT 1";
@@ -95,7 +104,10 @@ public class SQLiteHelper {
     }
 
     public static WritersCursor getWritersCursor(long writer) {
-        LogHelper.v(TAG, "getWritersCursor: writer="+writer);
+        LogHelper.v(TAG, "SQLITE: getWritersCursor: writer="+writer);
+        if (Long.valueOf(writer) == 0) {
+            return null;
+        }
         WritersSelection where = new WritersSelection();
         where.fieldWriterId(writer);
         String order_limit = RadioTheaterContract.WritersEntry.FIELD_WRITER_ID + " ASC LIMIT 1";
@@ -111,7 +123,10 @@ public class SQLiteHelper {
     }
 
     public static ActorsEpisodesCursor getActorsEpisodesCursor(long episode) {
-        LogHelper.v(TAG, "getActorsEpisodesCursor: episode="+episode);
+        LogHelper.v(TAG, "SQLITE: getActorsEpisodesCursor: episode="+episode);
+        if (Long.valueOf(episode) == 0) {
+            return null;
+        }
         ActorsEpisodesSelection where = new ActorsEpisodesSelection();
         where.fieldEpisodeNumber(episode);
         String order_limit = RadioTheaterContract.ActorsEpisodesEntry.FIELD_EPISODE_NUMBER + " ASC";
@@ -127,7 +142,10 @@ public class SQLiteHelper {
     }
 
     public static WritersEpisodesCursor getWritersEpisodesCursor(long episode) {
-        LogHelper.v(TAG, "getWritersEpisodesCursor: episode="+episode);
+        LogHelper.v(TAG, "SQLITE: getWritersEpisodesCursor: episode="+episode);
+        if (Long.valueOf(episode) == 0) {
+            return null;
+        }
         WritersEpisodesSelection where = new WritersEpisodesSelection();
         where.fieldEpisodeNumber(episode);
         String order_limit = RadioTheaterContract.WritersEpisodesEntry.FIELD_EPISODE_NUMBER + " ASC";
@@ -143,7 +161,7 @@ public class SQLiteHelper {
     }
 
     public static ConfigurationCursor getCursorForConfigurationDevice(String deviceId) {
-        LogHelper.v(TAG, "getCursorForConfigurationDevice: deviceId="+deviceId);
+        LogHelper.v(TAG, "SQLITE: getCursorForConfigurationDevice: deviceId="+deviceId);
         ConfigurationSelection where = new ConfigurationSelection();
         // find the specified configuration
         where.fieldDeviceId(deviceId);
@@ -161,7 +179,7 @@ public class SQLiteHelper {
     }
 
     public static ConfigEpisodesCursor getCursorForNextAvailableEpisode() {
-        LogHelper.v(TAG, "getCursorForNextAvailableEpisode");
+        LogHelper.v(TAG, "SQLITE: getCursorForNextAvailableEpisode");
         ConfigEpisodesSelection where = new ConfigEpisodesSelection();
         // find the next unwatched episode, in airdate order
         where.fieldEpisodeHeard(false);
@@ -184,8 +202,8 @@ public class SQLiteHelper {
 
     @NonNull
     public static ConfigurationContentValues getConfigurationContentValues(ConfigurationCursor cursor) {
-        LogHelper.v(TAG, "getConfigurationContentValues");
-        LogHelper.v(TAG, "getConfigurationContentValues: SQL found "+cursor.getCount()+" records");
+        LogHelper.v(TAG, "SQLITE: getConfigurationContentValues");
+        LogHelper.v(TAG, "SQLITE: getConfigurationContentValues: SQL found "+cursor.getCount()+" records");
         ConfigurationContentValues record = new ConfigurationContentValues();
 
         if (cursor.moveToNext()) {
@@ -213,7 +231,7 @@ public class SQLiteHelper {
                 int listenCount = cursor.getFieldTotalListenCount();
                 record.putFieldTotalListenCount(listenCount);
             } catch (Exception e) {
-                LogHelper.e(TAG, "RECORD NOT FOUND: Exception=" + e);
+                LogHelper.e(TAG, "SQLITE: RECORD NOT FOUND: Exception=" + e);
                 record = null;
             }
         }
@@ -223,7 +241,7 @@ public class SQLiteHelper {
 
     @NonNull
     public static ConfigEpisodesContentValues getConfigEpisodesContentValues(ConfigEpisodesCursor cursor) {
-        LogHelper.v(TAG, "getConfigEpisodesContentValues: SQL found "+cursor.getCount()+" records");
+        LogHelper.v(TAG, "SQLITE: getConfigEpisodesContentValues: SQL found "+cursor.getCount()+" records");
         ConfigEpisodesContentValues record = new ConfigEpisodesContentValues();
 
         if (cursor.moveToNext()) {
@@ -253,7 +271,7 @@ public class SQLiteHelper {
                 int listenCount = cursor.getFieldListenCount();
                 record.putFieldListenCount(listenCount);
             } catch (Exception e) {
-                LogHelper.e(TAG, "RECORD NOT FOUND: Exception=" + e);
+                LogHelper.e(TAG, "SQLITE: RECORD NOT FOUND: Exception=" + e);
                 record = null;
             }
         }
@@ -261,9 +279,9 @@ public class SQLiteHelper {
     }
 
     public static Uri insertConfiguration(ContentValues configurationValues) {
-        LogHelper.v(TAG, "insertConfigurationValues");
+        LogHelper.v(TAG, "SQLITE: insertConfigurationValues");
         if (configurationValues == null || configurationValues.size() == 0) {
-            LogHelper.w(TAG, "unable to insertConfigurationValues! - null or empty values.");
+            LogHelper.w(TAG, "SQLITE: unable to insertConfigurationValues! - null or empty values.");
             return null;
         }
         Uri configurationEntry = RadioTheaterContract.ConfigurationEntry.buildConfigurationUri();
@@ -272,9 +290,9 @@ public class SQLiteHelper {
 
     // update local SQLite
     public static int updateConfigurationValues(String deviceId, ContentValues configurationValues) {
-        LogHelper.v(TAG, "updateConfigurationValues");
+        LogHelper.v(TAG, "SQLITE: updateConfigurationValues");
         if (configurationValues == null || configurationValues.size() == 0) {
-            LogHelper.w(TAG, "unable to updateConfigurationValues! - null or empty values.");
+            LogHelper.w(TAG, "SQLITE: unable to updateConfigurationValues! - null or empty values.");
             return 0;
         }
         Uri configurationEntry = RadioTheaterContract.ConfigurationEntry.buildConfigurationUri();
@@ -285,9 +303,9 @@ public class SQLiteHelper {
     }
 
     public static Uri insertConfigEntryValues(ContentValues configEntryValues) {
-        LogHelper.v(TAG, "insertConfigEntryValues");
+        LogHelper.v(TAG, "SQLITE: insertConfigEntryValues");
         if (configEntryValues == null || configEntryValues.size() == 0) {
-            LogHelper.w(TAG, "unable to insertConfigEntryValues! - null or empty values.");
+            LogHelper.w(TAG, "SQLITE: unable to insertConfigEntryValues! - null or empty values.");
             return null;
         }
         Uri configEntry = RadioTheaterContract.ConfigEpisodesEntry.buildConfigEpisodesUri();
@@ -296,9 +314,9 @@ public class SQLiteHelper {
 
     // update local SQLite
     public static int updateConfigEntryValues(String episode, ContentValues configEntryValues) {
-        LogHelper.v(TAG, "updateConfigEntryValues");
+        LogHelper.v(TAG, "SQLITE: updateConfigEntryValues");
         if (configEntryValues == null || configEntryValues.size() == 0) {
-            LogHelper.w(TAG, "unable to updateConfigurationValues! - null or empty values.");
+            LogHelper.w(TAG, "SQLITE: unable to updateConfigurationValues! - null or empty values.");
             return 0;
         }
         Uri configEntry = RadioTheaterContract.ConfigEpisodesEntry.buildConfigEpisodesUri();

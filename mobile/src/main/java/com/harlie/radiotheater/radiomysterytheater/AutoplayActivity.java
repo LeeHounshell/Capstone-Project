@@ -48,7 +48,6 @@ import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadingAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.SQLiteHelper;
 import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
-import com.harlie.radiotheater.radiomysterytheater.utils.CheckPlayStore;
 import com.harlie.radiotheater.radiomysterytheater.utils.CircularSeekBar;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.OnSwipeTouchListener;
@@ -236,7 +235,6 @@ public class AutoplayActivity extends BaseActivity {
             final String episodeId = intent.getStringExtra("PLAY_NOW");
             if (episodeId != null) {
                 LogHelper.v(TAG, "---> PLAY_NOW "+episodeId+" <---");
-                setShareIntentForEpisode(Long.parseLong(episodeId));
                 displayScrollingText();
                 mAutoPlay.setVisibility(View.VISIBLE);
                 if (sWaitForMedia == false) {
@@ -339,20 +337,19 @@ public class AutoplayActivity extends BaseActivity {
             public void onClick() {
                 ButtonState oldButtonState = sShowingButton;
                 if (!isTimePassed()) {
+                    displayScrollingText();
                     return;
                 }
                 LogHelper.v(TAG, "onClick");
                 //mp.start();
                 verifyPaidVersion(true);
                 if (getEpisodeNumber() != 0) {
-                    LogHelper.v(TAG, "onClick: need to getEpisodeInfoFor(" + getEpisodeNumber() + ")");
-                    setShareIntentForEpisode(getEpisodeNumber());
-                    displayScrollingText();
+                    LogHelper.v(TAG, "onClick: prepare episode=" + getEpisodeNumber());
                 }
                 else {
                     LogHelper.v(TAG, "onClick: need to getCursorForNextAvailableEpisode");
                     ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
-                    if (!getEpisodeData(configCursor)) {
+                    if (!getEpisodeDataForCursor(configCursor)) {
                         LogHelper.v(TAG, "popup alert - ALL EPISODES ARE HEARD!");
                         mAppBarLayout.setExpanded(true);
                         heardAllEpisodes();
@@ -375,6 +372,7 @@ public class AutoplayActivity extends BaseActivity {
 
             @Override
             public void onDoubleClick() { // FIXME: OnSwipeTouchListener issue, low priority
+                displayScrollingText();
                 if (! isTimePassed()) {
                     return;
                 }
@@ -385,6 +383,7 @@ public class AutoplayActivity extends BaseActivity {
 
             @Override
             public void onLongClick(final Drawable buttonImage) {
+                displayScrollingText();
                 if (! isTimePassed()) {
                     return;
                 }
@@ -408,6 +407,7 @@ public class AutoplayActivity extends BaseActivity {
 
             @Override
             public void onSwipeRight() {
+                displayScrollingText();
                 if (! isTimePassed()) {
                     return;
                 }
@@ -419,6 +419,7 @@ public class AutoplayActivity extends BaseActivity {
 
             @Override
             public void onSwipeLeft() {
+                displayScrollingText();
                 if (! isTimePassed()) {
                     return;
                 }
@@ -431,6 +432,7 @@ public class AutoplayActivity extends BaseActivity {
 /*
 //            @Override
 //            public void onSwipeUp() { // FIXME: OnSwipeTouchListener issue, low priority
+//                displayScrollingText();
 //                if (! isTimePassed()) {
 //                    return;
 //                }
@@ -449,6 +451,7 @@ public class AutoplayActivity extends BaseActivity {
 //
 //            @Override
 //            public void onSwipeDown() { // FIXME: OnSwipeTouchListener issue, low priority
+//                displayScrollingText();
 //                if (! isTimePassed()) {
 //                    return;
 //                }
@@ -488,16 +491,22 @@ public class AutoplayActivity extends BaseActivity {
 
             @Override
             public void onClick() {
-                ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
-                if (getEpisodeData(configCursor)) {
-                    displayScrollingText();
+                int lastPlaybackState = LocalPlayback.getCurrentState();
+                if (PlaybackStateCompat.STATE_PLAYING != lastPlaybackState) {
+                    ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
+                    if (getEpisodeDataForCursor(configCursor)) {
+                        displayScrollingText();
+                    }
                 }
                 LogHelper.v(TAG, "onClick - mFabActionButton");
                 Intent episodeListIntent = new Intent(activity, EpisodeListActivity.class);
                 Bundle playInfo = new Bundle();
                 savePlayInfoToBundle(playInfo);
                 episodeListIntent.putExtras(playInfo);
-                episodeListIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                String playing = String.valueOf(getEpisodeNumber());
+                episodeListIntent.putExtra("ACTIVE_PLAYING", playing);
+                LogHelper.v(TAG, "LIST: set ACTIVE_PLAYING="+playing);
+                episodeListIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 stopSeekbarUpdate();
                 startActivity(episodeListIntent);
                 overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
@@ -651,16 +660,32 @@ public class AutoplayActivity extends BaseActivity {
     }
 
     protected void displayScrollingText() {
+        LogHelper.v(TAG, "displayScrollingText");
         if (isLoadedOK()) {
             getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     ScrollingTextView horizontalScrollingText = getHorizontalScrollingText();
-                    if (horizontalScrollingText != null && sAirdate != null && sEpisodeTitle != null && sEpisodeDescription != null) {
-                        horizontalScrollingText.setText("         ... Airdate: " + RadioTheaterContract.airDate(sAirdate) + " ... Episode #" + sEpisodeNumber + " ... " + sEpisodeTitle + " ... " + sEpisodeDescription);
-                        horizontalScrollingText.setEnabled(true);
-                        horizontalScrollingText.setSelected(true);
+                    if (horizontalScrollingText != null && getAirdate() != null && getEpisodeTitle() != null && getEpisodeDescription() != null) {
+                        setHorizontalScrollingText(horizontalScrollingText);
                     }
+                    else {
+                        // error state recovery
+                        getEpisodeInfoFor(getEpisodeNumber());
+                        if (horizontalScrollingText != null && getAirdate() != null && getEpisodeTitle() != null && getEpisodeDescription() != null) {
+                            setHorizontalScrollingText(horizontalScrollingText);
+                        }
+                        else {
+                            LogHelper.v(TAG, "UNABLE TO DISPLAY SCROLLING TEXT: episode="+getEpisodeNumber()+", airdate="+getAirdate()+", title="+getTitle()+", description="+getEpisodeDescription());
+                        }
+                    }
+                }
+
+                protected void setHorizontalScrollingText(ScrollingTextView horizontalScrollingText) {
+                    horizontalScrollingText.setText("         ... Airdate: " + RadioTheaterContract.airDate(getAirdate())
+                            + " ... Episode #" + getEpisodeNumber() + " ... " + getEpisodeTitle() + " ... " + getEpisodeDescription());
+                    horizontalScrollingText.setEnabled(true);
+                    horizontalScrollingText.setSelected(true);
                 }
             });
         }
@@ -691,13 +716,15 @@ public class AutoplayActivity extends BaseActivity {
 */
 
             case R.id.share: {
-                LogHelper.v(TAG, "-> SHARE <-");
                 long episode = getEpisodeNumber();
+                LogHelper.v(TAG, "-> SHARE <-");
                 if (episode == 0) {
                     ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
-                    getEpisodeData(configCursor);
+                    getEpisodeDataForCursor(configCursor);
                     episode = getEpisodeNumber();
                     if (episode == 0) {
+                        String message = getResources().getString(R.string.unable_to_share);
+                        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
                         return true;
                     }
                 }
@@ -761,7 +788,7 @@ public class AutoplayActivity extends BaseActivity {
             shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
         } else {
             // from: http://stackoverflow.com/questions/32941254/is-there-anything-similar-to-flag-activity-new-document-for-older-apis
-            shareIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+            shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         }
 
         shareIntent.setType("text/html");
@@ -958,7 +985,9 @@ public class AutoplayActivity extends BaseActivity {
                     getHandler().post(new Runnable() {
                         @Override
                         public void run() {
-                            LogHelper.v(TAG, "*** RECEIVED BROADCAST: LOAD_OK");
+                            LogHelper.v(TAG, "*** RECEIVED BROADCAST: LOAD_OK - episode="+getEpisodeNumber());
+                            //getEpisodeInfoFor(getEpisodeNumber());
+                            LogHelper.v(TAG, "PLAYING: "+getEpisodeNumber()+" "+getEpisodeTitle());
                             enableButtons();
                             displayScrollingText();
                             sLoadedOK = true; // placed after 'displayScrollingText' because i don't want to see Episode detail until after the first Autoplay click
@@ -1013,7 +1042,6 @@ public class AutoplayActivity extends BaseActivity {
                 else if (message.length() > KEY_REQUEST.length() && message.substring(0, KEY_REQUEST.length()).equals(KEY_REQUEST)) {
                     String episodeIndex = message.substring(KEY_REQUEST.length(), message.length());
                     LogHelper.v(TAG,  "*** RECEIVED BROADCAST: REQUEST TO PLAY EPISODE "+episodeIndex);
-                    setShareIntentForEpisode(Long.parseLong(episodeIndex));
                     if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
                         mAppBarLayout.setExpanded(false);
                     }
@@ -1021,15 +1049,21 @@ public class AutoplayActivity extends BaseActivity {
                     RadioControlIntentService.startActionPlay(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), getEpisodeDownloadUrl(), getEpisodeTitle());
                 }
 
-                // PLAY
+                // PLAYING
                 else if (message.length() > KEY_PLAYING.length() && message.substring(0, KEY_PLAYING.length()).equals(KEY_PLAYING)) {
-                    String episodeIndex = message.substring(KEY_PLAYING.length(), message.length());
+                    final String episodeIndex = message.substring(KEY_PLAYING.length(), message.length());
                     LogHelper.v(TAG,  "*** RECEIVED BROADCAST: NOW PLAYING EPISODE "+episodeIndex);
-                    setShareIntentForEpisode(Long.parseLong(episodeIndex));
                     getHandler().post(new Runnable() {
                         @Override
                         public void run() {
+                            // NEXT and PREV need to show the new Episode info
+                            long episode = Long.valueOf(episodeIndex);
+                            setEpisodeNumber(episode);
+                            getEpisodeInfoFor(getEpisodeNumber());
+                            LogHelper.v(TAG, "PLAYING: "+getEpisodeNumber()+" "+getEpisodeTitle()+", episode="+episode);
+                            showExpectedControls("PLAYING");
                             displayScrollingText();
+                            mAppBarLayout.setExpanded(false);
                         }
                     });
                 }
@@ -1042,6 +1076,7 @@ public class AutoplayActivity extends BaseActivity {
                         @Override
                         public void run() {
                             LogHelper.v(TAG, "*** RECEIVED BROADCAST: NOT ABLE TO PLAY");
+                            mAppBarLayout.setExpanded(true);
                             problemWithPlayback();
                         }
                     });
@@ -1053,7 +1088,7 @@ public class AutoplayActivity extends BaseActivity {
                     markEpisodeAsHeardAndIncrementPlayCount(Long.parseLong(episodeIndex), episodeIndex, mDuration);
                     LogHelper.v(TAG,  "*** RECEIVED BROADCAST: COMPLETED PLAY EPISODE "+episodeIndex);
                     ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
-                    if (!getEpisodeData(configCursor)) {
+                    if (!getEpisodeDataForCursor(configCursor)) {
                         getHandler().post(new Runnable() {
                             @Override
                             public void run() {
@@ -1065,7 +1100,10 @@ public class AutoplayActivity extends BaseActivity {
                     }
                     else {
                         LogHelper.v(TAG, "=========> START AUTOPLAY FOR NEXT AVAILABLE EPISODE: "+getEpisodeNumber());
+                        mAppBarLayout.setExpanded(true);
+                        showPleaseWaitButton(0);
                         startPlaybackForEpisode(String.valueOf(getEpisodeNumber()), autoplayActivity);
+                        displayScrollingText();
                     }
                 }
 
@@ -1086,7 +1124,6 @@ public class AutoplayActivity extends BaseActivity {
                 initializeForEpisode();
                 mCurrentPosition = 0;
                 showPleaseWaitButton(0);
-                setShareIntentForEpisode(Long.parseLong(episodeIndex));
                 displayScrollingText();
                 verifyPaidVersion(true);
                 RadioControlIntentService.startActionPlay(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), getEpisodeDownloadUrl(), getEpisodeTitle());
@@ -1312,7 +1349,7 @@ public class AutoplayActivity extends BaseActivity {
 
     //
     // NOTE: there is an Android problem setting these 3 intent flags together with a shared-element transition that destroys the transition effect:
-    //autoplayIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+    //autoplayIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
     //
     // see: BaseActivity.playNow()
     // to get around this problem, I have over-ridden onBackPressed in AutoplayActivity so that it clears the back stack before exiting.
@@ -1321,8 +1358,12 @@ public class AutoplayActivity extends BaseActivity {
     public void onBackPressed() {
         LogHelper.v(TAG, "onBackPressed - exiting");
         super.onBackPressed();
+        exit_now();
+    }
+
+    protected void exit_now() {
         Intent intent = new Intent(this, SplashActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         intent.putExtra("EXIT_NOW", "exit");
         startActivity(intent);
         finish();

@@ -33,7 +33,6 @@ import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
 
-import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
 import com.harlie.radiotheater.radiomysterytheater.R;
 import com.harlie.radiotheater.radiomysterytheater.RadioControlIntentService;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
@@ -667,11 +666,11 @@ public class LocalPlayback
         }
         if (what == -38) {
             LogHelper.v(TAG, "*** MEDIA PLAYER NEEDS RESET - ERROR=-38 ***");
-            Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
             stop(true);
             relaxResources(true);
-            RadioControlIntentService.startActionStop(context, "ERROR", String.valueOf(BaseActivity.getEpisodeNumber()), BaseActivity.getEpisodeDownloadUrl());
         }
+        Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+        RadioControlIntentService.startActionStop(context, "ERROR", String.valueOf(LocalPlayback.getCurrentEpisode()), "error="+String.valueOf(what));
         return true; // true indicates we handled the error
     }
 
