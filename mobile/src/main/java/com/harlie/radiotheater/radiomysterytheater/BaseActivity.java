@@ -152,6 +152,8 @@ public class BaseActivity extends AppCompatActivity {
 
     private static int mCount;
 
+    private static volatile boolean sConfigurationUpdated;
+
     public static volatile boolean sProgressViewSpinning;
 
     protected ConfigurationContentValues mConfiguration;
@@ -585,8 +587,10 @@ public class BaseActivity extends AppCompatActivity {
 
     protected void userLoginSuccess() {
         LogHelper.v(TAG, "userLoginSuccess");
-        String message = getResources().getString(R.string.successful);
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        if (! isLoadedOK()) {
+            String message = getResources().getString(R.string.successful);
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        }
     }
 
     protected void userLoginFailed() {
@@ -599,13 +603,13 @@ public class BaseActivity extends AppCompatActivity {
         LogHelper.v(TAG, "---> startAuthenticationActivity <---");
         Intent authenticationIntent = new Intent(this, AuthenticationActivity.class);
         // close existing activity stack regardless of what's in there and create new root
-        authenticationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         authenticationIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        authenticationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         Bundle playInfo = new Bundle();
         savePlayInfoToBundle(playInfo);
         authenticationIntent.putExtras(playInfo);
-        authenticationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
+        LogHelper.v(TAG, "STARTACTIVITY: AuthenticationActivity.class");
         startActivity(authenticationIntent, bundle);
         overridePendingTransition(0,0);
         finish();
@@ -662,7 +666,7 @@ public class BaseActivity extends AppCompatActivity {
             }
             savePlayInfoToBundle(bundle);
             autoplayIntent.putExtras(bundle);
-            autoplayIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            LogHelper.v(TAG, "STARTACTIVITY: AutoplayActivity.class");
             startActivity(autoplayIntent, bundle);
             finish();
         }
@@ -693,6 +697,7 @@ public class BaseActivity extends AppCompatActivity {
         savePlayInfoToBundle(playInfo);
         autoplayIntent.putExtras(playInfo);
         autoplayIntent.putExtra("PLAY_NOW", String.valueOf(episodeNumber));
+        LogHelper.v(TAG, "STARTACTIVITY: AutoplayActivity.class");
         startActivity(autoplayIntent, playInfo);
     }
 
@@ -1335,19 +1340,21 @@ public class BaseActivity extends AppCompatActivity {
             updateFirebaseWithLocal = true;
         }
 
-        if (mConfiguration != null || updateFirebaseWithLocal) { // found Firebase Configuration
-            LogHelper.v(TAG, "updating Firebase entry for Configuration.");
-            // 4) merge and update local SQLite and Firebase
-            boolean dirty = mergeConfiguratons(sqliteConfiguration, firebaseConfiguration);
-            if (dirty) {
-                sqliteConfiguration = mConfiguration.values();
-                LogHelper.v(TAG, "DIRTY: sqliteConfiguration="+sqliteConfiguration.toString());
-                SQLiteHelper.updateConfigurationValues(getAdvertId(), sqliteConfiguration);
-                updateFirebaseConfigurationValues(getAdvertId(), mConfiguration.values());
+        if (! sConfigurationUpdated) {
+            if (mConfiguration != null || updateFirebaseWithLocal) { // found Firebase Configuration
+                LogHelper.v(TAG, "updating Firebase entry for Configuration.");
+                // 4) merge and update local SQLite and Firebase
+                boolean dirty = mergeConfiguratons(sqliteConfiguration, firebaseConfiguration);
+                if (dirty) {
+                    sqliteConfiguration = mConfiguration.values();
+                    LogHelper.v(TAG, "DIRTY: sqliteConfiguration=" + sqliteConfiguration.toString());
+                    SQLiteHelper.updateConfigurationValues(getAdvertId(), sqliteConfiguration);
+                    updateFirebaseConfigurationValues(getAdvertId(), mConfiguration.values());
+                }
+                sConfigurationUpdated = true;
+            } else {
+                LogHelper.v(TAG, "unable to update Firebase Configuration!");
             }
-        }
-        else {
-            LogHelper.v(TAG, "unable to update Firebase Configuration!");
         }
     }
 

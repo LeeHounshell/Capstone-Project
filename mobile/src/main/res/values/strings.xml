@@ -50,6 +50,18 @@
     <string name="title_activity_about">About</string>
     <string name="up">Up</string>
 
+    <!-- Strings related to Share email -->
+    <string name="email_share_episode">Episode #</string>
+    <string name="email_share_checkitout">Check it out!</string>
+    <string name="email_share_clicktohear">Click to hear \'</string>
+    <string name="email_share_radio">\' with the \'Radio Mystery Theater\' Android App</string>
+    <string name="email_share_hereis">Here is the</string>
+    <string name="email_share_webpage">episode\'s webpage.</string>
+    <string name="email_share_mp3">And here is the episode\'s mp3</string>
+    <string name="email_share_mp3_download">download link.</string>
+    <string name="email_share_applink">http://market.android.com/details?id=</string>
+    <string name="email_share_marketlink">market://details?id=</string>
+
     <!-- Strings related to Autoplay and messages -->
     <string name="title_activity_autoplay">AutoplayActivity</string>
     <string name="episode_number">Episode Number</string>

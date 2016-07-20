@@ -226,6 +226,7 @@ public class EpisodeDetailFragment extends FragmentBase {
                     LogHelper.v(TAG, "onClick - WEB LINK - url="+url);
                     Intent webLinkIntent = new Intent(Intent.ACTION_VIEW);
                     webLinkIntent.setData(Uri.parse(url));
+                    LogHelper.v(TAG, "STARTACTIVITY: webLink");
                     startActivity(webLinkIntent);
                     getActivity().overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
                 }

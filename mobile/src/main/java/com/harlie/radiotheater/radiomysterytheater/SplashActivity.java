@@ -38,6 +38,7 @@ public class SplashActivity extends AppCompatActivity
             getWindow().setExitTransition(exitTransition);
             ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this);
             Bundle bundle = options.toBundle();
+            LogHelper.v(TAG, "STARTACTIVITY: AutoplayActivity.class");
             startActivity(autoplayIntent, bundle);
         }
         else {
@@ -45,6 +46,7 @@ public class SplashActivity extends AppCompatActivity
             Intent authenticationIntent = new Intent(this, AuthenticationActivity.class);
             authenticationIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
             authenticationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            LogHelper.v(TAG, "STARTACTIVITY: AuthenticationActivity.class");
             startActivity(authenticationIntent);
         }
         finish();

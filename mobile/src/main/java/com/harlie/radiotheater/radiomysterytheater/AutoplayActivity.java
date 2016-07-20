@@ -197,6 +197,7 @@ public class AutoplayActivity extends BaseActivity {
             tvIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION");
             tvIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             stopSeekbarUpdate();
+            LogHelper.v(TAG, "STARTACTIVITY: TvPlaybackActivity.class");
             startActivity(tvIntent);
             overridePendingTransition((R.anim.abc_fade_in, R.anim.abc_fade_out,R.anim.abc_fade_in, R.anim.abc_fade_out);
             finish();
@@ -506,6 +507,7 @@ public class AutoplayActivity extends BaseActivity {
                 episodeListIntent.putExtras(playInfo);
                 episodeListIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 stopSeekbarUpdate();
+                LogHelper.v(TAG, "STARTACTIVITY: EpisodeListActivity.class");
                 startActivity(episodeListIntent);
                 overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
                 FragmentManager fragmentManager = activity.getSupportFragmentManager();
@@ -734,6 +736,7 @@ public class AutoplayActivity extends BaseActivity {
                 MenuItemCompat.setActionProvider(item, sShareActionProvider);
                 LogHelper.v(TAG, "onCreateOptionsMenu: sShareActionProvider="+sShareActionProvider);
                 if (shareIntent != null) {
+                    LogHelper.v(TAG, "STARTACTIVITY: shareEpisode");
                     startActivity(Intent.createChooser(shareIntent, "Share via"));
                 }
                 else {
@@ -753,6 +756,7 @@ public class AutoplayActivity extends BaseActivity {
                 intent.putExtra(PreferenceActivity.EXTRA_NO_HEADERS, true);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 stopSeekbarUpdate();
+                LogHelper.v(TAG, "STARTACTIVITY: SettingsActivity.class");
                 startActivity(intent);
                 overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
                 trackSettingsWithFirebaseAnalytics();
@@ -767,6 +771,7 @@ public class AutoplayActivity extends BaseActivity {
                 intent.putExtras(playInfo);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 stopSeekbarUpdate();
+                LogHelper.v(TAG, "STARTACTIVITY: AboutActivity.class");
                 startActivity(intent);
                 overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
                 trackAboutWithFirebaseAnalytics();
@@ -793,20 +798,26 @@ public class AutoplayActivity extends BaseActivity {
 
         shareIntent.setType("text/html");
 
+        // always send a link to the free version
         String packageId = getApplicationContext().getPackageName();
-        // send a link to the free version
         packageId = packageId.replace(".radiomysterytheater.paid", ".radiomysterytheater");
-        String appLink = "http://market.android.com/details?id=" + packageId;
-//        if (CheckPlayStore.isGooglePlayInstalled(getApplicationContext())) {
-//            appLink = "market://details?id=" + packageId;
-//        }
+        String appLink = getResources().getString(R.string.email_share_applink) + packageId;
 
-        String share_body = "\n<body>\n<br>Check it out!\n\n"
-                + "Episode #" + episodeNumber + " - \"" + episodeTitle + "\""
+        String episode = getResources().getString(R.string.email_share_episode);
+        String checkitout = getResources().getString(R.string.email_share_checkitout);
+        String clicktohear = getResources().getString(R.string.email_share_clicktohear);
+        String radiomysterytheater = getResources().getString(R.string.email_share_radio);
+        String hereis = getResources().getString(R.string.email_share_hereis);
+        String webpage = getResources().getString(R.string.email_share_webpage);
+        String mp3 = getResources().getString(R.string.email_share_mp3);
+        String mp3_download = getResources().getString(R.string.email_share_mp3_download);
+
+        String share_body = "\n<body>\n<br>"+checkitout+"\n\n"
+                + episode + episodeNumber + " - \"" + episodeTitle + "\""
                 + "\n<br>\n<br>\n" + episodeDescription
-                + "\n<br>\n<br> <a href=\""+appLink+"\">Click to hear '"+episodeTitle+"' with the 'Radio Mystery Theater' Android App</a>"
-                + "\n<br>\n<br> Here is the <a href=\"" + webLinkUrl.replace("_name", "") + "\">episode's webpage.</a>"
-                + "\n<br>\n<br> And here is the episode's mp3 <a href=\"" + episodeDownloadUrl + "\">download link.</a>"
+                + "\n<br>\n<br> <a href=\"" + appLink + "\">" + clicktohear + episodeTitle + radiomysterytheater + "</a>"
+                + "\n<br>\n<br> " + hereis + " <a href=\"" + webLinkUrl.replace("_name", "") + "\">" + webpage + "</a>"
+                + "\n<br>\n<br> " + mp3 + " <a href=\"" + episodeDownloadUrl + "\">" + mp3_download + "</a>"
                 + "\n</body>\n";
 
         shareIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.share_text));
@@ -1379,6 +1390,7 @@ public class AutoplayActivity extends BaseActivity {
         Intent intent = new Intent(this, SplashActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         intent.putExtra("EXIT_NOW", "exit");
+        LogHelper.v(TAG, "STARTACTIVITY: SplashActivity.class");
         startActivity(intent);
         finish();
     }

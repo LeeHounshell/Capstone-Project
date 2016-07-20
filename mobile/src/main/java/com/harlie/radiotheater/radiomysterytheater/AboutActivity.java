@@ -11,6 +11,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.AppCompatImageButton;
 import android.support.v7.widget.Toolbar;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowInsets;
@@ -151,6 +152,24 @@ public class AboutActivity extends BaseActivity {
         }
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        LogHelper.v(TAG, "onOptionsItemSelected");
+        int id = item.getItemId();
+        if (id == android.R.id.home) {
+            // This ID represents the Home or Up button. In the case of this
+            // activity, the Up button is shown. For
+            // more details, see the Navigation pattern on Android Design:
+            //
+            // http://developer.android.com/design/patterns/navigation.html#up-vs-back
+            //
+            startAutoplayActivity(false);
+            overridePendingTransition(0, 0);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     private void sendEmail_to_LeeHounshell() {
         LogHelper.v(TAG, "sendEmail_to_LeeHounshell");
         String contact = getResources().getString(R.string.app_contact);
@@ -159,6 +178,7 @@ public class AboutActivity extends BaseActivity {
         intent.putExtra(Intent.EXTRA_EMAIL, new String[] {contact});
         intent.putExtra(Intent.EXTRA_SUBJECT, "Re: the 'Radio Mystery Theater' Android app");
         intent.putExtra(Intent.EXTRA_TEXT, "");
+        LogHelper.v(TAG, "STARTACTIVITY: chooser");
         startActivity(Intent.createChooser(intent, ""));
         overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
     }
@@ -170,6 +190,7 @@ public class AboutActivity extends BaseActivity {
         intent.setAction(Intent.ACTION_VIEW);
         intent.addCategory(Intent.CATEGORY_BROWSABLE);
         intent.setData(Uri.parse("http://www.linkedin.com/pub/lee-hounshell/2/674/852"));
+        LogHelper.v(TAG, "STARTACTIVITY: linkedIn");
         startActivity(intent);
         overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
     }
@@ -185,6 +206,7 @@ public class AboutActivity extends BaseActivity {
         savePlayInfoToBundle(playInfo);
         autoplayIntent.putExtras(playInfo);
         autoplayIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        LogHelper.v(TAG, "STARTACTIVITY: AutoplayActivity.class");
         startActivity(autoplayIntent);
         overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
     }

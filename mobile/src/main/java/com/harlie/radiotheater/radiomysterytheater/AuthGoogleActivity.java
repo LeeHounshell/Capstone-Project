@@ -108,6 +108,7 @@ public class AuthGoogleActivity
 
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
         signInIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        LogHelper.v(TAG, "STARTACTIVITY: GoogleSignInApi");
         startActivityForResult(signInIntent, RC_SIGN_IN);
         overridePendingTransition(0,0);
     }
@@ -245,6 +246,7 @@ public class AuthGoogleActivity
                     authEmailIntent.putExtra("DO_AUTH", true);
                     LogHelper.v(TAG, "---> DO_AUTH");
                     authEmailIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    LogHelper.v(TAG, "STARTACTIVITY: AuthEmailActivity.class");
                     startActivity(authEmailIntent);
                     overridePendingTransition(0, 0);
                     finish();

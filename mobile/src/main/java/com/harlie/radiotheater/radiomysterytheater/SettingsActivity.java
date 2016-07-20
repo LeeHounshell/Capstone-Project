@@ -1,6 +1,7 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
 import android.annotation.TargetApi;
+import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -12,11 +13,14 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.NavUtils;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.widget.LinearLayout;
+
+import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import java.util.List;
 
@@ -34,9 +38,11 @@ import static com.harlie.radiotheater.radiomysterytheater.R.xml.pref_general;
  * API Guide</a> for more information on developing a Settings UI.
  */
 public class SettingsActivity extends AppCompatPreferenceActivity {
+    private final static String TAG = "LEE: <" + SettingsActivity.class.getSimpleName() + ">";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        LogHelper.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         setTheme(R.style.SettingsFragmentStyle);
         // from: http://stackoverflow.com/questions/30114730/how-to-use-appcompatpreferenceactivity
@@ -49,8 +55,21 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        LogHelper.v(TAG, "onOptionsItemSelected");
         int id = item.getItemId();
         if (id == android.R.id.home) {
+            // This ID represents the Home or Up button. In the case of this
+            // activity, the Up button is shown. For
+            // more details, see the Navigation pattern on Android Design:
+            //
+            // http://developer.android.com/design/patterns/navigation.html#up-vs-back
+            //
+            Intent autoplayIntent = new Intent(this, AutoplayActivity.class);
+            // close existing activity stack regardless of what's in there and create new root
+            autoplayIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            LogHelper.v(TAG, "STARTACTIVITY: AutoplayActivity.class");
+            startActivity(autoplayIntent);
+            overridePendingTransition(0, 0);
             finish();
             return true;
         }
@@ -64,6 +83,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
+            LogHelper.v(TAG, "onPreferenceChange");
             String stringValue = value.toString();
 
             if (preference instanceof ListPreference) {
@@ -115,6 +135,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      * example, 10" tablets are extra-large.
      */
     private static boolean isXLargeTablet(Context context) {
+        LogHelper.v(TAG, "isXLargeTablet");
         return (context.getResources().getConfiguration().screenLayout
                 & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_XLARGE;
     }
@@ -129,6 +150,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      * @see #sBindPreferenceSummaryToValueListener
      */
     private static void bindPreferenceSummaryToValue(Preference preference) {
+        LogHelper.v(TAG, "bindPreferenceSummaryToValue");
         // Set the listener to watch for value changes.
         if (preference == null) return;
         preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
@@ -143,6 +165,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
+        LogHelper.v(TAG, "onMenuItemSelected");
         int id = item.getItemId();
         if (id == android.R.id.home) {
             if (!super.onMenuItemSelected(featureId, item)) {
@@ -167,6 +190,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     @Override
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void onBuildHeaders(List<Header> target) {
+        LogHelper.v(TAG, "onBuildHeaders");
         loadHeadersFromResource(R.xml.pref_headers, target);
     }
 
@@ -190,6 +214,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     public static class GeneralPreferenceFragment extends PreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
+            LogHelper.v(TAG, "onCreate (GeneralPreferenceFragment )");
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(pref_general);
             setHasOptionsMenu(true);
@@ -205,10 +230,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
         @Override
         public boolean onOptionsItemSelected(MenuItem item) {
+            LogHelper.v(TAG, "onOptionsItemSelected (GeneralPreferenceFragment )");
             int id = item.getItemId();
             if (id == android.R.id.home) {
                 Intent intent = new Intent(getActivity(), SettingsActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                LogHelper.v(TAG, "STARTACTIVITY: SettingsActivity.class");
                 startActivity(intent);
                 return true;
             }
@@ -224,6 +251,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     public static class NotificationPreferenceFragment extends PreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
+            LogHelper.v(TAG, "onCreate (NotificationPreferenceFragment )");
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_notification);
             setHasOptionsMenu(true);
@@ -238,10 +266,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
         @Override
         public boolean onOptionsItemSelected(MenuItem item) {
+            LogHelper.v(TAG, "onOptionsItemSelected (NotificationPreferenceFragment )");
             int id = item.getItemId();
             if (id == android.R.id.home) {
                 Intent intent = new Intent(getActivity(), SettingsActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                LogHelper.v(TAG, "STARTACTIVITY: SettingsActivity.class");
                 startActivity(intent);
                 return true;
             }
@@ -257,6 +287,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     public static class DataSyncPreferenceFragment extends PreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
+            LogHelper.v(TAG, "onCreate (DataSyncPreferenceFragment )");
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_data_sync);
             setHasOptionsMenu(true);
@@ -271,14 +302,17 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
         @Override
         public boolean onOptionsItemSelected(MenuItem item) {
+            LogHelper.v(TAG, "onOptionsItemSelected (DataSyncPreferenceFragment )");
             int id = item.getItemId();
             if (id == android.R.id.home) {
                 Intent intent = new Intent(getActivity(), SettingsActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                LogHelper.v(TAG, "STARTACTIVITY: SettingsActivity.class");
                 startActivity(intent);
                 return true;
             }
             return super.onOptionsItemSelected(item);
         }
     }
+
 }

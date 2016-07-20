@@ -44,6 +44,7 @@ public class CheckPlayStore {
                 intent.setAction(Intent.ACTION_VIEW);
                 intent.addCategory(Intent.CATEGORY_BROWSABLE);
                 intent.setData(Uri.parse(upgradeLink));
+                LogHelper.v(TAG, "STARTACTIVITY: upgradeLink");
                 activity.startActivity(intent); //FIXME: log 'upgrade' web-click to Firebase
                 activity.overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
             }

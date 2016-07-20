@@ -1,6 +1,7 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.design.widget.FloatingActionButton;
@@ -11,6 +12,8 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
+
+import static com.harlie.radiotheater.radiomysterytheater.EpisodeListActivity.isTwoPane;
 
 /**
  * An activity representing a single Episode detail screen. This
@@ -53,10 +56,13 @@ public class EpisodeDetailActivity extends BaseActivity {
                     Bundle playInfo = new Bundle();
                     savePlayInfoToBundle(playInfo);
                     autoplayIntent.putExtras(playInfo);
+                    LogHelper.v(TAG, "STARTACTIVITY: AutoplayActivity.class");
                     startActivity(autoplayIntent);
                     overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
-                    FragmentManager fragmentManager = activity.getSupportFragmentManager();
-                    fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                    if (isTwoPane() && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                        FragmentManager fragmentManager = activity.getSupportFragmentManager();
+                        fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                    }
                 }
             });
         }
@@ -107,7 +113,12 @@ public class EpisodeDetailActivity extends BaseActivity {
             //
             // http://developer.android.com/design/patterns/navigation.html#up-vs-back
             //
-            navigateUpTo(new Intent(this, EpisodeListActivity.class));
+            if (isTwoPane() && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                navigateUpTo(new Intent(this, EpisodeListActivity.class));
+            }
+            else {
+                onBackPressed();
+            }
             return true;
         }
         return super.onOptionsItemSelected(item);

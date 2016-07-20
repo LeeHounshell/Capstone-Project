@@ -75,6 +75,7 @@ public class AuthenticationActivity extends BaseActivity
             Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
             trackSignupAttemptWithFirebaseAnalytics("email");
             authEmailIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            LogHelper.v(TAG, "STARTACTIVITY: AuthEmailActivity.class");
             startActivity(authEmailIntent, bundle);
             overridePendingTransition(0,0);
             finish();
@@ -94,6 +95,7 @@ public class AuthenticationActivity extends BaseActivity
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
         trackSignupAttemptWithFirebaseAnalytics("google");
         authGoogleIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        LogHelper.v(TAG, "STARTACTIVITY: AuthGoogleActivity.class");
         startActivity(authGoogleIntent, bundle);
         overridePendingTransition(0,0);
         finish();
@@ -108,6 +110,7 @@ public class AuthenticationActivity extends BaseActivity
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
         trackSignupAttemptWithFirebaseAnalytics("twitter");
         authTwitterIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        LogHelper.v(TAG, "STARTACTIVITY: AuthTwitterActivity.class");
         startActivity(authTwitterIntent, bundle);
         overridePendingTransition(0,0);
         finish();
@@ -122,6 +125,7 @@ public class AuthenticationActivity extends BaseActivity
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
         trackSignupAttemptWithFirebaseAnalytics("facebook");
         authFacebookIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        LogHelper.v(TAG, "STARTACTIVITY: AuthFacebookActivity.class");
         startActivity(authFacebookIntent, bundle);
         overridePendingTransition(0,0);
         finish();

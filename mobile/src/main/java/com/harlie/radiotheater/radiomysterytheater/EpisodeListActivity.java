@@ -1,6 +1,7 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -13,6 +14,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 
@@ -77,10 +79,13 @@ public class EpisodeListActivity extends BaseActivity
                     Bundle playInfo = new Bundle();
                     savePlayInfoToBundle(playInfo);
                     autoplayIntent.putExtras(playInfo);
+                    LogHelper.v(TAG, "STARTACTIVITY: AutoplayActivity.class");
                     startActivity(autoplayIntent);
                     overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
-                    FragmentManager fragmentManager = activity.getSupportFragmentManager();
-                    fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                    if (isTwoPane() && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                        FragmentManager fragmentManager = activity.getSupportFragmentManager();
+                        fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                    }
                 }
             });
         }
@@ -97,30 +102,41 @@ public class EpisodeListActivity extends BaseActivity
             mTwoPane = true;
         }
 
-        if (savedInstanceState == null) {
-            Intent intent = getIntent();
-            long position = Long.valueOf(getEpisodeNumber());
-            int lastPlaybackState = LocalPlayback.getCurrentState();
-            if (position == 0 || PlaybackStateCompat.STATE_PLAYING == lastPlaybackState) {
-                position = LocalPlayback.getCurrentEpisode();
-                LogHelper.v(TAG, "---> use position="+position);
-            }
-            final int activePosition = (int) position - 1;
-            LogHelper.v(TAG, "===> LIST: SET INITIAL SCROLL POSITION TO: "+activePosition);
-            ((RecyclerView) recyclerView).invalidate();
-            ((RecyclerView) recyclerView).scrollToPosition((int) activePosition);
-            if (mTwoPane) {
-                getHandler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        LogHelper.v(TAG, "*** AUTO CLICK TO SHOW EPISODE DETAIL ***");
-                        RecyclerView.ViewHolder viewHolder = ((RecyclerView) recyclerView).findViewHolderForAdapterPosition(activePosition);
-                        if (viewHolder != null && viewHolder.itemView != null) {
-                            viewHolder.itemView.performClick();
-                        }
+        // Show the Up button in the action bar.
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
+
+        Intent intent = getIntent();
+        long position = Long.valueOf(getEpisodeNumber());
+        int lastPlaybackState = LocalPlayback.getCurrentState();
+        if (position == 0 || PlaybackStateCompat.STATE_PLAYING == lastPlaybackState) {
+            LogHelper.v(TAG, "LIST: using current selection in LocalPlayback");
+            position = LocalPlayback.getCurrentEpisode();
+            LogHelper.v(TAG, "---> use position="+position);
+        }
+        if (position == 0) {
+            LogHelper.v(TAG, "LIST: unable to locate selection - using NEXT AVAILABLE");
+            ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
+            getEpisodeDataForCursor(configCursor);
+            position = getEpisodeNumber();
+        }
+        final int activePosition = (int) position - 1;
+        LogHelper.v(TAG, "===> LIST: SET INITIAL SCROLL POSITION TO: "+activePosition);
+        ((RecyclerView) recyclerView).invalidate();
+        ((RecyclerView) recyclerView).scrollToPosition((int) activePosition);
+        if (isTwoPane() && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            getHandler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    LogHelper.v(TAG, "*** AUTO CLICK TO SHOW EPISODE DETAIL ***");
+                    RecyclerView.ViewHolder viewHolder = ((RecyclerView) recyclerView).findViewHolderForAdapterPosition(activePosition);
+                    if (viewHolder != null && viewHolder.itemView != null) {
+                        viewHolder.itemView.performClick();
                     }
-                }, 1000);
-            }
+                }
+            }, 1000);
         }
     }
 
@@ -158,6 +174,28 @@ public class EpisodeListActivity extends BaseActivity
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        LogHelper.v(TAG, "onOptionsItemSelected");
+        int id = item.getItemId();
+        if (id == android.R.id.home) {
+            // This ID represents the Home or Up button. In the case of this
+            // activity, the Up button is shown. For
+            // more details, see the Navigation pattern on Android Design:
+            //
+            // http://developer.android.com/design/patterns/navigation.html#up-vs-back
+            //
+            if (isTwoPane() && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                navigateUpTo(new Intent(this, AutoplayActivity.class));
+            }
+            else {
+                onBackPressed();
+            }
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     public void onBackPressed() {
         LogHelper.v(TAG, "onBackPressed");
         super.onBackPressed();
@@ -165,7 +203,7 @@ public class EpisodeListActivity extends BaseActivity
         overridePendingTransition(0, 0);
     }
 
-//--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------
     // Loader callbacks
     //--------------------------------------------------------------------------------
 
