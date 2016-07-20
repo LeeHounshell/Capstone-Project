@@ -244,7 +244,7 @@ public class AuthGoogleActivity
                     authEmailIntent.putExtra("photo", personPhoto);
                     authEmailIntent.putExtra("DO_AUTH", true);
                     LogHelper.v(TAG, "---> DO_AUTH");
-                    authEmailIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    authEmailIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                     startActivity(authEmailIntent);
                     overridePendingTransition(0, 0);
                     finish();

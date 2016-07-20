@@ -205,16 +205,16 @@ public class MediaNotificationManager extends BroadcastReceiver {
         }
     }
 
+
     // FIXME
     private PendingIntent createContentIntent(MediaDescriptionCompat description) {
         Intent openUI = new Intent(mService, AutoplayActivity.class);
-        openUI.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        openUI.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         openUI.putExtra(AutoplayActivity.EXTRA_START_FULLSCREEN, true);
         if (description != null) {
             openUI.putExtra(AutoplayActivity.EXTRA_CURRENT_MEDIA_DESCRIPTION, description);
         }
-        return PendingIntent.getActivity(mService, REQUEST_CODE, openUI,
-                PendingIntent.FLAG_CANCEL_CURRENT);
+        return PendingIntent.getActivity(mService, REQUEST_CODE, openUI, PendingIntent.FLAG_CANCEL_CURRENT);
     }
 
     private final MediaControllerCompat.Callback mCb = new MediaControllerCompat.Callback() {

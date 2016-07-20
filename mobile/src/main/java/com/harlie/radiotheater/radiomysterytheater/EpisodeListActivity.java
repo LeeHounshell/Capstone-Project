@@ -5,11 +5,14 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 
@@ -17,6 +20,7 @@ import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpi
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.SQLiteHelper;
+import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
 import com.harlie.radiotheater.radiomysterytheater.utils.EpisodeRecyclerViewAdapter;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
@@ -73,9 +77,10 @@ public class EpisodeListActivity extends BaseActivity
                     Bundle playInfo = new Bundle();
                     savePlayInfoToBundle(playInfo);
                     autoplayIntent.putExtras(playInfo);
-                    autoplayIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(autoplayIntent);
                     overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
+                    FragmentManager fragmentManager = activity.getSupportFragmentManager();
+                    fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
                 }
             });
         }
@@ -94,14 +99,15 @@ public class EpisodeListActivity extends BaseActivity
 
         if (savedInstanceState == null) {
             Intent intent = getIntent();
-            String playing = intent.getStringExtra("ACTIVE_PLAYING");
             long position = Long.valueOf(getEpisodeNumber());
-            if (playing != null) {
-                position = Long.valueOf(playing);
-                LogHelper.v(TAG, "---> currently playing="+playing+", position="+position);
+            int lastPlaybackState = LocalPlayback.getCurrentState();
+            if (position == 0 || PlaybackStateCompat.STATE_PLAYING == lastPlaybackState) {
+                position = LocalPlayback.getCurrentEpisode();
+                LogHelper.v(TAG, "---> use position="+position);
             }
             final int activePosition = (int) position - 1;
             LogHelper.v(TAG, "===> LIST: SET INITIAL SCROLL POSITION TO: "+activePosition);
+            ((RecyclerView) recyclerView).invalidate();
             ((RecyclerView) recyclerView).scrollToPosition((int) activePosition);
             if (mTwoPane) {
                 getHandler().postDelayed(new Runnable() {
@@ -111,17 +117,6 @@ public class EpisodeListActivity extends BaseActivity
                         RecyclerView.ViewHolder viewHolder = ((RecyclerView) recyclerView).findViewHolderForAdapterPosition(activePosition);
                         if (viewHolder != null && viewHolder.itemView != null) {
                             viewHolder.itemView.performClick();
-                        }
-                        else {
-                            // Android bug??
-                            LogHelper.e(TAG, "*** UNABLE TO AUTO CLICK ON ITEM FOR POSITION "+activePosition+" ***");
-                            ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
-                            getEpisodeDataForCursor(configCursor);
-                            int newActivePosition = (int) (getEpisodeNumber() - 1);
-                            viewHolder = ((RecyclerView) recyclerView).findViewHolderForAdapterPosition(newActivePosition);
-                            if (viewHolder != null && viewHolder.itemView != null) {
-                                viewHolder.itemView.performClick();
-                            }
                         }
                     }
                 }, 1000);
@@ -162,7 +157,15 @@ public class EpisodeListActivity extends BaseActivity
         return mTwoPane;
     }
 
-    //--------------------------------------------------------------------------------
+    @Override
+    public void onBackPressed() {
+        LogHelper.v(TAG, "onBackPressed");
+        super.onBackPressed();
+        startAutoplayActivity(false);
+        overridePendingTransition(0, 0);
+    }
+
+//--------------------------------------------------------------------------------
     // Loader callbacks
     //--------------------------------------------------------------------------------
 

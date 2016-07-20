@@ -363,7 +363,7 @@ public class RadioTheaterService
                     long max_episodes = Long.valueOf(getResources().getString(R.string.episodes_count)); // 1399
                     episodeId += 1;
                     if (episodeId > max_episodes) {
-                        episodeId = 1;
+                        episodeId = max_episodes;
                     }
                     EpisodesCursor episodesCursor = SQLiteHelper.getEpisodesCursor(episodeId);
                     if (episodesCursor != null && episodesCursor.moveToNext()) {
@@ -378,7 +378,7 @@ public class RadioTheaterService
                     long max_episodes = Long.valueOf(getResources().getString(R.string.episodes_count)); // 1399
                     episodeId -= 1;
                     if (episodeId <= 0) {
-                        episodeId = max_episodes;
+                        episodeId = 1;
                     }
                     EpisodesCursor episodesCursor = SQLiteHelper.getEpisodesCursor(episodeId);
                     if (episodesCursor != null && episodesCursor.moveToNext()) {

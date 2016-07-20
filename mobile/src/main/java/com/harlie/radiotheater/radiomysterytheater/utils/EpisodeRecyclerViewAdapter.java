@@ -135,7 +135,7 @@ public class EpisodeRecyclerViewAdapter
                 Bundle playInfo = new Bundle();
                 episodeListActivity.savePlayInfoToBundle(playInfo);
                 intent.putExtras(playInfo);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 context.startActivity(intent);
 
             } else {
