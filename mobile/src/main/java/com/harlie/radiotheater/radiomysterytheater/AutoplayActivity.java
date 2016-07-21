@@ -124,6 +124,7 @@ public class AutoplayActivity extends BaseActivity {
     //private MediaPlayer mp;
 
     private final Handler mHandler = new Handler();
+    private boolean sFirstSeekEvent = true;
 
     private final ScheduledExecutorService mExecutorService =
             Executors.newSingleThreadScheduledExecutor();
@@ -866,6 +867,10 @@ public class AutoplayActivity extends BaseActivity {
     }
 
     protected void updateCircularSeekbar() {
+        if (sFirstSeekEvent) {
+            sFirstSeekEvent = false;
+            displayScrollingText();
+        }
         int lastPlaybackState = LocalPlayback.getCurrentState();
         if (PlaybackStateCompat.STATE_PLAYING == lastPlaybackState) {
             if (getExpectedPlayState() == 1) {
@@ -999,11 +1004,14 @@ public class AutoplayActivity extends BaseActivity {
                         @Override
                         public void run() {
                             LogHelper.v(TAG, "*** RECEIVED BROADCAST: LOAD_OK - episode="+getEpisodeNumber());
-                            //getEpisodeInfoFor(getEpisodeNumber());
                             LogHelper.v(TAG, "LOAD_OK: "+getEpisodeNumber()+" "+getEpisodeTitle());
                             enableButtons();
+                            if (sHandleRotationEvent) {
+                                getEpisodeInfoFor(getEpisodeNumber());
+                                sLoadedOK = true; // update scrolling text now
+                            }
                             displayScrollingText();
-                            sLoadedOK = true; // placed after 'displayScrollingText' because i don't want to see Episode detail until after the first Autoplay click
+                            sLoadedOK = true; // after 'displayScrollingText' because i don't want to see Episode detail until after the first Autoplay click
                             sWaitForMedia = false;
                             autoplayActivity.checkUpdateWidget(autoplayActivity, sAllListenCount);
                         }
@@ -1062,7 +1070,7 @@ public class AutoplayActivity extends BaseActivity {
                     String episodeIndex = message.substring(KEY_REQUEST.length(), message.length());
                     LogHelper.v(TAG,  "*** RECEIVED BROADCAST: REQUEST TO PLAY EPISODE "+episodeIndex);
                     if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                        mAppBarLayout.setExpanded(false);
+                        setAppBarExpanded(false, false);
                     }
                     sLoadedOK = true;
                     displayScrollingText();
@@ -1086,7 +1094,7 @@ public class AutoplayActivity extends BaseActivity {
                             LogHelper.v(TAG, "PLAYING: "+getEpisodeNumber()+" "+getEpisodeTitle()+", episode="+episode);
                             showExpectedControls("PLAYING");
                             displayScrollingText();
-                            mAppBarLayout.setExpanded(false);
+                            setAppBarExpanded(false, true);
                         }
                     });
                 }
@@ -1100,7 +1108,7 @@ public class AutoplayActivity extends BaseActivity {
                         public void run() {
                             LogHelper.v(TAG, "*** RECEIVED BROADCAST: NOT ABLE TO PLAY");
                             sWaitForMedia = false;
-                            mAppBarLayout.setExpanded(true);
+                            setAppBarExpanded(true, false);
                             problemWithPlayback();
                         }
                     });
@@ -1117,7 +1125,7 @@ public class AutoplayActivity extends BaseActivity {
                             @Override
                             public void run() {
                                 LogHelper.v(TAG, "popup alert - ALL EPISODES ARE HEARD!");
-                                mAppBarLayout.setExpanded(true);
+                                setAppBarExpanded(true, false);
                                 sWaitForMedia = false;
                                 heardAllEpisodes();
                             }
@@ -1125,7 +1133,7 @@ public class AutoplayActivity extends BaseActivity {
                     }
                     else {
                         LogHelper.v(TAG, "=========> START AUTOPLAY FOR NEXT AVAILABLE EPISODE: "+getEpisodeNumber());
-                        mAppBarLayout.setExpanded(true);
+                        setAppBarExpanded(true, false);
                         sWaitForMedia = true;
                         showPleaseWaitButton(0);
                         startPlaybackForEpisode(String.valueOf(getEpisodeNumber()), autoplayActivity);
@@ -1140,6 +1148,15 @@ public class AutoplayActivity extends BaseActivity {
             }
         };
         this.registerReceiver(getReceiver(), intentFilter);
+    }
+
+    private void setAppBarExpanded(boolean expanded, boolean override) {
+        if (override || getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            mAppBarLayout.setExpanded(expanded);
+        }
+        else {
+            mAppBarLayout.setExpanded(true);
+        }
     }
 
     protected void startPlaybackForEpisode(final String episodeIndex, final AutoplayActivity autoplayActivity) {
