@@ -1,6 +1,7 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
 import android.app.IntentService;
+import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.Context;
@@ -19,6 +20,7 @@ import android.support.v4.media.session.PlaybackStateCompat;
 
 import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
+import com.harlie.radiotheater.radiomysterytheater.utils.RadioTheaterWidgetProvider;
 
 import java.util.List;
 
@@ -314,6 +316,19 @@ public class RadioControlIntentService extends IntentService {
         mRadioMediaController = null;
     }
 
+    public static void changeUpdateNotification(Context context, boolean error) {
+        Intent intent = new Intent(context.getApplicationContext(), RadioTheaterWidgetService.class);
+        if (error) {
+            intent.putExtra("ERROR", true);
+        }
+        intent.putExtra("BUTTON_PRESS", false);
+        intent.putExtra("VISUAL_ONLY", true);
+        ComponentName thisWidget = new ComponentName(context, RadioTheaterWidgetProvider.class);
+        int[] allWidgetIds = AppWidgetManager.getInstance(context).getAppWidgetIds(thisWidget);
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, allWidgetIds);
+        context.startService(intent); // Update widget via the service!
+    }
+
     //================================================================================
     // PUBLIC API
     //================================================================================
@@ -336,6 +351,7 @@ public class RadioControlIntentService extends IntentService {
         }
         else {
             LogHelper.v(TAG, "*** startActionStart *** - ALREADY!");
+            changeUpdateNotification(context, false);
         }
     }
 
@@ -374,6 +390,7 @@ public class RadioControlIntentService extends IntentService {
         }
         else {
             LogHelper.v(TAG, "*** ignored startActionPause (not playing) ***");
+            changeUpdateNotification(context, false);
         }
     }
 
@@ -425,6 +442,11 @@ public class RadioControlIntentService extends IntentService {
         }
         else {
             LogHelper.v(TAG, "*** ignored startActionStop (not playing) ***");
+            boolean error = false;
+            if (from.equals("ERROR")) {
+                error = true;
+            }
+            changeUpdateNotification(context, error);
         }
     }
 

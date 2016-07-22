@@ -21,15 +21,12 @@ public class LoadingAsyncTask extends AsyncTask<AutoplayActivity, Void, Boolean>
     private final static int sMaxCount = 100;
 
     private AutoplayActivity mActivity;
-    private AppCompatButton mAutoPlay;
     private CircleProgressView mCircleProgressView;
     private CircularSeekBar mCircularSeekBar;
 
-    public LoadingAsyncTask(AutoplayActivity activity, CircleProgressView circleProgressView, CircularSeekBar circularSeekBar, AppCompatButton autoPlay) {
+    public LoadingAsyncTask(AutoplayActivity activity, CircleProgressView circleProgressView, CircularSeekBar circularSeekBar) {
         LogHelper.v(TAG, "new LoadingAsyncTask");
-        sLoadingNow = true;
         this.mActivity = activity;
-        this.mAutoPlay = autoPlay;
         this.mCircleProgressView = circleProgressView;
         this.mCircularSeekBar = circularSeekBar;
         mCount = 0;
@@ -52,6 +49,9 @@ public class LoadingAsyncTask extends AsyncTask<AutoplayActivity, Void, Boolean>
         while (rc == false) {
             ++mCount;
             CircleViewHelper.setCircleViewValue((float) mCount, mActivity);
+            if (mCount == 1) {
+                mActivity.initiateLoadingTask(mActivity);
+            }
             try {
                 Thread.sleep(1000);
             }
@@ -67,15 +67,8 @@ public class LoadingAsyncTask extends AsyncTask<AutoplayActivity, Void, Boolean>
     protected void onPostExecute(Boolean success) {
         LogHelper.v(TAG, "onPostExecute: success="+success);
         super.onPostExecute(success);
-        sLoadingNow = false;
         mCircleProgressView.stopSpinning();
         mCircleProgressView.setVisibility(View.INVISIBLE);
-        mActivity.getHandler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mActivity.showExpectedControls("onPostExecute");
-            }
-        }, 1000);
     }
 
 }

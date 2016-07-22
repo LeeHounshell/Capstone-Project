@@ -10,7 +10,6 @@ import android.os.Parcelable;
 import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesContentValues;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
-import com.harlie.radiotheater.radiomysterytheater.data_helper.SQLiteHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 
@@ -86,7 +85,7 @@ public class EpisodeRecyclerViewItem implements Parcelable {
         boolean downloaded = false;
         if (context instanceof BaseActivity) {
             String episode = String.valueOf(episodeNumber);
-            ConfigEpisodesContentValues configEpisodesContentValues = SQLiteHelper.getConfigForEpisode(episode);
+            ConfigEpisodesContentValues configEpisodesContentValues = SQLiteHelper.getConfigEpisodeForEpisode(episode);
             ContentValues contentValues = configEpisodesContentValues.values();
             heard = contentValues.getAsBoolean(RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_HEARD);
             downloaded = contentValues.getAsBoolean(RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_DOWNLOADED);

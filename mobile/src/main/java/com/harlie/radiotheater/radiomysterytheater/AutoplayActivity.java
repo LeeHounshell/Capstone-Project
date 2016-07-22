@@ -252,7 +252,6 @@ public class AutoplayActivity extends BaseActivity {
 
         setupAdMob();
 
-        sLoadingScreenEnabled = true;
         RadioControlIntentService.startActionStart(this, "MAIN", String.valueOf(getEpisodeNumber()), null);
     }
 
@@ -337,7 +336,7 @@ public class AutoplayActivity extends BaseActivity {
             }
 
             @Override
-            public void onClick() {
+            public void onClick() { // Autoplay Button
                 ButtonState oldButtonState = sShowingButton;
                 if (!isTimePassed()) {
                     displayScrollingText();
@@ -365,6 +364,18 @@ public class AutoplayActivity extends BaseActivity {
                     if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
                         mAppBarLayout.setExpanded(false);
                     }
+//                    if (mCurrentPosition == 0) {
+//                        getHandler().post(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                LogHelper.v(TAG, "*** SHOW LOADING SCREEN ***");
+//                                sLoadingScreenEnabled = true;
+//                                loadingScreen();
+//                            }
+//                        });
+//                        return;
+//                    }
+                    LogHelper.v(TAG, "*** REQUEST PLAYBACK FOR EPISODE " + getEpisodeNumber() + " ***");
                     RadioControlIntentService.startActionPlay(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), getEpisodeDownloadUrl(), getEpisodeTitle());
                 }
                 else if (oldButtonState == PAUSE) {
@@ -493,7 +504,7 @@ public class AutoplayActivity extends BaseActivity {
         getFabActionButton().setOnTouchListener(new OnSwipeTouchListener(this, getHandler(), getFabActionButton()) {
 
             @Override
-            public void onClick() {
+            public void onClick() { // FloatingActiionButton
                 int lastPlaybackState = LocalPlayback.getCurrentState();
                 if (PlaybackStateCompat.STATE_PLAYING != lastPlaybackState) {
                     ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
@@ -551,21 +562,6 @@ public class AutoplayActivity extends BaseActivity {
         LogHelper.v(TAG, "onRestoreInstanceState");
         super.onRestoreInstanceState(savedInstanceState);
     }
-
-    //--------------------------------------------------------------------------------
-    // UPDATE THE CIRCULAR SEEK BAR
-    private final Runnable mUpdateProgressTask = new Runnable() {
-        @Override
-        public void run() {
-            getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    updateCircularSeekbar();
-                }
-            });
-        }
-    };
-    //--------------------------------------------------------------------------------
 
     @Override
     protected void enableButtons() {
@@ -837,7 +833,19 @@ public class AutoplayActivity extends BaseActivity {
     //--------------------------------------------------------------------------------
     // UPDATE THE CIRCULAR SEEK BAR
     //--------------------------------------------------------------------------------
-    //
+
+    private final Runnable mUpdateProgressTask = new Runnable() {
+        @Override
+        public void run() {
+            getHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    updateCircularSeekbar();
+                }
+            });
+        }
+    };
+
     private void stopSeekbarUpdate() {
         LogHelper.v(TAG, "stopSeekbarUpdate");
         if (getScheduleFuture() != null) {
@@ -921,17 +929,19 @@ public class AutoplayActivity extends BaseActivity {
         getCircularSeekBar().setMaxProgress((int) mDuration);
         showExpectedControls("updateDuration");
     }
+
+    //--------------------------------------------------------------------------------
+    // LOADING SCREEN
     //--------------------------------------------------------------------------------
 
     protected void loadingScreen() {
         LogHelper.d(TAG, "loadingScreen: enabled="+ sLoadingScreenEnabled);
         if (sLoadingScreenEnabled && !LoadingAsyncTask.sLoadingNow) {
             sBeginLoading = true;
-            showExpectedControls("loadingScreen");
             LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
-            LoadingAsyncTask asyncTask = new LoadingAsyncTask(this, mCircleView, getCircularSeekBar(), getAutoPlay());
-            asyncTask.execute();
             sProgressViewSpinning = true;
+            LoadingAsyncTask asyncTask = new LoadingAsyncTask(this, mCircleView, getCircularSeekBar());
+            asyncTask.execute();
             LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
         }
     }
@@ -940,13 +950,24 @@ public class AutoplayActivity extends BaseActivity {
     public void setCircleViewValue(float value) {
         LogHelper.v(TAG, "setCircleViewValue: "+value);
         super.setCircleViewValue(value);
-        mCurrentPosition = (long) value;
         if (value != 0) {
             sBeginLoading = false;
-            LoadingAsyncTask.sDoneLoading = true;
         }
-        showExpectedControls("setCircleViewValue value="+value);
     }
+
+    public void initiateLoadingTask(AutoplayActivity autoplayActivity) {
+        LogHelper.v(TAG, "initiateLoadingTask: *** REQUEST PLAYBACK FOR EPISODE " + getEpisodeNumber() + " ***");
+        RadioControlIntentService.startActionPlay(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), getEpisodeDownloadUrl(), getEpisodeTitle());
+    }
+
+    protected void stopLoadingScreen() {
+        LogHelper.v(TAG, "*** STOP LOADING SCREEN ***");
+        sLoadingScreenEnabled = false;
+        sProgressViewSpinning = false;
+        LoadingAsyncTask.sDoneLoading = true;
+    }
+
+    //--------------------------------------------------------------------------------
 
     @Override
     protected void onPause() {
@@ -970,183 +991,7 @@ public class AutoplayActivity extends BaseActivity {
             enableButtons();
         }
         IntentFilter intentFilter = new IntentFilter("android.intent.action.MAIN");
-
-        //--------------------------------------------------------------------------------
-        // AUTOPLAY MESSAGE RECEIVER AND PROCESSOR
-        //--------------------------------------------------------------------------------
-        final AutoplayActivity autoplayActivity = this;
-        mRadioReceiver = new BroadcastReceiver() {
-
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
-                final String message = intent.getStringExtra(initialization); // get any control messages, for example: did metadata load ok? or play:id etc..
-                LogHelper.v(TAG, "*** RECEIVED BROADCAST CONTROL: "+message);
-
-                if (message == null) {
-                    LogHelper.e(TAG, "*** *** *** FAILED TO RECEIVE MESSAGE! - CRITICAL ERROR");
-                    return;
-                }
-
-                final String KEY_LOAD_OK = getResources().getString(R.string.metadata_loaded);
-                final String KEY_LOAD_FAIL = getResources().getString(R.string.error_no_metadata);
-                final String KEY_UPDATE_BUTTONS = getResources().getString(R.string.update_buttons);
-                final String KEY_DURATION = getResources().getString(R.string.duration);
-                final String KEY_REQUEST = getResources().getString(R.string.request_play);
-                final String KEY_PLAYING = getResources().getString(R.string.playing);
-                final String KEY_NOPLAY = getResources().getString(R.string.noplay);
-                final String KEY_COMPLETION = getResources().getString(R.string.complete);
-
-                // LOAD_OK
-                if (message.equals(KEY_LOAD_OK)) {
-                    LogHelper.v(TAG, KEY_LOAD_OK);
-                    getHandler().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            LogHelper.v(TAG, "*** RECEIVED BROADCAST: LOAD_OK - episode="+getEpisodeNumber());
-                            LogHelper.v(TAG, "LOAD_OK: "+getEpisodeNumber()+" "+getEpisodeTitle());
-                            enableButtons();
-                            if (sHandleRotationEvent) {
-                                getEpisodeInfoFor(getEpisodeNumber());
-                                sLoadedOK = true; // update scrolling text now
-                            }
-                            displayScrollingText();
-                            sLoadedOK = true; // after 'displayScrollingText' because i don't want to see Episode detail until after the first Autoplay click
-                            sWaitForMedia = false;
-                            autoplayActivity.checkUpdateWidget(autoplayActivity, sAllListenCount);
-                        }
-                    });
-                }
-
-                // LOAD_FAIL
-                else if (message.equals(KEY_LOAD_FAIL)) {
-                    LogHelper.v(TAG, KEY_LOAD_FAIL);
-                    getHandler().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            LogHelper.v(TAG, "*** RECEIVED BROADCAST: LOAD_FAIL");
-                            sWaitForMedia = false;
-                            problemLoadingMetadata();
-                            showExpectedControls("LOAD_FAIL");
-                        }
-                    });
-                }
-
-                // UPDATE_BUTTONS
-                else if (message.equals(KEY_UPDATE_BUTTONS)) {
-                    LogHelper.v(TAG, KEY_UPDATE_BUTTONS);
-                    getHandler().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            LogHelper.v(TAG, "*** RECEIVED BROADCAST: UPDATE_BUTTONS");
-                            showExpectedControls("UPDATE_BUTTONS");
-                        }
-                    });
-                }
-
-                // DURATION
-                else if (message.length() > KEY_DURATION.length() && message.substring(0, KEY_DURATION.length()).equals(KEY_DURATION)) {
-                    LogHelper.v(TAG, KEY_DURATION);
-                    getHandler().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            LogHelper.v(TAG, "*** RECEIVED BROADCAST: EPISODE DURATION");
-                            sLoadedOK = true;
-                            displayScrollingText();
-                            showExpectedControls("DURATION");
-                            sWaitForMedia = false;
-                            mDuration = Long.valueOf(message.substring(KEY_DURATION.length(), message.length()));
-                            sHaveRealDuration = true;
-                            getCircularSeekBar().setMaxProgress((int) mDuration);
-                            LogHelper.v(TAG, "*** REVISED EPISODE DURATION="+mDuration);
-                            updateDuration(mDuration);
-                            do_UpdateControls();
-                        }
-                    });
-                }
-
-                // REQUEST
-                else if (message.length() > KEY_REQUEST.length() && message.substring(0, KEY_REQUEST.length()).equals(KEY_REQUEST)) {
-                    String episodeIndex = message.substring(KEY_REQUEST.length(), message.length());
-                    LogHelper.v(TAG,  "*** RECEIVED BROADCAST: REQUEST TO PLAY EPISODE "+episodeIndex);
-                    if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                        setAppBarExpanded(false, false);
-                    }
-                    sLoadedOK = true;
-                    displayScrollingText();
-                    showExpectedControls("REQUEST");
-                    RadioControlIntentService.startActionPlay(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), getEpisodeDownloadUrl(), getEpisodeTitle());
-                }
-
-                // PLAYING
-                else if (message.length() > KEY_PLAYING.length() && message.substring(0, KEY_PLAYING.length()).equals(KEY_PLAYING)) {
-                    final String episodeIndex = message.substring(KEY_PLAYING.length(), message.length());
-                    LogHelper.v(TAG,  "*** RECEIVED BROADCAST: NOW PLAYING EPISODE "+episodeIndex);
-                    getHandler().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            // NEXT and PREV need to show the new Episode info
-                            sLoadedOK = true;
-                            sWaitForMedia = false;
-                            long episode = Long.valueOf(episodeIndex);
-                            setEpisodeNumber(episode);
-                            getEpisodeInfoFor(getEpisodeNumber());
-                            LogHelper.v(TAG, "PLAYING: "+getEpisodeNumber()+" "+getEpisodeTitle()+", episode="+episode);
-                            showExpectedControls("PLAYING");
-                            displayScrollingText();
-                            setAppBarExpanded(false, true);
-                        }
-                    });
-                }
-
-                // NOPLAY
-                else if (message.length() > KEY_NOPLAY.length() && message.substring(0, KEY_NOPLAY.length()).equals(KEY_NOPLAY)) {
-                    String episodeIndex = message.substring(KEY_NOPLAY.length(), message.length());
-                    LogHelper.v(TAG,  "*** RECEIVED BROADCAST: UNABLE TO PLAY EPISODE "+episodeIndex);
-                    getHandler().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            LogHelper.v(TAG, "*** RECEIVED BROADCAST: NOT ABLE TO PLAY");
-                            sWaitForMedia = false;
-                            setAppBarExpanded(true, false);
-                            problemWithPlayback();
-                        }
-                    });
-                }
-
-                // COMPLETION
-                else if (message.length() > KEY_COMPLETION.length() && message.substring(0, KEY_COMPLETION.length()).equals(KEY_COMPLETION)) {
-                    String episodeIndex = message.substring(KEY_COMPLETION.length(), message.length());
-                    markEpisodeAsHeardAndIncrementPlayCount(Long.parseLong(episodeIndex), episodeIndex, mDuration);
-                    LogHelper.v(TAG,  "*** RECEIVED BROADCAST: COMPLETED PLAY EPISODE "+episodeIndex);
-                    ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
-                    if (!getEpisodeDataForCursor(configCursor)) {
-                        getHandler().post(new Runnable() {
-                            @Override
-                            public void run() {
-                                LogHelper.v(TAG, "popup alert - ALL EPISODES ARE HEARD!");
-                                setAppBarExpanded(true, false);
-                                sWaitForMedia = false;
-                                heardAllEpisodes();
-                            }
-                        });
-                    }
-                    else {
-                        LogHelper.v(TAG, "=========> START AUTOPLAY FOR NEXT AVAILABLE EPISODE: "+getEpisodeNumber());
-                        setAppBarExpanded(true, false);
-                        sWaitForMedia = true;
-                        showPleaseWaitButton(0);
-                        startPlaybackForEpisode(String.valueOf(getEpisodeNumber()), autoplayActivity);
-                        displayScrollingText();
-                    }
-                }
-
-                // UNKNOWN
-                else {
-                    LogHelper.v(TAG, "*** UNKNOWN MESSAGE VIA INTENT: "+message);
-                }
-            }
-        };
+        handleNotifyNewPlaybackState();
         this.registerReceiver(getReceiver(), intentFilter);
     }
 
@@ -1159,18 +1004,18 @@ public class AutoplayActivity extends BaseActivity {
         }
     }
 
-    protected void startPlaybackForEpisode(final String episodeIndex, final AutoplayActivity autoplayActivity) {
-        LogHelper.v(TAG, "startPlaybackForEpisode: episodeIndex="+episodeIndex);
+    protected void startPlaybackForEpisode(final long nextEpisode, final AutoplayActivity autoplayActivity) {
+        LogHelper.v(TAG, "startPlaybackForEpisode: episode="+getEpisodeNumber());
         getHandler().post(new Runnable() {
             @Override
             public void run() {
                 initializeForEpisode();
-                getEpisodeInfoFor(Long.parseLong(episodeIndex));
-                mCurrentPosition = 0;
+                setEpisodeNumber(nextEpisode);
+                getEpisodeInfoFor(getEpisodeNumber());
                 showPleaseWaitButton(0);
                 displayScrollingText();
                 verifyPaidVersion(true);
-                RadioControlIntentService.startActionPlay(autoplayActivity, "MAIN", episodeIndex, getEpisodeDownloadUrl(), getEpisodeTitle());
+                RadioControlIntentService.startActionPlay(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), getEpisodeDownloadUrl(), getEpisodeTitle());
             }
         });
     }
@@ -1412,6 +1257,225 @@ public class AutoplayActivity extends BaseActivity {
         LogHelper.v(TAG, "STARTACTIVITY: SplashActivity.class");
         startActivity(intent);
         finish();
+    }
+
+    //================================================================================
+    // THE PRIMARY MESSAGE RECEIVER AND HANDLING PROCESSOR
+    //================================================================================
+
+    protected void handleNotifyNewPlaybackState() {
+        LogHelper.v(TAG, "handleNotifyNewPlaybackState");
+        final AutoplayActivity autoplayActivity = this;
+        mRadioReceiver = new BroadcastReceiver() {
+
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
+                final String message = intent.getStringExtra(initialization); // get any control messages, for example: did metadata load ok? or play:id etc..
+                LogHelper.v(TAG, "*** RECEIVED BROADCAST CONTROL: "+message);
+
+                if (message == null) {
+                    LogHelper.e(TAG, "*** *** *** FAILED TO RECEIVE MESSAGE! - CRITICAL ERROR");
+                    return;
+                }
+
+                final String KEY_LOAD_OK = getResources().getString(R.string.metadata_loaded);
+                final String KEY_LOAD_FAIL = getResources().getString(R.string.error_no_metadata);
+                final String KEY_UPDATE_BUTTONS = getResources().getString(R.string.update_buttons);
+                final String KEY_DURATION = getResources().getString(R.string.duration);
+                final String KEY_ERROR = getResources().getString(R.string.error);
+                final String KEY_REQUEST = getResources().getString(R.string.request_play);
+                final String KEY_PLAYING = getResources().getString(R.string.playing);
+                final String KEY_NOPLAY = getResources().getString(R.string.noplay);
+                final String KEY_COMPLETION = getResources().getString(R.string.complete);
+
+                // LOAD_OK
+                if (message.equals(KEY_LOAD_OK)) {
+                    LogHelper.v(TAG, KEY_LOAD_OK);
+                    getHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            LogHelper.v(TAG, "*** RECEIVED BROADCAST: LOAD_OK - episode="+getEpisodeNumber());
+                            LogHelper.v(TAG, "LOAD_OK: "+getEpisodeNumber()+" "+getEpisodeTitle());
+                            stopLoadingScreen();
+                            enableButtons();
+                            if (sHandleRotationEvent) {
+                                getEpisodeInfoFor(getEpisodeNumber());
+                                sLoadedOK = true; // update scrolling text now
+                            }
+                            displayScrollingText();
+                            sLoadedOK = true; // after 'displayScrollingText' because i don't want to see Episode detail until after the first Autoplay click
+                            sWaitForMedia = false;
+                            autoplayActivity.checkUpdateWidget(autoplayActivity, sAllListenCount);
+                        }
+                    });
+                }
+
+                // LOAD_FAIL
+                else if (message.equals(KEY_LOAD_FAIL)) {
+                    LogHelper.v(TAG, KEY_LOAD_FAIL);
+                    getHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            LogHelper.v(TAG, "*** RECEIVED BROADCAST: LOAD_FAIL");
+                            stopLoadingScreen();
+                            sWaitForMedia = false;
+                            problemLoadingMetadata();
+                            showExpectedControls("LOAD_FAIL");
+                        }
+                    });
+                }
+
+                // UPDATE_BUTTONS
+                else if (message.equals(KEY_UPDATE_BUTTONS)) {
+                    LogHelper.v(TAG, KEY_UPDATE_BUTTONS);
+                    getHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            LogHelper.v(TAG, "*** RECEIVED BROADCAST: UPDATE_BUTTONS");
+                            showExpectedControls("UPDATE_BUTTONS");
+                        }
+                    });
+                }
+
+                // DURATION
+                else if (message.length() > KEY_DURATION.length() && message.substring(0, KEY_DURATION.length()).equals(KEY_DURATION)) {
+                    LogHelper.v(TAG, KEY_DURATION);
+                    getHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            LogHelper.v(TAG, "*** RECEIVED BROADCAST: EPISODE DURATION");
+                            stopLoadingScreen();
+                            sLoadedOK = true;
+                            displayScrollingText();
+                            showExpectedControls("DURATION");
+                            sWaitForMedia = false;
+                            mDuration = Long.valueOf(message.substring(KEY_DURATION.length(), message.length()));
+                            sHaveRealDuration = true;
+                            getCircularSeekBar().setMaxProgress((int) mDuration);
+                            LogHelper.v(TAG, "*** REVISED EPISODE DURATION="+mDuration);
+                            updateDuration(mDuration);
+                            do_UpdateControls();
+                        }
+                    });
+                }
+
+                // ERROR
+                else if (message.equals(KEY_ERROR)) {
+                    LogHelper.v(TAG, KEY_ERROR);
+                    getHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            LogHelper.v(TAG, "*** RECEIVED BROADCAST: PLAYBACK ERROR!");
+                            stopLoadingScreen();
+                            sWaitForMedia = false;
+                            setAppBarExpanded(true, false);
+                            showExpectedControls("PLAYBACK ERROR");
+                            problemWithPlayback();
+                        }
+                    });
+                }
+
+                // REQUEST
+                else if (message.length() > KEY_REQUEST.length() && message.substring(0, KEY_REQUEST.length()).equals(KEY_REQUEST)) {
+                    final String episodeIndex = message.substring(KEY_REQUEST.length(), message.length());
+                    LogHelper.v(TAG,  "*** RECEIVED BROADCAST: REQUEST TO PLAY EPISODE "+episodeIndex);
+                    getHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                                setAppBarExpanded(false, false);
+                            }
+                            sLoadedOK = true;
+                            long episode = Long.valueOf(episodeIndex);
+                            setEpisodeNumber(episode);
+                            getEpisodeInfoFor(episode);
+                            displayScrollingText();
+                            showExpectedControls("REQUEST");
+                            RadioControlIntentService.startActionPlay(autoplayActivity, "MAIN", String.valueOf(getEpisodeNumber()), getEpisodeDownloadUrl(), getEpisodeTitle());
+                        }
+                    });
+                }
+
+                // PLAYING
+                else if (message.length() > KEY_PLAYING.length() && message.substring(0, KEY_PLAYING.length()).equals(KEY_PLAYING)) {
+                    final String episodeIndex = message.substring(KEY_PLAYING.length(), message.length());
+                    LogHelper.v(TAG,  "*** RECEIVED BROADCAST: NOW PLAYING EPISODE "+episodeIndex);
+                    getHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            // NEXT and PREV need to show the new Episode info
+                            stopLoadingScreen();
+                            long episode = Long.valueOf(episodeIndex);
+                            setEpisodeNumber(episode);
+                            getEpisodeInfoFor(episode);
+                            LogHelper.v(TAG, "PLAYING: title="+getEpisodeTitle()+", episode="+episode);
+                            sLoadedOK = true;
+                            sWaitForMedia = false;
+                            showPauseButton(0);
+                            displayScrollingText();
+                            setAppBarExpanded(false, true);
+                        }
+                    });
+                }
+
+                // NOPLAY
+                else if (message.length() > KEY_NOPLAY.length() && message.substring(0, KEY_NOPLAY.length()).equals(KEY_NOPLAY)) {
+                    String episodeIndex = message.substring(KEY_NOPLAY.length(), message.length());
+                    LogHelper.v(TAG,  "*** RECEIVED BROADCAST: UNABLE TO PLAY EPISODE "+episodeIndex);
+                    getHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            LogHelper.v(TAG, "*** RECEIVED BROADCAST: NOT ABLE TO PLAY");
+                            stopLoadingScreen();
+                            sWaitForMedia = false;
+                            setAppBarExpanded(true, false);
+                            problemWithPlayback();
+                        }
+                    });
+                }
+
+                // COMPLETION
+                else if (message.length() > KEY_COMPLETION.length() && message.substring(0, KEY_COMPLETION.length()).equals(KEY_COMPLETION)) {
+                    String episodeIndex = message.substring(KEY_COMPLETION.length(), message.length());
+                    LogHelper.v(TAG,  "*** RECEIVED BROADCAST: COMPLETED PLAY EPISODE "+episodeIndex);
+                    markEpisodeAsHeardAndIncrementPlayCount(Long.parseLong(episodeIndex), episodeIndex, mDuration);
+                    initializeForEpisode();
+                    ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
+                    if (!getEpisodeDataForCursor(configCursor)) {
+                        getHandler().post(new Runnable() {
+                            @Override
+                            public void run() {
+                                LogHelper.v(TAG, "popup alert - ALL EPISODES ARE HEARD!");
+                                setAppBarExpanded(true, false);
+                                sWaitForMedia = false;
+                                heardAllEpisodes();
+                            }
+                        });
+                    }
+                    else {
+                        final long nextEpisode = getEpisodeNumber();
+                        LogHelper.v(TAG, "=========> START AUTOPLAY FOR NEXT AVAILABLE EPISODE: "+nextEpisode);
+                        sWaitForMedia = true;
+                        showPleaseWaitButton(0);
+                        startPlaybackForEpisode(nextEpisode, autoplayActivity);
+                    }
+                }
+
+                // UNKNOWN
+                else {
+                    LogHelper.v(TAG, "*** UNKNOWN MESSAGE VIA INTENT: "+message);
+                    sWaitForMedia = false;
+                    getHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            stopLoadingScreen();
+                            showExpectedControls("UNKNOWN");
+                        }
+                    });
+                }
+            }
+        };
     }
 
 }

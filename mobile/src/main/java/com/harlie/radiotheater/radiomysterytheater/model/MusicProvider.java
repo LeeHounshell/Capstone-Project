@@ -86,11 +86,11 @@ public class MusicProvider {
 
     public MusicProvider() {
         this(new RemoteJSONSource());
-        LogHelper.v(TAG, "MusicProvider");
+        //LogHelper.v(TAG, "MusicProvider");
     }
 
     public MusicProvider(MusicProviderSource source) {
-        LogHelper.v(TAG, "MusicProvider: source="+source);
+        //LogHelper.v(TAG, "MusicProvider: source="+source);
         mSource = source;
         mMusicListByGenre = new ConcurrentHashMap<>();
         if (sMusicListById == null) {
@@ -105,7 +105,7 @@ public class MusicProvider {
      * @return genres
      */
     public Iterable<String> getGenres() {
-        LogHelper.v(TAG, "getGenres");
+        //LogHelper.v(TAG, "getGenres");
         if (mCurrentState != State.INITIALIZED) {
             return Collections.emptyList();
         }
@@ -116,7 +116,7 @@ public class MusicProvider {
      * Get an iterator over a shuffled collection of all songs
      */
     public Iterable<MediaMetadataCompat> getShuffledMusic() {
-        LogHelper.v(TAG, "getShuffledMusic");
+        //LogHelper.v(TAG, "getShuffledMusic");
         if (mCurrentState != State.INITIALIZED) {
             return Collections.emptyList();
         }
@@ -133,11 +133,11 @@ public class MusicProvider {
      *
      */
     public Iterable<MediaMetadataCompat> getMusicsByGenre(String genre) {
-        LogHelper.v(TAG, "getMusicsByGenre: genre="+genre);
+        //LogHelper.v(TAG, "getMusicsByGenre: genre="+genre);
         if (mCurrentState != State.INITIALIZED || !mMusicListByGenre.containsKey(genre)) {
             return Collections.emptyList();
         }
-        LogHelper.v(TAG, "getMusicsByGenre("+genre+") found "+mMusicListByGenre.size());
+        //LogHelper.v(TAG, "getMusicsByGenre("+genre+") found "+mMusicListByGenre.size());
         return mMusicListByGenre.get(genre);
     }
 
@@ -147,18 +147,18 @@ public class MusicProvider {
      *
      */
     public Iterable<MediaMetadataCompat> searchMusicBySongTitle(String query) {
-        LogHelper.v(TAG, "searchMusicBySongTitle: query="+query);
+        //LogHelper.v(TAG, "searchMusicBySongTitle: query="+query);
         Iterable<MediaMetadataCompat> iter = searchMusic(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, query);
         if (iter == null) {
-            LogHelper.v(TAG, "searchMusicBySongTitle: *** RADIO THEATER - search returned null Iterable. query="+query);
+            //LogHelper.v(TAG, "searchMusicBySongTitle: *** RADIO THEATER - search returned null Iterable. query="+query);
             iter = Collections.emptyList();
         }
         else {
             if (iter.iterator().hasNext()) {
-                LogHelper.v(TAG, "searchMusicBySongTitle: *** RADIO THEATER - search found an EPISODE! - next=" + iter.iterator().next().toString());
+                //LogHelper.v(TAG, "searchMusicBySongTitle: *** RADIO THEATER - search found an EPISODE! - next=" + iter.iterator().next().toString());
             }
             else {
-                LogHelper.v(TAG, "searchMusicBySongTitle: *** RADIO THEATER - search found nothing");
+                //LogHelper.v(TAG, "searchMusicBySongTitle: *** RADIO THEATER - search found nothing");
             }
         }
         return iter;
@@ -170,7 +170,7 @@ public class MusicProvider {
      *
      */
     public Iterable<MediaMetadataCompat> searchMusicById(String query) {
-        LogHelper.v(TAG, "searchMusicById: query="+query);
+        //LogHelper.v(TAG, "searchMusicById: query="+query);
         return searchMusic(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, query);
     }
 
@@ -180,7 +180,7 @@ public class MusicProvider {
      *
      */
     public Iterable<MediaMetadataCompat> searchMusicByAlbum(String query) {
-        LogHelper.v(TAG, "searchMusicByAlbum: query="+query);
+        //LogHelper.v(TAG, "searchMusicByAlbum: query="+query);
         return searchMusic(MediaMetadataCompat.METADATA_KEY_ALBUM, query);
     }
 
@@ -190,12 +190,12 @@ public class MusicProvider {
      *
      */
     public Iterable<MediaMetadataCompat> searchMusicByArtist(String query) {
-        LogHelper.v(TAG, "searchMusicByArtist");
+        //LogHelper.v(TAG, "searchMusicByArtist");
         return searchMusic(MediaMetadataCompat.METADATA_KEY_ARTIST, query);
     }
 
     Iterable<MediaMetadataCompat> searchMusic(String metadataField, String query) {
-        LogHelper.v(TAG, "searchMusic");
+        //LogHelper.v(TAG, "searchMusic");
         if (mCurrentState != State.INITIALIZED) {
             return Collections.emptyList();
         }
@@ -216,24 +216,24 @@ public class MusicProvider {
      * @param musicId The unique, non-hierarchical music ID.
      */
     public MediaMetadataCompat getMusic(String musicId) {
-        LogHelper.v(TAG, "getMusic: musicId="+musicId);
+        //LogHelper.v(TAG, "getMusic: musicId="+musicId);
         MediaMetadataCompat item = sMusicListById.containsKey(musicId) ? sMusicListById.get(musicId).metadata : null;
-        LogHelper.v(TAG, "getMusic(" + musicId + ") found " + ((item == null) ? "nothing" : item.getDescription().getTitle()));
+        //LogHelper.v(TAG, "getMusic(" + musicId + ") found " + ((item == null) ? "nothing" : item.getDescription().getTitle()));
         return item;
     }
 
     // for debugging
     private void dumpTheMusicList() {
-        LogHelper.v(TAG, "*** DUMPING LIST ***");
+        //LogHelper.v(TAG, "*** DUMPING LIST ***");
         for (MutableMediaMetadata element : sMusicListById.values()) {
             if (element != null) {
-                LogHelper.v(TAG, "FOUND ELEMENT: "+element.metadata.getDescription().getTitle()+" - "+element.metadata.getDescription().getMediaId());
+                //LogHelper.v(TAG, "FOUND ELEMENT: "+element.metadata.getDescription().getTitle()+" - "+element.metadata.getDescription().getMediaId());
             }
         }
     }
 
     public synchronized void updateMusicArt(String musicId, Bitmap albumArt, Bitmap icon) {
-        LogHelper.v(TAG, "updateMusicArt: musicId="+musicId);
+        //LogHelper.v(TAG, "updateMusicArt: musicId="+musicId);
         MediaMetadataCompat metadata = getMusic(musicId);
         metadata = new MediaMetadataCompat.Builder(metadata)
 
@@ -257,7 +257,7 @@ public class MusicProvider {
     }
 
     public void setFavorite(String musicId, boolean favorite) {
-        LogHelper.v(TAG, "setFavorite: musicId="+musicId+", favorite="+favorite);
+        //LogHelper.v(TAG, "setFavorite: musicId="+musicId+", favorite="+favorite);
         if (favorite) {
             mFavoriteTracks.add(musicId);
         } else {
@@ -266,7 +266,7 @@ public class MusicProvider {
     }
 
     public boolean isFavorite(String musicId) {
-        LogHelper.v(TAG, "isFavorite: musicId="+musicId);
+        //LogHelper.v(TAG, "isFavorite: musicId="+musicId);
         return mFavoriteTracks.contains(musicId);
     }
 
@@ -275,7 +275,7 @@ public class MusicProvider {
      * for future reference, keying tracks by musicId and grouping by genre.
      */
     public void retrieveMediaAsync(final Callback callback) {
-        LogHelper.v(TAG, "---> retrieveMediaAsync <---");
+        //LogHelper.v(TAG, "---> retrieveMediaAsync <---");
         if (mCurrentState == State.INITIALIZED) {
             if (callback != null) {
                 // Nothing to do, execute callback immediately
@@ -288,14 +288,14 @@ public class MusicProvider {
         new AsyncTask<Void, Void, State>() {
             @Override
             protected State doInBackground(Void... params) {
-                LogHelper.v(TAG, "---> doInBackground <---");
+                //LogHelper.v(TAG, "---> doInBackground <---");
                 retrieveMedia();
                 return mCurrentState;
             }
 
             @Override
             protected void onPostExecute(State current) {
-                LogHelper.v(TAG, "---> onPostExecute <---");
+                //LogHelper.v(TAG, "---> onPostExecute <---");
                 sOnMusicCatalogReady = true;
                 if (callback != null) {
                     callback.onMusicCatalogReady(current == State.INITIALIZED);
@@ -305,7 +305,7 @@ public class MusicProvider {
     }
 
     private synchronized void buildListsByGenre() {
-        LogHelper.v(TAG, "buildListsByGenre");
+        //LogHelper.v(TAG, "buildListsByGenre");
         ConcurrentMap<String, List<MediaMetadataCompat>> newMusicListByGenre = new ConcurrentHashMap<>();
 
         int episodeCount = 0;
@@ -314,7 +314,7 @@ public class MusicProvider {
             List<MediaMetadataCompat> list = newMusicListByGenre.get(genre);
             //String mediaId = m.metadata.getDescription().getMediaId();
             //String title = (String) m.metadata.getDescription().getTitle();
-            //LogHelper.v(TAG, "==========> buildListsByGenre: genre="+genre+", mediaId="+mediaId+", title="+title);
+            ////LogHelper.v(TAG, "==========> buildListsByGenre: genre="+genre+", mediaId="+mediaId+", title="+title);
             if (list == null) {
                 list = new ArrayList<>();
                 newMusicListByGenre.put(genre, list);
@@ -322,22 +322,22 @@ public class MusicProvider {
             list.add(m.metadata);
             ++episodeCount;
         }
-        LogHelper.v(TAG, "==========> buildListsByGenre: found "+newMusicListByGenre.size()+", episodeCount="+episodeCount);
+        //LogHelper.v(TAG, "==========> buildListsByGenre: found "+newMusicListByGenre.size()+", episodeCount="+episodeCount);
         mMusicListByGenre = newMusicListByGenre;
     }
 
     private synchronized void retrieveMedia() {
-        LogHelper.v(TAG, "---> retrieveMedia <---");
+        //LogHelper.v(TAG, "---> retrieveMedia <---");
         try {
             if (mCurrentState == State.NON_INITIALIZED) {
                 mCurrentState = State.INITIALIZING;
 
                 Iterator<MediaMetadataCompat> tracks = mSource.iterator();
-                LogHelper.v(TAG, "*** LOAD META-DATA FOR THE TRACKS ***");
+                //LogHelper.v(TAG, "*** LOAD META-DATA FOR THE TRACKS ***");
                 while (tracks.hasNext()) {
                     MediaMetadataCompat item = tracks.next();
                     String musicId = item.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
-                    //LogHelper.v(TAG, "item="+item.getDescription()+", meta="+item.getMediaMetadata()+", musicId="+musicId);
+                    ////LogHelper.v(TAG, "item="+item.getDescription()+", meta="+item.getMediaMetadata()+", musicId="+musicId);
                     sMusicListById.put(musicId, new MutableMediaMetadata(musicId, item));
                 }
                 buildListsByGenre();
@@ -346,7 +346,7 @@ public class MusicProvider {
         } finally {
             String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
             if (mCurrentState != State.INITIALIZED) {
-                LogHelper.v(TAG, "*** retrieveMedia FINISHED *** - LOAD FAILED");
+                //LogHelper.v(TAG, "*** retrieveMedia FINISHED *** - LOAD FAILED");
                 // Something bad happened, so we reset state to NON_INITIALIZED to allow
                 // retries (eg if the network connection is temporary unavailable)
                 mCurrentState = State.NON_INITIALIZED;
@@ -355,7 +355,7 @@ public class MusicProvider {
                 RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
             }
             else {
-                LogHelper.v(TAG, "*** retrieveMedia FINISHED *** - LOAD SUCCESS");
+                //LogHelper.v(TAG, "*** retrieveMedia FINISHED *** - LOAD SUCCESS");
                 String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.metadata_loaded);
                 Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
                 RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
@@ -365,7 +365,7 @@ public class MusicProvider {
     }
 
     public List<MediaBrowserCompat.MediaItem> getChildren(String mediaId, Resources resources) {
-        LogHelper.v(TAG, "getChildren: mediaId="+mediaId);
+        //LogHelper.v(TAG, "getChildren: mediaId="+mediaId);
         List<MediaBrowserCompat.MediaItem> mediaItems = new ArrayList<>();
 
         if (!MediaIDHelper.isBrowseable(mediaId)) {
@@ -389,13 +389,13 @@ public class MusicProvider {
             }
         }
         else {
-            LogHelper.w(TAG, "skipping unmatched mediaId: ", mediaId);
+            //LogHelper.w(TAG, "skipping unmatched mediaId: ", mediaId);
         }
         return mediaItems;
     }
 
     private MediaBrowserCompat.MediaItem createBrowsableMediaItemForRoot(Resources resources) {
-        LogHelper.v(TAG, "createBrowsableMediaItemForRoot");
+        //LogHelper.v(TAG, "createBrowsableMediaItemForRoot");
         MediaDescriptionCompat description = new MediaDescriptionCompat.Builder()
                 .setMediaId(MEDIA_ID_MUSICS_BY_GENRE)
                 .setTitle(resources.getString(R.string.browse_genres))
@@ -406,7 +406,7 @@ public class MusicProvider {
     }
 
     private MediaBrowserCompat.MediaItem createBrowsableMediaItemForGenre(String genre, Resources resources) {
-        LogHelper.v(TAG, "createBrowsableMediaItemForGenre: genre="+genre);
+        //LogHelper.v(TAG, "createBrowsableMediaItemForGenre: genre="+genre);
         MediaDescriptionCompat description = new MediaDescriptionCompat.Builder()
                 .setMediaId(createMediaID(null, MEDIA_ID_MUSICS_BY_GENRE, genre))
                 .setTitle(genre)
@@ -417,7 +417,7 @@ public class MusicProvider {
     }
 
     private MediaBrowserCompat.MediaItem createMediaItem(MediaMetadataCompat metadata) {
-        LogHelper.v(TAG, "!!! createMediaItem: metadata="+metadata);
+        //LogHelper.v(TAG, "!!! createMediaItem: metadata="+metadata);
         // Since mediaMetadata fields are immutable, we need to create a copy, so we
         // can set a hierarchy-aware mediaID. We will need to know the media hierarchy
         // when we get a onPlayFromMusicID call, so we can create the proper queue based

@@ -289,8 +289,7 @@ public class LocalPlayback
             notifyEpisodePlaying();
         }
         if (! sPlaybackEnabled
-                || (getCurrentState() == PlaybackStateCompat.STATE_PLAYING && ! mediaHasChanged)
-                || (getCurrentState() == PlaybackStateCompat.STATE_BUFFERING && ! mediaHasChanged))
+                || (getCurrentState() == PlaybackStateCompat.STATE_PLAYING && ! mediaHasChanged))
         {
             LogHelper.v(TAG, "PLAY: *** IGNORED 'play' REQUEST *** - mediaId="+mediaId+", enabled="+sPlaybackEnabled+", current state="+getCurrentState());
             Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
@@ -659,16 +658,18 @@ public class LocalPlayback
         if (what == 1 && extra == -2147483648) {
             // The '1' value corresponds to the constant in MediaPlayer.MEDIA_ERROR_UNKNOWN
             // -2147483648 corresponds to hexadecimal 0x80000000 which is defined as UNKNOWN_ERROR in frameworks/native/include/utils/Errors.h
-            LogHelper.e(TAG, "onError: MediaPlayer.MEDIA_ERROR_UNKNOWN - UNKNOWN_ERROR");
+            LogHelper.e(TAG, "onError: MediaPlayer.MEDIA_ERROR_UNKNOWN - UNKNOWN_ERROR - *** IGNORED ERROR - NO ACTION TAKEN ***");
+            return true;
         }
         if (mCallback != null) {
             mCallback.onError("MediaPlayer error " + what + " (" + extra + ")");
         }
         if (what == -38) {
             LogHelper.v(TAG, "*** MEDIA PLAYER NEEDS RESET - ERROR=-38 ***");
-            stop(true);
-            relaxResources(true);
         }
+        stop(true);
+        relaxResources(true);
+        // LocalPlayback is stopped now, but still need to notify the app that display buttons should update their state..
         Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
         RadioControlIntentService.startActionStop(context, "ERROR", String.valueOf(LocalPlayback.getCurrentEpisode()), "error="+String.valueOf(what));
         return true; // true indicates we handled the error

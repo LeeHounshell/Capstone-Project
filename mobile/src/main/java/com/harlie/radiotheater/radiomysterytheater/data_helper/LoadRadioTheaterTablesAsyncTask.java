@@ -468,14 +468,14 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
     }
 
     public Uri insertConfigurationValues(ContentValues configurationValues) {
-        LogHelper.v(TAG, "insertConfigEntryValues");
+        LogHelper.v(TAG, "insertConfigEntry");
         // FIXME: need to "update" Firebase record for this user's configuration
         Uri configuration = RadioTheaterContract.ConfigurationEntry.buildConfigurationUri();
         return mActivity.getContentResolver().insert(configuration, configurationValues);
     }
 
     public Uri insertConfigEntryValues(ContentValues configEntryValues) {
-        LogHelper.v(TAG, "insertConfigEntryValues");
+        LogHelper.v(TAG, "insertConfigEntry");
         // FIXME: need to "update" Firebase record for this episode and user
         Uri configEntry = RadioTheaterContract.ConfigEpisodesEntry.buildConfigEpisodesUri();
         return mActivity.getContentResolver().insert(configEntry, configEntryValues);

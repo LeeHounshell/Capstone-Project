@@ -320,7 +320,7 @@ public class RadioTheaterService
      */
     @Override
     public int onStartCommand(Intent startIntent, int flags, int startId) {
-        LogHelper.v(TAG, "=========>>> onStartCommand: startIntent="+startIntent+", flags="+flags+", startId="+startId);
+        LogHelper.v(TAG, "=========>>> onStartCommand: startIntent="+startIntent.getAction()+", flags="+flags+", startId="+startId);
         if (startIntent != null) {
             String action = startIntent.getAction();
             String command = startIntent.getStringExtra(CMD_NAME);

@@ -23,7 +23,6 @@ import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatButton;
@@ -33,8 +32,6 @@ import android.transition.Fade;
 import android.transition.Transition;
 import android.transition.TransitionInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.view.WindowManager;
@@ -100,6 +97,8 @@ import static com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheat
 public class BaseActivity extends AppCompatActivity {
     private final static String TAG = "LEE: <" + BaseActivity.class.getSimpleName() + ">";
 
+    protected static final boolean COPY_PREBUILT_SQLITE_DATABASE = true;
+
     protected static final int MAX_TRIAL_EPISODES = 19;
     protected static final int MIN_EMAIL_LENGTH = 5;
     protected static final int MIN_PASSWORD_LENGTH = 6;
@@ -151,8 +150,6 @@ public class BaseActivity extends AppCompatActivity {
     protected static volatile boolean sLoadedOK;
 
     private static int mCount;
-
-    private static volatile boolean sConfigurationUpdated;
 
     public static volatile boolean sProgressViewSpinning;
 
@@ -633,7 +630,7 @@ public class BaseActivity extends AppCompatActivity {
                     if (! dbMissing) {
                         return;
                     }
-                    loadSqliteDatabase(true); // copy ok
+                    loadSqliteDatabase(COPY_PREBUILT_SQLITE_DATABASE); // copy ok? (or if not ok then load via Firebase)
                     Looper.loop();
                 }
             }).start();
@@ -821,7 +818,7 @@ public class BaseActivity extends AppCompatActivity {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
             isPaidEpi = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
             if (!isPaidEpi) {
-                ConfigEpisodesContentValues existing = SQLiteHelper.getConfigForEpisode(episode);
+                ConfigEpisodesContentValues existing = SQLiteHelper.getConfigEpisodeForEpisode(episode);
                 if (existing != null && existing.values() != null && existing.values().size() != 0) {
                     ContentValues configEpisode = existing.values();
                     isPaidEpi = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
@@ -847,7 +844,7 @@ public class BaseActivity extends AppCompatActivity {
         }
         else {
             // see if a record already exists for this episode
-            ConfigEpisodesContentValues existing = SQLiteHelper.getConfigForEpisode(episode);
+            ConfigEpisodesContentValues existing = SQLiteHelper.getConfigEpisodeForEpisode(episode);
             ContentValues configurationValues;
             try {
                 if (existing != null && existing.values() != null && existing.values().size() != 0) {
@@ -856,14 +853,14 @@ public class BaseActivity extends AppCompatActivity {
                     LogHelper.v(TAG, "FOUND: so update ConfigEntry for episode "+episode+" with paid="+paid);
                     configurationValues.put(ConfigEpisodesEntry.FIELD_EPISODE_NUMBER, episode);
                     configurationValues.put(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS, paid);
-                    SQLiteHelper.updateConfigEntryValues(episode, configurationValues);
+                    SQLiteHelper.updateConfigEpisodesEntry(episode, configurationValues);
                 } else {
                     // CREATE and mark an individual episode as paid
                     LogHelper.v(TAG, "NOT FOUND: so create ConfigEntry for episode "+episode+" with paid="+paid);
                     configurationValues = new ContentValues();
                     configurationValues.put(ConfigEpisodesEntry.FIELD_EPISODE_NUMBER, episode);
                     configurationValues.put(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS, paid);
-                    Uri result = SQLiteHelper.insertConfigEntryValues(configurationValues);
+                    Uri result = SQLiteHelper.insertConfigEntry(configurationValues);
                 }
             }
             catch (Exception e) {
@@ -966,7 +963,9 @@ public class BaseActivity extends AppCompatActivity {
 
     public Intent setShareIntentForEpisode(long episodeId) {
         LogHelper.v(TAG, "setShareIntentForEpisode");
-        getEpisodeInfoFor(episodeId);
+        if (getEpisodeNumber() != episodeId) {
+            getEpisodeInfoFor(episodeId);
+        }
         // share button setup
         if (sShareActionProvider != null) {
             sShareIntent = getShareIntent(getEpisodeTitle(), getEpisodeDescription(), String.valueOf(getEpisodeNumber()), getEpisodeDownloadUrl(), getEpisodeWeblinkUrl());
@@ -987,7 +986,6 @@ public class BaseActivity extends AppCompatActivity {
         LogHelper.v(TAG, "startProgressViewSpinning");
         final BaseActivity baseActivity = this;
         if (! sProgressViewSpinning) {
-            sProgressViewSpinning = true;
             getHandler().post(new Runnable() {
                 @Override
                 public void run() {
@@ -1219,14 +1217,7 @@ public class BaseActivity extends AppCompatActivity {
                 boolean purchaseNoads = false;
                 //#ENDIF
 
-                mConfiguration = new ConfigurationContentValues();
-                mConfiguration.putFieldUserEmail(getEmail());
-                mConfiguration.putFieldUserName(getName() != null ? getName() : "unknown");
-                mConfiguration.putFieldDeviceId(getAdvertId());
-
-                mConfiguration.putFieldPaidVersion(paidVersion);
-                mConfiguration.putFieldPurchaseAccess(purchaseAccess);
-                mConfiguration.putFieldPurchaseNoads(purchaseNoads);
+                createConfiguration(paidVersion, purchaseAccess, purchaseNoads);
 
                 int decodedListenCount = 0;
                 //
@@ -1264,6 +1255,19 @@ public class BaseActivity extends AppCompatActivity {
 
     }
 
+    protected ConfigurationContentValues createConfiguration(boolean paidVersion, boolean purchaseAccess, boolean purchaseNoads) {
+        LogHelper.v(TAG, "createConfiguration");
+        mConfiguration = new ConfigurationContentValues();
+        mConfiguration.putFieldUserEmail(getEmail());
+        mConfiguration.putFieldUserName(getName() != null ? getName() : "unknown");
+        mConfiguration.putFieldDeviceId(getAdvertId());
+
+        mConfiguration.putFieldPaidVersion(paidVersion);
+        mConfiguration.putFieldPurchaseAccess(purchaseAccess);
+        mConfiguration.putFieldPurchaseNoads(purchaseNoads);
+        return mConfiguration;
+    }
+
     protected void enableButtons() {
         LogHelper.v(TAG, "enableButtons");
     }
@@ -1291,11 +1295,16 @@ public class BaseActivity extends AppCompatActivity {
         ContentValues sqliteConfiguration = null;
         // 1) load local SQLite entry for deviceId
         ConfigurationCursor configurationCursor = SQLiteHelper.getCursorForConfigurationDevice(getAdvertId());
+        boolean createLocalDeviceRecord = false;
         if (configurationCursor != null) {
             LogHelper.v(TAG, "found existing SQLite user Configuration");
             configurationContent = SQLiteHelper.getConfigurationContentValues(configurationCursor);
             sqliteConfiguration = configurationContent.values();
             configurationCursor.close();
+        }
+        else {
+            LogHelper.v(TAG, "*** SQLITE: NO LOCAL DEVICE CONFIGURATION FOUND ***");
+            createLocalDeviceRecord = true;
         }
 
         if (! sFoundFirebaseDeviceId) { // deviceId not in Firebase
@@ -1303,31 +1312,28 @@ public class BaseActivity extends AppCompatActivity {
             // 2) if local SQLite entry doesn't exist, create it
             if (sqliteConfiguration == null) { // no SQLite Configuration either
                 LogHelper.v(TAG, "*** INITIALIZING USER *** - create local SQLite Configuration");
-                mConfiguration = new ConfigurationContentValues();
-                mConfiguration.putFieldUserEmail(getEmail());
-                mConfiguration.putFieldUserName(getName());
-                mConfiguration.putFieldDeviceId(getAdvertId());
 
                 //#IFDEF 'PAID'
-                //mConfiguration.putFieldAuthenticated(true);
-                //mConfiguration.putFieldPurchaseAccess(true);
-                //mConfiguration.putFieldPurchaseNoads(true);
+                //mConfiguration = createConfiguration(true, true, true);
                 //RadioTheaterWidgetService.setPaidVersion(this, true);
                 //#ENDIF
 
                 //#IFDEF 'TRIAL'
-                mConfiguration.putFieldAuthenticated(getEmail() != null);
-                mConfiguration.putFieldPurchaseAccess(false);
-                mConfiguration.putFieldPurchaseNoads(false);
+                mConfiguration = createConfiguration(false, false, false);
                 RadioTheaterWidgetService.setPaidVersion(this, false);
                 //#ENDIF
 
                 mConfiguration.putFieldTotalListenCount(0);
-                SQLiteHelper.insertConfiguration(mConfiguration.values());
                 // 3) update Firebase with the new deviceId entry
+                LogHelper.v(TAG, "*** CREATING FIREBASE DEVICE ENTRY ***");
                 updateFirebaseConfigurationValues(getAdvertId(), mConfiguration.values());
                 return;
             }
+        }
+
+        if (createLocalDeviceRecord) {
+            LogHelper.v(TAG, "*** SQLITE: CREATING LOCAL DEVICE ENTRY ***");
+            SQLiteHelper.insertConfiguration(mConfiguration.values());
         }
 
         ContentValues firebaseConfiguration = null;
@@ -1340,22 +1346,26 @@ public class BaseActivity extends AppCompatActivity {
             updateFirebaseWithLocal = true;
         }
 
-        if (! sConfigurationUpdated) {
-            if (mConfiguration != null || updateFirebaseWithLocal) { // found Firebase Configuration
-                LogHelper.v(TAG, "updating Firebase entry for Configuration.");
-                // 4) merge and update local SQLite and Firebase
-                boolean dirty = mergeConfiguratons(sqliteConfiguration, firebaseConfiguration);
-                if (dirty) {
-                    sqliteConfiguration = mConfiguration.values();
-                    LogHelper.v(TAG, "DIRTY: sqliteConfiguration=" + sqliteConfiguration.toString());
-                    SQLiteHelper.updateConfigurationValues(getAdvertId(), sqliteConfiguration);
-                    updateFirebaseConfigurationValues(getAdvertId(), mConfiguration.values());
-                }
-                sConfigurationUpdated = true;
-            } else {
-                LogHelper.v(TAG, "unable to update Firebase Configuration!");
+        if (mConfiguration != null || updateFirebaseWithLocal) { // found Firebase Configuration
+            LogHelper.v(TAG, "updating Firebase entry for Configuration.");
+            // 4) merge and update local SQLite and Firebase
+            boolean dirty = mergeConfiguratons(sqliteConfiguration, firebaseConfiguration);
+            if (dirty) {
+                updateTheConfiguration();
             }
+        } else {
+            LogHelper.v(TAG, "unable to update Firebase Configuration!");
         }
+    }
+
+    private void updateTheConfiguration() {
+        LogHelper.v(TAG, "updateTheConfiguration");
+        ContentValues sqliteConfiguration;
+        sqliteConfiguration = mConfiguration.values();
+        LogHelper.v(TAG, "updateTheConfiguration: SQLITE: sqliteConfiguration=" + sqliteConfiguration.toString());
+        SQLiteHelper.updateConfiguration(getAdvertId(), sqliteConfiguration);
+        LogHelper.v(TAG, "updateTheConfiguration: FIREBASE: UPDATE FIREBASE DEVICE ENTRY ***");
+        updateFirebaseConfigurationValues(getAdvertId(), mConfiguration.values());
     }
 
     private boolean mergeConfiguratons(ContentValues sqliteConfiguration, ContentValues firebaseConfiguration) {
@@ -1380,59 +1390,81 @@ public class BaseActivity extends AppCompatActivity {
         //RadioTheaterWidgetService.setPaidVersion(this, true);
         //#ENDIF
 
-        try {
-            if (sqliteConfiguration == null) {
-                if (firebaseConfiguration == null) {
-                    LogHelper.w(TAG, "both SQLite and Firebase have NO CONFIGURATION! - can't update");
-                    return false;
-                }
-                LogHelper.v(TAG, "no local SQLite configuration exists on this device! - copy from Firebase");
-                sqliteConfiguration = firebaseConfiguration;
+        if (sqliteConfiguration == null) {
+            if (firebaseConfiguration == null) {
+                LogHelper.w(TAG, "both SQLite and Firebase have NO CONFIGURATION! - can't update");
+                return false;
+            }
+            LogHelper.v(TAG, "no local SQLite configuration exists on this device! - copy from Firebase");
+            sqliteConfiguration = firebaseConfiguration;
+            dirty = (firebaseConfiguration != null);
+        }
+        if (mConfiguration == null) {
+
+            //#IFDEF 'PAID'
+            //mConfiguration = createConfiguration(true, true, true);
+            //RadioTheaterWidgetService.setPaidVersion(this, true);
+            //#ENDIF
+
+            //#IFDEF 'TRIAL'
+            mConfiguration = createConfiguration(false, false, false);
+            RadioTheaterWidgetService.setPaidVersion(this, false);
+            //#ENDIF
+
+        }
+        if (firebaseConfiguration == null || firebaseConfiguration.size() == 0) {
+            if (sqliteConfiguration != null) {
+                LogHelper.v(TAG, "*** USING THE LOCAL SQLITE CONFIGURATION TO INITIALIZE FIREBASE ***");
+                firebaseConfiguration = sqliteConfiguration;
                 dirty = true;
             }
-            mConfiguration = new ConfigurationContentValues();
+            else {
+                LogHelper.w(TAG, "*** EMPTY FIREBASE CONFIGURATION ***");
+                firebaseConfiguration = new ContentValues();
+            }
         }
-        catch (Exception e) {
-            LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT, e="+e.getMessage());
+        if (sqliteConfiguration == null) {
+            LogHelper.v(TAG, "*** USING THE FIREBASE CONFIGURATION INITIALIZE SQLITE ***");
+            sqliteConfiguration = firebaseConfiguration;
+            dirty = true;
         }
 
         //--------------------------------------------------------------------------------
         //#IFDEF 'TRIAL'
-        try {
-            paidVersion = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
-            if (!paidVersion && firebaseConfiguration != null) {
-                firebasePaidVersion = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
-                if (firebasePaidVersion != null) {
-                    paidVersion = firebasePaidVersion;
+        if (sqliteConfiguration != null && sqliteConfiguration.size() > 0) {
+            try {
+                paidVersion = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
+                if (!paidVersion && firebaseConfiguration != null) {
+                    firebasePaidVersion = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
+                    if (firebasePaidVersion != null) {
+                        paidVersion = firebasePaidVersion;
+                    }
                 }
+            } catch (Exception e) {
+                LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PAID_VERSION, e=" + e.getMessage());
             }
-        }
-        catch (Exception e) {
-            LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PAID_VERSION, e="+e.getMessage());
-        }
-        try {
-            purchaseAccess = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
-            if (!purchaseAccess && firebaseConfiguration != null) {
-                firebasePurchaseAccess = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
-                if (firebasePurchaseAccess != null) {
-                    purchaseAccess = firebasePurchaseAccess;
+            try {
+                purchaseAccess = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
+                if (!purchaseAccess && firebaseConfiguration != null) {
+                    firebasePurchaseAccess = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
+                    if (firebasePurchaseAccess != null) {
+                        purchaseAccess = firebasePurchaseAccess;
+                    }
                 }
+            } catch (Exception e) {
+                LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PURCHASE_ACCESS, e=" + e.getMessage());
             }
-        }
-        catch (Exception e) {
-            LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PURCHASE_ACCESS, e="+e.getMessage());
-        }
-        try {
-            purchaseNoads = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
-            if (!purchaseNoads && firebaseConfiguration != null) {
-                firebasePurchaseNoads = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
-                if (firebasePurchaseNoads != null) {
-                    purchaseNoads = firebasePurchaseNoads;
+            try {
+                purchaseNoads = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
+                if (!purchaseNoads && firebaseConfiguration != null) {
+                    firebasePurchaseNoads = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
+                    if (firebasePurchaseNoads != null) {
+                        purchaseNoads = firebasePurchaseNoads;
+                    }
                 }
+            } catch (Exception e) {
+                LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PURCHASE_NOADS, e=" + e.getMessage());
             }
-        }
-        catch (Exception e) {
-            LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PURCHASE_NOADS, e="+e.getMessage());
         }
         //#ENDIF
         //--------------------------------------------------------------------------------
@@ -1461,14 +1493,25 @@ public class BaseActivity extends AppCompatActivity {
             firebase_listen_count = Long.valueOf(0);
         }
 
-        if (sqlite_listen_count > firebase_listen_count) {
-            sAllListenCount = (int) sqlite_listen_count.longValue();
+        if (sqlite_listen_count == firebase_listen_count) {
+            LogHelper.v(TAG, "local listen count EQUAL TO firebase listen count: sAllListenCount="+ sAllListenCount);
+            mConfiguration.putFieldTotalListenCount(sAllListenCount);
+            dirty = true; // not really dirty, but we need to update because the record might not exist yet
+        }
+        else if (sqlite_listen_count > firebase_listen_count) {
+            long total_listen_count = (int) sqlite_listen_count.longValue();
+            if (total_listen_count > sAllListenCount) {
+                sAllListenCount = (int) total_listen_count;
+            }
             LogHelper.v(TAG, "local listen count GREATER THAN firebase listen count: sAllListenCount="+ sAllListenCount);
             mConfiguration.putFieldTotalListenCount(sAllListenCount);
             dirty = true;
         }
         else {
-            sAllListenCount = (int) firebase_listen_count.longValue();
+            long total_listen_count = (int) firebase_listen_count.longValue();
+            if (total_listen_count > sAllListenCount) {
+                sAllListenCount = (int) total_listen_count;
+            }
             LogHelper.v(TAG, "firebase listen count GREATER THAN local listen count: sAllListenCount="+ sAllListenCount);
             mConfiguration.putFieldTotalListenCount(sAllListenCount);
             dirty = true;
@@ -1607,6 +1650,9 @@ public class BaseActivity extends AppCompatActivity {
             getCircleView().setUnit("%");
             getCircleView().setUnitVisible(true);
             getCircleView().setTextMode(TextMode.PERCENT); // Shows current percent of the current value from the max value
+            getCircleView().setTextColor(Color.RED);
+            getCircleView().setUnitScale(0.9f); // if you want the calculated text sizes to be bigger/smaller
+            getCircleView().setTextScale(0.9f); // if you want the calculated text sizes to be bigger/smaller
         }
         else if (what == CircleViewHelper.CircleViewType.PLAY_EPISODE) {
             sShowPercentUnit = false;
@@ -1614,6 +1660,10 @@ public class BaseActivity extends AppCompatActivity {
             getCircleView().setUnit("");
             getCircleView().setUnitVisible(false);
             getCircleView().setTextMode(TextMode.TEXT);
+            getCircleView().setText("");
+            getCircleView().setTextColor(Color.YELLOW);
+            getCircleView().setUnitScale(0.9f); // if you want the calculated text sizes to be bigger/smaller
+            getCircleView().setTextScale(0.5f); // if you want the calculated text sizes to be bigger/smaller
         }
     }
 
@@ -1630,11 +1680,6 @@ public class BaseActivity extends AppCompatActivity {
                 getCircleView().setVisibility(View.VISIBLE);
                 LogHelper.w(TAG, "showCircleView: CircleView VISIBLE");
                 getCircleView().setAutoTextSize(true); // enable auto text size, previous values are overwritten
-                getCircleView().setUnitScale(0.9f); // if you want the calculated text sizes to be bigger/smaller
-                getCircleView().setTextScale(0.9f); // if you want the calculated text sizes to be bigger/smaller
-                getCircleView().setTextColor(Color.RED);
-                getCircleView().setText("Loading.."); //shows the given text in the circle view
-                getCircleView().setTextMode(TextMode.TEXT); // Set text mode to text to show text
                 getCircleView().spin(); // start spinning
                 getCircleView().setShowTextWhileSpinning(true); // Show/hide text in spinning mode
 
@@ -2014,6 +2059,7 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     public void markEpisodeAsHeardAndIncrementPlayCount(long episodeNumber, String episodeIndex, long duration) {
+        LogHelper.v(TAG, "-------------------------------------------------------------------------------- sAllListenCount="+sAllListenCount);
         LogHelper.v(TAG, "markEpisodeAsHeardAndIncrementPlayCount: episodeNumber="+episodeNumber+", episodeIndex="+episodeIndex+", duration="+duration);
         if (episodeNumber == 0) {
             LogHelper.w(TAG, "unable to markEpisodeAsHeardAndIncrementPlayCount - episodeNumber is zero!");
@@ -2026,22 +2072,24 @@ public class BaseActivity extends AppCompatActivity {
         }
 
         // UPDATE SQLITE - mark SQLite config episode as "HEARD" and increment "PLAY COUNT" - Also send record to Firebase
-        ConfigEpisodesContentValues existing = SQLiteHelper.getConfigForEpisode(episodeIndex);
-        long listenCount = 0;
-        if (existing != null && existing.values() != null && existing.values().size() != 0) {
-            ContentValues configEpisode = existing.values();
+        ConfigEpisodesContentValues existingEpisodeConfig = SQLiteHelper.getConfigEpisodeForEpisode(episodeIndex);
+        long episodeListenCount = 1;
+        if (existingEpisodeConfig != null && existingEpisodeConfig.values() != null && existingEpisodeConfig.values().size() != 0) {
+            ContentValues configEpisode = existingEpisodeConfig.values();
             configEpisode.put(ConfigEpisodesEntry.FIELD_EPISODE_HEARD, true);
 
-            listenCount = configEpisode.getAsLong(ConfigEpisodesColumns.FIELD_LISTEN_COUNT);
-            ++listenCount;
+            episodeListenCount = configEpisode.getAsLong(ConfigEpisodesColumns.FIELD_LISTEN_COUNT);
+            ++episodeListenCount;
 
-            configEpisode.put(ConfigEpisodesEntry.FIELD_LISTEN_COUNT, listenCount);
-            SQLiteHelper.updateConfigEntryValues(episodeIndex, configEpisode);
+            configEpisode.put(ConfigEpisodesEntry.FIELD_LISTEN_COUNT, episodeListenCount);
+            SQLiteHelper.updateConfigEpisodesEntry(episodeIndex, configEpisode);
+
+            LogHelper.v(TAG, "markEpisodeAsHeardAndIncrementPlayCount: *** UPDATE FIREBASE CONFIG ENTRY FOR EPISODE "+episodeNumber+" ***");
             updateFirebaseConfigEntryValues(episodeIndex, configEpisode, duration);
-            LogHelper.d(TAG, "markEpisodeAsHeardAndIncrementPlayCount: new LISTEN-COUNT="+listenCount+" for Episode "+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
+            LogHelper.d(TAG, "markEpisodeAsHeardAndIncrementPlayCount: new EPISODE-LISTEN-COUNT=" + episodeListenCount + " for #" + episodeIndex + (matchError ? " *** MATCH ERROR EPISODE=" + episodeNumber : ""));
         }
         else {
-            LogHelper.e(TAG, "*** SQLITE: - unable to getConfigForEpisode="+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
+            LogHelper.e(TAG, "markEpisodeAsHeardAndIncrementPlayCount: *** SQLITE: - MARK HEARD FAILED - unable to getConfigEpisodeForEpisode="+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
         }
 
         // UPDATE SQLITE - mark SQLite configuration as "HEARD" and increment "PLAY COUNT"
@@ -2051,31 +2099,68 @@ public class BaseActivity extends AppCompatActivity {
             existingConfiguration = SQLiteHelper.getConfigurationContentValues(configurationCursor);
             configurationCursor.close();
         }
-        long total_listen_count = 0;
+        long total_listen_count = 1;
+        ContentValues configurationValues = null;
         if (existingConfiguration != null && existingConfiguration.values() != null && existingConfiguration.values().size() != 0) {
-            ContentValues configurationValues = existingConfiguration.values();
+            configurationValues = existingConfiguration.values();
 
             total_listen_count = configurationValues.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
             ++total_listen_count;
 
             if (total_listen_count < sAllListenCount) {
                 total_listen_count = sAllListenCount;
-            }
-            else {
+            } else {
                 sAllListenCount = (int) total_listen_count;
             }
 
             configurationValues.put(ConfigurationEntry.FIELD_TOTAL_LISTEN_COUNT, Long.valueOf(sAllListenCount));
-            SQLiteHelper.updateConfigurationValues(getAdvertId(), configurationValues);
-            updateFirebaseConfigurationValues(getAdvertId(), configurationValues);
-            LogHelper.d(TAG, "---> markEpisodeAsHeardAndIncrementPlayCount: new ALL-LISTEN-COUNT="+ total_listen_count +" <---");
+            SQLiteHelper.updateConfiguration(getAdvertId(), configurationValues);
         }
         else {
-            LogHelper.e(TAG, "*** SQLITE: - unable to getConfigurationDevice info, email="+getEmail()+", deviceId="+getAdvertId());
+            LogHelper.e(TAG, "markEpisodeAsHeardAndIncrementPlayCount: *** SQLITE: - INCREMENT LISTEN COUNT - no getConfigurationDevice SQL record, email="+getEmail()+", deviceId="+getAdvertId());
+            if (mConfiguration == null) {
+                LogHelper.w(TAG, "*** THE GLOBAL CONFIGURATION IS NULL! - INITIALIZING IT NOW. ***");
+
+                //#IFDEF 'PAID'
+                //mConfiguration = createConfiguration(true, true, true);
+                //#ENDIF
+
+                //#IFDEF 'TRIAL'
+                mConfiguration = createConfiguration(false, false, false);
+                //#ENDIF
+
+            }
+            configurationValues = mConfiguration.values();
+            ++sAllListenCount;
+            configurationValues.put(ConfigurationEntry.FIELD_TOTAL_LISTEN_COUNT, sAllListenCount);
+            try {
+                LogHelper.w(TAG, "markEpisodeAsHeardAndIncrementPlayCount: *** SQLITE: MISSING - TRY UPDATE THE LOCAL DEVICE ENTRY ***");
+                SQLiteHelper.updateConfiguration(getAdvertId(), configurationValues);
+            }
+            catch (Exception e1) {
+                LogHelper.w(TAG, "markEpisodeAsHeardAndIncrementPlayCount: *** SQLITE: MISSING - UPDATE for SQLITE Configuration failed - try INSERT instead *** - e1="+e1.getMessage());
+                try {
+                    LogHelper.w(TAG, "markEpisodeAsHeardAndIncrementPlayCount: *** SQLITE: MISSING - CREATE THE LOCAL DEVICE ENTRY ***");
+                    SQLiteHelper.insertConfiguration(configurationValues);
+                }
+                catch (Exception e2) {
+                    LogHelper.e(TAG, "markEpisodeAsHeardAndIncrementPlayCount: *** SQLITE: MISSING - UNABLE TO INSERT OR UPDATE CONFIGURATION *** - e2="+e2.getMessage());
+                }
+            }
+        }
+
+        if (configurationValues != null && mConfiguration != null && mConfiguration.values() != null) {
+            LogHelper.v(TAG, "markEpisodeAsHeardAndIncrementPlayCount: *** FIREBASE: merge and update local SQLite and Firebase - sAllListenCount="+sAllListenCount);
+            boolean dirty = mergeConfiguratons(configurationValues, mConfiguration.values());
+            if (dirty) {
+                updateTheConfiguration();
+            }
         }
 
         // send Analytics record to Firebase for Episode+Heard+Count
-        trackWithFirebaseAnalytics(episodeIndex, duration, "mark HEARD + playcount="+listenCount+" + allcount="+ total_listen_count);
+        trackWithFirebaseAnalytics(episodeIndex, duration, "mark HEARD + playcount="+ episodeListenCount +" + allcount="+ total_listen_count);
+        LogHelper.v(TAG, "markEpisodeAsHeardAndIncrementPlayCount: FINISH");
+        LogHelper.v(TAG, "-------------------------------------------------------------------------------- sAllListenCount="+sAllListenCount);
     }
 
     public void markEpisodeAs_NOT_Heard(long episodeNumber, String episodeIndex, long duration) {
@@ -2091,16 +2176,16 @@ public class BaseActivity extends AppCompatActivity {
         }
 
         // UPDATE SQLITE - mark SQLite config episode as "NOT HEARD" - Also send record to Firebase
-        ConfigEpisodesContentValues existing = SQLiteHelper.getConfigForEpisode(episodeIndex);
+        ConfigEpisodesContentValues existing = SQLiteHelper.getConfigEpisodeForEpisode(episodeIndex);
         if (existing != null && existing.values() != null && existing.values().size() != 0) {
             ContentValues configEpisode = existing.values();
             configEpisode.put(ConfigEpisodesEntry.FIELD_EPISODE_HEARD, false);
-            SQLiteHelper.updateConfigEntryValues(episodeIndex, configEpisode);
+            SQLiteHelper.updateConfigEpisodesEntry(episodeIndex, configEpisode);
             updateFirebaseConfigEntryValues(episodeIndex, configEpisode, duration);
             LogHelper.d(TAG, "markEpisodeAs_NOT_Heard: for Episode "+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
         }
         else {
-            LogHelper.e(TAG, "*** SQLITE: - unable to getConfigForEpisode="+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
+            LogHelper.e(TAG, "*** SQLITE: - unable to getConfigEpisodeForEpisode="+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
         }
 
         // send Analytics record to Firebase for Episode+Heard+Count

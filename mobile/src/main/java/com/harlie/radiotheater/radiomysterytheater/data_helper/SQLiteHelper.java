@@ -30,15 +30,14 @@ import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersSelection
 import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.writersepisodes.WritersEpisodesSelection;
-import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.NetworkHelper;
 
 public class SQLiteHelper {
     private final static String TAG = "LEE: <" + SQLiteHelper.class.getSimpleName() + ">";
 
-    public static ConfigEpisodesContentValues getConfigForEpisode(String episode) {
-        LogHelper.v(TAG, "SQLITE: getConfigForEpisode: episode="+episode);
+    public static ConfigEpisodesContentValues getConfigEpisodeForEpisode(String episode) {
+        LogHelper.v(TAG, "SQLITE: getConfigEpisodeForEpisode: episode="+episode);
         if (Long.valueOf(episode) == 0) {
             return null;
         }
@@ -289,10 +288,10 @@ public class SQLiteHelper {
     }
 
     // update local SQLite
-    public static int updateConfigurationValues(String deviceId, ContentValues configurationValues) {
-        LogHelper.v(TAG, "SQLITE: updateConfigurationValues");
+    public static int updateConfiguration(String deviceId, ContentValues configurationValues) {
+        LogHelper.v(TAG, "SQLITE: updateConfiguration");
         if (configurationValues == null || configurationValues.size() == 0) {
-            LogHelper.w(TAG, "SQLITE: unable to updateConfigurationValues! - null or empty values.");
+            LogHelper.w(TAG, "SQLITE: unable to updateConfiguration! - null or empty values.");
             return 0;
         }
         Uri configurationEntry = RadioTheaterContract.ConfigurationEntry.buildConfigurationUri();
@@ -302,10 +301,10 @@ public class SQLiteHelper {
         return rc;
     }
 
-    public static Uri insertConfigEntryValues(ContentValues configEntryValues) {
-        LogHelper.v(TAG, "SQLITE: insertConfigEntryValues");
+    public static Uri insertConfigEntry(ContentValues configEntryValues) {
+        LogHelper.v(TAG, "SQLITE: insertConfigEntry");
         if (configEntryValues == null || configEntryValues.size() == 0) {
-            LogHelper.w(TAG, "SQLITE: unable to insertConfigEntryValues! - null or empty values.");
+            LogHelper.w(TAG, "SQLITE: unable to insertConfigEntry! - null or empty values.");
             return null;
         }
         Uri configEntry = RadioTheaterContract.ConfigEpisodesEntry.buildConfigEpisodesUri();
@@ -313,16 +312,16 @@ public class SQLiteHelper {
     }
 
     // update local SQLite
-    public static int updateConfigEntryValues(String episode, ContentValues configEntryValues) {
-        LogHelper.v(TAG, "SQLITE: updateConfigEntryValues");
-        if (configEntryValues == null || configEntryValues.size() == 0) {
-            LogHelper.w(TAG, "SQLITE: unable to updateConfigurationValues! - null or empty values.");
+    public static int updateConfigEpisodesEntry(String episode, ContentValues configEpisodesEntryValues) {
+        LogHelper.v(TAG, "SQLITE: updateConfigEpisodesEntry");
+        if (configEpisodesEntryValues == null || configEpisodesEntryValues.size() == 0) {
+            LogHelper.w(TAG, "SQLITE: unable to updateConfigEpisodesValues! - null or empty values.");
             return 0;
         }
-        Uri configEntry = RadioTheaterContract.ConfigEpisodesEntry.buildConfigEpisodesUri();
+        Uri configEpisodesEntry = RadioTheaterContract.ConfigEpisodesEntry.buildConfigEpisodesUri();
         String whereClause = RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_NUMBER + "=?";
         String whereCondition[] = new String[]{episode};
-        int rc = RadioTheaterApplication.getRadioTheaterApplicationContext().getContentResolver().update(configEntry, configEntryValues, whereClause, whereCondition);
+        int rc = RadioTheaterApplication.getRadioTheaterApplicationContext().getContentResolver().update(configEpisodesEntry, configEpisodesEntryValues, whereClause, whereCondition);
         return rc;
     }
 

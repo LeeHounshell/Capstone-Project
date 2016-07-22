@@ -58,7 +58,7 @@ public class PlaybackManager implements Playback.Callback {
                            MusicProvider musicProvider, QueueManager queueManager,
                            Playback playback)
     {
-        LogHelper.v(TAG, "PlaybackManager");
+        //LogHelper.v(TAG, "PlaybackManager");
         sQueueManager = queueManager;
         mMusicProvider = musicProvider;
         mServiceCallback = serviceCallback;
@@ -69,12 +69,12 @@ public class PlaybackManager implements Playback.Callback {
     }
 
     public Playback getPlayback() {
-        LogHelper.v(TAG, "getPlayback");
+        //LogHelper.v(TAG, "getPlayback");
         return mPlayback;
     }
 
     public MediaSessionCompat.Callback getMediaSessionCallback() {
-        LogHelper.v(TAG, "getMediaSessionCallback");
+        //LogHelper.v(TAG, "getMediaSessionCallback");
         return mMediaSessionCallback;
     }
 
@@ -83,7 +83,7 @@ public class PlaybackManager implements Playback.Callback {
      * Handle a request to play music
      */
     public void handlePlayRequest() {
-        LogHelper.v(TAG, "handlePlayRequest: mState=" + mPlayback.getState());
+        //LogHelper.v(TAG, "handlePlayRequest: mState=" + mPlayback.getState());
         MediaSessionCompat.QueueItem currentMusic = getQueueManager().getCurrentMusic();
         if (currentMusic != null) {
             mServiceCallback.onPlaybackStart();
@@ -96,7 +96,7 @@ public class PlaybackManager implements Playback.Callback {
      * Handle a request to pause music
      */
     public void handlePauseRequest() {
-        LogHelper.v(TAG, "handlePauseRequest: mState=" + mPlayback.getState());
+        //LogHelper.v(TAG, "handlePauseRequest: mState=" + mPlayback.getState());
         if (mPlayback.isPlaying()) {
             mPlayback.pause();
             mServiceCallback.onPlaybackStop();
@@ -108,9 +108,9 @@ public class PlaybackManager implements Playback.Callback {
      * Handle a request to seek to a specified position and continue playback
      */
     public void handleSeekRequest(int position) {
-        LogHelper.v(TAG, "handleSeekRequest: position=" + position);
+        //LogHelper.v(TAG, "handleSeekRequest: position=" + position);
         mPlayback.seekTo(position);
-        LogHelper.v(TAG, "handleSeekRequest: need to resume playback");
+        //LogHelper.v(TAG, "handleSeekRequest: need to resume playback");
         MediaSessionCompat.QueueItem currentMusic = getQueueManager().getCurrentMusic();
         if (currentMusic != null) {
             mPlayback.play(currentMusic);
@@ -126,7 +126,7 @@ public class PlaybackManager implements Playback.Callback {
      *                  MediaController clients.
      */
     public void handleStopRequest(String withError) {
-        LogHelper.v(TAG, "handleStopRequest: mState=" + mPlayback.getState() + ((withError != null) ? (" error="+withError) : ""));
+        //LogHelper.v(TAG, "handleStopRequest: mState=" + mPlayback.getState() + ((withError != null) ? (" error="+withError) : ""));
         mPlayback.stop(true);
         mServiceCallback.onPlaybackStop();
         updatePlaybackState(withError);
@@ -138,7 +138,7 @@ public class PlaybackManager implements Playback.Callback {
      * @param withError if not null, error message to present to the user.
      */
     public void updatePlaybackState(String withError) {
-        LogHelper.v(TAG, "updatePlaybackState: playback state=" + mPlayback.getState() + ((withError != null) ? (" error="+withError) : ""));
+        //LogHelper.v(TAG, "updatePlaybackState: playback state=" + mPlayback.getState() + ((withError != null) ? (" error="+withError) : ""));
         long position = PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN;
         if (mPlayback != null && mPlayback.isConnected()) {
             position = mPlayback.getCurrentStreamPosition();
@@ -176,7 +176,7 @@ public class PlaybackManager implements Playback.Callback {
     }
 
     private void setCustomAction(PlaybackStateCompat.Builder stateBuilder) {
-        LogHelper.v(TAG, "setCustomAction");
+        //LogHelper.v(TAG, "setCustomAction");
         MediaSessionCompat.QueueItem currentMusic = getQueueManager().getCurrentMusic();
         if (currentMusic == null) {
             return;
@@ -189,8 +189,8 @@ public class PlaybackManager implements Playback.Callback {
         String musicId = MediaIDHelper.extractMusicIDFromMediaID(mediaId);
         int favoriteIcon = mMusicProvider.isFavorite(musicId) ?
                 R.drawable.ic_star_on : R.drawable.ic_star_off;
-        LogHelper.d(TAG, "updatePlaybackState, setting Favorite custom action of music ",
-                musicId, " current favorite=", mMusicProvider.isFavorite(musicId));
+        //LogHelper.d(TAG, "updatePlaybackState, setting Favorite custom action of music ",
+        //        musicId, " current favorite=", mMusicProvider.isFavorite(musicId));
         Bundle customActionExtras = new Bundle();
         WearHelper.setShowCustomActionOnWear(customActionExtras, true);
         stateBuilder.addCustomAction(new PlaybackStateCompat.CustomAction.Builder(
@@ -200,7 +200,7 @@ public class PlaybackManager implements Playback.Callback {
     }
 
     private long getAvailableActions() {
-        LogHelper.v(TAG, "getAvailableActions");
+        //LogHelper.v(TAG, "getAvailableActions");
         long actions =
                 PlaybackStateCompat.ACTION_PLAY |
                 PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID |
@@ -218,7 +218,7 @@ public class PlaybackManager implements Playback.Callback {
      */
     @Override
     public void onCompletion() {
-        LogHelper.v(TAG, "onCompletion");
+        //LogHelper.v(TAG, "onCompletion");
         // The media player finished playing the current song, so we go ahead
         // and start the next.
         if (getQueueManager().skipQueuePosition(1)) {
@@ -232,19 +232,19 @@ public class PlaybackManager implements Playback.Callback {
 
     @Override
     public void onPlaybackStatusChanged(int state) {
-        LogHelper.v(TAG, "onPlaybackStatusChanged");
+        //LogHelper.v(TAG, "onPlaybackStatusChanged");
         updatePlaybackState(null);
     }
 
     @Override
     public void onError(String error) {
-        LogHelper.v(TAG, "onError");
+        //LogHelper.v(TAG, "onError");
         updatePlaybackState(error);
     }
 
     @Override
     public void setCurrentMediaId(String mediaId) {
-        LogHelper.v(TAG, "setCurrentMediaId", mediaId);
+        //LogHelper.v(TAG, "setCurrentMediaId", mediaId);
         getQueueManager().setQueueFromMusic(mediaId);
     }
 
@@ -254,7 +254,7 @@ public class PlaybackManager implements Playback.Callback {
      * @param playback switch to this playback
      */
     public void switchToPlayback(Playback playback, boolean resumePlaying) {
-        LogHelper.v(TAG, "switchToPlayback");
+        //LogHelper.v(TAG, "switchToPlayback");
         if (playback == null) {
             throw new IllegalArgumentException("Playback cannot be null");
         }
@@ -288,7 +288,7 @@ public class PlaybackManager implements Playback.Callback {
             case PlaybackStateCompat.STATE_NONE:
                 break;
             default:
-                LogHelper.d(TAG, "Default called. Old state is ", oldState);
+                //LogHelper.d(TAG, "Default called. Old state is ", oldState);
         }
     }
 
@@ -297,13 +297,13 @@ public class PlaybackManager implements Playback.Callback {
 
         @Override
         public void onPlay() {
-            LogHelper.v(TAG, "play");
+            //LogHelper.v(TAG, "play");
             handlePlayRequest();
         }
 
         @Override
         public void onSkipToQueueItem(long queueId) {
-            LogHelper.v(TAG, "onSkipToQueueItem:" + queueId);
+            //LogHelper.v(TAG, "onSkipToQueueItem:" + queueId);
             getQueueManager().setCurrentQueueItem(queueId);
             handlePlayRequest();
             getQueueManager().updateMetadata();
@@ -311,32 +311,32 @@ public class PlaybackManager implements Playback.Callback {
 
         @Override
         public void onSeekTo(long position) {
-            LogHelper.v(TAG, "onSeekTo:", position);
+            //LogHelper.v(TAG, "onSeekTo:", position);
             mPlayback.seekTo((int) position);
         }
 
         @Override
         public void onPlayFromMediaId(String mediaId, Bundle extras) {
-            LogHelper.v(TAG, "=========> onPlayFromMediaId mediaId="+mediaId+", extras="+extras);
+            //LogHelper.v(TAG, "=========> onPlayFromMediaId mediaId="+mediaId+", extras="+extras);
             getQueueManager().setQueueFromMusic(mediaId);
             handlePlayRequest();
         }
 
         @Override
         public void onPause() {
-            LogHelper.v(TAG, "onPause - current state=" + mPlayback.getState());
+            //LogHelper.v(TAG, "onPause - current state=" + mPlayback.getState());
             handlePauseRequest();
         }
 
         @Override
         public void onStop() {
-            LogHelper.v(TAG, "onStop - current state=" + mPlayback.getState());
+            //LogHelper.v(TAG, "onStop - current state=" + mPlayback.getState());
             handleStopRequest(null);
         }
 
         @Override
         public void onSkipToNext() {
-            LogHelper.v(TAG, "onSkipToNext");
+            //LogHelper.v(TAG, "onSkipToNext");
             if (getQueueManager().skipQueuePosition(1)) {
                 handlePlayRequest();
             } else {
@@ -347,7 +347,7 @@ public class PlaybackManager implements Playback.Callback {
 
         @Override
         public void onSkipToPrevious() {
-            LogHelper.v(TAG, "onSkipToPrevious");
+            //LogHelper.v(TAG, "onSkipToPrevious");
             if (getQueueManager().skipQueuePosition(-1)) {
                 handlePlayRequest();
             } else {
@@ -358,9 +358,9 @@ public class PlaybackManager implements Playback.Callback {
 
         @Override
         public void onCustomAction(@NonNull String action, Bundle extras) {
-            LogHelper.v(TAG, "onCustomAction");
+            //LogHelper.v(TAG, "onCustomAction");
             if (CUSTOM_ACTION_THUMBS_UP.equals(action)) {
-                LogHelper.i(TAG, "onCustomAction: favorite for current track");
+                //LogHelper.i(TAG, "onCustomAction: favorite for current track");
                 MediaSessionCompat.QueueItem currentMusic = getQueueManager().getCurrentMusic();
                 if (currentMusic != null) {
                     String mediaId = currentMusic.getDescription().getMediaId();
@@ -373,7 +373,7 @@ public class PlaybackManager implements Playback.Callback {
                 // custom action will change to reflect the new favorite state.
                 updatePlaybackState(null);
             } else {
-                LogHelper.e(TAG, "Unsupported action: ", action);
+                //LogHelper.e(TAG, "Unsupported action: ", action);
             }
         }
 
@@ -392,7 +392,7 @@ public class PlaybackManager implements Playback.Callback {
          **/
         @Override
         public void onPlayFromSearch(final String query, final Bundle extras) {
-            LogHelper.d(TAG, "onPlayFromSearch - query=", query, " extras=", extras);
+            //LogHelper.d(TAG, "onPlayFromSearch - query=", query, " extras=", extras);
             mPlayback.setState(PlaybackStateCompat.STATE_CONNECTING);
             getQueueManager().setQueueFromSearch(query, extras);
             handlePlayRequest();

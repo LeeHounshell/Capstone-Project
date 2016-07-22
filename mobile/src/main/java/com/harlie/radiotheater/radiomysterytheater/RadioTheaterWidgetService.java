@@ -40,55 +40,60 @@ public class RadioTheaterWidgetService extends Service {
         //mp.start();
 
         setGotWidgetButtonPress(false);
-        if (intent.getBooleanExtra("BUTTON_PRESS", false) == true) {
-            LogHelper.v(TAG, "handleCommand: GOT WIDGET BUTTON PRESS!");
-            setGotWidgetButtonPress(true);
-        }
-        else if (intent.getBooleanExtra("VISUAL_ONLY", false) == true) {
-            LogHelper.v(TAG, "handleCommand: *** VISUAL BUTTON UPDATE ONLY ***");
+        if (intent.getBooleanExtra("ERROR", false) == true) {
+            LogHelper.v(TAG, "*** PLAYBACK ERROR REPORTED ***");
             String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
-            String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.update_buttons);
+            String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.error);
             Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
             RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
         }
         else {
-            LogHelper.v(TAG, "handleCommand: not BUTTON_PRESS and not VISUAL_ONLY");
-        }
-
-        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this.getApplicationContext());
-
-        int[] allWidgetIds = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS);
-        if (allWidgetIds == null) {
-            allWidgetIds = new int[]{R.id.autoplay_widget};
-        }
-
-        for (int widgetId : allWidgetIds)
-        {
-            RemoteViews theWidgetView = new RemoteViews(this.getApplicationContext().getPackageName(), R.layout.radio_theater_widget);
-
-            boolean enabled = AutoplayActivity.isPurchased() || AutoplayActivity.isTrial();
-            if (enabled) {
-                LogHelper.v(TAG, "handleCommand: enabled widget, click ok");
-                widgetButtonClick(theWidgetView);
-            }
-            else {
-                LogHelper.v(TAG, "handleCommand: not purchased");
-                disableWidgetButtons(theWidgetView);
+            if (intent.getBooleanExtra("BUTTON_PRESS", false) == true) {
+                LogHelper.v(TAG, "handleCommand: GOT WIDGET BUTTON PRESS!");
+                setGotWidgetButtonPress(true);
+            } else if (intent.getBooleanExtra("VISUAL_ONLY", false) == true) {
+                LogHelper.v(TAG, "handleCommand: *** VISUAL BUTTON UPDATE ONLY ***");
+                String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
+                String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.update_buttons);
+                Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
+                RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
+            } else {
+                LogHelper.v(TAG, "handleCommand: not BUTTON_PRESS and not VISUAL_ONLY");
             }
 
-            // Register an onClickListener
-            Intent clickIntent = new Intent(this.getApplicationContext(), RadioTheaterWidgetProvider.class);
+            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this.getApplicationContext());
 
-            clickIntent.setAction(RadioTheaterWidgetProvider.ACTION_APPWIDGET_BUTTON_CLICK);
-            clickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, allWidgetIds);
+            int[] allWidgetIds = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS);
+            if (allWidgetIds == null) {
+                allWidgetIds = new int[]{R.id.autoplay_widget};
+            }
 
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                    getApplicationContext(), 0, clickIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT);
+            for (int widgetId : allWidgetIds) {
+                RemoteViews theWidgetView = new RemoteViews(this.getApplicationContext().getPackageName(), R.layout.radio_theater_widget);
 
-            theWidgetView.setOnClickPendingIntent(R.id.autoplay_widget, pendingIntent);
+                boolean enabled = AutoplayActivity.isPurchased() || AutoplayActivity.isTrial();
+                if (enabled) {
+                    LogHelper.v(TAG, "handleCommand: enabled widget, click ok");
+                    widgetButtonClick(theWidgetView);
+                } else {
+                    LogHelper.v(TAG, "handleCommand: not purchased");
+                    disableWidgetButtons(theWidgetView);
+                }
 
-            appWidgetManager.updateAppWidget(widgetId, theWidgetView);
+                // Register an onClickListener
+                Intent clickIntent = new Intent(this.getApplicationContext(), RadioTheaterWidgetProvider.class);
+
+                clickIntent.setAction(RadioTheaterWidgetProvider.ACTION_APPWIDGET_BUTTON_CLICK);
+                clickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, allWidgetIds);
+
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                        getApplicationContext(), 0, clickIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT);
+
+                theWidgetView.setOnClickPendingIntent(R.id.autoplay_widget, pendingIntent);
+
+                appWidgetManager.updateAppWidget(widgetId, theWidgetView);
+            }
         }
         stopSelf();
     }
