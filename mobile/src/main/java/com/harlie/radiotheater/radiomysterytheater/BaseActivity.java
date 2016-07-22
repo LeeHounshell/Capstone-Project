@@ -1440,7 +1440,8 @@ public class BaseActivity extends AppCompatActivity {
                         paidVersion = firebasePaidVersion;
                     }
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PAID_VERSION, e=" + e.getMessage());
             }
             try {
@@ -1451,7 +1452,8 @@ public class BaseActivity extends AppCompatActivity {
                         purchaseAccess = firebasePurchaseAccess;
                     }
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PURCHASE_ACCESS, e=" + e.getMessage());
             }
             try {
@@ -1462,7 +1464,8 @@ public class BaseActivity extends AppCompatActivity {
                         purchaseNoads = firebasePurchaseNoads;
                     }
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PURCHASE_NOADS, e=" + e.getMessage());
             }
         }
