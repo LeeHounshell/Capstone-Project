@@ -64,7 +64,7 @@ public class LogHelper {
         log(tag, Log.WARN, null, messages);
     }
 
-    public static void w(String tag, Throwable t, Object... messages) {
+    public static void w(@SuppressWarnings("SameParameterValue") String tag, Throwable t, Object... messages) {
         log(tag, Log.WARN, t, messages);
     }
 

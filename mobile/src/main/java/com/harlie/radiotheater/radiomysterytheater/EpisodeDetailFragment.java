@@ -30,6 +30,7 @@ import com.harlie.radiotheater.radiomysterytheater.utils.FontPreferences;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Locale;
 
 /**
@@ -50,7 +51,6 @@ public class EpisodeDetailFragment extends FragmentBase {
     //private MediaPlayer mp;
 
     private AppCompatButton mPlayNow;
-    private AppCompatButton mWebLink;
     private long mEpisodeId;
 
     /**
@@ -76,12 +76,11 @@ public class EpisodeDetailFragment extends FragmentBase {
             // Load the content specified by the fragment arguments.
             // The ARG_EPISODE_PARCELABLE contains a Parcelable EpisodeRecyclerViewItem.
             mEpisodeId = Long.valueOf(getArguments().getString(ARG_EPISODE_ID));
-            BaseActivity baseActivity = (BaseActivity) getActivity();
-            baseActivity.setEpisodeNumber(mEpisodeId);
+            BaseActivity.setEpisodeNumber(mEpisodeId);
             LogHelper.v(TAG, "onCreate: build EpisodeRecyclerViewItem for (RECEIVE) ARG_EPISODE_ID="+ mEpisodeId);
             mItem = getArguments().getParcelable(ARG_EPISODE_PARCELABLE);
 
-            baseActivity.getEpisodeInfoFor(mEpisodeId);
+            BaseActivity.getEpisodeInfoFor(mEpisodeId);
 
             // Load the actors for this episode
             ActorsEpisodesCursor actorsEpisodesCursor = SQLiteHelper.getActorsEpisodesCursor(mEpisodeId);
@@ -178,7 +177,7 @@ public class EpisodeDetailFragment extends FragmentBase {
             } catch (IOException e) {
                 LogHelper.e(TAG, "unable to read portraits assets! e="+e);
             }
-            LogHelper.v(TAG, "available portraits: " + assetList.toString());
+            LogHelper.v(TAG, "available portraits: " + Arrays.toString(assetList));
 
             String actor1 = mItem.getActor1();
             loadPortrait(rootView, actor1, R.id.actor1, R.id.actor1_name, height, width);
@@ -199,7 +198,7 @@ public class EpisodeDetailFragment extends FragmentBase {
             mPlayNow.setBackground(playNowButton);
             mPlayNow.setEnabled(true);
             mPlayNow.playSoundEffect(SoundEffectConstants.CLICK);
-            mWebLink = (AppCompatButton) rootView.findViewById(R.id.weblink);
+            AppCompatButton webLink = (AppCompatButton) rootView.findViewById(R.id.weblink);
 
             final BaseActivity baseActivity = (BaseActivity) this.getActivity();
             mPlayNow.setOnClickListener(new View.OnClickListener() {
@@ -218,7 +217,7 @@ public class EpisodeDetailFragment extends FragmentBase {
                 }
             });
 
-            mWebLink.setOnClickListener(new View.OnClickListener() {
+            webLink.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     String url = "http://" + mItem.getWeblink();
@@ -237,8 +236,9 @@ public class EpisodeDetailFragment extends FragmentBase {
         return rootView;
     }
 
+    @SuppressWarnings("WeakerAccess")
     static final int DETAIL_SCALE_AMT = 7;
-    public void setFontTypeAndSizes(BaseActivity activity, View rootView) {
+    private void setFontTypeAndSizes(BaseActivity activity, View rootView) {
         //LogHelper.v(TAG, "setFontTypeAndSizes");
         FontPreferences fontPreferences = new FontPreferences(activity);
         String fontname = fontPreferences.getFontName();
@@ -248,9 +248,8 @@ public class EpisodeDetailFragment extends FragmentBase {
 
         int[] attrs = {R.attr.font_small, R.attr.font_medium, R.attr.font_large, R.attr.font_xlarge}; // The attributes to retrieve
         TypedArray ta = activity.obtainStyledAttributes(fontPreferences.getFontStyle().getResId(), attrs);
-        String str;
         //noinspection ResourceType
-        float titleTextSize = 0, descriptionTextSize = 0, airdateTextSize = 0, episodeNumberTextSize = 0;
+        float titleTextSize, descriptionTextSize, airdateTextSize, episodeNumberTextSize;
         if (! EpisodeListActivity.isTwoPane()
                 || activity.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
         {
@@ -317,9 +316,9 @@ public class EpisodeDetailFragment extends FragmentBase {
             ((ImageView) rootView.findViewById(personImageResource)).setImageBitmap(BitmapHelper.scaleBitmap(bitmapPortrait, width, height));
             ((ImageView) rootView.findViewById(personImageResource)).setScaleType(ImageView.ScaleType.CENTER_CROP);
             ((ImageView) rootView.findViewById(personImageResource)).setAdjustViewBounds(true);
-            ((ImageView) rootView.findViewById(personImageResource)).setVisibility(View.VISIBLE);
+            rootView.findViewById(personImageResource).setVisibility(View.VISIBLE);
             ((TextView) rootView.findViewById(personNameResource)).setText(person_name);
-            ((TextView) rootView.findViewById(personNameResource)).setVisibility(View.VISIBLE);
+            rootView.findViewById(personNameResource).setVisibility(View.VISIBLE);
         }
     }
 

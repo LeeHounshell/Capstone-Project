@@ -1,5 +1,6 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -41,10 +42,18 @@ public class EpisodeDetailActivity extends BaseActivity {
             }
         }
 
+        Intent intent = getIntent();
+
+//        String action = intent.getAction();
+//        Uri data = intent.getData();
+//        String packageId = getApplicationContext().getPackageName();
+//        System.out.println("LEE: ACTION="+action+", DATA="+data+", PACKAGE="+packageId);
+
         FloatingActionButton fabActionButton = (FloatingActionButton) findViewById(R.id.fab);
         if (fabActionButton != null) {
             final EpisodeDetailActivity activity = this;
             fabActionButton.setOnClickListener(new View.OnClickListener() {
+                @SuppressLint("PrivateResource")
                 @Override
                 public void onClick(View view) {
                     //Snackbar.make(view, "Replace with your own detail action", Snackbar.LENGTH_LONG)
@@ -86,8 +95,8 @@ public class EpisodeDetailActivity extends BaseActivity {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
-            mArgEpisodeId = getIntent().getStringExtra(EpisodeDetailFragment.ARG_EPISODE_ID);
-            Parcelable arg_episode_parcel = getIntent().getParcelableExtra(EpisodeDetailFragment.ARG_EPISODE_PARCELABLE);
+            mArgEpisodeId = intent.getStringExtra(EpisodeDetailFragment.ARG_EPISODE_ID);
+            Parcelable arg_episode_parcel = intent.getParcelableExtra(EpisodeDetailFragment.ARG_EPISODE_PARCELABLE);
             LogHelper.v(TAG, "(SEND) ARG_EPISODE_PARCELABLE and ARG_EPISODE_ID="+EpisodeDetailFragment.ARG_EPISODE_ID);
             arguments.putString(EpisodeDetailFragment.ARG_EPISODE_ID, mArgEpisodeId);
             arguments.putParcelable(EpisodeDetailFragment.ARG_EPISODE_PARCELABLE, arg_episode_parcel);

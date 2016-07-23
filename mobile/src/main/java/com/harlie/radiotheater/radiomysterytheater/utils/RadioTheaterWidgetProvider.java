@@ -28,25 +28,28 @@ public class RadioTheaterWidgetProvider extends AppWidgetProvider {
         super.onReceive(context, intent);
         String action = intent.getAction();
 
-        if (action.equals(RadioTheaterWidgetProvider.ACTION_APPWIDGET_BUTTON_CLICK)) {
-            LogHelper.v(TAG, "*** RadioTheaterWidgetProvider.ACTION_APPWIDGET_BUTTON_CLICK ***");
-            notifyWidget(context, AppWidgetManager.getInstance(context), true); // <<--- DO BUTTON CLICK!
-        }
-
-        else if (action.equals(AppWidgetManager.ACTION_APPWIDGET_UPDATE)) {
-            LogHelper.v(TAG, "*** ACTION_APPWIDGET_UPDATE ***");
-        }
-
-        else if (action.equals(AppWidgetManager.ACTION_APPWIDGET_ENABLED)) {
-            LogHelper.v(TAG, "*** ACTION_APPWIDGET_ENABLED ***");
-        }
-
-        else if (action.equals(AppWidgetManager.ACTION_APPWIDGET_DELETED)) {
-            LogHelper.v(TAG, "*** ACTION_APPWIDGET_DELETED ***");
-        }
-
-        else if (action.equals(AppWidgetManager.ACTION_APPWIDGET_DISABLED)) {
-            LogHelper.v(TAG, "*** ACTION_APPWIDGET_DISABLED ***");
+        switch (action) {
+            case RadioTheaterWidgetProvider.ACTION_APPWIDGET_BUTTON_CLICK: {
+                LogHelper.v(TAG, "*** RadioTheaterWidgetProvider.ACTION_APPWIDGET_BUTTON_CLICK ***");
+                notifyWidget(context, AppWidgetManager.getInstance(context), true); // <<--- DO BUTTON CLICK!
+                break;
+            }
+            case AppWidgetManager.ACTION_APPWIDGET_UPDATE: {
+                LogHelper.v(TAG, "*** ACTION_APPWIDGET_UPDATE ***");
+                break;
+            }
+            case AppWidgetManager.ACTION_APPWIDGET_ENABLED: {
+                LogHelper.v(TAG, "*** ACTION_APPWIDGET_ENABLED ***");
+                break;
+            }
+            case AppWidgetManager.ACTION_APPWIDGET_DELETED: {
+                LogHelper.v(TAG, "*** ACTION_APPWIDGET_DELETED ***");
+                break;
+            }
+            case AppWidgetManager.ACTION_APPWIDGET_DISABLED: {
+                LogHelper.v(TAG, "*** ACTION_APPWIDGET_DISABLED ***");
+                break;
+            }
         }
     }
 

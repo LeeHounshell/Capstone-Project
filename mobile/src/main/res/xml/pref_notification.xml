@@ -1,3 +1,4 @@
+<!--suppress XmlUnusedNamespaceDeclaration -->
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- A 'parent' preference, which enables/disables child preferences (below)

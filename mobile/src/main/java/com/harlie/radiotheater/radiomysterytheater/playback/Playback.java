@@ -47,7 +47,7 @@ public interface Playback {
     /**
      * Set the latest playback state as determined by the caller.
      */
-    void setState(int state);
+    void setState(@SuppressWarnings("SameParameterValue") int state);
 
     /**
      * Get the current {@link android.media.session.PlaybackState#getState()}

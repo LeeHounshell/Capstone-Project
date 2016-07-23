@@ -16,23 +16,24 @@ import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 public class EpisodeRecyclerViewItem implements Parcelable {
     private final static String TAG = "LEE: <" + EpisodeRecyclerViewItem.class.getSimpleName() + ">";
 
-    public String episode_title;
-    public String episode_airdate;
-    public String episode_description;
-    public int episode_number;
-    public float episode_rating;
-    public boolean have_actor_writer_detail;
-    public boolean episode_heard;
-    public boolean episode_downloaded;
-    public String actor1;
-    public String actor2;
-    public String actor3;
-    public String actor4;
-    public String actor5;
-    public String actor6;
-    public String writer;
-    public String weblink;
-    public String download;
+    private String episode_title;
+    private String episode_airdate;
+    private String episode_description;
+    private int episode_number;
+    private float episode_rating;
+    @SuppressWarnings("CanBeFinal")
+    private boolean have_actor_writer_detail;
+    private boolean episode_heard;
+    private boolean episode_downloaded;
+    private String actor1;
+    private String actor2;
+    private String actor3;
+    private String actor4;
+    private String actor5;
+    private String actor6;
+    private String writer;
+    private String weblink;
+    private String download;
 
     public EpisodeRecyclerViewItem(String title, String airdate, String description, int episodeNumber, float rating, boolean heard, boolean downloaded,
                      String actor1, String actor2, String actor3, String actor4, String actor5, String actor6, String writer, String weblink, String download)
@@ -86,13 +87,13 @@ public class EpisodeRecyclerViewItem implements Parcelable {
         if (context instanceof BaseActivity) {
             String episode = String.valueOf(episodeNumber);
             ConfigEpisodesContentValues configEpisodesContentValues = SQLiteHelper.getConfigEpisodeForEpisode(episode);
-            ContentValues contentValues = configEpisodesContentValues.values();
+            ContentValues contentValues = configEpisodesContentValues != null ? configEpisodesContentValues.values() : null;
             heard = contentValues.getAsBoolean(RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_HEARD);
             downloaded = contentValues.getAsBoolean(RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_DOWNLOADED);
             //LogHelper.v(TAG, "awesome!!! found matching config for episode="+episodeNumber+", heard="+heard+", and downloaded="+downloaded);
         }
         else {
-            LogHelper.w(TAG, "unable to find matching config for episode="+episodeNumber+", heard="+heard+", and downloaded="+downloaded);
+            LogHelper.w(TAG, "unable to find matching config for episode="+episodeNumber+", and downloaded="+downloaded);
         }
 
         return new EpisodeRecyclerViewItem(

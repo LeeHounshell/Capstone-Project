@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- from: https://github.com/lgvalle/Material-Animations/blob/master/app/src/main/res/transition/changebounds_with_arcmotion.xml -->
+<!--suppress AndroidElementNotAllowed -->
 <transitionSet xmlns:android="http://schemas.android.com/apk/res/android"
     android:duration="@integer/anim_duration_long"
     android:interpolator="@android:interpolator/decelerate_cubic">

@@ -30,7 +30,7 @@ public class WearHelper {
         return WEAR_APP_PACKAGE_NAME.equals(packageName);
     }
 
-    public static void setShowCustomActionOnWear(Bundle customActionExtras, boolean showOnWear) {
+    public static void setShowCustomActionOnWear(Bundle customActionExtras, @SuppressWarnings("SameParameterValue") boolean showOnWear) {
         if (showOnWear) {
             customActionExtras.putBoolean(
                     MediaControlConstants.EXTRA_CUSTOM_ACTION_SHOW_ON_WEAR, true);
@@ -39,7 +39,7 @@ public class WearHelper {
         }
     }
 
-    public static void setUseBackgroundFromTheme(Bundle extras, boolean useBgFromTheme) {
+    public static void setUseBackgroundFromTheme(Bundle extras, @SuppressWarnings("SameParameterValue") boolean useBgFromTheme) {
         if (useBgFromTheme) {
             extras.putBoolean(MediaControlConstants.EXTRA_BACKGROUND_COLOR_FROM_THEME, true);
         } else {
@@ -47,8 +47,10 @@ public class WearHelper {
         }
     }
 
-    public static void setSlotReservationFlags(Bundle extras, boolean reserveSkipToNextSlot,
-                                               boolean reserveSkipToPrevSlot) {
+    public static void setSlotReservationFlags(Bundle extras,
+                                               @SuppressWarnings("SameParameterValue") boolean reserveSkipToNextSlot,
+                                               @SuppressWarnings("SameParameterValue") boolean reserveSkipToPrevSlot)
+    {
         if (reserveSkipToPrevSlot) {
             extras.putBoolean(MediaControlConstants.EXTRA_RESERVE_SLOT_SKIP_TO_PREVIOUS, true);
         } else {

@@ -51,6 +51,7 @@ public class BitmapHelper {
             (int) (src.getWidth() * scaleFactor), (int) (src.getHeight() * scaleFactor), false);
     }
 
+    @SuppressWarnings("WeakerAccess")
     public static Bitmap scaleBitmap(int scaleFactor, InputStream is) {
         // Get the dimensions of the bitmap
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
@@ -62,6 +63,7 @@ public class BitmapHelper {
         return BitmapFactory.decodeStream(is, null, bmOptions);
     }
 
+    @SuppressWarnings("WeakerAccess")
     public static int findScaleFactor(int targetW, int targetH, InputStream is) {
         // Get the dimensions of the bitmap
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
@@ -90,6 +92,7 @@ public class BitmapHelper {
             return scaleBitmap(scaleFactor, is);
         } finally {
             if (is != null) {
+                //noinspection ThrowFromFinallyBlock
                 is.close();
             }
         }
@@ -97,7 +100,7 @@ public class BitmapHelper {
 
     // from: http://stackoverflow.com/questions/3035692/how-to-convert-a-drawable-to-a-bitmap
     public static Bitmap drawableToBitmap(Drawable drawable) {
-        Bitmap bitmap = null;
+        Bitmap bitmap;
 
         if (drawable instanceof BitmapDrawable) {
             BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
@@ -121,7 +124,7 @@ public class BitmapHelper {
     public static Bitmap getBitmapFromAsset(String bitmapFileName)
     {
         AssetManager assetManager = RadioTheaterApplication.getRadioTheaterApplicationContext().getAssets();
-        InputStream inputStream = null;
+        InputStream inputStream;
         try {
             inputStream = assetManager.open(bitmapFileName);
         } catch (IOException e) {

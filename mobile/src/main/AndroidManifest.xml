@@ -210,6 +210,30 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Because the SQLite database must also be installed
+                 deep links go first to the SplashScreen to be parsed and routed
+                 after first ensuring the database is properly setup.
+            -->
+            <intent-filter
+                android:label="@string/filter_title_viewradiotheater">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- Accepts URIs that begin with "http://harlie.com/radiomysterytheater”
+                     e.g. http://harlie.com/radiomysterytheater?episode=1
+                 -->
+                <data android:scheme="http"
+                    android:host="harlie.com"
+                    android:pathPrefix="/radiomysterytheater">
+                </data>
+                <!-- note that the leading "/" is required for pathPrefix-->
+                <!-- Accepts URIs that begin with "harlie://radiomysterytheater”
+                     e.g. harlie://radiomysterytheater?episode=1
+                 -->
+                <data android:scheme="harlie"
+                    android:host="radiomysterytheater">
+                </data>
+            </intent-filter>
         </activity>
 
         <activity
@@ -276,23 +300,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.harlie.radiotheater.radiomysterytheater.EpisodeListActivity">
             </meta-data>
-            <intent-filter
-                android:label="@string/filter_title_viewradiotheater">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <!-- Accepts URIs that begin with "http://www.harlie.com/radiotheater” -->
-                <data android:scheme="http"
-                    android:host="www.harlie.com"
-                    android:pathPrefix="/radiotheater">
-                </data>
-                <!-- note that the leading "/" is required for pathPrefix-->
-                <!-- Accepts URIs that begin with "harlie://radiotheater” -->
-                <data android:scheme="harlie"
-                    android:host="radiotheater">
-                </data>
-            </intent-filter>
-
         </activity>
 
         <activity

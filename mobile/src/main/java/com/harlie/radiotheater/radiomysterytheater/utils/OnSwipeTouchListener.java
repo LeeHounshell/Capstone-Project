@@ -21,12 +21,13 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
 
     private final static long THREE_SECONDS = (3 * 1000);
 
-    private GestureDetectorCompat mGestureDetectorCompat;
-    private AppCompatButton mCompatButton;
-    private FloatingActionButton mFloatingButton;
-    private Handler mHandler;
+    private final GestureDetectorCompat mGestureDetectorCompat;
+    private final AppCompatButton mCompatButton;
+    private final FloatingActionButton mFloatingButton;
+    private final Handler mHandler;
+    private final Drawable mPressedDrawable;
+
     private Drawable mNotPressedDrawable;
-    private Drawable mPressedDrawable;
     private Timer mDownTimer = new Timer();
 
     private static volatile boolean onDownClick;
@@ -97,14 +98,12 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
                             if (sDownPressTime < (time - THREE_SECONDS)) {
                                 sIgnoreUpPressUntilDown = true;
                                 clearInput();
-                                if (mHandler != null) {
-                                    mHandler.post(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            onActionUp(); // automatic ACTION_UP after 3 seconds and onClick()
-                                        }
-                                    });
-                                }
+                                mHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        onActionUp(); // automatic ACTION_UP after 3 seconds and onClick()
+                                    }
+                                });
                             }
                         }
                     }, THREE_SECONDS);
@@ -121,14 +120,12 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
                         sIgnoreUpPressUntilDown = false;
                     }
                     else {
-                        if (mHandler != null){
-                            mHandler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    onActionUp();
-                                }
-                            });
-                        }
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                onActionUp();
+                            }
+                        });
                     }
                     break;
                 }
@@ -224,7 +221,6 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
         // Determines the fling velocity and then fires the appropriate swipe event accordingly
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            boolean result = false;
             try {
                 float diffY = e2.getY() - e1.getY();
                 float diffX = e2.getX() - e1.getX();
@@ -248,7 +244,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
             } catch (Exception exception) {
                 exception.printStackTrace();
             }
-            return result;
+            return false;
         }
     }
 
@@ -281,7 +277,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
         onDoubleClick = true;
     }
 
-    public void onLongClick(Drawable image) {
+    public void onLongClick(@SuppressWarnings("UnusedParameters") Drawable image) {
         LogHelper.v(TAG, "onLongClick");
         onLongClick = true;
     }

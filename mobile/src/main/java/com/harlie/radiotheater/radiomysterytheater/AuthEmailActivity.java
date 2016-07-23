@@ -119,13 +119,11 @@ public class AuthEmailActivity extends BaseActivity
                                     return;
                                 }
                             }
-                            if (success) {
-                                if (getUID() == null) {
-                                    String uid = mAuth.getCurrentUser().getUid();
-                                    setUID(uid);
-                                }
-                                trackLoginWithFirebaseAnalytics();
+                            if (getUID() == null) {
+                                @SuppressWarnings("ConstantConditions") String uid = mAuth.getCurrentUser().getUid();
+                                setUID(uid);
                             }
+                            trackLoginWithFirebaseAnalytics();
                         }
                         else {
                             LogHelper.e(TAG, "email or password is null!");
@@ -149,7 +147,7 @@ public class AuthEmailActivity extends BaseActivity
         }, 19000); // nineteen seconds
     }
 
-    private void problemAuthenticating(String error) {
+    private void problemAuthenticating(@SuppressWarnings("SameParameterValue") String error) {
         LogHelper.w(TAG, "problemAuthenticating: error="+error);
         mCurrentPosition = 0;
         AlertDialog alertDialog = new AlertDialog.Builder(this).create();

@@ -60,6 +60,7 @@ public class RadioTheaterContract {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
+        @SuppressWarnings("SameReturnValue")
         public static Uri buildConfigurationUri() {
             LogHelper.v(TAG, "buildConfigurationUri");
             return CONTENT_URI;
@@ -75,6 +76,7 @@ public class RadioTheaterContract {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
+        @SuppressWarnings("SameReturnValue")
         public static Uri buildConfigEpisodesUri() {
             LogHelper.v(TAG, "buildConfigEpisodesUri");
             return CONTENT_URI;
@@ -90,6 +92,7 @@ public class RadioTheaterContract {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
+        @SuppressWarnings("SameReturnValue")
         public static Uri buildEpisodesUri() {
             LogHelper.v(TAG, "buildEpisodesUri");
             return CONTENT_URI;
@@ -105,6 +108,7 @@ public class RadioTheaterContract {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
+        @SuppressWarnings("SameReturnValue")
         public static Uri buildEpisodesActorsUri() {
             LogHelper.v(TAG, "buildEpisodesActorsUri");
             return CONTENT_URI;
@@ -120,6 +124,7 @@ public class RadioTheaterContract {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
+        @SuppressWarnings("SameReturnValue")
         public static Uri buildEpisodesWritersUri() {
             LogHelper.v(TAG, "buildEpisodesWritersUri");
             return CONTENT_URI;
@@ -135,6 +140,7 @@ public class RadioTheaterContract {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
+        @SuppressWarnings("SameReturnValue")
         public static Uri buildActorsUri() {
             LogHelper.v(TAG, "buildActorsUri");
             return CONTENT_URI;
@@ -150,6 +156,7 @@ public class RadioTheaterContract {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
+        @SuppressWarnings("SameReturnValue")
         public static Uri buildActorsEpisodesUri() {
             LogHelper.v(TAG, "buildActorsEpisodesUri");
             return CONTENT_URI;
@@ -165,6 +172,7 @@ public class RadioTheaterContract {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
+        @SuppressWarnings("SameReturnValue")
         public static Uri buildWritersUri() {
             LogHelper.v(TAG, "buildWritersUri");
             return CONTENT_URI;
@@ -180,6 +188,7 @@ public class RadioTheaterContract {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
+        @SuppressWarnings("SameReturnValue")
         public static Uri buildWritersEpisodesUri() {
             LogHelper.v(TAG, "buildWritersEpisodesUri");
             return CONTENT_URI;

@@ -1,5 +1,6 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
@@ -13,7 +14,6 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
@@ -65,30 +65,29 @@ public class EpisodeListActivity extends BaseActivity
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setFocusable(true);
-        if (fab != null) {
-            final EpisodeListActivity activity = this;
-            fab.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                    //        .setAction("Action", null).show();
-                    LogHelper.v(TAG, "CLICK - fab");
-                    Intent autoplayIntent = new Intent(activity, AutoplayActivity.class);
-                    // close existing activity stack regardless of what's in there and create new root
-                    autoplayIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                    Bundle playInfo = new Bundle();
-                    savePlayInfoToBundle(playInfo);
-                    autoplayIntent.putExtras(playInfo);
-                    LogHelper.v(TAG, "STARTACTIVITY: AutoplayActivity.class");
-                    startActivity(autoplayIntent);
-                    overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
-                    if (! sHandleRotationEvent && isTwoPane() && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                        FragmentManager fragmentManager = activity.getSupportFragmentManager();
-                        fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
-                    }
+        final EpisodeListActivity activity = this;
+        fab.setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("PrivateResource")
+            @Override
+            public void onClick(View view) {
+                //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                //        .setAction("Action", null).show();
+                LogHelper.v(TAG, "CLICK - fab");
+                Intent autoplayIntent = new Intent(activity, AutoplayActivity.class);
+                // close existing activity stack regardless of what's in there and create new root
+                autoplayIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                Bundle playInfo = new Bundle();
+                savePlayInfoToBundle(playInfo);
+                autoplayIntent.putExtras(playInfo);
+                LogHelper.v(TAG, "STARTACTIVITY: AutoplayActivity.class");
+                startActivity(autoplayIntent);
+                overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
+                if (! sHandleRotationEvent && isTwoPane() && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    FragmentManager fragmentManager = activity.getSupportFragmentManager();
+                    fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
                 }
-            });
-        }
+            }
+        });
 
         final View recyclerView = findViewById(R.id.episode_list);
         assert recyclerView != null;
@@ -102,14 +101,15 @@ public class EpisodeListActivity extends BaseActivity
             mTwoPane = true;
         }
 
-        // Show the Up button in the action bar.
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
+        if (!isTwoPane() || getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            // Show the Up button in the action bar. except for TwoPane + LANDSCAPE
+            ActionBar actionBar = getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.setDisplayHomeAsUpEnabled(true);
+            }
         }
 
-        Intent intent = getIntent();
-        long position = Long.valueOf(getEpisodeNumber());
+        long position = getEpisodeNumber();
         int lastPlaybackState = LocalPlayback.getCurrentState();
         if (position == 0 || PlaybackStateCompat.STATE_PLAYING == lastPlaybackState) {
             LogHelper.v(TAG, "LIST: using current selection in LocalPlayback");
@@ -124,8 +124,8 @@ public class EpisodeListActivity extends BaseActivity
         }
         final int activePosition = (int) position - 1;
         LogHelper.v(TAG, "===> LIST: SET INITIAL SCROLL POSITION TO: "+activePosition);
-        ((RecyclerView) recyclerView).invalidate();
-        ((RecyclerView) recyclerView).scrollToPosition((int) activePosition);
+        recyclerView.invalidate();
+        ((RecyclerView) recyclerView).scrollToPosition(activePosition);
         if (isTwoPane() && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
             getHandler().postDelayed(new Runnable() {
                 @Override

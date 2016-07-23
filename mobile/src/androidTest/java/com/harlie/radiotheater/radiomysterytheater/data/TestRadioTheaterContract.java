@@ -58,8 +58,8 @@ public class TestRadioTheaterContract {
         assertNotNull("Error: Null Episode Uri returned.", episodeUri);
         assertEquals("Error: Episode _ID not properly appended to the end of the Uri",
                 Long.toString(TEST_EPISODE), episodeUri.getLastPathSegment());
-//        assertEquals("Error: Episode Uri doesn't match our expected result", episodeUri.toString(),
-//                RadioTheaterProvider.AUTHORITY + "/episodes/" + TEST_EPISODE);
+        assertEquals("Error: Episode Uri doesn't match our expected result", episodeUri.toString(),
+                "content://" + RadioTheaterProvider.AUTHORITY + "/episodes/" + TEST_EPISODE);
     }
 
     @Test
@@ -69,8 +69,8 @@ public class TestRadioTheaterContract {
         assertNotNull("Error: Null Actor Uri returned.", actorUri);
         assertEquals("Error: Actor _ID not properly appended to the end of the Uri",
                 Long.toString(TEST_ACTOR), actorUri.getLastPathSegment());
-//        assertEquals("Error: Actor Uri doesn't match our expected result", actorUri.toString(),
-//                RadioTheaterProvider.AUTHORITY + "/actors/" + TEST_ACTOR);
+        assertEquals("Error: Actor Uri doesn't match our expected result", actorUri.toString(),
+                "content://" + RadioTheaterProvider.AUTHORITY + "/actors/" + TEST_ACTOR);
     }
 
     @Test
@@ -80,8 +80,8 @@ public class TestRadioTheaterContract {
         assertNotNull("Error: Null Writer Uri returned.", writerUri);
         assertEquals("Error: Writer _ID not properly appended to the end of the Uri",
                 Long.toString(TEST_WRITER), writerUri.getLastPathSegment());
-//        assertEquals("Error: Actor Uri doesn't match our expected result", writerUri.toString(),
-//                RadioTheaterProvider.AUTHORITY + "/writers/" + TEST_WRITER);
+        assertEquals("Error: Actor Uri doesn't match our expected result", writerUri.toString(),
+                "content://" + RadioTheaterProvider.AUTHORITY + "/writers/" + TEST_WRITER);
     }
 
 }

@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.v4.media.MediaBrowserCompat.MediaItem;
@@ -35,9 +34,7 @@ import com.harlie.radiotheater.radiomysterytheater.playback.PlaybackManager;
 import com.harlie.radiotheater.radiomysterytheater.playback.QueueManager;
 import com.harlie.radiotheater.radiomysterytheater.utils.CarHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
-import com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.PackageValidator;
-import com.harlie.radiotheater.radiomysterytheater.utils.QueueHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.WearHelper;
 
 import java.util.List;
@@ -155,7 +152,6 @@ public class RadioTheaterService
 
     // Delay stopSelf by using a handler.
     private static final int STOP_DELAY = 30000;
-    private static final int DEFAULT_GOBACK_AMOUNT = (60 * 1000); // one minute
 
     private MusicProvider mMusicProvider;
     private PlaybackManager mPlaybackManager;
@@ -166,7 +162,6 @@ public class RadioTheaterService
     private MediaRouter mMediaRouter;
     private PackageValidator mPackageValidator;
     private QueueManager queueManager;
-    private Handler handler;
 
     private boolean mIsConnectedToCar;
     private BroadcastReceiver mCarConnectionReceiver;
@@ -218,7 +213,6 @@ public class RadioTheaterService
         super.onCreate();
         LogHelper.v(TAG, "onCreate");
         final RadioTheaterService radioTheaterService = this;
-        handler = new Handler();
 
         LogHelper.v(TAG, "*** CREATE THE MUSIC PROVIDER ***");
         mMusicProvider = new MusicProvider();
@@ -321,85 +315,82 @@ public class RadioTheaterService
     @Override
     public int onStartCommand(Intent startIntent, int flags, int startId) {
         LogHelper.v(TAG, "=========>>> onStartCommand: startIntent="+startIntent.getAction()+", flags="+flags+", startId="+startId);
-        if (startIntent != null) {
-            String action = startIntent.getAction();
-            String command = startIntent.getStringExtra(CMD_NAME);
-            String episode = startIntent.getStringExtra(CMD_PARAM_EPISODE);
-            long episodeId = (episode != null && !episode.equals("null")) ? Long.valueOf(episode) : 0L;
+        String action = startIntent.getAction();
+        String command = startIntent.getStringExtra(CMD_NAME);
+        String episode = startIntent.getStringExtra(CMD_PARAM_EPISODE);
+        long episodeId = (episode != null && !episode.equals("null")) ? Long.valueOf(episode) : 0L;
 
-            if (ACTION_CMD.equals(action)) {
-                LogHelper.v(TAG, "=========>>> ACTION: "+action+", COMMAND="+command+", EPISODE="+episode);
+        if (ACTION_CMD.equals(action)) {
+            LogHelper.v(TAG, "=========>>> ACTION: "+action+", COMMAND="+command+", EPISODE="+episode);
 
-                if (CMD_PLAY.equals(command)) {
-                    String title = startIntent.getStringExtra(CMD_PARAM_TITLE);
-                    String downloadUrl = startIntent.getStringExtra(CMD_PARAM_DOWNLOAD_URL);
+            if (CMD_PLAY.equals(command)) {
+                String title = startIntent.getStringExtra(CMD_PARAM_TITLE);
+                String downloadUrl = startIntent.getStringExtra(CMD_PARAM_DOWNLOAD_URL);
+                startPlaying(episodeId, title, downloadUrl);
+            }
+
+            else if (CMD_PAUSE.equals(command)) {
+                mPlaybackManager.handlePauseRequest();
+            }
+
+            else if (CMD_SEEK.equals(command)) {
+                Integer position = startIntent.getIntExtra(CMD_PARAM_SEEK_POSITION, 0);
+                mPlaybackManager.handleSeekRequest(position);
+            }
+
+            else if (CMD_GOBACK.equals(command)) {
+                Integer amount = startIntent.getIntExtra(CMD_PARAM_GOBACK_AMOUNT, 0);
+                int position = LocalPlayback.getCurrentPosition();
+                position -= amount;
+                if (position < 0) {
+                    position = 0;
+                }
+                mPlaybackManager.handleSeekRequest(position);
+            }
+
+            else if (CMD_STOP.equals(command)) {
+                mPlaybackManager.handleStopRequest(null);
+            }
+
+            else if (CMD_NEXT.equals(command)) {
+                long max_episodes = Long.valueOf(getResources().getString(R.string.episodes_count)); // 1399
+                episodeId += 1;
+                if (episodeId > max_episodes) {
+                    episodeId = max_episodes;
+                }
+                EpisodesCursor episodesCursor = SQLiteHelper.getEpisodesCursor(episodeId);
+                if (episodesCursor != null && episodesCursor.moveToNext()) {
+                    String title = episodesCursor.getFieldEpisodeTitle();
+                    String downloadUrl = Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString();
+                    episodesCursor.close();
                     startPlaying(episodeId, title, downloadUrl);
                 }
-
-                else if (CMD_PAUSE.equals(command)) {
-                    mPlaybackManager.handlePauseRequest();
-                }
-
-                else if (CMD_SEEK.equals(command)) {
-                    Integer position = startIntent.getIntExtra(CMD_PARAM_SEEK_POSITION, 0);
-                    mPlaybackManager.handleSeekRequest(position);
-                }
-
-                else if (CMD_GOBACK.equals(command)) {
-                    Integer amount = startIntent.getIntExtra(CMD_PARAM_GOBACK_AMOUNT, 0);
-                    int position = LocalPlayback.getCurrentPosition();
-                    position -= DEFAULT_GOBACK_AMOUNT;
-                    if (position < 0) {
-                        position = 0;
-                    }
-                    mPlaybackManager.handleSeekRequest(position);
-                }
-
-                else if (CMD_STOP.equals(command)) {
-                    mPlaybackManager.handleStopRequest(null);
-                }
-
-                else if (CMD_NEXT.equals(command)) {
-                    long max_episodes = Long.valueOf(getResources().getString(R.string.episodes_count)); // 1399
-                    episodeId += 1;
-                    if (episodeId > max_episodes) {
-                        episodeId = max_episodes;
-                    }
-                    EpisodesCursor episodesCursor = SQLiteHelper.getEpisodesCursor(episodeId);
-                    if (episodesCursor != null && episodesCursor.moveToNext()) {
-                        String title = episodesCursor.getFieldEpisodeTitle();
-                        String downloadUrl = Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString();
-                        episodesCursor.close();
-                        startPlaying(episodeId, title, downloadUrl);
-                    }
-                }
-
-                else if (CMD_PREV.equals(command)) {
-                    long max_episodes = Long.valueOf(getResources().getString(R.string.episodes_count)); // 1399
-                    episodeId -= 1;
-                    if (episodeId <= 0) {
-                        episodeId = 1;
-                    }
-                    EpisodesCursor episodesCursor = SQLiteHelper.getEpisodesCursor(episodeId);
-                    if (episodesCursor != null && episodesCursor.moveToNext()) {
-                        String title = episodesCursor.getFieldEpisodeTitle();
-                        String downloadUrl = Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString();
-                        episodesCursor.close();
-                        startPlaying(episodeId, title, downloadUrl);
-                    }
-                }
-
-                else if (CMD_STOP_CASTING.equals(command)) {
-                    VideoCastManager.getInstance().disconnect();
-                }
-
-                else {
-                    LogHelper.w(TAG, "*** UNKNOWN ACTION="+action+" for COMMAND="+command);
-                }
-            } else {
-                // Try to handle the intent as a media button event wrapped by MediaButtonReceiver
-                MediaButtonReceiver.handleIntent(mSession, startIntent);
             }
+
+            else if (CMD_PREV.equals(command)) {
+                episodeId -= 1;
+                if (episodeId <= 0) {
+                    episodeId = 1;
+                }
+                EpisodesCursor episodesCursor = SQLiteHelper.getEpisodesCursor(episodeId);
+                if (episodesCursor != null && episodesCursor.moveToNext()) {
+                    String title = episodesCursor.getFieldEpisodeTitle();
+                    String downloadUrl = Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString();
+                    episodesCursor.close();
+                    startPlaying(episodeId, title, downloadUrl);
+                }
+            }
+
+            else if (CMD_STOP_CASTING.equals(command)) {
+                VideoCastManager.getInstance().disconnect();
+            }
+
+            else {
+                LogHelper.w(TAG, "*** UNKNOWN ACTION="+action+" for COMMAND="+command);
+            }
+        } else {
+            // Try to handle the intent as a media button event wrapped by MediaButtonReceiver
+            MediaButtonReceiver.handleIntent(mSession, startIntent);
         }
 
         return START_STICKY;

@@ -31,7 +31,6 @@ import android.support.v4.media.MediaMetadataCompat;
 
 import com.harlie.radiotheater.radiomysterytheater.R;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
-import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper;
 
 import java.util.ArrayList;
@@ -66,7 +65,7 @@ public class MusicProvider {
     private static volatile boolean sOnMusicCatalogReady = false;
     //--------------------------------------------------------------------------------
 
-    private MusicProviderSource mSource;
+    private final MusicProviderSource mSource;
 
     // Categorized caches for music track data:
     private ConcurrentMap<String, List<MediaMetadataCompat>> mMusicListByGenre;
@@ -81,7 +80,7 @@ public class MusicProvider {
     private volatile State mCurrentState = State.NON_INITIALIZED;
 
     public interface Callback {
-        void onMusicCatalogReady(boolean success);
+        void onMusicCatalogReady(@SuppressWarnings("UnusedParameters") boolean success);
     }
 
     public MusicProvider() {
@@ -154,6 +153,7 @@ public class MusicProvider {
             iter = Collections.emptyList();
         }
         else {
+            //noinspection StatementWithEmptyBody
             if (iter.iterator().hasNext()) {
                 //LogHelper.v(TAG, "searchMusicBySongTitle: *** RADIO THEATER - search found an EPISODE! - next=" + iter.iterator().next().toString());
             }
@@ -217,7 +217,7 @@ public class MusicProvider {
      */
     public MediaMetadataCompat getMusic(String musicId) {
         //LogHelper.v(TAG, "getMusic: musicId="+musicId);
-        MediaMetadataCompat item = sMusicListById.containsKey(musicId) ? sMusicListById.get(musicId).metadata : null;
+        @SuppressWarnings("UnnecessaryLocalVariable") MediaMetadataCompat item = sMusicListById.containsKey(musicId) ? sMusicListById.get(musicId).metadata : null;
         //LogHelper.v(TAG, "getMusic(" + musicId + ") found " + ((item == null) ? "nothing" : item.getDescription().getTitle()));
         return item;
     }
@@ -226,6 +226,7 @@ public class MusicProvider {
     private void dumpTheMusicList() {
         //LogHelper.v(TAG, "*** DUMPING LIST ***");
         for (MutableMediaMetadata element : sMusicListById.values()) {
+            //noinspection StatementWithEmptyBody
             if (element != null) {
                 //LogHelper.v(TAG, "FOUND ELEMENT: "+element.metadata.getDescription().getTitle()+" - "+element.metadata.getDescription().getMediaId());
             }
@@ -344,19 +345,19 @@ public class MusicProvider {
                 mCurrentState = State.INITIALIZED;
             }
         } finally {
-            String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
+            @SuppressWarnings("ThrowFromFinallyBlock") String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
             if (mCurrentState != State.INITIALIZED) {
                 //LogHelper.v(TAG, "*** retrieveMedia FINISHED *** - LOAD FAILED");
                 // Something bad happened, so we reset state to NON_INITIALIZED to allow
                 // retries (eg if the network connection is temporary unavailable)
                 mCurrentState = State.NON_INITIALIZED;
-                String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.error_no_metadata);
+                @SuppressWarnings("ThrowFromFinallyBlock") String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.error_no_metadata);
                 Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
                 RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
             }
             else {
                 //LogHelper.v(TAG, "*** retrieveMedia FINISHED *** - LOAD SUCCESS");
-                String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.metadata_loaded);
+                @SuppressWarnings("ThrowFromFinallyBlock") String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.metadata_loaded);
                 Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
                 RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
                 sMediaLoaded = true;
@@ -379,7 +380,8 @@ public class MusicProvider {
                 mediaItems.add(createBrowsableMediaItemForGenre(genre, resources));
             }
         }
-        else if (mediaId.startsWith(MEDIA_ID_MUSICS_BY_GENRE)) {
+        else //noinspection StatementWithEmptyBody
+            if (mediaId.startsWith(MEDIA_ID_MUSICS_BY_GENRE)) {
             String[] hierarchy = MediaIDHelper.getHierarchy(mediaId);
             if (hierarchy != null) {
                 String genre = hierarchy[1];

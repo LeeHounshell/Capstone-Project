@@ -34,7 +34,6 @@ public class RadioControlIntentService extends IntentService {
     private static volatile boolean sAlreadyStarted = false;
 
     private final IBinder mBinder = new RadioControlServiceBinder();
-    private Messenger outMessenger;
 
     public IBinder onBind(Intent arg0) {
         Bundle extras = arg0.getExtras();
@@ -42,7 +41,7 @@ public class RadioControlIntentService extends IntentService {
         // Get messager from the Activity
         if (extras != null) {
             LogHelper.d(TAG,"RadioControlServiceBinder: service - onBind with extra");
-            outMessenger = (Messenger) extras.get("MESSENGER");
+            @SuppressWarnings("UnusedAssignment") Messenger outMessenger = (Messenger) extras.get("MESSENGER");
         }
         return mBinder;
     }
@@ -92,7 +91,7 @@ public class RadioControlIntentService extends IntentService {
         mAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
             public void onAudioFocusChange(int focusChange) {
                 LogHelper.v(TAG, "===> onAudioFocusChange=" + focusChange + " <===");
-                if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+                if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
                     LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_GAIN <<---");
                     mAudioFocusRequstResult = AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
                 } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
@@ -120,7 +119,7 @@ public class RadioControlIntentService extends IntentService {
             public void onChildrenLoaded(@NonNull String parentId,
                                          @NonNull List<MediaBrowserCompat.MediaItem> children) {
                 LogHelper.d(TAG, "********* onChildrenLoaded, parentId=" + parentId + " child count=" + children.size());
-                if (children == null || children.isEmpty()) {
+                if (children.isEmpty()) {
                     LogHelper.w(TAG, "onChildrenLoaded: NO CHILDREN");
                 }
             }
@@ -160,6 +159,14 @@ public class RadioControlIntentService extends IntentService {
                         LogHelper.d(TAG, "MediaControllerCompat.Callback onPlaybackStateChanged STATE_STOPPED <<<---------");
                         break;
                     }
+                    case PlaybackStateCompat.STATE_CONNECTING:
+                        break;
+                    case PlaybackStateCompat.STATE_FAST_FORWARDING:
+                        break;
+                    case PlaybackStateCompat.STATE_REWINDING:
+                        break;
+                    case PlaybackStateCompat.STATE_SKIPPING_TO_QUEUE_ITEM:
+                        break;
                 }
             }
 
@@ -339,7 +346,7 @@ public class RadioControlIntentService extends IntentService {
      *
      * @see IntentService
      */
-    public static void startActionStart(Context context, String from, String episode, String param2) {
+    public static void startActionStart(Context context, String from, String episode, @SuppressWarnings("SameParameterValue") String param2) {
         if (! sAlreadyStarted) {
             sAlreadyStarted = true;
             LogHelper.v(TAG, "startActionStart: from=" + from + ", episode=" + episode);
@@ -400,7 +407,7 @@ public class RadioControlIntentService extends IntentService {
      *
      * @see IntentService
      */
-    public static void startActionSeek(Context context, String from, String episode, String position) {
+    public static void startActionSeek(Context context, @SuppressWarnings("SameParameterValue") String from, String episode, String position) {
         LogHelper.v(TAG, "startActionSeek: from="+from+", episode="+episode+", position="+position);
         Intent intent = new Intent(context, RadioControlIntentService.class);
         intent.setAction(ACTION_SEEK);
@@ -415,7 +422,7 @@ public class RadioControlIntentService extends IntentService {
      *
      * @see IntentService
      */
-    public static void startActionGoback(Context context, String from, String episode, String amount) {
+    public static void startActionGoback(Context context, @SuppressWarnings("SameParameterValue") String from, String episode, String amount) {
         LogHelper.v(TAG, "startActionGoback: from="+from+", episode="+episode+", amount="+amount);
         Intent intent = new Intent(context, RadioControlIntentService.class);
         intent.setAction(ACTION_GOBACK);
@@ -456,7 +463,7 @@ public class RadioControlIntentService extends IntentService {
      *
      * @see IntentService
      */
-    public static void startActionNext(Context context, String from, String episode, String param2) {
+    public static void startActionNext(Context context, @SuppressWarnings("SameParameterValue") String from, String episode, String param2) {
         LocalPlayback.setPlaybackEnabled(true);
         LogHelper.v(TAG, "startActionNext: from="+from+", episode="+episode);
         Intent intent = new Intent(context, RadioControlIntentService.class);
@@ -472,7 +479,7 @@ public class RadioControlIntentService extends IntentService {
      *
      * @see IntentService
      */
-    public static void startActionPrev(Context context, String from, String episode, String param2) {
+    public static void startActionPrev(Context context, @SuppressWarnings("SameParameterValue") String from, String episode, String param2) {
         LocalPlayback.setPlaybackEnabled(true);
         LogHelper.v(TAG, "startActionPrev: from="+from+", episode="+episode);
         Intent intent = new Intent(context, RadioControlIntentService.class);

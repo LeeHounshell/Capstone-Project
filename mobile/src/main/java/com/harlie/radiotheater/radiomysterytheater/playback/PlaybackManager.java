@@ -30,7 +30,6 @@ import android.support.v4.media.session.PlaybackStateCompat;
 
 import com.harlie.radiotheater.radiomysterytheater.R;
 import com.harlie.radiotheater.radiomysterytheater.model.MusicProvider;
-import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.MediaIDHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.WearHelper;
 
@@ -48,11 +47,12 @@ public class PlaybackManager implements Playback.Callback {
     }
     private static QueueManager sQueueManager;
 
-    private MusicProvider mMusicProvider;
-    private Resources mResources;
+    private final MusicProvider mMusicProvider;
+    private final Resources mResources;
+    private final PlaybackServiceCallback mServiceCallback;
+    private final MediaSessionCallback mMediaSessionCallback;
+
     private Playback mPlayback;
-    private PlaybackServiceCallback mServiceCallback;
-    private MediaSessionCallback mMediaSessionCallback;
 
     public PlaybackManager(PlaybackServiceCallback serviceCallback, Resources resources,
                            MusicProvider musicProvider, QueueManager queueManager,
@@ -359,6 +359,7 @@ public class PlaybackManager implements Playback.Callback {
         @Override
         public void onCustomAction(@NonNull String action, Bundle extras) {
             //LogHelper.v(TAG, "onCustomAction");
+            //noinspection StatementWithEmptyBody
             if (CUSTOM_ACTION_THUMBS_UP.equals(action)) {
                 //LogHelper.i(TAG, "onCustomAction: favorite for current track");
                 MediaSessionCompat.QueueItem currentMusic = getQueueManager().getCurrentMusic();

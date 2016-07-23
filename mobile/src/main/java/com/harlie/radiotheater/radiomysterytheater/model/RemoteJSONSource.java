@@ -51,13 +51,10 @@ import java.util.Iterator;
 public class RemoteJSONSource implements MusicProviderSource {
     private final static String TAG = "LEE: <" + RemoteJSONSource.class.getSimpleName() + ">";
 
-    private String mMediaId;
-
     private static volatile boolean sLoadedMediaMetaData = false;
 
     @Override
     public Iterator<MediaMetadataCompat> iterator() {
-        mMediaId = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.genre);
         ArrayList<MediaMetadataCompat> tracks = new ArrayList<>();
         if (!sLoadedMediaMetaData) {
             sLoadedMediaMetaData = true; // WATCHME: determine properly if Meta-Data needs to be (re)loaded.
@@ -124,25 +121,25 @@ public class RemoteJSONSource implements MusicProviderSource {
         String episodeDescription = episodesCursor.getFieldEpisodeDescription();
         String episodeDownloadUrl = Uri.parse("http://"+episodesCursor.getFieldDownloadUrl()).toString();
         Float rating = episodesCursor.getFieldRating();
-        float ratingPercent = (float) ((rating * 100.0) / 5.0);
+        float f_rating = (rating == null) ? (float) 0.0 : rating.floatValue();
+        float ratingPercent = (float) ((f_rating * 100.0) / 5.0);
         RatingCompat ratingCompat = RatingCompat.newPercentageRating(ratingPercent);
         String episodeWriter = getWriterForEpisodeId(episodeNumber);
 
         String artist = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.e_g_marshall);
         String genre = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.genre);
-        String iconUrl = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.icon_url);
-        String keyArtUrl =  RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.key_art_url);
-        String hauntedUrl =  RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.haunted_url);
+        @SuppressWarnings("UnusedAssignment") String iconUrl = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.icon_url);
+        @SuppressWarnings("UnusedAssignment") String keyArtUrl =  RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.key_art_url);
+        @SuppressWarnings("UnusedAssignment") String hauntedUrl =  RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.haunted_url);
         Drawable iconDrawable = ResourcesCompat.getDrawable(RadioTheaterApplication.getRadioTheaterApplicationContext().getResources(), R.drawable.logo_icon, null);
-        Bitmap iconBitmap = BitmapHelper.drawableToBitmap(iconDrawable);
+        @SuppressWarnings("UnusedAssignment") Bitmap iconBitmap = BitmapHelper.drawableToBitmap(iconDrawable);
         Drawable keyArtDrawable = ResourcesCompat.getDrawable(RadioTheaterApplication.getRadioTheaterApplicationContext().getResources(), R.drawable.e_g_marshall_1970, null);
-        Bitmap keyArtBitmap = BitmapHelper.drawableToBitmap(keyArtDrawable);
+        @SuppressWarnings("UnusedAssignment") Bitmap keyArtBitmap = BitmapHelper.drawableToBitmap(keyArtDrawable);
         Drawable hauntedDrawable = ResourcesCompat.getDrawable(RadioTheaterApplication.getRadioTheaterApplicationContext().getResources(), R.drawable.haunted, null);
-        Bitmap hauntedBitmap = BitmapHelper.drawableToBitmap(hauntedDrawable);
+        @SuppressWarnings("UnusedAssignment") Bitmap hauntedBitmap = BitmapHelper.drawableToBitmap(hauntedDrawable);
         int totalTrackCount = Integer.valueOf(RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.episodes_count));
         int duration = 50 * 60 * 1000; // fifty-minutes in ms
         String id = String.valueOf(episodeDownloadUrl.hashCode());
-        //String episodeMediaId = MediaIDHelper.createMediaID(id, MediaIDHelper.MEDIA_ID_ROOT, mMediaId);
 
         //LogHelper.d(TAG, "found episode: #"+episodeNumber+" '"+episodeTitle+"' by "+episodeWriter+" with id="+id);
 
@@ -194,7 +191,7 @@ public class RemoteJSONSource implements MusicProviderSource {
         */
         //--------------------------------------------------------------------------------
 
-        //noinspection ResourceType
+        //noinspection ResourceType,UnnecessaryLocalVariable
         MediaMetadataCompat theMetadata = new MediaMetadataCompat.Builder()
                 .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, id)
                 .putString(MusicProviderSource.CUSTOM_METADATA_TRACK_SOURCE, episodeDownloadUrl)

@@ -25,6 +25,11 @@ public class SplashActivity extends AppCompatActivity
             return;
         }
 
+//        String action = intent.getAction();
+//        Uri data = intent.getData();
+//        String packageId = getApplicationContext().getPackageName();
+//        System.out.println("LEE: ACTION="+action+", DATA="+data+", PACKAGE="+packageId);
+
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
         String email = sharedPreferences.getString("userEmail", "");
         String authenticated = sharedPreferences.getString("authentication", "");

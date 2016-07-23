@@ -76,8 +76,11 @@ public class CarHelper {
         return AUTO_APP_PACKAGE_NAME.equals(packageName);
     }
 
-    public static void setSlotReservationFlags(Bundle extras, boolean reservePlayingQueueSlot,
-          boolean reserveSkipToNextSlot, boolean reserveSkipToPrevSlot) {
+    public static void setSlotReservationFlags(Bundle extras,
+                                               @SuppressWarnings("SameParameterValue") boolean reservePlayingQueueSlot,
+                                               @SuppressWarnings("SameParameterValue") boolean reserveSkipToNextSlot,
+                                               @SuppressWarnings("SameParameterValue") boolean reserveSkipToPrevSlot)
+    {
         if (reservePlayingQueueSlot) {
             extras.putBoolean(SLOT_RESERVATION_QUEUE, true);
         } else {
@@ -101,7 +104,6 @@ public class CarHelper {
      * A preferable way of detecting if your app is running in the context of an Android Auto
      * compatible car is by registering a BroadcastReceiver for the action
      * {@link CarHelper#ACTION_MEDIA_STATUS}. See a sample implementation in
-     * {@link MusicService#onCreate()}.
      *
      * @param c Context to detect UI Mode.
      * @return true when device is running in car mode, false otherwise.

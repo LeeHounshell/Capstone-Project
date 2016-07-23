@@ -267,7 +267,6 @@ public class LocalPlayback
     static void setCurrentState(int currentState) {
         LogHelper.v(TAG, "WIDGET: setCurrentState="+currentState);
         sCurrentState = currentState;
-        Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
         if (sCurrentNotifyState != sCurrentState) {
             sCurrentNotifyState = sCurrentState;
         }
@@ -312,10 +311,11 @@ public class LocalPlayback
             relaxResources(false); // release everything except MediaPlayer
 
             String source = null;
+            assert mediaId != null;
             String musicId = MediaIDHelper.extractMusicIDFromMediaID(mediaId);
             boolean error = false;
             if (musicId == null) {
-                LogHelper.e(TAG, "*** UNABLE TO GET MUSIC ID *** - musicId=" + musicId + ", mediaId=" + mediaId);
+                LogHelper.e(TAG, "*** UNABLE TO GET MUSIC ID *** - mediaId=" + mediaId);
                 error = true;
             }
             else {
@@ -446,13 +446,13 @@ public class LocalPlayback
     @Override
     public void setCurrentStreamPosition(int pos) {
         LogHelper.v(TAG, "---------> setCurrentStreamPosition: pos="+pos);
-        this.sCurrentPosition = pos;
+        sCurrentPosition = pos;
     }
 
     @Override
     public void setCurrentMediaId(String mediaId) {
         LogHelper.v(TAG, "setCurrentMediaId: mediaId="+mediaId);
-        this.sCurrentMediaId = mediaId;
+        sCurrentMediaId = mediaId;
     }
 
     @Override

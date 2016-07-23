@@ -21,7 +21,6 @@ public class RadioTheaterWidgetService extends Service {
 
     //private MediaPlayer mp;
 
-    private static volatile boolean sPaidVersion;
     private static volatile boolean sGotWidgetButtonPress;
 
     public RadioTheaterWidgetService() {
@@ -40,7 +39,7 @@ public class RadioTheaterWidgetService extends Service {
         //mp.start();
 
         setGotWidgetButtonPress(false);
-        if (intent.getBooleanExtra("ERROR", false) == true) {
+        if (intent.getBooleanExtra("ERROR", false)) {
             LogHelper.v(TAG, "*** PLAYBACK ERROR REPORTED ***");
             String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
             String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.error);
@@ -48,10 +47,10 @@ public class RadioTheaterWidgetService extends Service {
             RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
         }
         else {
-            if (intent.getBooleanExtra("BUTTON_PRESS", false) == true) {
+            if (intent.getBooleanExtra("BUTTON_PRESS", false)) {
                 LogHelper.v(TAG, "handleCommand: GOT WIDGET BUTTON PRESS!");
                 setGotWidgetButtonPress(true);
-            } else if (intent.getBooleanExtra("VISUAL_ONLY", false) == true) {
+            } else if (intent.getBooleanExtra("VISUAL_ONLY", false)) {
                 LogHelper.v(TAG, "handleCommand: *** VISUAL BUTTON UPDATE ONLY ***");
                 String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
                 String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.update_buttons);
@@ -157,7 +156,6 @@ public class RadioTheaterWidgetService extends Service {
 
     public static void setPaidVersion(Context context, boolean isPaid) {
         LogHelper.v(TAG, "setPaidVersion: isPaid="+isPaid);
-        sPaidVersion = isPaid;
         // Build the intent to call the service
         Intent intent = new Intent(context, RadioTheaterWidgetService.class);
         intent.putExtra("BUTTON_PRESS", false);

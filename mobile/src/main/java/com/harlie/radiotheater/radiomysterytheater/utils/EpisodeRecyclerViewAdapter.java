@@ -1,5 +1,6 @@
 package com.harlie.radiotheater.radiomysterytheater.utils;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -12,7 +13,6 @@ import android.view.animation.AlphaAnimation;
 import android.widget.TextView;
 
 import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
-import com.harlie.radiotheater.radiomysterytheater.CursorRecyclerViewAdapter;
 import com.harlie.radiotheater.radiomysterytheater.EpisodeDetailActivity;
 import com.harlie.radiotheater.radiomysterytheater.EpisodeDetailFragment;
 import com.harlie.radiotheater.radiomysterytheater.EpisodeListActivity;
@@ -27,9 +27,10 @@ public class EpisodeRecyclerViewAdapter
 {
     private final static String TAG = "LEE: <" + EpisodeRecyclerViewAdapter.class.getSimpleName() + ">";
 
+    @SuppressWarnings("FieldCanBeLocal")
     private final int FADE_DURATION = 2;
     private final Context mContext;
-    private Cursor mDataCursor;
+    private final Cursor mDataCursor;
 
     // --- dummy content disabled ---
 //  private List<EpisodeRecyclerViewItem> mValues;
@@ -121,6 +122,7 @@ public class EpisodeRecyclerViewAdapter
         });
     }
 
+    @SuppressLint("PrivateResource")
     private void showDetailView(View v, EpisodeViewHolder holder) {
         if (mContext instanceof EpisodeListActivity) {
             EpisodeListActivity episodeListActivity = (EpisodeListActivity) mContext;

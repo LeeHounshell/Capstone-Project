@@ -162,14 +162,14 @@ public class AuthGoogleActivity
     }
 
     // Called from ErrorDialogFragment when the dialog is dismissed.
-    public void onDialogDismissed() {
+    private void onDialogDismissed() {
         mResolvingError = false;
         startAuthenticationActivity();
     }
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        LogHelper.v(TAG, "---> onConnected: bundle="+bundle.toString());
+        LogHelper.v(TAG, "---> onConnected: bundle="+ (bundle != null ? bundle.toString() : null));
     }
 
     @Override
@@ -181,6 +181,7 @@ public class AuthGoogleActivity
     public static class ErrorDialogFragment extends DialogFragment {
         public ErrorDialogFragment() { }
 
+        @NonNull
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             // Get the error code and retrieve the appropriate dialog

@@ -1,5 +1,6 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -7,7 +8,6 @@ import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.AppCompatImageButton;
 import android.support.v7.widget.Toolbar;
@@ -30,7 +30,6 @@ public class AboutActivity extends BaseActivity {
     private final static String TAG = "LEE: <" + AboutActivity.class.getSimpleName() + ">";
 
     private int mTopInset;
-    private View mUpButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,10 +60,11 @@ public class AboutActivity extends BaseActivity {
                 showMyLinkedInProfile();
             }
         });
+        //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         final TextView textView = (TextView) findViewById(R.id.trial_or_paid);
-        PackageInfo pInfo = null;
+        PackageInfo pInfo;
         String version = "";
         try {
             pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
@@ -122,7 +122,7 @@ public class AboutActivity extends BaseActivity {
 
         final View upButtonContainer = findViewById(R.id.up_container);
 
-        mUpButton = findViewById(R.id.action_up);
+        View mUpButton = findViewById(R.id.action_up);
         if (mUpButton != null) {
             mUpButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -170,6 +170,7 @@ public class AboutActivity extends BaseActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @SuppressLint("PrivateResource")
     private void sendEmail_to_LeeHounshell() {
         LogHelper.v(TAG, "sendEmail_to_LeeHounshell");
         String contact = getResources().getString(R.string.app_contact);
@@ -183,6 +184,7 @@ public class AboutActivity extends BaseActivity {
         overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
     }
 
+    @SuppressLint("PrivateResource")
     private void showMyLinkedInProfile() {
         LogHelper.v(TAG, "showMyLinkedInProfile");
         // show my Linked-In profile
@@ -195,6 +197,7 @@ public class AboutActivity extends BaseActivity {
         overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
     }
 
+    @SuppressLint("PrivateResource")
     @Override
     public void onBackPressed() {
         LogHelper.v(TAG, "onBackPressed");

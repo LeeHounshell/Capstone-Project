@@ -18,18 +18,18 @@ public class EpisodeViewHolder extends RecyclerView.ViewHolder {
     private final static String TAG = "LEE: <" + EpisodeViewHolder.class.getSimpleName() + ">";
 
     public final View mView;
-    public TextView mEpisodeNumber;
-    public TextView mEpisodeAirdate;
-    public TextView mEpisodeTitle;
-    public TextView mEpisodeDescription;
-    public RatingBar mEpisodeRating;
+    public final TextView mEpisodeNumber;
+    public final TextView mEpisodeAirdate;
+    public final TextView mEpisodeTitle;
+    public final TextView mEpisodeDescription;
+    public final RatingBar mEpisodeRating;
 
     public EpisodeRecyclerViewItem mItem;
 
-    public int mTextTitleColor;
-    public int mTextDescriptionColor;
-    public int mTitleBackgroundColor;
-    public int mDescriptionBackgroundColor;
+    public final int mTextTitleColor;
+    public final int mTextDescriptionColor;
+    public final int mTitleBackgroundColor;
+    public final int mDescriptionBackgroundColor;
 
     public EpisodeViewHolder(View itemView) {
         super(itemView);
@@ -49,22 +49,24 @@ public class EpisodeViewHolder extends RecyclerView.ViewHolder {
     public void setNormalColors() {
         if (mItem != null) {
             if (mView != null && mItem.isHeard()) {
-                int color = 0;
+                int color;
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                     color = mView.getResources().getColor(R.color.primary_light, null);
                 }
                 else {
+                    //noinspection deprecation
                     color = mView.getResources().getColor(R.color.primary_light);
                 }
                 mView.setBackgroundColor(color);
             }
             if (mEpisodeTitle != null && mItem.isDownloaded()) {
-                int color = 0;
+                int color;
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                    color = mView.getResources().getColor(R.color.list_episode_title_color, null);
+                    color = mView != null ? mView.getResources().getColor(R.color.list_episode_title_color, null) : 0;
                 }
                 else {
-                    color = mView.getResources().getColor(R.color.list_episode_title_color);
+                    //noinspection deprecation
+                    color = mView != null ? mView.getResources().getColor(R.color.list_episode_title_color) : 0;
                 }
                 mEpisodeTitle.setTextColor(color);
             }
@@ -74,22 +76,24 @@ public class EpisodeViewHolder extends RecyclerView.ViewHolder {
     public void setSpecialColors() {
         if (mItem != null) {
             if (mView != null && mItem.isHeard()) {
-                int color = 0;
+                int color;
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                     color = mView.getResources().getColor(R.color.grey, null);
                 }
                 else {
+                    //noinspection deprecation
                     color = mView.getResources().getColor(R.color.grey);
                 }
                 mView.setBackgroundColor(color);
             }
             if (mEpisodeTitle != null && mItem.isDownloaded()) {
-                int color = 0;
+                int color;
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                    color = mView.getResources().getColor(R.color.green, null);
+                    color = mView != null ? mView.getResources().getColor(R.color.green, null) : 0;
                 }
                 else {
-                    color = mView.getResources().getColor(R.color.green);
+                    //noinspection deprecation
+                    color = mView != null ? mView.getResources().getColor(R.color.green) : 0;
                 }
                 mEpisodeTitle.setTextColor(color);
             }
@@ -107,9 +111,8 @@ public class EpisodeViewHolder extends RecyclerView.ViewHolder {
 
         int[] attrs = {R.attr.font_small, R.attr.font_medium, R.attr.font_large, R.attr.font_xlarge}; // The attributes to retrieve
         TypedArray ta = activity.obtainStyledAttributes(fontPreferences.getFontStyle().getResId(), attrs);
-        String str;
         //noinspection ResourceType
-        float titleTextSize = 0, descriptionTextSize = 0, airdateTextSize = 0, episodeNumberTextSize = 0;
+        float titleTextSize, descriptionTextSize, airdateTextSize, episodeNumberTextSize;
         if (! EpisodeListActivity.isTwoPane()
                 || activity.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
         {

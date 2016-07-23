@@ -35,14 +35,14 @@ public class ScrollingTextView extends TextView {
     @Override
     protected void onFocusChanged(boolean focused, int direction, Rect previouslyFocusedRect) {
         if (focused) {
-            super.onFocusChanged(focused, direction, previouslyFocusedRect);
+            super.onFocusChanged(true, direction, previouslyFocusedRect);
         }
     }
 
     @Override
     public void onWindowFocusChanged(boolean focused) {
         if (focused) {
-            super.onWindowFocusChanged(focused);
+            super.onWindowFocusChanged(true);
         }
     }
 

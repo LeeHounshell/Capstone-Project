@@ -65,7 +65,7 @@ public class AuthenticationActivity extends BaseActivity
         String email = username.getText().toString();
         String pass = password.getText().toString();
         LogHelper.v(TAG, "email="+email);
-        if (getAuth() != null && email != null && pass != null && isValid(email, pass)) {
+        if (getAuth() != null && isValid(email, pass)) {
             LogHelper.v(TAG, "authenticateEmail - Firebase Auth using Email");
             Intent authEmailIntent = new Intent(this, AuthEmailActivity.class);
             authEmailIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);

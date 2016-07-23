@@ -1,7 +1,6 @@
 package com.harlie.radiotheater.radiomysterytheater.data_helper;
 
 import android.os.AsyncTask;
-import android.support.v7.widget.AppCompatButton;
 import android.view.View;
 
 import com.harlie.radiotheater.radiomysterytheater.AutoplayActivity;
@@ -20,15 +19,13 @@ public class LoadingAsyncTask extends AsyncTask<AutoplayActivity, Void, Boolean>
     private static int mCount;
     private final static int sMaxCount = 100;
 
-    private AutoplayActivity mActivity;
-    private CircleProgressView mCircleProgressView;
-    private CircularSeekBar mCircularSeekBar;
+    private final AutoplayActivity mActivity;
+    private final CircleProgressView mCircleProgressView;
 
-    public LoadingAsyncTask(AutoplayActivity activity, CircleProgressView circleProgressView, CircularSeekBar circularSeekBar) {
+    public LoadingAsyncTask(AutoplayActivity activity, CircleProgressView circleProgressView, @SuppressWarnings("UnusedParameters") CircularSeekBar circularSeekBar) {
         LogHelper.v(TAG, "new LoadingAsyncTask");
         this.mActivity = activity;
         this.mCircleProgressView = circleProgressView;
-        this.mCircularSeekBar = circularSeekBar;
         mCount = 0;
         sDoneLoading = false;
     }
@@ -46,12 +43,13 @@ public class LoadingAsyncTask extends AsyncTask<AutoplayActivity, Void, Boolean>
     protected Boolean doInBackground(AutoplayActivity... params) {
         LogHelper.v(TAG, "doInBackground");
         Boolean rc = false;
-        while (rc == false) {
+        while (!rc) {
             ++mCount;
             CircleViewHelper.setCircleViewValue((float) mCount, mActivity);
             if (mCount == 1) {
                 mActivity.initiateLoadingTask(mActivity);
             }
+            //noinspection EmptyCatchBlock
             try {
                 Thread.sleep(1000);
             }
@@ -60,7 +58,7 @@ public class LoadingAsyncTask extends AsyncTask<AutoplayActivity, Void, Boolean>
                 rc = true;
             }
         }
-        return rc;
+        return true;
     }
 
     @Override

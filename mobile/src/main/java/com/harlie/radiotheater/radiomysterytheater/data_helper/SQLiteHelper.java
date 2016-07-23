@@ -66,7 +66,7 @@ public class SQLiteHelper {
 
     public static EpisodesCursor getEpisodesCursor(long episode) {
         LogHelper.v(TAG, "SQLITE: getEpisodesCursor: episode="+episode);
-        if (Long.valueOf(episode) == 0) {
+        if (episode == 0) {
             return null;
         }
         EpisodesSelection where = new EpisodesSelection();
@@ -85,7 +85,7 @@ public class SQLiteHelper {
 
     public static ActorsCursor getActorsCursor(long actor) {
         LogHelper.v(TAG, "SQLITE: getActorsCursor: actor="+actor);
-        if (Long.valueOf(actor) == 0) {
+        if (actor == 0) {
             return null;
         }
         ActorsSelection where = new ActorsSelection();
@@ -104,7 +104,7 @@ public class SQLiteHelper {
 
     public static WritersCursor getWritersCursor(long writer) {
         LogHelper.v(TAG, "SQLITE: getWritersCursor: writer="+writer);
-        if (Long.valueOf(writer) == 0) {
+        if (writer == 0) {
             return null;
         }
         WritersSelection where = new WritersSelection();
@@ -123,7 +123,7 @@ public class SQLiteHelper {
 
     public static ActorsEpisodesCursor getActorsEpisodesCursor(long episode) {
         LogHelper.v(TAG, "SQLITE: getActorsEpisodesCursor: episode="+episode);
-        if (Long.valueOf(episode) == 0) {
+        if (episode == 0) {
             return null;
         }
         ActorsEpisodesSelection where = new ActorsEpisodesSelection();
@@ -142,7 +142,7 @@ public class SQLiteHelper {
 
     public static WritersEpisodesCursor getWritersEpisodesCursor(long episode) {
         LogHelper.v(TAG, "SQLITE: getWritersEpisodesCursor: episode="+episode);
-        if (Long.valueOf(episode) == 0) {
+        if (episode == 0) {
             return null;
         }
         WritersEpisodesSelection where = new WritersEpisodesSelection();
@@ -199,7 +199,6 @@ public class SQLiteHelper {
         return (cursor != null) ? new ConfigEpisodesCursor(cursor) : null;
     }
 
-    @NonNull
     public static ConfigurationContentValues getConfigurationContentValues(ConfigurationCursor cursor) {
         LogHelper.v(TAG, "SQLITE: getConfigurationContentValues");
         LogHelper.v(TAG, "SQLITE: getConfigurationContentValues: SQL found "+cursor.getCount()+" records");
@@ -223,8 +222,11 @@ public class SQLiteHelper {
                 boolean noAdsForShow = cursor.getFieldPurchaseNoads();
                 //#ENDIF
 
+                //noinspection ConstantConditions
                 record.putFieldPaidVersion(paidVersion);
+                //noinspection ConstantConditions
                 record.putFieldPurchaseAccess(purchased);
+                //noinspection ConstantConditions
                 record.putFieldPurchaseNoads(noAdsForShow);
 
                 int listenCount = cursor.getFieldTotalListenCount();
@@ -258,7 +260,9 @@ public class SQLiteHelper {
                 boolean noAdsForShow = cursor.getFieldPurchasedNoads();
                 //#ENDIF
 
+                //noinspection ConstantConditions
                 record.putFieldPurchasedAccess(purchased);
+                //noinspection ConstantConditions
                 record.putFieldPurchasedNoads(noAdsForShow);
 
                 boolean downloaded = cursor.getFieldEpisodeDownloaded();
@@ -277,6 +281,7 @@ public class SQLiteHelper {
         return record;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public static Uri insertConfiguration(ContentValues configurationValues) {
         LogHelper.v(TAG, "SQLITE: insertConfigurationValues");
         if (configurationValues == null || configurationValues.size() == 0) {
@@ -288,6 +293,7 @@ public class SQLiteHelper {
     }
 
     // update local SQLite
+    @SuppressWarnings("UnusedReturnValue")
     public static int updateConfiguration(String deviceId, ContentValues configurationValues) {
         LogHelper.v(TAG, "SQLITE: updateConfiguration");
         if (configurationValues == null || configurationValues.size() == 0) {
@@ -297,8 +303,7 @@ public class SQLiteHelper {
         Uri configurationEntry = RadioTheaterContract.ConfigurationEntry.buildConfigurationUri();
         String whereClause = RadioTheaterContract.ConfigurationEntry.FIELD_DEVICE_ID + "=?";
         String whereCondition[] = new String[]{deviceId};
-        int rc = RadioTheaterApplication.getRadioTheaterApplicationContext().getContentResolver().update(configurationEntry, configurationValues, whereClause, whereCondition);
-        return rc;
+        return RadioTheaterApplication.getRadioTheaterApplicationContext().getContentResolver().update(configurationEntry, configurationValues, whereClause, whereCondition);
     }
 
     public static Uri insertConfigEntry(ContentValues configEntryValues) {
@@ -312,6 +317,7 @@ public class SQLiteHelper {
     }
 
     // update local SQLite
+    @SuppressWarnings("UnusedReturnValue")
     public static int updateConfigEpisodesEntry(String episode, ContentValues configEpisodesEntryValues) {
         LogHelper.v(TAG, "SQLITE: updateConfigEpisodesEntry");
         if (configEpisodesEntryValues == null || configEpisodesEntryValues.size() == 0) {
@@ -321,8 +327,7 @@ public class SQLiteHelper {
         Uri configEpisodesEntry = RadioTheaterContract.ConfigEpisodesEntry.buildConfigEpisodesUri();
         String whereClause = RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_NUMBER + "=?";
         String whereCondition[] = new String[]{episode};
-        int rc = RadioTheaterApplication.getRadioTheaterApplicationContext().getContentResolver().update(configEpisodesEntry, configEpisodesEntryValues, whereClause, whereCondition);
-        return rc;
+        return RadioTheaterApplication.getRadioTheaterApplicationContext().getContentResolver().update(configEpisodesEntry, configEpisodesEntryValues, whereClause, whereCondition);
     }
 
 }

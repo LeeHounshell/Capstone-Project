@@ -90,6 +90,7 @@ public class MediaIDHelper {
      * @return musicID
      */
     public static String extractMusicIDFromMediaID(@NonNull String mediaID) {
+        //noinspection ConstantConditions
         if (mediaID != null) {
             int pos = mediaID.indexOf(LEAF_SEPARATOR);
             if (pos >= 0) {
@@ -108,6 +109,7 @@ public class MediaIDHelper {
      * @param mediaID that contains a category and categoryValue.
      */
     public static @NonNull String[] getHierarchy(@NonNull String mediaID) {
+        //noinspection ConstantConditions
         if (mediaID == null) {
             return null;
         }
@@ -119,8 +121,10 @@ public class MediaIDHelper {
     }
 
     public static String extractBrowseCategoryValueFromMediaID(@NonNull String mediaID) {
+        //noinspection ConstantConditions
         if (mediaID != null) {
             String[] hierarchy = getHierarchy(mediaID);
+            //noinspection ConstantConditions
             if (hierarchy != null && hierarchy.length == 2) {
                 return hierarchy[1];
             }
@@ -134,6 +138,7 @@ public class MediaIDHelper {
 
     public static String getParentMediaID(@NonNull String mediaID) {
         String[] hierarchy = getHierarchy(mediaID);
+        //noinspection ConstantConditions
         if (hierarchy == null) {
             return MEDIA_ID_ROOT;
         }

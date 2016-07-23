@@ -23,6 +23,13 @@ public class ExampleInstrumentationTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
+        //#IFDEF 'PAID'
+        //assertEquals("com.harlie.radiotheater.radiomysterytheater.paid", appContext.getPackageName());
+        //#ENDIF
+
+        //#IFDEF 'TRIAL'
         assertEquals("com.harlie.radiotheater.radiomysterytheater", appContext.getPackageName());
+        //#ENDIF
+
     }
 }

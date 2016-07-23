@@ -37,9 +37,9 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
     }
     private volatile LoadState mState = LoadState.WRITERS;
 
-    private BaseActivity mActivity;
-    private CircleProgressView mCircleProgressView;
-    private DataSnapshot mDataSnapshot;
+    private final BaseActivity mActivity;
+    private final CircleProgressView mCircleProgressView;
+    private final DataSnapshot mDataSnapshot;
 
     public LoadRadioTheaterTablesAsyncTask(BaseActivity activity, CircleProgressView circleProgressView, DataSnapshot dataSnapshot, LoadState state) {
         LogHelper.v(TAG, "new LoadRadioTheaterTablesAsyncTask");
@@ -257,8 +257,8 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
                 String weblink = episode.getWeblink().replaceAll("^\"|\"$", "");
                 String download = episode.getDownload().replaceAll("^\"|\"$", "");
                 String rating = episode.getRating().replaceAll("^\"|\"$", "");
-                TheEpisodes.ActorsBean actors = episode.getActors();
-                TheEpisodes.WritersBean writers = episode.getWriters();
+                @SuppressWarnings("UnusedAssignment") TheEpisodes.ActorsBean actors = episode.getActors();
+                @SuppressWarnings("UnusedAssignment") TheEpisodes.WritersBean writers = episode.getWriters();
                 String vote_count = "1"; // true value is unknown
                 ContentValues episodeValues = new ContentValues();
                 episodeValues.put(RadioTheaterContract.EpisodesEntry.FIELD_EPISODE_NUMBER, number);
@@ -308,7 +308,7 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
                 }
 
                 List<String> actorNames = episode.getActors().getName();
-                List<String> actorPhotos = episode.getActors().getPhoto();
+                @SuppressWarnings("UnusedAssignment") List<String> actorPhotos = episode.getActors().getPhoto();
 
                 for (int act = 0; act < actorNames.size(); ++act) {
                     String actorName = actorNames.get(act).replaceAll("^\"|\"$", "");

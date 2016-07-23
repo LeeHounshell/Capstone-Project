@@ -14,7 +14,7 @@
     {
       "name": "field_episode_number",
       "type": "Long",
-      "nullable": false,
+      "nullable": false
     }
   ],
   "constraints": [
