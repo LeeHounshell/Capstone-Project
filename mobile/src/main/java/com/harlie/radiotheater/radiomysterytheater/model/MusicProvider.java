@@ -345,20 +345,20 @@ public class MusicProvider {
                 mCurrentState = State.INITIALIZED;
             }
         } finally {
-            @SuppressWarnings("ThrowFromFinallyBlock") String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
+            @SuppressWarnings("ThrowFromFinallyBlock") String radio_control_command = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.radio_control_command);
             if (mCurrentState != State.INITIALIZED) {
                 //LogHelper.v(TAG, "*** retrieveMedia FINISHED *** - LOAD FAILED");
                 // Something bad happened, so we reset state to NON_INITIALIZED to allow
                 // retries (eg if the network connection is temporary unavailable)
                 mCurrentState = State.NON_INITIALIZED;
                 @SuppressWarnings("ThrowFromFinallyBlock") String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.error_no_metadata);
-                Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
+                Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(radio_control_command, message);
                 RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
             }
             else {
                 //LogHelper.v(TAG, "*** retrieveMedia FINISHED *** - LOAD SUCCESS");
                 @SuppressWarnings("ThrowFromFinallyBlock") String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.metadata_loaded);
-                Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
+                Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(radio_control_command, message);
                 RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
                 sMediaLoaded = true;
             }

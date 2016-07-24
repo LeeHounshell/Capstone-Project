@@ -543,15 +543,15 @@ public class RadioControlIntentService extends IntentService {
     private void handleActionPlay(String episode, String episodeDownloadUrl, String title) {
         LogHelper.v(TAG, "---> handleActionPlay: episode="+episode+", episodeDownloadUrl="+episodeDownloadUrl);
         if (episode == null) {
-            LogHelper.e(TAG, "handleActionPlay: null episode");
+            LogHelper.e(TAG, "*** UNABLE TO PLAY *** - handleActionPlay: null episode");
             return;
         }
         if (episodeDownloadUrl == null) {
-            LogHelper.e(TAG, "handleActionPlay: null episodeDownloadUrl");
+            LogHelper.e(TAG, "*** UNABLE TO PLAY *** - handleActionPlay: null episodeDownloadUrl");
             return;
         }
         if (title == null) {
-            LogHelper.e(TAG, "handleActionPlay: null title");
+            LogHelper.e(TAG, "*** UNABLE TO PLAY *** - handleActionPlay: null title");
             return;
         }
         mMediaId = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.genre);
@@ -680,11 +680,11 @@ public class RadioControlIntentService extends IntentService {
         LogHelper.v(TAG, "---> handleActionComplete: episode="+episode+", param2="+param2);
         if (AutoplayActivity.isAutoplayActive()) {
             LogHelper.v(TAG, "---> SENDING COMPLETION INTENT TO AUTOPLAY ACTIVITY - NEXT EPISODE BEGINS THERE");
-            String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
+            String radio_control_command = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.radio_control_command);
             String complete = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.complete);
             String message = complete + episode;
             LogHelper.v(TAG, "notifyEpisodeComplete: message=" + message);
-            Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
+            Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(radio_control_command, message);
             RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
         }
         else {
@@ -715,9 +715,9 @@ public class RadioControlIntentService extends IntentService {
         if (AutoplayActivity.isAutoplayActive()) {
             LogHelper.v(TAG, "notifyUpdateButtons");
             Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
-            String initialization = context.getResources().getString(R.string.initialization);
+            String radio_control_command = context.getResources().getString(R.string.radio_control_command);
             String message = context.getResources().getString(R.string.update_buttons);
-            Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
+            Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(radio_control_command, message);
             RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
         }
     }

@@ -17,6 +17,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.preference.PreferenceActivity;
+import android.provider.ContactsContract;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentManager;
@@ -391,6 +392,7 @@ public class AutoplayActivity extends BaseActivity {
                     }
                 }
                 displayScrollingText();
+                DataHelper.getEpisodeInfoFor(DataHelper.getEpisodeNumber());
                 if (oldButtonState == PLAY) {
                     LogHelper.v(TAG, "START PLAYING..");
                     if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -543,15 +545,8 @@ public class AutoplayActivity extends BaseActivity {
         LogHelper.v(TAG, "initializeFloatingActionButton");
         mFabActionButton = (FloatingActionButton) findViewById(R.id.fab);
         getFabActionButton().setFocusable(true);
-        if (DataHelper.isLoadedOK()) {
-            sEnableFAB = true;
-            getFabActionButton().setEnabled(true);
-            getFabActionButton().setVisibility(View.VISIBLE);
-        }
-        else {
-            getFabActionButton().setEnabled(false);
-            getFabActionButton().setVisibility(View.INVISIBLE);
-        }
+        getFabActionButton().setEnabled(false);
+        getFabActionButton().setVisibility(View.INVISIBLE);
 
         final AutoplayActivity activity = this;
         getFabActionButton().setOnTouchListener(new OnSwipeTouchListener(this, getHandler(), getFabActionButton()) {
@@ -753,12 +748,14 @@ public class AutoplayActivity extends BaseActivity {
                     String remain = "";
 
                     //#IFDEF 'TRIAL'
-                    int count = DataHelper.MAX_TRIAL_EPISODES - DataHelper.getAllListenCount();
-                    if (count > 0) {
-                        remain = String.valueOf(count) + " " + getResources().getString(R.string.trial_remain);
-                    }
-                    else {
-                        remain = getResources().getString(R.string.trial_complete);
+                    if (DataHelper.isConfigurationLoaded()) {
+                        int count = DataHelper.MAX_TRIAL_EPISODES - DataHelper.getAllListenCount();
+                        if (count > 0) {
+                            remain = String.valueOf(count) + " " + getResources().getString(R.string.trial_remain);
+                        }
+                        else {
+                            remain = getResources().getString(R.string.trial_complete);
+                        }
                     }
                     //#ENDIF
 
@@ -1371,8 +1368,8 @@ public class AutoplayActivity extends BaseActivity {
 
             @Override
             public void onReceive(Context context, final Intent intent) {
-                String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
-                final String message = intent.getStringExtra(initialization); // get any control messages, for example: did metadata load ok? or play:id etc..
+                String radio_control_command = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.radio_control_command);
+                final String message = intent.getStringExtra(radio_control_command); // get any control messages, for example: did metadata load ok? or play:id etc..
                 LogHelper.v(TAG, "*** RECEIVED BROADCAST CONTROL: "+message);
 
                 if (message == null) {
@@ -1382,6 +1379,7 @@ public class AutoplayActivity extends BaseActivity {
 
                 final String KEY_LOAD_OK = getResources().getString(R.string.metadata_loaded);
                 final String KEY_LOAD_FAIL = getResources().getString(R.string.error_no_metadata);
+                final String KEY_UPDATE_SCROLLTEXT = getResources().getString(R.string.update_scroll_text);
                 final String KEY_UPDATE_BUTTONS = getResources().getString(R.string.update_buttons);
                 final String KEY_DURATION = getResources().getString(R.string.duration);
                 final String KEY_ERROR = getResources().getString(R.string.error);
@@ -1424,6 +1422,18 @@ public class AutoplayActivity extends BaseActivity {
                             sWaitForMedia = false;
                             problemLoadingMetadata();
                             showExpectedControls("LOAD_FAIL");
+                        }
+                    });
+                }
+
+                // UPDATE_SCROLLTEXT
+                else if (message.equals(KEY_UPDATE_SCROLLTEXT)) {
+                    LogHelper.v(TAG, KEY_UPDATE_SCROLLTEXT);
+                    getHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            LogHelper.v(TAG, "*** RECEIVED BROADCAST: UPDATE_SCROLLTEXT: "+intent.toString());
+                            displayScrollingText();
                         }
                     });
                 }

@@ -175,7 +175,7 @@ public class LocalPlayback
 
     @Override
     public int getState() {
-        LogHelper.v(TAG, "getState");
+        LogHelper.v(TAG, "getState: state="+sCurrentState);
         return sCurrentState;
     }
 
@@ -187,8 +187,9 @@ public class LocalPlayback
 
     @Override
     public boolean isPlaying() {
-        LogHelper.v(TAG, "isPlaying");
-        return mPlayOnFocusGain || (mMediaPlayer != null && mMediaPlayer.isPlaying());
+        boolean rc = mPlayOnFocusGain || (mMediaPlayer != null && mMediaPlayer.isPlaying());
+        LogHelper.v(TAG, "isPlaying: "+rc);
+        return rc;
     }
 
     @Override
@@ -219,21 +220,21 @@ public class LocalPlayback
 
     //-------- RADIO THEATER --------
     private void notifyEpisodePlaying() {
-        String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
+        String radio_control_command = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.radio_control_command);
         String playing = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.playing);
         String message = playing + getCurrentEpisode();
         LogHelper.v(TAG, "notifyEpisodePlaying: message="+message);
-        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
+        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(radio_control_command, message);
         RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
     }
 
     //-------- RADIO THEATER --------
     private void notifyEpisodeDuration() {
-        String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
+        String radio_control_command = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.radio_control_command);
         String duration = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.duration);
         String message = duration + String.valueOf(mMediaPlayer.getDuration());
         LogHelper.v(TAG, "notifyEpisodeDuration: message="+message);
-        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
+        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(radio_control_command, message);
         RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
     }
 
@@ -250,11 +251,11 @@ public class LocalPlayback
 
     //-------- RADIO THEATER --------
     private void notifyIfUnableToPlay() {
-        String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
+        String radio_control_command = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.radio_control_command);
         String noplay = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.noplay);
         String message = noplay + getCurrentEpisode();
         LogHelper.v(TAG, "notifyIfUnableToPlay: message="+message);
-        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
+        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(radio_control_command, message);
         RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
     }
 

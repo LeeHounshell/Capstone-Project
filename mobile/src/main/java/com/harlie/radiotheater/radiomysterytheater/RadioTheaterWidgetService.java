@@ -41,9 +41,9 @@ public class RadioTheaterWidgetService extends Service {
         setGotWidgetButtonPress(false);
         if (intent.getBooleanExtra("ERROR", false)) {
             LogHelper.v(TAG, "*** PLAYBACK ERROR REPORTED ***");
-            String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
+            String radio_control_command = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.radio_control_command);
             String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.error);
-            Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
+            Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(radio_control_command, message);
             RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
         }
         else {
@@ -53,9 +53,9 @@ public class RadioTheaterWidgetService extends Service {
             }
             else if (intent.getBooleanExtra("VISUAL_ONLY", false)) {
                 LogHelper.v(TAG, "handleCommand: *** VISUAL BUTTON UPDATE ONLY ***");
-                String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
+                String radio_control_command = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.radio_control_command);
                 String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.update_buttons);
-                Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
+                Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(radio_control_command, message);
                 RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
             }
             else {

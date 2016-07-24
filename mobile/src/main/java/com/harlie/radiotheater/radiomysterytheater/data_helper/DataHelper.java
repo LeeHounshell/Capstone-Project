@@ -2,12 +2,12 @@ package com.harlie.radiotheater.radiomysterytheater.data_helper;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
 
 import com.firebase.client.Firebase;
 import com.google.firebase.analytics.FirebaseAnalytics;
@@ -17,7 +17,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.harlie.radiotheater.radiomysterytheater.AutoplayActivity;
 import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
+import com.harlie.radiotheater.radiomysterytheater.R;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterWidgetService;
 import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsColumns;
@@ -77,6 +79,7 @@ public class DataHelper {
     protected static volatile String sEpisodeWeblinkUrl;
     protected static volatile String sEpisodeDownloadUrl;
 
+    protected static volatile boolean sConfigurationLoaded;
     protected static volatile boolean sFoundFirebaseDeviceId;
     protected static volatile boolean sPurchased;
     protected static volatile boolean sNoAdsForShow;
@@ -420,6 +423,10 @@ public class DataHelper {
     //--------------------------------------------------------------------------------
     // Getters and Setters
     //--------------------------------------------------------------------------------
+
+    public static boolean isConfigurationLoaded() {
+        return sConfigurationLoaded;
+    }
 
     public static boolean isLoadedOK() {
         return sLoadedOK;
@@ -916,16 +923,6 @@ public class DataHelper {
         }
     }
 
-    private static void updateTheConfiguration() {
-        LogHelper.v(TAG, "updateTheConfiguration");
-        ContentValues sqliteConfiguration;
-        sqliteConfiguration = sConfiguration.values();
-        LogHelper.v(TAG, "updateTheConfiguration: SQLITE: sqliteConfiguration=" + sqliteConfiguration.toString());
-        DataHelper.updateConfiguration(getAdvertId(), sqliteConfiguration);
-        LogHelper.v(TAG, "updateTheConfiguration: FIREBASE: UPDATE FIREBASE DEVICE ENTRY ***");
-        updateFirebaseConfigurationValues(getAdvertId(), sConfiguration.values());
-    }
-
     private static boolean mergeConfiguratons(ContentValues sqliteConfiguration, ContentValues firebaseConfiguration) {
         LogHelper.v(TAG, "mergeConfiguratons");
         boolean dirty = false;
@@ -1108,6 +1105,24 @@ public class DataHelper {
         //#ENDIF
 
         return dirty;
+    }
+
+    private static void updateTheConfiguration() {
+        LogHelper.v(TAG, "updateTheConfiguration");
+        ContentValues sqliteConfiguration;
+        sqliteConfiguration = sConfiguration.values();
+        LogHelper.v(TAG, "updateTheConfiguration: SQLITE: sqliteConfiguration=" + sqliteConfiguration.toString());
+        DataHelper.updateConfiguration(getAdvertId(), sqliteConfiguration);
+        LogHelper.v(TAG, "updateTheConfiguration: FIREBASE: UPDATE FIREBASE DEVICE ENTRY ***");
+        updateFirebaseConfigurationValues(getAdvertId(), sConfiguration.values());
+        sConfigurationLoaded = true;
+        if (AutoplayActivity.isAutoplayActive()) {
+            // notify so the horizontal scroll text can update with the correct TRIAL REMAIN
+            String radio_control_command = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.radio_control_command);
+            String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.update_scroll_text);
+            Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(radio_control_command, message);
+            RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
+        }
     }
 
     // update Firebase User Account info
