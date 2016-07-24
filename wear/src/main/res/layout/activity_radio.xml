@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.wearable.view.BoxInsetLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/container"
     android:layout_width="match_parent"
@@ -10,22 +9,22 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
+    android:background="@color/primary_dark"
     tools:context="com.harlie.radiotheater.radiomysterytheater.RadioWearActivity"
     tools:deviceIds="wear">
 
-    <TextView
-        android:id="@+id/text"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_lee"
-        app:layout_box="all" />
-
     <Button
         android:id="@+id/autoplayButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:soundEffectsEnabled="true"
+        android:focusable="true"
+        android:layout_width="@dimen/autoplay_width"
+        android:layout_height="@dimen/autoplay_height"
         android:layout_gravity="center"
-        android:text="@string/autoplay"
-        android:onClick="autoplay" />
+        android:gravity="center"
+        android:background="@drawable/radio_theater_autoplay_button_selector"
+        android:contentDescription="@string/autoplay_next"
+        android:elevation="@dimen/button_elevation"
+        android:visibility="visible"
+        android:theme="@style/RadioTheaterButton" />
 
 </android.support.wearable.view.BoxInsetLayout>

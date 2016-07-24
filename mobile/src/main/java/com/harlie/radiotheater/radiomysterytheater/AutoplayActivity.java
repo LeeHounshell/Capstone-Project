@@ -76,7 +76,6 @@ public class AutoplayActivity extends BaseActivity {
     private static final int DEFAULT_MEDIA_LOADING_DELAY = 13000;
     private static final int DELAY_BEFORE_NEXT_CLICK_ALLOWED = 1000;
     private static final int DELAY_BEFORE_NEXT_VERIFY = (15 * 60 * 60);
-    private static final int MIN_VISUAL_DELAY = 2000;
     private static long lastVerifyTime = 0L;
     private static long onCreateTime = 0L;
 
