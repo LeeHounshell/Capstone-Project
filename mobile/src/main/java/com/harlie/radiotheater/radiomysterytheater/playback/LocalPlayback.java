@@ -239,12 +239,13 @@ public class LocalPlayback
 
     //-------- RADIO THEATER --------
     private void notifyEpisodeComplete() {
-        String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
-        String complete = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.complete);
-        String message = complete + getCurrentEpisode();
-        LogHelper.v(TAG, "notifyEpisodeComplete: message="+message);
-        Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
-        RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
+        LogHelper.v(TAG, "notifyEpisodeComplete: episode="+getCurrentEpisode());
+        Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+        Intent radioServiceCommandIntent = new Intent(context, RadioTheaterService.class);
+        radioServiceCommandIntent.setAction(RadioTheaterService.ACTION_CMD);
+        radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_COMPLETE);
+        radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_EPISODE, String.valueOf(getCurrentEpisode()));
+        context.startService(radioServiceCommandIntent);
     }
 
     //-------- RADIO THEATER --------

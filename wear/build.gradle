@@ -18,34 +18,45 @@ android {
     }
 
     signingConfigs {
-        release {
-            keyAlias MyKeyAlias
-            keyPassword MyKeyPassword
-            storeFile file("../keystores-Radio-Mystery-Theater-PAID/lee.hounshell.keystore")
-            storePassword MyStorePassword
-        }
-        debug {
+        trial {
             keyAlias MyKeyAlias
             keyPassword MyKeyPassword
             storeFile file("../keystores-Radio-Mystery-Theater-FREE/lee.hounshell.keystore")
             storePassword MyStorePassword
         }
+        paid {
+            keyAlias MyKeyAlias
+            keyPassword MyKeyPassword
+            storeFile file("../keystores-Radio-Mystery-Theater-PAID/lee.hounshell.keystore")
+            storePassword MyStorePassword
+        }
+    }
+
+    productFlavors {
+        paid {
+            applicationId "com.harlie.radiotheater.radiomysterytheater.paid"
+            versionName "1.0-Paid"
+            signingConfig signingConfigs.paid
+        }
+        trial {
+            applicationId "com.harlie.radiotheater.radiomysterytheater"
+            versionName "1.0-Trial"
+            signingConfig signingConfigs.trial
+        }
     }
 
     buildTypes {
         debug {
-            minifyEnabled true
-            useProguard false
+            minifyEnabled false
             shrinkResources false
+            useProguard false
             debuggable true
-            signingConfigs.debug
         }
         release {
             minifyEnabled true
-            useProguard true
             shrinkResources true
+            useProguard true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfigs.release
         }
     }
 

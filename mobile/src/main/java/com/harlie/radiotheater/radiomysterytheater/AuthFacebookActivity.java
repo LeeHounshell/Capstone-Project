@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 
+import com.harlie.radiotheater.radiomysterytheater.data_helper.DataHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 // FIXME
@@ -34,14 +35,14 @@ public class AuthFacebookActivity extends BaseActivity
         }
 
         // see if Authentication is even needed..
-        if (getAuth() == null) {
+        if (DataHelper.getFirebaseAuth() == null) {
             LogHelper.v(TAG, "unable to get FirebaseAuth!");
             startAuthenticationActivity();
             overridePendingTransition(0,0);
             return;
         }
-        if (getAuth().getCurrentUser() != null && ! doINeedToCreateADatabase()) {
-            LogHelper.v(TAG, "--> Firebase: user=" + getAuth().getCurrentUser().getDisplayName() + " already signed in!");
+        if (DataHelper.getFirebaseAuth().getCurrentUser() != null && ! doINeedToCreateADatabase()) {
+            LogHelper.v(TAG, "--> Firebase: user=" + DataHelper.getFirebaseAuth().getCurrentUser().getDisplayName() + " already signed in!");
             startAutoplayActivity(false);
             overridePendingTransition(0,0);
             return;

@@ -13,6 +13,7 @@ import android.widget.Toast;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.DataHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 public class AuthEmailActivity extends BaseActivity
@@ -42,13 +43,13 @@ public class AuthEmailActivity extends BaseActivity
         }
 
         // see if Authentication is even needed..
-        if (getAuth() == null) {
+        if (DataHelper.getFirebaseAuth() == null) {
             LogHelper.v(TAG, "unable to get FirebaseAuth!");
             startAuthenticationActivity();
             return;
         }
-        if (getAuth().getCurrentUser() != null && ! doINeedToCreateADatabase()) {
-            LogHelper.v(TAG, "--> Firebase: user=" + getAuth().getCurrentUser().getDisplayName() + " already signed in!");
+        if (DataHelper.getFirebaseAuth().getCurrentUser() != null && ! doINeedToCreateADatabase()) {
+            LogHelper.v(TAG, "--> Firebase: user=" + DataHelper.getFirebaseAuth().getCurrentUser().getDisplayName() + " already signed in!");
             startAutoplayActivity(false);
             overridePendingTransition(0,0);
             return;
@@ -67,44 +68,44 @@ public class AuthEmailActivity extends BaseActivity
             }
         }
 
-        setName(null);
-        setEmail(null);
-        setPass(null);
-        setUID(null);
+        DataHelper.setName(null);
+        DataHelper.setEmail(null);
+        DataHelper.setPass(null);
+        DataHelper.setUID(null);
 
         boolean found_login_info = true;
         if (intent.hasExtra("email")) {
-            setEmail(intent.getStringExtra("email"));
+            DataHelper.setEmail(intent.getStringExtra("email"));
         }
         else {
             found_login_info = false;
         }
         if (intent.hasExtra("pass")) {
-            setPass(intent.getStringExtra("pass"));
+            DataHelper.setPass(intent.getStringExtra("pass"));
         }
         else {
             found_login_info = false;
         }
         if (intent.hasExtra("name")) {
-            setName(intent.getStringExtra("name"));
+            DataHelper.setName(intent.getStringExtra("name"));
         }
-        if (! found_login_info || getEmail() == null || getEmail().length() == 0 || getPass() == null || getPass().length() == 0) {
+        if (! found_login_info || DataHelper.getEmail() == null || DataHelper.getEmail().length() == 0 || DataHelper.getPass() == null || DataHelper.getPass().length() == 0) {
             LogHelper.e(TAG, "Failure to extract email and pass from Intent bundle!");
             String message = getResources().getString(R.string.enter_email);
             Toast.makeText(this, message, Toast.LENGTH_LONG).show();
             startAuthenticationActivity();
             return;
         }
-        LogHelper.v(TAG, "===> attempting signin for email="+getEmail());
+        LogHelper.v(TAG, "===> attempting signin for email="+ DataHelper.getEmail());
 
         final AuthEmailActivity activity = this;
-        getAuth().signInWithEmailAndPassword(getEmail(), getPass())
+        DataHelper.getFirebaseAuth().signInWithEmailAndPassword(DataHelper.getEmail(), DataHelper.getPass())
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         cancelTimer = true;
                         boolean success = false;
-                        if (getEmail() != null && getPass() != null) {
+                        if (DataHelper.getEmail() != null && DataHelper.getPass() != null) {
                             success = task.isSuccessful();
                             LogHelper.d(TAG, "signInWithEmailAndPassword:onComplete: success=" + success);
 
@@ -119,11 +120,11 @@ public class AuthEmailActivity extends BaseActivity
                                     return;
                                 }
                             }
-                            if (getUID() == null) {
-                                @SuppressWarnings("ConstantConditions") String uid = mAuth.getCurrentUser().getUid();
-                                setUID(uid);
+                            if (DataHelper.getUID() == null) {
+                                @SuppressWarnings("ConstantConditions") String uid = DataHelper.getFirebaseAuth().getCurrentUser().getUid();
+                                DataHelper.setUID(uid);
                             }
-                            trackLoginWithFirebaseAnalytics();
+                            DataHelper.trackLoginWithFirebaseAnalytics();
                         }
                         else {
                             LogHelper.e(TAG, "email or password is null!");
@@ -149,7 +150,7 @@ public class AuthEmailActivity extends BaseActivity
 
     private void problemAuthenticating(@SuppressWarnings("SameParameterValue") String error) {
         LogHelper.w(TAG, "problemAuthenticating: error="+error);
-        mCurrentPosition = 0;
+        DataHelper.setCurrentPosition(0);
         AlertDialog alertDialog = new AlertDialog.Builder(this).create();
         alertDialog.setTitle(getResources().getString(R.string.problem_authenticating));
         alertDialog.setMessage(getResources().getString(R.string.firebase_authentication_error) + "\n\nerror=" + error);

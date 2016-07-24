@@ -8,6 +8,7 @@ import android.support.v7.widget.Toolbar;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.harlie.radiotheater.radiomysterytheater.data_helper.DataHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import butterknife.BindString;
@@ -33,10 +34,14 @@ public class AuthenticationActivity extends BaseActivity
         getWindow().setWindowAnimations(0);
 
         // first see if Authentication is even needed..
-        if (getAuth() != null && getAuth().getCurrentUser() != null && getAuth().getCurrentUser().getEmail() != null && ! doINeedToCreateADatabase()) {
-            setEmail(getAuth().getCurrentUser().getEmail());
-            setUID(getAuth().getCurrentUser().getUid());
-            LogHelper.v(TAG, "--> Firebase: user=" + getAuth().getCurrentUser().getDisplayName() + " already signed in with email="+getEmail());
+        if (DataHelper.getFirebaseAuth() != null
+                && DataHelper.getFirebaseAuth().getCurrentUser() != null
+                && DataHelper.getFirebaseAuth().getCurrentUser().getEmail() != null
+                && ! doINeedToCreateADatabase())
+        {
+            DataHelper.setEmail(DataHelper.getFirebaseAuth().getCurrentUser().getEmail());
+            DataHelper.setUID(DataHelper.getFirebaseAuth().getCurrentUser().getUid());
+            LogHelper.v(TAG, "--> Firebase: user=" + DataHelper.getFirebaseAuth().getCurrentUser().getDisplayName() + " already signed in with email="+ DataHelper.getEmail());
             startAutoplayActivity(false);
             return;
         }
@@ -65,7 +70,7 @@ public class AuthenticationActivity extends BaseActivity
         String email = username.getText().toString();
         String pass = password.getText().toString();
         LogHelper.v(TAG, "email="+email);
-        if (getAuth() != null && isValid(email, pass)) {
+        if (DataHelper.getFirebaseAuth() != null && isValid(email, pass)) {
             LogHelper.v(TAG, "authenticateEmail - Firebase Auth using Email");
             Intent authEmailIntent = new Intent(this, AuthEmailActivity.class);
             authEmailIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
@@ -73,7 +78,7 @@ public class AuthenticationActivity extends BaseActivity
             authEmailIntent.putExtra("pass", pass);
             authEmailIntent.putExtra("DO_AUTH", true);
             Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
-            trackSignupAttemptWithFirebaseAnalytics("email");
+            DataHelper.trackSignupAttemptWithFirebaseAnalytics("email");
             authEmailIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             LogHelper.v(TAG, "STARTACTIVITY: AuthEmailActivity.class");
             startActivity(authEmailIntent, bundle);
@@ -93,7 +98,7 @@ public class AuthenticationActivity extends BaseActivity
         authGoogleIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         authGoogleIntent.putExtra("DO_AUTH", true);
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
-        trackSignupAttemptWithFirebaseAnalytics("google");
+        DataHelper.trackSignupAttemptWithFirebaseAnalytics("google");
         authGoogleIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         LogHelper.v(TAG, "STARTACTIVITY: AuthGoogleActivity.class");
         startActivity(authGoogleIntent, bundle);
@@ -108,7 +113,7 @@ public class AuthenticationActivity extends BaseActivity
         authTwitterIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         authTwitterIntent.putExtra("DO_AUTH", true);
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
-        trackSignupAttemptWithFirebaseAnalytics("twitter");
+        DataHelper.trackSignupAttemptWithFirebaseAnalytics("twitter");
         authTwitterIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         LogHelper.v(TAG, "STARTACTIVITY: AuthTwitterActivity.class");
         startActivity(authTwitterIntent, bundle);
@@ -123,7 +128,7 @@ public class AuthenticationActivity extends BaseActivity
         authFacebookIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         authFacebookIntent.putExtra("DO_AUTH", true);
         Bundle bundle = ActivityOptionsCompat.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle();
-        trackSignupAttemptWithFirebaseAnalytics("facebook");
+        DataHelper.trackSignupAttemptWithFirebaseAnalytics("facebook");
         authFacebookIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         LogHelper.v(TAG, "STARTACTIVITY: AuthFacebookActivity.class");
         startActivity(authFacebookIntent, bundle);

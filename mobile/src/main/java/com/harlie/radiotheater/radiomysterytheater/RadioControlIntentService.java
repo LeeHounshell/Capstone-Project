@@ -1,6 +1,7 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
 import android.app.IntentService;
+import android.app.Notification;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -12,17 +13,25 @@ import android.os.IBinder;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.support.v7.app.NotificationCompat;
 
+import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.DataHelper;
 import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.RadioTheaterWidgetProvider;
 
 import java.util.List;
+
+import static com.harlie.radiotheater.radiomysterytheater.RadioTheaterService.ACTION_CMD;
+import static com.harlie.radiotheater.radiomysterytheater.RadioTheaterService.CMD_COMPLETE;
+import static com.harlie.radiotheater.radiomysterytheater.RadioTheaterService.CMD_NAME;
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
@@ -72,6 +81,7 @@ public class RadioControlIntentService extends IntentService {
     private static final String ACTION_STOP = "com.harlie.radiotheater.radiomysterytheater.action.STOP";
     private static final String ACTION_NEXT = "com.harlie.radiotheater.radiomysterytheater.action.NEXT";
     private static final String ACTION_PREV = "com.harlie.radiotheater.radiomysterytheater.action.PREV";
+    private static final String ACTION_COMPLETE = "com.harlie.radiotheater.radiomysterytheater.action.COMPLETE";
 
     // control parameters
     private static final String EXTRA_EPISODE = "com.harlie.radiotheater.radiomysterytheater.extra.EPISODE";
@@ -94,21 +104,24 @@ public class RadioControlIntentService extends IntentService {
                 if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
                     LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_GAIN <<---");
                     mAudioFocusRequstResult = AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
-                } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+                }
+                else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
                     LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_LOSS <<---");
                     mAudioFocusRequstResult = 0;
                     Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
                     startActionStop(context, "onAudioFocusChange (loss)", null, null);
-                } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
+                }
+                else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
                     LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_LOSS_TRANSIENT <<---");
                     mAudioFocusRequstResult = 0;
                     Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
-                    startActionPause(context, "onAudioFocusChange (loss transient)", String.valueOf(BaseActivity.getEpisodeNumber()), BaseActivity.getEpisodeDownloadUrl());
-                } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
+                    startActionPause(context, "onAudioFocusChange (loss transient)", DataHelper.getEpisodeNumberString(), DataHelper.getEpisodeDownloadUrl());
+                }
+                else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
                     LogHelper.v(TAG, "AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK <<---");
                     mAudioFocusRequstResult = 0;
                     Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
-                    startActionPause(context, "onAudioFocusChange (loss can duck)", String.valueOf(BaseActivity.getEpisodeNumber()), BaseActivity.getEpisodeDownloadUrl());
+                    startActionPause(context, "onAudioFocusChange (loss can duck)", DataHelper.getEpisodeNumberString(), DataHelper.getEpisodeDownloadUrl());
                 }
             }
         };
@@ -236,36 +249,60 @@ public class RadioControlIntentService extends IntentService {
             if (ACTION_START.equals(action)) {
                 final String episode = intent.getStringExtra(EXTRA_EPISODE);
                 final String param2 = intent.getStringExtra(EXTRA_PARAM2);
+                LogHelper.v(TAG, "onHandleIntent: handleActionStart:"+episode);
                 handleActionStart(episode, param2);
             } else if (ACTION_PLAY.equals(action)) {
                 final String episode = intent.getStringExtra(EXTRA_EPISODE);
                 final String downloadUrl = intent.getStringExtra(EXTRA_PARAM2);
                 final String title = intent.getStringExtra(EXTRA_TITLE);
+                LogHelper.v(TAG, "onHandleIntent: handleActionPlay:"+episode);
                 handleActionPlay(episode, downloadUrl, title);
             } else if (ACTION_PAUSE.equals(action)) {
                 final String episode = intent.getStringExtra(EXTRA_EPISODE);
                 final String param2 = intent.getStringExtra(EXTRA_PARAM2);
+                LogHelper.v(TAG, "onHandleIntent: handleActionPause:"+episode);
                 handleActionPause(episode, param2);
             } else if (ACTION_SEEK.equals(action)) {
                 final String episode = intent.getStringExtra(EXTRA_EPISODE);
                 final String position = intent.getStringExtra(EXTRA_PARAM2);
+                LogHelper.v(TAG, "onHandleIntent: handleActionSeek:"+episode);
                 handleActionSeek(episode, position);
             } else if (ACTION_GOBACK.equals(action)) {
                 final String episode = intent.getStringExtra(EXTRA_EPISODE);
                 final String amount = intent.getStringExtra(EXTRA_PARAM2);
+                LogHelper.v(TAG, "onHandleIntent: handleActionGoback:"+episode);
                 handleActionGoback(episode, amount);
             } else if (ACTION_STOP.equals(action)) {
                 final String episode = intent.getStringExtra(EXTRA_EPISODE);
                 final String param2 = intent.getStringExtra(EXTRA_PARAM2);
+                LogHelper.v(TAG, "onHandleIntent: handleActionStop:"+episode);
                 handleActionStop(episode, param2);
             } else if (ACTION_NEXT.equals(action)) {
                 final String episode = intent.getStringExtra(EXTRA_EPISODE);
                 final String param2 = intent.getStringExtra(EXTRA_PARAM2);
+                LogHelper.v(TAG, "onHandleIntent: handleActionNext:"+episode);
                 handleActionNext(episode, param2);
             } else if (ACTION_PREV.equals(action)) {
                 final String episode = intent.getStringExtra(EXTRA_EPISODE);
                 final String param2 = intent.getStringExtra(EXTRA_PARAM2);
+                LogHelper.v(TAG, "onHandleIntent: handleActionPrev:"+episode);
                 handleActionPrev(episode, param2);
+            } else if (ACTION_CMD.equals(action)) {
+                final String cmd_name = intent.getStringExtra(CMD_NAME);
+                if (cmd_name != null && cmd_name.equals(CMD_COMPLETE)) {
+                    final String episode = intent.getStringExtra(RadioTheaterService.CMD_PARAM_EPISODE);
+                    final String param2 = intent.getStringExtra(EXTRA_EPISODE);
+                    LogHelper.v(TAG, "onHandleIntent: PLAYBACK COMPLETE - handleActionComplete:"+episode);
+                    handleActionComplete(episode, param2);
+                }
+                else {
+                    String message = intent.toString();
+                    LogHelper.v(TAG, "*** UNKNOWN ACTION_CMD COMMAND='"+cmd_name+"' - MESSAGE VIA INTENT: "+message);
+                }
+            }
+            else {
+                String message = intent.toString();
+                LogHelper.v(TAG, "*** UNKNOWN ACTION MESSAGE VIA INTENT: "+message);
             }
         }
     }
@@ -522,12 +559,25 @@ public class RadioControlIntentService extends IntentService {
 
         Context context = this.getBaseContext();
         Intent radioServiceCommandIntent = new Intent(context, RadioTheaterService.class);
-        radioServiceCommandIntent.setAction(RadioTheaterService.ACTION_CMD);
+        radioServiceCommandIntent.setAction(ACTION_CMD);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_PLAY);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_EPISODE, episode);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_DOWNLOAD_URL, episodeDownloadUrl);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_TITLE, title);
         context.startService(radioServiceCommandIntent);
+
+        // also notify the companion Android Wear app of the episode title now playing..
+        String message = "Now Playing: \n\n" + title;
+        Notification notification = new NotificationCompat.Builder(getApplication())
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle(getResources().getString(R.string.app_name))
+                .setContentText(message)
+                .extend(new NotificationCompat.WearableExtender().setHintShowBackgroundOnly(true))
+                .build();
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplication());
+        int notificationId = 1;
+        notificationManager.notify(notificationId, notification);
+        notifyUpdateButtons();
     }
 
     /**
@@ -538,10 +588,11 @@ public class RadioControlIntentService extends IntentService {
         Context context = this.getBaseContext();
         LogHelper.v(TAG, "---> handleActionPause: episode="+episode+", param2="+param2);
         Intent radioServiceCommandIntent = new Intent(context, RadioTheaterService.class);
-        radioServiceCommandIntent.setAction(RadioTheaterService.ACTION_CMD);
+        radioServiceCommandIntent.setAction(ACTION_CMD);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_PAUSE);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_EPISODE, episode);
         context.startService(radioServiceCommandIntent);
+        notifyUpdateButtons();
     }
 
     /**
@@ -552,11 +603,12 @@ public class RadioControlIntentService extends IntentService {
         Context context = this.getBaseContext();
         LogHelper.v(TAG, "---> handleActionSeek: episode="+episode+", position="+position);
         Intent radioServiceCommandIntent = new Intent(context, RadioTheaterService.class);
-        radioServiceCommandIntent.setAction(RadioTheaterService.ACTION_CMD);
+        radioServiceCommandIntent.setAction(ACTION_CMD);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_SEEK);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_EPISODE, episode);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_SEEK_POSITION, Integer.valueOf(position));
         context.startService(radioServiceCommandIntent);
+        notifyUpdateButtons();
     }
 
     /**
@@ -567,11 +619,12 @@ public class RadioControlIntentService extends IntentService {
         Context context = this.getBaseContext();
         LogHelper.v(TAG, "---> handleActionGoback: episode="+episode+", amount="+amount);
         Intent radioServiceCommandIntent = new Intent(context, RadioTheaterService.class);
-        radioServiceCommandIntent.setAction(RadioTheaterService.ACTION_CMD);
+        radioServiceCommandIntent.setAction(ACTION_CMD);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_GOBACK);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_EPISODE, episode);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_GOBACK_AMOUNT, Integer.valueOf(amount));
         context.startService(radioServiceCommandIntent);
+        notifyUpdateButtons();
     }
 
     /**
@@ -582,10 +635,11 @@ public class RadioControlIntentService extends IntentService {
         LogHelper.v(TAG, "---> handleActionStop: episode="+episode+", param2="+param2);
         Context context = this.getBaseContext();
         Intent radioServiceCommandIntent = new Intent(context, RadioTheaterService.class);
-        radioServiceCommandIntent.setAction(RadioTheaterService.ACTION_CMD);
+        radioServiceCommandIntent.setAction(ACTION_CMD);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_STOP);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_EPISODE, episode);
         context.startService(radioServiceCommandIntent);
+        notifyUpdateButtons();
     }
 
     /**
@@ -596,10 +650,11 @@ public class RadioControlIntentService extends IntentService {
         LogHelper.v(TAG, "---> handleActionNext: episode="+episode+", param2="+param2);
         Context context = this.getBaseContext();
         Intent radioServiceCommandIntent = new Intent(context, RadioTheaterService.class);
-        radioServiceCommandIntent.setAction(RadioTheaterService.ACTION_CMD);
+        radioServiceCommandIntent.setAction(ACTION_CMD);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_NEXT);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_EPISODE, episode);
         context.startService(radioServiceCommandIntent);
+        notifyUpdateButtons();
     }
 
     /**
@@ -610,10 +665,61 @@ public class RadioControlIntentService extends IntentService {
         LogHelper.v(TAG, "---> handleActionPrev: episode="+episode+", param2="+param2);
         Context context = this.getBaseContext();
         Intent radioServiceCommandIntent = new Intent(context, RadioTheaterService.class);
-        radioServiceCommandIntent.setAction(RadioTheaterService.ACTION_CMD);
+        radioServiceCommandIntent.setAction(ACTION_CMD);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_PREV);
         radioServiceCommandIntent.putExtra(RadioTheaterService.CMD_PARAM_EPISODE, episode);
         context.startService(radioServiceCommandIntent);
+        notifyUpdateButtons();
+    }
+
+    /**
+     * Handle action COMPLETE in the provided background thread with the provided
+     * parameters.
+     */
+    private void handleActionComplete(String episode, String param2) {
+        LogHelper.v(TAG, "---> handleActionComplete: episode="+episode+", param2="+param2);
+        if (AutoplayActivity.isAutoplayActive()) {
+            LogHelper.v(TAG, "---> SENDING COMPLETION INTENT TO AUTOPLAY ACTIVITY - NEXT EPISODE BEGINS THERE");
+            String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
+            String complete = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.complete);
+            String message = complete + episode;
+            LogHelper.v(TAG, "notifyEpisodeComplete: message=" + message);
+            Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
+            RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
+        }
+        else {
+            LogHelper.v(TAG, "---> NEED TO START NEXT EPISODE FROM A SERVICE.");
+            DataHelper.markEpisodeAsHeardAndIncrementPlayCount(DataHelper.getEpisodeNumber(), DataHelper.getEpisodeNumberString(), DataHelper.getCurrentPosition());
+            ConfigEpisodesCursor configCursor = DataHelper.getCursorForNextAvailableEpisode();
+            if (DataHelper.getEpisodeDataForCursor(configCursor)) {
+                final long nextEpisode = DataHelper.getEpisodeNumber();
+                DataHelper.setEpisodeNumber(nextEpisode);
+                DataHelper.getEpisodeInfoFor(DataHelper.getEpisodeNumber());
+                if (DataHelper.isPurchased() || DataHelper.isTrial()) {
+                    LogHelper.v(TAG, "=========> START AUTOPLAY FOR NEXT AVAILABLE EPISODE FROM SERVICE: episode="+nextEpisode);
+                    Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+                    RadioControlIntentService.startActionPlay(context,
+                            "MAIN",
+                            DataHelper.getEpisodeNumberString(),
+                            DataHelper.getEpisodeDownloadUrl(),
+                            DataHelper.getEpisodeTitle());
+                }
+                else {
+                    LogHelper.v(TAG, "=========> NOT PURCHASED! AUTOPLAY FOR NEXT AVAILABLE EPISODE: "+nextEpisode);
+                }
+            }
+        }
+    }
+
+    private void notifyUpdateButtons() {
+        if (AutoplayActivity.isAutoplayActive()) {
+            LogHelper.v(TAG, "notifyUpdateButtons");
+            Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+            String initialization = context.getResources().getString(R.string.initialization);
+            String message = context.getResources().getString(R.string.update_buttons);
+            Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
+            RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
+        }
     }
 
 }

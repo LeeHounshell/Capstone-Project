@@ -86,7 +86,7 @@ public class EpisodeRecyclerViewItem implements Parcelable {
         boolean downloaded = false;
         if (context instanceof BaseActivity) {
             String episode = String.valueOf(episodeNumber);
-            ConfigEpisodesContentValues configEpisodesContentValues = SQLiteHelper.getConfigEpisodeForEpisode(episode);
+            ConfigEpisodesContentValues configEpisodesContentValues = DataHelper.getConfigEpisodeForEpisode(episode);
             ContentValues contentValues = configEpisodesContentValues != null ? configEpisodesContentValues.values() : null;
             heard = contentValues.getAsBoolean(RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_HEARD);
             downloaded = contentValues.getAsBoolean(RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_DOWNLOADED);

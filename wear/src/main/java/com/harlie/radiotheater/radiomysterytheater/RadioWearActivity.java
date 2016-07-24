@@ -3,62 +3,37 @@ package com.harlie.radiotheater.radiomysterytheater;
 import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
 import android.support.wearable.view.BoxInsetLayout;
+import android.support.wearable.view.DelayedConfirmationView;
+import android.support.wearable.view.WatchViewStub;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
+import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
+
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Locale;
 
+// from: https://github.com/obaro/SimpleWearApp
 public class RadioWearActivity extends WearableActivity {
+    private final static String TAG = "LEE: <" + RadioWearActivity.class.getSimpleName() + ">";
 
     private static final SimpleDateFormat AMBIENT_DATE_FORMAT =
             new SimpleDateFormat("HH:mm", Locale.US);
 
-    private BoxInsetLayout mContainerView;
-    private TextView mTextView;
-    private TextView mClockView;
+    private Button autoplayButton;
+    private DelayedConfirmationView delayedView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        LogHelper.v(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_radio);
         setAmbientEnabled();
-
-        mContainerView = (BoxInsetLayout) findViewById(R.id.container);
-        mTextView = (TextView) findViewById(R.id.text);
-        mClockView = (TextView) findViewById(R.id.clock);
     }
 
-    @Override
-    public void onEnterAmbient(Bundle ambientDetails) {
-        super.onEnterAmbient(ambientDetails);
-        updateDisplay();
+    public void autoplay(View view) {
+        LogHelper.v(TAG, "autoplay: CLICK!");
     }
 
-    @Override
-    public void onUpdateAmbient() {
-        super.onUpdateAmbient();
-        updateDisplay();
-    }
-
-    @Override
-    public void onExitAmbient() {
-        updateDisplay();
-        super.onExitAmbient();
-    }
-
-    private void updateDisplay() {
-        if (isAmbient()) {
-            mContainerView.setBackgroundColor(getResources().getColor(android.R.color.black));
-            mTextView.setTextColor(getResources().getColor(android.R.color.white));
-            mClockView.setVisibility(View.VISIBLE);
-
-            mClockView.setText(AMBIENT_DATE_FORMAT.format(new Date()));
-        } else {
-            mContainerView.setBackground(null);
-            mTextView.setTextColor(getResources().getColor(android.R.color.black));
-            mClockView.setVisibility(View.GONE);
-        }
-    }
 }

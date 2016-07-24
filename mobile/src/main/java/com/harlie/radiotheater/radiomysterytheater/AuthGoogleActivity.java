@@ -21,6 +21,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.plus.Plus;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.DataHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
 import static com.firebase.ui.auth.ui.AcquireEmailHelper.RC_SIGN_IN;
@@ -66,13 +67,13 @@ public class AuthGoogleActivity
         }
 
         // see if Authentication is even needed..
-        if (getAuth() == null) {
+        if (DataHelper.getFirebaseAuth() == null) {
             LogHelper.v(TAG, "unable to get FirebaseAuth!");
             startAuthenticationActivity();
             return;
         }
-        if (getAuth().getCurrentUser() != null && ! doINeedToCreateADatabase()) {
-            LogHelper.v(TAG, "--> Firebase: user=" + getAuth().getCurrentUser().getDisplayName() + " already signed in!");
+        if (DataHelper.getFirebaseAuth().getCurrentUser() != null && ! doINeedToCreateADatabase()) {
+            LogHelper.v(TAG, "--> Firebase: user=" + DataHelper.getFirebaseAuth().getCurrentUser().getDisplayName() + " already signed in!");
             startAutoplayActivity(false);
             overridePendingTransition(0,0);
             return;
@@ -233,11 +234,11 @@ public class AuthGoogleActivity
                     final String personId = acct.getId();
                     final String personPass = acct.getId() + BuildConfig.SECRET_PASS_SUFFIX; // unique, repeatable and private
                     final Uri personPhoto = acct.getPhotoUrl();
-                    setEmail(personEmail);
-                    setPass(personPass);
+                    DataHelper.setEmail(personEmail);
+                    DataHelper.setPass(personPass);
                     // we're in.  now here come's the trick:
                     // ok, now do the login invisibly with email to avoid extra app manifest permissions
-                    LogHelper.v(TAG, "GOOGLE: name=" + personName + ", id=" + personId + ", email=" + getEmail() + ", url=" + personPhoto);
+                    LogHelper.v(TAG, "GOOGLE: name=" + personName + ", id=" + personId + ", email=" + DataHelper.getEmail() + ", url=" + personPhoto);
                     Intent authEmailIntent = new Intent(this, AuthEmailActivity.class);
                     authEmailIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                     authEmailIntent.putExtra("name", personName);

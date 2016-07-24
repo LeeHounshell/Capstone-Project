@@ -158,6 +158,17 @@
             </intent-filter>
         </service>
 
+        <!-- Android Wear communication -->
+        <service android:name=".WearTalkService"
+            android:enabled="true"
+            android:exported="true" >
+            <intent-filter>
+                <!-- listeners receive events that match the action and data filters -->
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/radiomysterytheater" />
+            </intent-filter>
+        </service>
+
         <!--
          A receiver that will receive media buttons and send as intents to the MediaBrowserServiceCompat implementation.
          Required on pre-Lollipop. More information at

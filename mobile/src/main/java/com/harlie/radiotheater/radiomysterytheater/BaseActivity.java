@@ -5,7 +5,6 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
 import android.app.ActivityOptions;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -41,33 +40,21 @@ import android.view.animation.Interpolator;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.firebase.client.Firebase;
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.harlie.radiotheater.radiomysterytheater.data.RadioTheaterHelper;
-import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesContentValues;
-import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationColumns;
-import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationContentValues;
-import com.harlie.radiotheater.radiomysterytheater.data.configuration.ConfigurationCursor;
-import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadRadioTheaterTablesAsyncTask;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.LoadingAsyncTask;
-import com.harlie.radiotheater.radiomysterytheater.data_helper.SQLiteHelper;
-import com.harlie.radiotheater.radiomysterytheater.firebase.FirebaseConfigEpisode;
-import com.harlie.radiotheater.radiomysterytheater.firebase.FirebaseConfiguration;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.DataHelper;
 import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
 import com.harlie.radiotheater.radiomysterytheater.utils.CheckPlayStore;
 import com.harlie.radiotheater.radiomysterytheater.utils.CircleViewHelper;
@@ -77,10 +64,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.text.SimpleDateFormat;
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import at.grabner.circleprogress.AnimationState;
 import at.grabner.circleprogress.AnimationStateChangedListener;
@@ -99,7 +83,6 @@ public class BaseActivity extends AppCompatActivity {
 
     protected static final boolean COPY_PREBUILT_SQLITE_DATABASE = true;
 
-    protected static final int MAX_TRIAL_EPISODES = 19;
     protected static final int MIN_EMAIL_LENGTH = 5;
     protected static final int MIN_PASSWORD_LENGTH = 6;
     protected static final int TOTAL_SIZE_TO_COPY_IN_BYTES = 1347584;
@@ -109,28 +92,10 @@ public class BaseActivity extends AppCompatActivity {
     protected static final String FIREBASE_SHOWS_URL = "radiomysterytheater/2/shows";
     protected static final boolean COPY_PACKAGED_SQLITE_DATABASE = true;
 
-    protected long mDuration;
-    protected long mCurrentPosition;
-
-    protected static String sAdvId;
-    protected static String sName;
-    protected static String sEmail;
-    protected static String sUID;
-    protected static String sPassword;
-
-    protected static int sAllListenCount;
-    protected static long sEpisodeNumber;
-    protected static String sAirdate;
-    protected static String sEpisodeTitle;
-    protected static String sEpisodeDescription;
-    protected static String sEpisodeWeblinkUrl;
-    protected static String sEpisodeDownloadUrl;
-
     protected static ShareActionProvider sShareActionProvider;
     protected static Intent sShareIntent;
 
     protected static volatile boolean sOnRestoreInstanceComplete;
-    protected static volatile boolean sFoundFirebaseDeviceId;
     protected static volatile boolean sOkLoadFirebaseConfiguration;
     protected static volatile boolean sShowPercentUnit;
 
@@ -142,22 +107,12 @@ public class BaseActivity extends AppCompatActivity {
     protected static volatile boolean sWaitForMedia;
 
     // need to save these across Activities
-    protected static volatile boolean sPurchased;
-    protected static volatile boolean sNoAdsForShow;
-    protected static volatile boolean sDownloaded;
-    protected static volatile boolean sEpisodeHeard;
     protected static volatile boolean sHaveRealDuration;
-    protected static volatile boolean sLoadedOK;
 
-    private static int mCount;
+    private static int sCount;
 
     public static volatile boolean sProgressViewSpinning;
 
-    protected ConfigurationContentValues mConfiguration;
-    protected FirebaseAuth mAuth;
-    protected Firebase mFirebase;
-    protected DatabaseReference mDatabase;
-    protected FirebaseAnalytics mFirebaseAnalytics;
     protected Handler mHandler;
     protected View mRootView;
     protected CircleProgressView mCircleView;
@@ -187,12 +142,12 @@ public class BaseActivity extends AppCompatActivity {
             sEnableFAB = false;
             sWaitForMedia = false;
 
-            sPurchased = false;
-            sNoAdsForShow = false;
-            sDownloaded = false;
-            sEpisodeHeard = false;
+            DataHelper.setPurchased(false);
+            DataHelper.setNoAdsForShow(false);
+            DataHelper.setDownloaded(false);
+            DataHelper.setEpisodeHeard(false);
+            DataHelper.setLoadedOK(false);
             sHaveRealDuration = false;
-            sLoadedOK = false;
 
             Bundle playInfo = getIntent().getExtras();
             if (playInfo != null) {
@@ -203,31 +158,31 @@ public class BaseActivity extends AppCompatActivity {
         mRootView = findViewById(android.R.id.content);
         mHandler = new Handler();
 
-        initializeFirebase();
+        DataHelper.initializeFirebase();
 
         final BaseActivity baseActivity = this;
 
         // capture the advertising id and save it
-        if (! isLoadedOK()) {
+        if (! DataHelper.isLoadedOK()) {
             AsyncTask.execute(new Runnable() {
                 @Override
                 public void run() {
-                    if (getEmail() != null) {
+                    if (DataHelper.getEmail() != null) {
                         try {
                             AdvertisingIdClient.Info adInfo = AdvertisingIdClient.getAdvertisingIdInfo(baseActivity);
-                            sAdvId = adInfo != null ? adInfo.getId() : null;
+                            DataHelper.setAdvertId((adInfo != null) ? adInfo.getId() : null);
                         }
                         catch (IOException | GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException exception) {
                             LogHelper.e(TAG, "*** UNABLE TO LOAD ADVERT ID ***"); // and it is needed for my Firebase key...
                         }
                         finally {
-                            if (sAdvId == null) {
-                                sAdvId = getAdvertId(); // from shared pref
+                            if (DataHelper.getAdvId() == null) {
+                                DataHelper.setAdvId(DataHelper.getAdvertId()); // from shared pref
                             }
-                            if (sAdvId != null) {
-                                setAdvertId(sAdvId); // also in shared pref
+                            if (DataHelper.getAdvId() != null) {
+                                DataHelper.setAdvertId(DataHelper.getAdvId()); // now also in shared pref
                                 if (sOkLoadFirebaseConfiguration) {
-                                    loadAnyExistingFirebaseConfigurationValues(sAdvId);
+                                    DataHelper.loadAnyExistingFirebaseConfigurationValues(baseActivity);
                                 }
                             }
                         }
@@ -237,14 +192,6 @@ public class BaseActivity extends AppCompatActivity {
 
             setupWindowAnimations();
         }
-    }
-
-    protected void initializeFirebase() {
-        Firebase.setAndroidContext(this);
-        mAuth = FirebaseAuth.getInstance();
-        mFirebase = new Firebase("https://radio-mystery-theater.firebaseio.com");
-        mDatabase = FirebaseDatabase.getInstance().getReference();
-        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
     }
 
     private void setupWindowAnimations() {
@@ -397,44 +344,19 @@ public class BaseActivity extends AppCompatActivity {
     public void onDestroy() {
         LogHelper.v(TAG, "onDestroy");
         super.onDestroy();
-
-        sAdvId = null;
-        sName = null;
-        sEmail = null;
-        sUID = null;
-        sPassword = null;
-
-        sAllListenCount = 0;
-        sEpisodeNumber = 0L;
-        sAirdate = null;
-        sEpisodeTitle = null;
-        sEpisodeDescription = null;
-        sEpisodeWeblinkUrl = null;
-        sEpisodeDownloadUrl = null;
-
         sShareActionProvider = null;
         sShareIntent = null;
-
         sOnRestoreInstanceComplete = false;
-        sFoundFirebaseDeviceId = false;
         sOkLoadFirebaseConfiguration = false;
         sShowPercentUnit = false;
-
         sHandleRotationEvent = false;
         sLoadingScreenEnabled = false;
         sBeginLoading = false;
         sEnableFAB = false;
         sWaitForMedia = false;
-
-        sPurchased = false;
-        sNoAdsForShow = false;
-        sDownloaded = false;
-        sEpisodeHeard = false;
         sHaveRealDuration = false;
-        sLoadedOK = false;
-
-        mCount = 0;
         sProgressViewSpinning = false;
+        sCount = 0;
     }
 
     @Override
@@ -498,7 +420,7 @@ public class BaseActivity extends AppCompatActivity {
     protected void handleAuthenticationRequestResult(boolean loginSuccess) {
         LogHelper.d(TAG, "handleAuthenticationRequestResult - loginSuccess=" + loginSuccess);
         if (loginSuccess) {
-            authenticateRadioMysteryTheaterFirebaseAccount(getEmail(), getPass());
+            authenticateRadioMysteryTheaterFirebaseAccount(DataHelper.getEmail(), DataHelper.getPass());
         } else {
             userLoginFailed();
             startAuthenticationActivity();
@@ -510,10 +432,10 @@ public class BaseActivity extends AppCompatActivity {
     //
     protected void authenticateRadioMysteryTheaterFirebaseAccount(final String email, final String pass) {
         LogHelper.v(TAG, "authenticateRadioMysteryTheaterFirebaseAccount - Firebase Login using email="+email+", and password="+pass);
-        if (mAuth != null && email != null && pass != null && isValid(email, pass)) {
+        if (DataHelper.getFirebaseAuth() != null && DataHelper.getEmail() != null && DataHelper.getPass() != null && isValid(email, pass)) {
             LogHelper.v(TAG, "authenticateRadioMysteryTheaterFirebaseAccount: GOOD");
             final BaseActivity activity = this;
-            mAuth.createUserWithEmailAndPassword(email, pass)
+            DataHelper.getFirebaseAuth().createUserWithEmailAndPassword(email, pass)
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
@@ -527,11 +449,11 @@ public class BaseActivity extends AppCompatActivity {
                                 success = checkExceptionReason(task, activity);
                             }
                             if (success) {
-                                String uid = mAuth.getCurrentUser().getUid();
-                                setEmail(email);
-                                setPass(pass);
-                                setUID(uid);
-                                trackSignupWithFirebaseAnalytics();
+                                String uid = DataHelper.getFirebaseAuth().getCurrentUser().getUid();
+                                DataHelper.setEmail(email);
+                                DataHelper.setPass(pass);
+                                DataHelper.setUID(uid);
+                                DataHelper.trackSignupWithFirebaseAnalytics();
                                 // ok, we're in
                                 startAutoplayActivity(true);
                             }
@@ -543,7 +465,10 @@ public class BaseActivity extends AppCompatActivity {
                     });
         }
         else {
-            LogHelper.w(TAG, "authenticateRadioMysteryTheaterFirebaseAccount: problem authenticating - mAuth="+mAuth+", email="+email+", pass="+pass+", isValid="+isValid(email, pass));
+            LogHelper.w(TAG, "authenticateRadioMysteryTheaterFirebaseAccount: problem authenticating - FirebaseAuth="+ DataHelper.getFirebaseAuth()
+                    +", email="+ DataHelper.getEmail()
+                    +", pass="+ DataHelper.getPass()
+                    +", isValid="+isValid(email, pass));
             String message = getResources().getString(R.string.enter_email);
             Toast.makeText(this, message, Toast.LENGTH_LONG).show();
             startAuthenticationActivity();
@@ -584,7 +509,7 @@ public class BaseActivity extends AppCompatActivity {
 
     protected void userLoginSuccess() {
         LogHelper.v(TAG, "userLoginSuccess");
-        if (! isLoadedOK()) {
+        if (! DataHelper.isLoadedOK()) {
             String message = getResources().getString(R.string.successful);
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
         }
@@ -637,14 +562,14 @@ public class BaseActivity extends AppCompatActivity {
         }
         else {
             LogHelper.v(TAG, "*** READY TO START RADIO MYSTERY THEATER ***");
-            if (getEmail() != null) {
+            if (DataHelper.getEmail() != null) {
                 userLoginSuccess();
             }
             // save authentication to Shared Prefs
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
             SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("authentication", getEmail());
-            editor.putString("userUID", getUID());
+            editor.putString("authentication", DataHelper.getEmail());
+            editor.putString("userUID", DataHelper.getUID());
             editor.apply();
 
             Intent autoplayIntent = new Intent(this, AutoplayActivity.class);
@@ -670,11 +595,11 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     public void playNow() {
-        String episodeNumber = String.valueOf(getEpisodeNumber());
+        String episodeNumber = DataHelper.getEpisodeNumberString();
         LogHelper.v(TAG, "playNow: episodeNumber="+episodeNumber);
         if (LocalPlayback.getCurrentState() == PlaybackStateCompat.STATE_PLAYING) {
             LogHelper.v(TAG, "*** STOP PLAYING CURRENT EPISODE BEFORE STARING WITH A FRESH ONE ***");
-            RadioControlIntentService.startActionStop(this, "DETAIL", episodeNumber, getEpisodeDownloadUrl());
+            RadioControlIntentService.startActionStop(this, "DETAIL", episodeNumber, DataHelper.getEpisodeDownloadUrl());
         }
         Intent autoplayIntent = new Intent(this, AutoplayActivity.class);
         // setup a shared-element transition..
@@ -715,11 +640,11 @@ public class BaseActivity extends AppCompatActivity {
         byte[] buffer = new byte[1024];
         int len;
         while ((len = input.read(buffer)) > 0) {
-            mCount += len;
+            sCount += len;
             try {
                 Thread.sleep(3);
             } catch (Exception e) { };
-            CircleViewHelper.setCircleViewValue((float) mCount, this);
+            CircleViewHelper.setCircleViewValue((float) sCount, this);
             output.write(buffer, 0, len);
         }
         output.flush();
@@ -769,7 +694,7 @@ public class BaseActivity extends AppCompatActivity {
             whereArgs = new String[]{Long.toString(rowId)};
         }
         else if (tableName.toUpperCase(Locale.getDefault()).equals("CONFIGURATION")) {
-            if (getEmail() == null || getEmail().length() == 0) {
+            if (DataHelper.getEmail() == null || DataHelper.getEmail().length() == 0) {
                 CONTENT_URI = null;
                 whereClause = null;
             }
@@ -811,14 +736,14 @@ public class BaseActivity extends AppCompatActivity {
         //#ENDIF
 
         //#IFDEF 'TRIAL'
-        if (mConfiguration != null) {
-            isPaidEpi = mConfiguration.values().getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
+        if (DataHelper.getConfiguration() != null) {
+            isPaidEpi = DataHelper.getConfiguration().values().getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
         }
         if (!isPaidEpi) {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
             isPaidEpi = sharedPreferences.getBoolean("userPaid", false); // all episodes paid for?
             if (!isPaidEpi) {
-                ConfigEpisodesContentValues existing = SQLiteHelper.getConfigEpisodeForEpisode(episode);
+                ConfigEpisodesContentValues existing = DataHelper.getConfigEpisodeForEpisode(episode);
                 if (existing != null && existing.values() != null && existing.values().size() != 0) {
                     ContentValues configEpisode = existing.values();
                     isPaidEpi = configEpisode.getAsBoolean(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS);
@@ -844,7 +769,7 @@ public class BaseActivity extends AppCompatActivity {
         }
         else {
             // see if a record already exists for this episode
-            ConfigEpisodesContentValues existing = SQLiteHelper.getConfigEpisodeForEpisode(episode);
+            ConfigEpisodesContentValues existing = DataHelper.getConfigEpisodeForEpisode(episode);
             ContentValues configurationValues;
             try {
                 if (existing != null && existing.values() != null && existing.values().size() != 0) {
@@ -853,14 +778,14 @@ public class BaseActivity extends AppCompatActivity {
                     LogHelper.v(TAG, "FOUND: so update ConfigEntry for episode "+episode+" with paid="+paid);
                     configurationValues.put(ConfigEpisodesEntry.FIELD_EPISODE_NUMBER, episode);
                     configurationValues.put(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS, paid);
-                    SQLiteHelper.updateConfigEpisodesEntry(episode, configurationValues);
+                    DataHelper.updateConfigEpisodesEntry(episode, configurationValues);
                 } else {
                     // CREATE and mark an individual episode as paid
                     LogHelper.v(TAG, "NOT FOUND: so create ConfigEntry for episode "+episode+" with paid="+paid);
                     configurationValues = new ContentValues();
                     configurationValues.put(ConfigEpisodesEntry.FIELD_EPISODE_NUMBER, episode);
                     configurationValues.put(ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS, paid);
-                    Uri result = SQLiteHelper.insertConfigEntry(configurationValues);
+                    Uri result = DataHelper.insertConfigEntry(configurationValues);
                 }
             }
             catch (Exception e) {
@@ -927,52 +852,22 @@ public class BaseActivity extends AppCompatActivity {
         runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state
     }
 
-    public static boolean getEpisodeDataForCursor(ConfigEpisodesCursor configCursor) {
-        LogHelper.v(TAG, "getEpisodeDataForCursor");
-        boolean foundEpisode = false;
-        if (configCursor != null && configCursor.moveToNext()) {
-            // found the next episode to listen to
-            sEpisodeNumber = configCursor.getFieldEpisodeNumber();
-            sPurchased = configCursor.getFieldPurchasedAccess();
-            sNoAdsForShow = configCursor.getFieldPurchasedNoads();
-            sDownloaded = configCursor.getFieldEpisodeDownloaded();
-            sEpisodeHeard = configCursor.getFieldEpisodeHeard();
-            configCursor.close();
-            foundEpisode = getEpisodeInfoFor(sEpisodeNumber);
-        }
-        return foundEpisode;
-    }
-
-    public static boolean getEpisodeInfoFor(long episodeId) {
-        LogHelper.v(TAG, "getEpisodeInfoFor: "+episodeId);
-        // get this episode's detail info
-        boolean foundEpisode = false;
-        EpisodesCursor episodesCursor = SQLiteHelper.getEpisodesCursor(episodeId);
-        if (episodesCursor != null && episodesCursor.moveToNext()) {
-            sEpisodeNumber = episodesCursor.getFieldEpisodeNumber();
-            sAirdate = episodesCursor.getFieldAirdate();
-            sEpisodeTitle = episodesCursor.getFieldEpisodeTitle();
-            sEpisodeDescription = episodesCursor.getFieldEpisodeDescription();
-            sEpisodeWeblinkUrl = Uri.parse(episodesCursor.getFieldWeblinkUrl()).getEncodedPath();
-            sEpisodeDownloadUrl = Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString();
-            episodesCursor.close();
-            foundEpisode = true;
-        }
-        return foundEpisode;
-    }
-
     public Intent setShareIntentForEpisode(long episodeId) {
         LogHelper.v(TAG, "setShareIntentForEpisode");
-        if (getEpisodeNumber() != episodeId) {
-            getEpisodeInfoFor(episodeId);
+        if (DataHelper.getEpisodeNumber() != episodeId) {
+            DataHelper.getEpisodeInfoFor(episodeId);
         }
         // share button setup
         if (sShareActionProvider != null) {
-            sShareIntent = getShareIntent(getEpisodeTitle(), getEpisodeDescription(), String.valueOf(getEpisodeNumber()), getEpisodeDownloadUrl(), getEpisodeWeblinkUrl());
-            if (sShareIntent != null) {
+            sShareIntent = getShareIntent(DataHelper.getEpisodeTitle(),
+                    DataHelper.getEpisodeDescription(),
+                    DataHelper.getEpisodeNumberString(),
+                    DataHelper.getEpisodeDownloadUrl(),
+                    DataHelper.getEpisodeWeblinkUrl());
+            if (getShareIntent() != null) {
                 sShareActionProvider.setShareIntent(sShareIntent);
             }
-            return sShareIntent;
+            return getShareIntent();
         }
         LogHelper.w(TAG, "*** sShareActionProvider is null! ***");
         return null;
@@ -989,10 +884,10 @@ public class BaseActivity extends AppCompatActivity {
             getHandler().post(new Runnable() {
                 @Override
                 public void run() {
-                    mCount = 0;
+                    sCount = 0;
                     CircleViewHelper.showCircleView(baseActivity, getCircleView(), CircleViewHelper.CircleViewType.CREATE_DATABASE);
                     CircleViewHelper.setCircleViewMaximum((float) TOTAL_SIZE_TO_COPY_IN_BYTES, baseActivity);
-                    CircleViewHelper.setCircleViewValue((float) mCount, baseActivity);
+                    CircleViewHelper.setCircleViewValue((float) sCount, baseActivity);
                 }
             });
         }
@@ -1000,14 +895,15 @@ public class BaseActivity extends AppCompatActivity {
 
     private void problemExistingDatabase(String fileName) {
         LogHelper.w(TAG, "problemExistingDatabase, fileName="+fileName);
-        mCurrentPosition = 0;
+        DataHelper.setCurrentPosition(0);
         AlertDialog alertDialog = new AlertDialog.Builder(BaseActivity.this).create();
         alertDialog.setTitle(getResources().getString(R.string.existing_database));
         alertDialog.setMessage(getResources().getString(R.string.database_existing_problem) + "\n\nfile="+fileName);
         alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        trackWithFirebaseAnalytics(String.valueOf(sEpisodeNumber), mCurrentPosition, "load sqlite failed");
+                        String episode = DataHelper.getEpisodeNumberString();
+                        DataHelper.trackWithFirebaseAnalytics(episode, DataHelper.getCurrentPosition(), "load sqlite failed");
                         dialog.dismiss();
                         runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state - slow via Internet, but it gets there.
                     }
@@ -1017,14 +913,15 @@ public class BaseActivity extends AppCompatActivity {
 
     private void problemMissingDatabase(String fileName) {
         LogHelper.w(TAG, "problemMissingDatabase: fileName="+fileName);
-        mCurrentPosition = 0;
+        DataHelper.setCurrentPosition(0);
         AlertDialog alertDialog = new AlertDialog.Builder(BaseActivity.this).create();
         alertDialog.setTitle(getResources().getString(R.string.missing_database));
         alertDialog.setMessage(getResources().getString(R.string.database_missing_problem) + "\n\nfile="+fileName);
         alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        trackWithFirebaseAnalytics(String.valueOf(sEpisodeNumber), mCurrentPosition, "load sqlite failed");
+                        String episode = DataHelper.getEpisodeNumberString();
+                        DataHelper.trackWithFirebaseAnalytics(episode, DataHelper.getCurrentPosition(), "load sqlite failed");
                         dialog.dismiss();
                         runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state - slow via Internet, but it gets there.
                     }
@@ -1034,14 +931,14 @@ public class BaseActivity extends AppCompatActivity {
 
     private void problemLoadingDatabase(String error) {
         LogHelper.w(TAG, "problemLoadingDatabase: error="+error);
-        mCurrentPosition = 0;
+        DataHelper.setCurrentPosition(0);
         AlertDialog alertDialog = new AlertDialog.Builder(BaseActivity.this).create();
         alertDialog.setTitle(getResources().getString(R.string.missing_database));
         alertDialog.setMessage(getResources().getString(R.string.database_loading_problem) + "\n\nerror=" + error);
         alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        trackWithFirebaseAnalytics(String.valueOf(sEpisodeNumber), mCurrentPosition, "load sqlite failed");
+                        DataHelper.trackWithFirebaseAnalytics(DataHelper.getEpisodeNumberString(), DataHelper.getCurrentPosition(), "load sqlite failed");
                         dialog.dismiss();
                         runLoadState(LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS); // begin with first load state - slow via Internet, but it gets there.
                     }
@@ -1051,7 +948,7 @@ public class BaseActivity extends AppCompatActivity {
 
     protected void maxTrialEpisodesAreReached() {
         final BaseActivity baseActivity = this;
-        if (sPurchased != true) {
+        if (! DataHelper.isPurchased()) {
             LogHelper.v(TAG, "maxTrialEpisodesAreReached");
             AlertDialog alertDialog = new AlertDialog.Builder(this).create();
             alertDialog.setTitle(getResources().getString(R.string.trial_complete));
@@ -1104,11 +1001,15 @@ public class BaseActivity extends AppCompatActivity {
         final BaseActivity activity = this;
         // Attach a listener to read the data initially
         LogHelper.v(TAG, "*** FIREBASE REQUEST *** "+FIREBASE_WRITERS_URL);
-        getDatabase().child(FIREBASE_WRITERS_URL).addListenerForSingleValueEvent(new ValueEventListener() {
+        DataHelper.getDatabase().child(FIREBASE_WRITERS_URL).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
-                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, getCircleView(), dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS);
+                LoadRadioTheaterTablesAsyncTask asyncTask =
+                        new LoadRadioTheaterTablesAsyncTask(activity,
+                                getCircleView(),
+                                dataSnapshot,
+                                LoadRadioTheaterTablesAsyncTask.LoadState.WRITERS);
                 asyncTask.execute();
                 LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
             }
@@ -1127,11 +1028,15 @@ public class BaseActivity extends AppCompatActivity {
         final BaseActivity activity = this;
         // Attach a listener to read the data initially
         LogHelper.v(TAG, "*** FIREBASE REQUEST *** "+FIREBASE_ACTORS_URL);
-        activity.getDatabase().child(FIREBASE_ACTORS_URL).addListenerForSingleValueEvent(new ValueEventListener() {
+        DataHelper.getDatabase().child(FIREBASE_ACTORS_URL).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
-                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, getCircleView(), dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.ACTORS);
+                LoadRadioTheaterTablesAsyncTask asyncTask =
+                        new LoadRadioTheaterTablesAsyncTask(activity,
+                                getCircleView(),
+                                dataSnapshot,
+                                LoadRadioTheaterTablesAsyncTask.LoadState.ACTORS);
                 asyncTask.execute();
                 LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
             }
@@ -1150,11 +1055,15 @@ public class BaseActivity extends AppCompatActivity {
         final BaseActivity activity = this;
         // Attach a listener to read the data initially
         LogHelper.v(TAG, "*** FIREBASE REQUEST *** "+FIREBASE_SHOWS_URL);
-        activity.getDatabase().child(FIREBASE_SHOWS_URL).addListenerForSingleValueEvent(new ValueEventListener() {
+        DataHelper.getDatabase().child(FIREBASE_SHOWS_URL).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
-                LoadRadioTheaterTablesAsyncTask asyncTask = new LoadRadioTheaterTablesAsyncTask(activity, getCircleView(), dataSnapshot, LoadRadioTheaterTablesAsyncTask.LoadState.EPISODES);
+                LoadRadioTheaterTablesAsyncTask asyncTask =
+                        new LoadRadioTheaterTablesAsyncTask(activity,
+                                getCircleView(),
+                                dataSnapshot,
+                                LoadRadioTheaterTablesAsyncTask.LoadState.EPISODES);
                 asyncTask.execute();
                 LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
             }
@@ -1167,474 +1076,9 @@ public class BaseActivity extends AppCompatActivity {
         });
     }
 
-    public void loadAnyExistingFirebaseConfigurationValues(String deviceId) {
-        LogHelper.v(TAG, "*** FIREBASE REQUEST *** - loadAnyExistingFirebaseConfigurationValues: deviceId="+deviceId);
-        if (deviceId == null) {
-            LogHelper.e(TAG, "ERROR: loadAnyExistingFirebaseConfigurationValues deviceId is null");
-            return;
-        }
-        if (getEmail() == null) {
-            LogHelper.e(TAG, "ERROR: loadAnyExistingFirebaseConfigurationValues email is null");
-            return;
-        }
-        final BaseActivity activity = this;
-
-        // Use a timer to determine if this deviceId is tracked inside Firebase
-        sFoundFirebaseDeviceId = false;
-        getHandler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                LogHelper.v(TAG, "*** CHECK THE USER CONFIGURATION ***");
-                updateTheUserConfiguration();
-            }
-        }, 90000); // allow a minute and a half
-
-        // Attach a listener to read the data initially
-        getDatabase().child("configuration").child("device").child(deviceId).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
-                // load the dataSnapshot info
-                Object configurationObject = dataSnapshot.getValue();
-                if (configurationObject == null) {
-                    LogHelper.e(TAG, "the Firebase User Configuration (DataSnapshot) is null! deviceId="+getAdvertId()+", email="+getEmail());
-                    //updateTheUserConfiguration();
-                    return;
-                }
-                String configurationJSON = configurationObject.toString();
-                sFoundFirebaseDeviceId = true;
-                LogHelper.v(TAG, "===> Firebase configurationJSON="+configurationJSON);
-
-                //#IFDEF 'PAID'
-                //boolean paidVersion = true;
-                //boolean purchaseAccess = true;
-                //boolean purchaseNoads = true;
-                //#ENDIF
-
-                //#IFDEF 'TRIAL'
-                boolean paidVersion = false;
-                boolean purchaseAccess = false;
-                boolean purchaseNoads = false;
-                //#ENDIF
-
-                createConfiguration(paidVersion, purchaseAccess, purchaseNoads);
-
-                int decodedListenCount = 0;
-                //
-                // since we only need a single value from the JSON use a regex pattern
-                // EXAMPLE JSON: {firebase_user_name=colefklbBSTHPrRWGPt9BWYcCYS2, firebase_device_id=bf5874b5-0cd5-4457-9401-6fd384edb579, firebase_email=lee@harlie.com, firebase_authenticated=true, firebase_total_listen_count=19}
-                //
-                Pattern pattern = Pattern.compile(".*firebase_total_listen_count=([0-9]+).*");
-                Matcher matcher = pattern.matcher((configurationJSON));
-                if (matcher.find()) {
-                    try {
-                        decodedListenCount = Integer.parseInt(matcher.group(1));
-                        LogHelper.v(TAG, "---> DECODED LISTEN_COUNT="+decodedListenCount);
-                        checkUpdateWidget(activity, decodedListenCount);
-                        getHandler().post(new Runnable() {
-                            @Override
-                            public void run() {
-                                enableButtons();
-                            }
-                        });
-                    }
-                    catch (NumberFormatException e) {
-                        LogHelper.e(TAG, "*** UNABLE TO DECODE LISTEN_COUNT FROM FIREBASE *** - NumberFormatException: configuration="+configurationJSON);
-                    }
-                }
-                mConfiguration.putFieldTotalListenCount(decodedListenCount);
-                LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                LogHelper.v(TAG, "loadAnyExistingFirebaseConfigurationValues - onCancelled");
-                activity.startAuthenticationActivity();
-            }
-        });
-
-    }
-
-    protected ConfigurationContentValues createConfiguration(boolean paidVersion, boolean purchaseAccess, boolean purchaseNoads) {
-        LogHelper.v(TAG, "createConfiguration");
-        mConfiguration = new ConfigurationContentValues();
-        mConfiguration.putFieldUserEmail(getEmail());
-        mConfiguration.putFieldUserName(getName() != null ? getName() : "unknown");
-        mConfiguration.putFieldDeviceId(getAdvertId());
-
-        mConfiguration.putFieldPaidVersion(paidVersion);
-        mConfiguration.putFieldPurchaseAccess(purchaseAccess);
-        mConfiguration.putFieldPurchaseNoads(purchaseNoads);
-        return mConfiguration;
-    }
-
-    protected void enableButtons() {
+    public void enableButtons() {
         LogHelper.v(TAG, "enableButtons");
     }
-
-    public void checkUpdateWidget(Context context, int listenCount) {
-        boolean updateWidget = true;
-
-        //#IFDEF 'TRIAL'
-        updateWidget = (listenCount < AutoplayActivity.MAX_TRIAL_EPISODES);
-        //#ENDIF
-
-        LogHelper.v(TAG, "--> checkUpdateWidget: listenCount="+listenCount+", updateWidget="+updateWidget);
-        if (updateWidget && isLoadedOK()) {
-            LogHelper.v(TAG, "*** TURN ON WIDGET FUNCTIONALITY ***");
-            RadioTheaterWidgetService.setPaidVersion(context, updateWidget);
-        }
-    }
-
-    // the Configuration exists initially in SQLite, then in Firebase also.
-    // but if a new install happens for the account, we need to remember LISTEN_COUNT
-    // and pull it from Firebase instead of using local data.
-    private void updateTheUserConfiguration() {
-        LogHelper.v(TAG, "*** updateTheUserConfiguration ***");
-        ConfigurationContentValues configurationContent = null;
-        ContentValues sqliteConfiguration = null;
-        // 1) load local SQLite entry for deviceId
-        ConfigurationCursor configurationCursor = SQLiteHelper.getCursorForConfigurationDevice(getAdvertId());
-        boolean createLocalDeviceRecord = false;
-        if (configurationCursor != null) {
-            LogHelper.v(TAG, "found existing SQLite user Configuration");
-            configurationContent = SQLiteHelper.getConfigurationContentValues(configurationCursor);
-            sqliteConfiguration = configurationContent.values();
-            configurationCursor.close();
-        }
-        else {
-            LogHelper.v(TAG, "*** SQLITE: NO LOCAL DEVICE CONFIGURATION FOUND ***");
-            createLocalDeviceRecord = true;
-        }
-
-        if (! sFoundFirebaseDeviceId) { // deviceId not in Firebase
-            LogHelper.v(TAG, "device entry for Configuration doesn't exist in Firebase yet..");
-            // 2) if local SQLite entry doesn't exist, create it
-            if (sqliteConfiguration == null) { // no SQLite Configuration either
-                LogHelper.v(TAG, "*** INITIALIZING USER *** - create local SQLite Configuration");
-
-                //#IFDEF 'PAID'
-                //mConfiguration = createConfiguration(true, true, true);
-                //RadioTheaterWidgetService.setPaidVersion(this, true);
-                //#ENDIF
-
-                //#IFDEF 'TRIAL'
-                mConfiguration = createConfiguration(false, false, false);
-                RadioTheaterWidgetService.setPaidVersion(this, false);
-                //#ENDIF
-
-                mConfiguration.putFieldTotalListenCount(0);
-                // 3) update Firebase with the new deviceId entry
-                LogHelper.v(TAG, "*** CREATING FIREBASE DEVICE ENTRY ***");
-                updateFirebaseConfigurationValues(getAdvertId(), mConfiguration.values());
-                return;
-            }
-        }
-
-        if (createLocalDeviceRecord) {
-            LogHelper.v(TAG, "*** SQLITE: CREATING LOCAL DEVICE ENTRY ***");
-            SQLiteHelper.insertConfiguration(mConfiguration.values());
-        }
-
-        ContentValues firebaseConfiguration = null;
-        boolean updateFirebaseWithLocal = false;
-        if (mConfiguration != null) {
-            firebaseConfiguration = mConfiguration.values();
-        }
-        else if (sqliteConfiguration != null && configurationContent != null) {
-            LogHelper.v(TAG, "have SQLite configuration, but not Firebase - so update Firebase with local");
-            updateFirebaseWithLocal = true;
-        }
-
-        if (mConfiguration != null || updateFirebaseWithLocal) { // found Firebase Configuration
-            LogHelper.v(TAG, "updating Firebase entry for Configuration.");
-            // 4) merge and update local SQLite and Firebase
-            boolean dirty = mergeConfiguratons(sqliteConfiguration, firebaseConfiguration);
-            if (dirty) {
-                updateTheConfiguration();
-            }
-        } else {
-            LogHelper.v(TAG, "unable to update Firebase Configuration!");
-        }
-    }
-
-    private void updateTheConfiguration() {
-        LogHelper.v(TAG, "updateTheConfiguration");
-        ContentValues sqliteConfiguration;
-        sqliteConfiguration = mConfiguration.values();
-        LogHelper.v(TAG, "updateTheConfiguration: SQLITE: sqliteConfiguration=" + sqliteConfiguration.toString());
-        SQLiteHelper.updateConfiguration(getAdvertId(), sqliteConfiguration);
-        LogHelper.v(TAG, "updateTheConfiguration: FIREBASE: UPDATE FIREBASE DEVICE ENTRY ***");
-        updateFirebaseConfigurationValues(getAdvertId(), mConfiguration.values());
-    }
-
-    private boolean mergeConfiguratons(ContentValues sqliteConfiguration, ContentValues firebaseConfiguration) {
-        LogHelper.v(TAG, "mergeConfiguratons");
-        boolean dirty = false;
-        Boolean paidVersion = false;
-        Boolean purchaseAccess = false;
-        Boolean purchaseNoads = false;
-        Boolean firebasePaidVersion = false;
-        Boolean firebasePurchaseAccess = false;
-        Boolean firebasePurchaseNoads = false;
-        Long sqlite_listen_count = Long.valueOf(0);
-        Long firebase_listen_count = Long.valueOf(0);
-
-        //#IFDEF 'PAID'
-        //paidVersion = true;
-        //purchaseAccess = true;
-        //purchaseNoads = true;
-        //firebasePaidVersion = true;
-        //firebasePurchaseAccess = true;
-        //firebasePurchaseNoads = true;
-        //RadioTheaterWidgetService.setPaidVersion(this, true);
-        //#ENDIF
-
-        if (sqliteConfiguration == null) {
-            if (firebaseConfiguration == null) {
-                LogHelper.w(TAG, "both SQLite and Firebase have NO CONFIGURATION! - can't update");
-                return false;
-            }
-            LogHelper.v(TAG, "no local SQLite configuration exists on this device! - copy from Firebase");
-            sqliteConfiguration = firebaseConfiguration;
-            dirty = (firebaseConfiguration != null);
-        }
-        if (mConfiguration == null) {
-
-            //#IFDEF 'PAID'
-            //mConfiguration = createConfiguration(true, true, true);
-            //RadioTheaterWidgetService.setPaidVersion(this, true);
-            //#ENDIF
-
-            //#IFDEF 'TRIAL'
-            mConfiguration = createConfiguration(false, false, false);
-            RadioTheaterWidgetService.setPaidVersion(this, false);
-            //#ENDIF
-
-        }
-        if (firebaseConfiguration == null || firebaseConfiguration.size() == 0) {
-            if (sqliteConfiguration != null) {
-                LogHelper.v(TAG, "*** USING THE LOCAL SQLITE CONFIGURATION TO INITIALIZE FIREBASE ***");
-                firebaseConfiguration = sqliteConfiguration;
-                dirty = true;
-            }
-            else {
-                LogHelper.w(TAG, "*** EMPTY FIREBASE CONFIGURATION ***");
-                firebaseConfiguration = new ContentValues();
-            }
-        }
-        if (sqliteConfiguration == null) {
-            LogHelper.v(TAG, "*** USING THE FIREBASE CONFIGURATION INITIALIZE SQLITE ***");
-            sqliteConfiguration = firebaseConfiguration;
-            dirty = true;
-        }
-
-        //--------------------------------------------------------------------------------
-        //#IFDEF 'TRIAL'
-        if (sqliteConfiguration != null && sqliteConfiguration.size() > 0) {
-            try {
-                paidVersion = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
-                if (!paidVersion && firebaseConfiguration != null) {
-                    firebasePaidVersion = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
-                    if (firebasePaidVersion != null) {
-                        paidVersion = firebasePaidVersion;
-                    }
-                }
-            }
-            catch (Exception e) {
-                LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PAID_VERSION, e=" + e.getMessage());
-            }
-            try {
-                purchaseAccess = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
-                if (!purchaseAccess && firebaseConfiguration != null) {
-                    firebasePurchaseAccess = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
-                    if (firebasePurchaseAccess != null) {
-                        purchaseAccess = firebasePurchaseAccess;
-                    }
-                }
-            }
-            catch (Exception e) {
-                LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PURCHASE_ACCESS, e=" + e.getMessage());
-            }
-            try {
-                purchaseNoads = sqliteConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
-                if (!purchaseNoads && firebaseConfiguration != null) {
-                    firebasePurchaseNoads = firebaseConfiguration.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
-                    if (firebasePurchaseNoads != null) {
-                        purchaseNoads = firebasePurchaseNoads;
-                    }
-                }
-            }
-            catch (Exception e) {
-                LogHelper.w(TAG, "SQLite: unable to get ConfigurationColumns.FIELD_PURCHASE_NOADS, e=" + e.getMessage());
-            }
-        }
-        //#ENDIF
-        //--------------------------------------------------------------------------------
-
-        try {
-            sqlite_listen_count = sqliteConfiguration.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
-            if (sqlite_listen_count == null) {
-                sqlite_listen_count = Long.valueOf(0);
-            }
-        }
-        catch (Exception e) {
-            LogHelper.w(TAG, "SQLite: unable to get SQLite ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT, e="+e.getMessage());
-            sqlite_listen_count = Long.valueOf(0);
-        }
-
-        try {
-            if (firebaseConfiguration != null) {
-                firebase_listen_count = firebaseConfiguration.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
-                if (firebase_listen_count == null) {
-                    firebase_listen_count = Long.valueOf(0);
-                }
-            }
-        }
-        catch (Exception e) {
-            LogHelper.w(TAG, "SQLite: unable to get Firebase ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT, e="+e.getMessage());
-            firebase_listen_count = Long.valueOf(0);
-        }
-
-        if (sqlite_listen_count == firebase_listen_count) {
-            LogHelper.v(TAG, "local listen count EQUAL TO firebase listen count: sAllListenCount="+ sAllListenCount);
-            mConfiguration.putFieldTotalListenCount(sAllListenCount);
-            dirty = true; // not really dirty, but we need to update because the record might not exist yet
-        }
-        else if (sqlite_listen_count > firebase_listen_count) {
-            long total_listen_count = (int) sqlite_listen_count.longValue();
-            if (total_listen_count > sAllListenCount) {
-                sAllListenCount = (int) total_listen_count;
-            }
-            LogHelper.v(TAG, "local listen count GREATER THAN firebase listen count: sAllListenCount="+ sAllListenCount);
-            mConfiguration.putFieldTotalListenCount(sAllListenCount);
-            dirty = true;
-        }
-        else {
-            long total_listen_count = (int) firebase_listen_count.longValue();
-            if (total_listen_count > sAllListenCount) {
-                sAllListenCount = (int) total_listen_count;
-            }
-            LogHelper.v(TAG, "firebase listen count GREATER THAN local listen count: sAllListenCount="+ sAllListenCount);
-            mConfiguration.putFieldTotalListenCount(sAllListenCount);
-            dirty = true;
-        }
-
-        if ((paidVersion != null && paidVersion)
-                || (firebasePaidVersion != null && firebasePaidVersion))
-        {
-            mConfiguration.putFieldPaidVersion(true);
-            dirty = true;
-        }
-        if ((purchaseAccess != null && purchaseAccess)
-                || (firebasePurchaseAccess != null && firebasePurchaseAccess)
-                || (paidVersion != null && paidVersion)
-                || (firebasePaidVersion != null && firebasePaidVersion))
-        {
-            mConfiguration.putFieldPurchaseAccess(true);
-            dirty = true;
-        }
-        if ((purchaseNoads != null && purchaseNoads)
-                || (firebasePurchaseNoads != null && firebasePurchaseNoads)
-                || (paidVersion != null && paidVersion)
-                || (firebasePaidVersion != null && firebasePaidVersion))
-        {
-            mConfiguration.putFieldPurchaseNoads(true);
-            dirty = true;
-        }
-
-        //#IFDEF 'TRIAL'
-        boolean trialMode = (paidVersion != null && paidVersion) || (purchaseAccess != null && purchaseAccess) || isTrial();
-        RadioTheaterWidgetService.setPaidVersion(this, trialMode);
-        //#ENDIF
-
-        return dirty;
-    }
-
-    // update Firebase User Account info
-    public void updateFirebaseConfigurationValues(String deviceId, ContentValues configurationValues) {
-        LogHelper.v(TAG, "updateFirebaseConfigurationValues");
-        if (getDatabase() == null) {
-            initializeFirebase();
-        }
-        String  email = getEmail();
-        Boolean authenticated = email != null;
-        Long total_listen_count = configurationValues.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
-
-        if (total_listen_count < sAllListenCount) {
-            total_listen_count = Long.valueOf(sAllListenCount);
-        }
-        else {
-            sAllListenCount = total_listen_count.intValue();
-        }
-
-        //#IFDEF 'PAID'
-        //Boolean paid_version = true;
-        //Boolean purchase_access = true;
-        //Boolean purchase_noads = true;
-        //#ENDIF
-
-        //#IFDEF 'TRIAL'
-        Boolean paid_version = configurationValues.getAsBoolean(ConfigurationColumns.FIELD_PAID_VERSION);
-        Boolean purchase_access = configurationValues.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_ACCESS);
-        Boolean purchase_noads = configurationValues.getAsBoolean(ConfigurationColumns.FIELD_PURCHASE_NOADS);
-        //#ENDIF
-
-        FirebaseConfiguration firebaseConfiguration = new FirebaseConfiguration(
-                email,
-                getUID(),
-                deviceId,
-                authenticated,
-                paid_version,
-                purchase_access,
-                purchase_noads,
-                total_listen_count
-        );
-        firebaseConfiguration.commit(getDatabase(), deviceId);
-    }
-
-    // update Firebase User Episode History and Auth
-    public void updateFirebaseConfigEntryValues(String episode_number, ContentValues configEntryValues, long duration) {
-        LogHelper.v(TAG, "updateFirebaseConfigEntryValues");
-        if (getDatabase() == null) {
-            initializeFirebase();
-        }
-        String  email = getEmail();
-        Boolean episode_downloaded = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_EPISODE_DOWNLOADED);
-        Boolean episode_heard = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_EPISODE_HEARD);
-        Long    episode_count = configEntryValues.getAsLong(ConfigEpisodesColumns.FIELD_LISTEN_COUNT);
-
-        //#IFDEF 'PAID'
-        //Boolean purchased_access = true;
-        //Boolean purchased_noads = true;
-        //#ENDIF
-
-        //#IFDEF 'TRIAL'
-        Boolean purchased_access = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_PURCHASED_ACCESS);
-        Boolean purchased_noads = configEntryValues.getAsBoolean(ConfigEpisodesColumns.FIELD_PURCHASED_NOADS);
-        //#ENDIF
-
-        FirebaseConfigEpisode firebaseConfigEpisode = new FirebaseConfigEpisode(
-                email,
-                episode_number,
-                purchased_access,
-                purchased_noads,
-                episode_downloaded,
-                episode_heard,
-                episode_count,
-                duration
-        );
-        firebaseConfigEpisode.commit(getDatabase(), getUID());
-    }
-
-    /*
-    private void deleteFirebaseDatabase() {
-        LogHelper.v(TAG, "*** deleteFirebaseDatabase ***");
-        mFirebase.child("radiomysterytheater/0").removeValue();
-        mFirebase.child("radiomysterytheater/1").removeValue();
-        mFirebase.child("radiomysterytheater/2").removeValue();
-    }
-    */
 
     //--------------------------------------------------------------------------------
     // CircleView related
@@ -1751,172 +1195,8 @@ public class BaseActivity extends AppCompatActivity {
     // Getters and Setters
     //--------------------------------------------------------------------------------
 
-    public static String getName() {
-        if (sName == null) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            sName = sharedPreferences.getString("userName", "");
-            if (sName.length() == 0) {
-                sName = null;
-            }
-        }
-        return sName;
-    }
-
-    public static void setName(String name) {
-        if (name != null && name.length() > 0) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("userName", name);
-            editor.apply();
-        }
-        sName = name;
-    }
-
-    public static String getEmail() {
-        if (sEmail == null) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            sEmail = sharedPreferences.getString("userEmail", "");
-            if (sEmail.length() == 0) {
-                sEmail = null;
-            }
-        }
-        return sEmail;
-    }
-
-    public static void setEmail(String email) {
-        if (email != null && email.length() > 0) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("userEmail", email);
-            editor.apply();
-        }
-        sEmail = email;
-    }
-
-    public static String getPass() {
-        if (sPassword == null) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            sPassword = sharedPreferences.getString("userPass", "");
-            if (sPassword.length() == 0) {
-                sPassword = null;
-            }
-        }
-        return sPassword;
-    }
-
-    public static void setPass(String password) {
-        if (password != null && password.length() > 0) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("userPass", password);
-            editor.apply();
-        }
-        sPassword = password;
-    }
-
-    public static String getUID() {
-        if (sUID == null) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            sUID = sharedPreferences.getString("userUID", "");
-            if (sUID.length() == 0) {
-                sUID = null;
-            }
-        }
-        return sUID;
-    }
-
-    public static void setUID(String uid) {
-        if (uid != null && uid.length() > 0) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("userUID", uid);
-            editor.apply();
-        }
-        sUID = uid;
-    }
-
-    public static String getAdvertId() {
-        if (sAdvId == null) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            String advertID = sharedPreferences.getString("advertID", sAdvId); // passing null object for default
-            if (advertID != null && advertID.length() != 0) {
-                sAdvId = advertID;
-            }
-        }
-        LogHelper.v(TAG, "get sAdvId="+ sAdvId);
-        return sAdvId;
-    }
-
-    public static void setAdvertId(String advId) {
-        if (advId != null && advId.length() > 0) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RadioTheaterApplication.getRadioTheaterApplicationContext());
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("advertID", advId);
-            editor.apply();
-        }
-        LogHelper.v(TAG, "set sAdvId="+advId);
-        sAdvId = advId;
-    }
-
-    public static boolean isTrial() {
-        boolean trial = true;
-        //#IFDEF 'TRIAL'
-        trial = (sAllListenCount < MAX_TRIAL_EPISODES);
-        //#ENDIF
-        return trial;
-    }
-
-    public static boolean isPurchased() {
-        return sPurchased;
-    }
-
-    public static String getAirdate() {
-        return sAirdate;
-    }
-
-    public static String getEpisodeTitle() {
-
-        return sEpisodeTitle;
-    }
-
-    public static long getEpisodeNumber() {
-        return sEpisodeNumber;
-    }
-
-    public static void setEpisodeNumber(long episodeNumber) {
-        sEpisodeNumber = episodeNumber;
-    }
-
-    public static String getEpisodeDescription() {
-        return sEpisodeDescription;
-    }
-
-    public static String getEpisodeWeblinkUrl() {
-        return sEpisodeWeblinkUrl;
-    }
-
-    public static String getEpisodeDownloadUrl() {
-        return sEpisodeDownloadUrl;
-    }
-
-    public static boolean isLoadedOK() {
-        return sLoadedOK;
-    }
-
     public Handler getHandler() {
         return mHandler;
-    }
-
-    public FirebaseAuth getAuth() {
-        return mAuth;
-    }
-
-    public Firebase getFirebase() {
-        return mFirebase;
-    }
-
-    public DatabaseReference getDatabase() {
-        return mDatabase;
     }
 
     public CircleProgressView getCircleView() {
@@ -1984,27 +1264,28 @@ public class BaseActivity extends AppCompatActivity {
                 +", sLoadingScreenEnabled="+sLoadingScreenEnabled+", sBeginLoading="+sBeginLoading
                 +", sEnableFAB="+sEnableFAB+", sWaitForMedia="+sWaitForMedia+" <<<=========");
 
-        playInfoBundle.putLong(KEY_EPISODE, getEpisodeNumber());
-        playInfoBundle.putBoolean(KEY_PURCHASED, sPurchased);
-        playInfoBundle.putBoolean(KEY_NOADS, sNoAdsForShow);
-        playInfoBundle.putBoolean(KEY_DOWNLOADED, sDownloaded);
-        playInfoBundle.putBoolean(KEY_HEARD, sEpisodeHeard);
-        playInfoBundle.putLong(KEY_DURATION, mDuration);
         playInfoBundle.putBoolean(KEY_REAL_DURATION, sHaveRealDuration);
-        playInfoBundle.putLong(KEY_CURRENT_POSITION, mCurrentPosition);
-        playInfoBundle.putBoolean(KEY_LOADED_OK, sLoadedOK);
-        playInfoBundle.putString(KEY_AIRDATE, getAirdate());
-        playInfoBundle.putString(KEY_TITLE, getEpisodeTitle());
-        playInfoBundle.putString(KEY_DESCRIPTION, getEpisodeDescription());
-        playInfoBundle.putString(KEY_WEBLINK, getEpisodeWeblinkUrl());
-        playInfoBundle.putString(KEY_DOWNLOAD_URL, getEpisodeDownloadUrl());
 
-        LogHelper.v(TAG, "APP-STATE (Base): savePlayInfoToBundle: sEpisodeNumber="+ sEpisodeNumber
-                +", sPurchased="+sPurchased+", sNoAdsForShow="+sNoAdsForShow+", sDownloaded="+sDownloaded
-                +", sEpisodeHeard="+sEpisodeHeard+", mDuration="+mDuration+", sHaveRealDuration="+sHaveRealDuration
-                +", mCurrentPosition="+mCurrentPosition+", sLoadedOK="+sLoadedOK
-                +", sAirdate="+ sAirdate +", sEpisodeTitle="+ sEpisodeTitle +", sEpisodeDescription="+ sEpisodeDescription
-                +", sEpisodeWeblinkUrl="+ sEpisodeWeblinkUrl +", sEpisodeDownloadUrl="+ sEpisodeDownloadUrl +" <<<=========");
+        playInfoBundle.putLong(KEY_EPISODE, DataHelper.getEpisodeNumber());
+        playInfoBundle.putBoolean(KEY_PURCHASED, DataHelper.isPurchased());
+        playInfoBundle.putBoolean(KEY_NOADS, DataHelper.isNoAdsForShow());
+        playInfoBundle.putBoolean(KEY_DOWNLOADED, DataHelper.isDownloaded());
+        playInfoBundle.putBoolean(KEY_HEARD, DataHelper.isEpisodeHeard());
+        playInfoBundle.putLong(KEY_DURATION, DataHelper.getDuration());
+        playInfoBundle.putLong(KEY_CURRENT_POSITION, DataHelper.getCurrentPosition());
+        playInfoBundle.putBoolean(KEY_LOADED_OK, DataHelper.isLoadedOK());
+        playInfoBundle.putString(KEY_AIRDATE, DataHelper.getAirdate());
+        playInfoBundle.putString(KEY_TITLE, DataHelper.getEpisodeTitle());
+        playInfoBundle.putString(KEY_DESCRIPTION, DataHelper.getEpisodeDescription());
+        playInfoBundle.putString(KEY_WEBLINK, DataHelper.getEpisodeWeblinkUrl());
+        playInfoBundle.putString(KEY_DOWNLOAD_URL, DataHelper.getEpisodeDownloadUrl());
+
+        LogHelper.v(TAG, "APP-STATE (Base): savePlayInfoToBundle: EpisodeNumber="+ DataHelper.getEpisodeNumber()
+                +", Purchased="+ DataHelper.isPurchased()+", NoAdsForShow="+ DataHelper.isNoAdsForShow()+", Downloaded="+ DataHelper.isDownloaded()
+                +", EpisodeHeard="+ DataHelper.isEpisodeHeard()+", Duration="+ DataHelper.getDuration()+", sHaveRealDuration="+sHaveRealDuration
+                +", mCurrentPosition="+ DataHelper.getCurrentPosition()+", LoadedOK="+ DataHelper.isLoadedOK()+", Airdate="+ DataHelper.getAirdate()
+                +", EpisodeTitle="+ DataHelper.getEpisodeTitle()+", EpisodeDescription="+ DataHelper.getEpisodeDescription()
+                +", EpisodeWeblinkUrl="+ DataHelper.getEpisodeWeblinkUrl()+", EpisodeDownloadUrl="+ DataHelper.getEpisodeDownloadUrl() +" <<<=========");
     }
 
     protected void restorePlayInfoFromBundle(Bundle playInfoBundle) {
@@ -2021,328 +1302,32 @@ public class BaseActivity extends AppCompatActivity {
                     +", sLoadingScreenEnabled="+sLoadingScreenEnabled+", sBeginLoading="+sBeginLoading
                     +", sEnableFAB="+sEnableFAB+", sWaitForMedia="+sWaitForMedia+" <<<=========");
 
-            sEpisodeNumber = playInfoBundle.getLong(KEY_EPISODE);
-            sPurchased = playInfoBundle.getBoolean(KEY_PURCHASED);
-            sNoAdsForShow = playInfoBundle.getBoolean(KEY_NOADS);
-            sDownloaded = playInfoBundle.getBoolean(KEY_DOWNLOADED);
-            sEpisodeHeard = playInfoBundle.getBoolean(KEY_HEARD);
-            mDuration = playInfoBundle.getLong(KEY_DURATION);
             sHaveRealDuration = playInfoBundle.getBoolean(KEY_REAL_DURATION);
-            mCurrentPosition = playInfoBundle.getLong(KEY_CURRENT_POSITION);
-            sLoadedOK = playInfoBundle.getBoolean(KEY_LOADED_OK);
-            sAirdate = playInfoBundle.getString(KEY_AIRDATE);
-            sEpisodeTitle = playInfoBundle.getString(KEY_TITLE);
-            sEpisodeDescription = playInfoBundle.getString(KEY_DESCRIPTION);
-            sEpisodeWeblinkUrl = playInfoBundle.getString(KEY_WEBLINK);
-            sEpisodeDownloadUrl = playInfoBundle.getString(KEY_DOWNLOAD_URL);
 
-            LogHelper.v(TAG, "APP-STATE (Base): restorePlayInfoFromBundle: sEpisodeNumber="+ sEpisodeNumber
-                    +", sPurchased="+sPurchased+", sNoAdsForShow="+sNoAdsForShow+", sDownloaded="+sDownloaded
-                    +", sEpisodeHeard="+sEpisodeHeard+", mDuration="+mDuration+", sHaveRealDuration="+sHaveRealDuration
-                    +", mCurrentPosition="+mCurrentPosition+", sLoadedOK="+sLoadedOK
-                    +", sAirdate="+ sAirdate +", sEpisodeTitle="+ sEpisodeTitle +", sEpisodeDescription="+ sEpisodeDescription
-                    +", sEpisodeWeblinkUrl="+ sEpisodeWeblinkUrl +", sEpisodeDownloadUrl="+ sEpisodeDownloadUrl +" <<<=========");
+            DataHelper.setEpisodeNumber(playInfoBundle.getLong(KEY_EPISODE));
+            DataHelper.setPurchased(playInfoBundle.getBoolean(KEY_PURCHASED));
+            DataHelper.setNoAdsForShow(playInfoBundle.getBoolean(KEY_NOADS));
+            DataHelper.setDownloaded(playInfoBundle.getBoolean(KEY_DOWNLOADED));
+            DataHelper.setEpisodeHeard(playInfoBundle.getBoolean(KEY_HEARD));
+            DataHelper.setDuration(playInfoBundle.getLong(KEY_DURATION));
+            DataHelper.setCurrentPosition(playInfoBundle.getLong(KEY_CURRENT_POSITION));
+            DataHelper.setLoadedOK(playInfoBundle.getBoolean(KEY_LOADED_OK));
+            DataHelper.setAirdate(playInfoBundle.getString(KEY_AIRDATE));
+            DataHelper.setEpisodeTitle(playInfoBundle.getString(KEY_TITLE));
+            DataHelper.setEpisodeDescription(playInfoBundle.getString(KEY_DESCRIPTION));
+            DataHelper.setEpisodeWeblinkUrl(playInfoBundle.getString(KEY_WEBLINK));
+            DataHelper.setEpisodeDownloadUrl(playInfoBundle.getString(KEY_DOWNLOAD_URL));
 
-            showCurrentInfo();
+            LogHelper.v(TAG, "APP-STATE (Base): restorePlayInfoFromBundle: sEpisodeNumber="+ DataHelper.getEpisodeNumber()
+                    +", Purchased="+ DataHelper.isPurchased()+", NoAdsForShow="+ DataHelper.isNoAdsForShow()+", Downloaded="+ DataHelper.isDownloaded()
+                    +", EpisodeHeard="+ DataHelper.isEpisodeHeard()+", Duration="+ DataHelper.getDuration()+", sHaveRealDuration="+sHaveRealDuration
+                    +", mCurrentPosition="+ DataHelper.getCurrentPosition()+", LoadedOK="+ DataHelper.isLoadedOK()+", Airdate="+ DataHelper.getAirdate()
+                    +", EpisodeTitle="+ DataHelper.getEpisodeTitle() +", EpisodeDescription="+ DataHelper.getEpisodeDescription()
+                    +", EpisodeWeblinkUrl="+ DataHelper.getEpisodeWeblinkUrl() +", EpisodeDownloadUrl="+ DataHelper.getEpisodeDownloadUrl()
+                    +" <<<=========");
+
+            DataHelper.showCurrentInfo();
         }
-    }
-
-    protected void showCurrentInfo() {
-        LogHelper.v(TAG, "===> EPISODE INFO"
-                + ": sEpisodeTitle=" + getEpisodeTitle()
-                + ": sEpisodeNumber=" + getEpisodeNumber()
-                + ": sAirdate=" + getAirdate()
-                + ": sEpisodeDescription=" + getEpisodeDescription()
-                + ": sEpisodeWeblinkUrl=" + getEpisodeWeblinkUrl()
-                + ": sEpisodeDownloadUrl=" + getEpisodeDownloadUrl()
-                + ", sPurchased=" + sPurchased
-                + ", sNoAdsForShow=" + sNoAdsForShow
-                + ", sDownloaded=" + sDownloaded
-                + ", sEpisodeHeard=" + sEpisodeHeard);
-    }
-
-    public void markEpisodeAsHeardAndIncrementPlayCount(long episodeNumber, String episodeIndex, long duration) {
-        LogHelper.v(TAG, "-------------------------------------------------------------------------------- sAllListenCount="+sAllListenCount);
-        LogHelper.v(TAG, "markEpisodeAsHeardAndIncrementPlayCount: episodeNumber="+episodeNumber+", episodeIndex="+episodeIndex+", duration="+duration);
-        if (episodeNumber == 0) {
-            LogHelper.w(TAG, "unable to markEpisodeAsHeardAndIncrementPlayCount - episodeNumber is zero!");
-            return;
-        }
-        boolean matchError = false;
-        if (! String.valueOf(episodeNumber).equals(episodeIndex)) {
-            LogHelper.e(TAG, "markEpisodeAsHeardAndIncrementPlayCount: The episodeNumber="+episodeNumber+" and episodeIndex "+episodeIndex+" DONT MATCH");
-            matchError = true;
-        }
-
-        // UPDATE SQLITE - mark SQLite config episode as "HEARD" and increment "PLAY COUNT" - Also send record to Firebase
-        ConfigEpisodesContentValues existingEpisodeConfig = SQLiteHelper.getConfigEpisodeForEpisode(episodeIndex);
-        long episodeListenCount = 1;
-        if (existingEpisodeConfig != null && existingEpisodeConfig.values() != null && existingEpisodeConfig.values().size() != 0) {
-            ContentValues configEpisode = existingEpisodeConfig.values();
-            configEpisode.put(ConfigEpisodesEntry.FIELD_EPISODE_HEARD, true);
-
-            episodeListenCount = configEpisode.getAsLong(ConfigEpisodesColumns.FIELD_LISTEN_COUNT);
-            ++episodeListenCount;
-
-            configEpisode.put(ConfigEpisodesEntry.FIELD_LISTEN_COUNT, episodeListenCount);
-            SQLiteHelper.updateConfigEpisodesEntry(episodeIndex, configEpisode);
-
-            LogHelper.v(TAG, "markEpisodeAsHeardAndIncrementPlayCount: *** UPDATE FIREBASE CONFIG ENTRY FOR EPISODE "+episodeNumber+" ***");
-            updateFirebaseConfigEntryValues(episodeIndex, configEpisode, duration);
-            LogHelper.d(TAG, "markEpisodeAsHeardAndIncrementPlayCount: new EPISODE-LISTEN-COUNT=" + episodeListenCount + " for #" + episodeIndex + (matchError ? " *** MATCH ERROR EPISODE=" + episodeNumber : ""));
-        }
-        else {
-            LogHelper.e(TAG, "markEpisodeAsHeardAndIncrementPlayCount: *** SQLITE: - MARK HEARD FAILED - unable to getConfigEpisodeForEpisode="+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
-        }
-
-        // UPDATE SQLITE - mark SQLite configuration as "HEARD" and increment "PLAY COUNT"
-        ConfigurationCursor configurationCursor = SQLiteHelper.getCursorForConfigurationDevice(getAdvertId());
-        ConfigurationContentValues existingConfiguration = null;
-        if (configurationCursor != null) {
-            existingConfiguration = SQLiteHelper.getConfigurationContentValues(configurationCursor);
-            configurationCursor.close();
-        }
-        long total_listen_count = 1;
-        ContentValues configurationValues = null;
-        if (existingConfiguration != null && existingConfiguration.values() != null && existingConfiguration.values().size() != 0) {
-            configurationValues = existingConfiguration.values();
-
-            total_listen_count = configurationValues.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
-            ++total_listen_count;
-
-            if (total_listen_count < sAllListenCount) {
-                total_listen_count = sAllListenCount;
-            } else {
-                sAllListenCount = (int) total_listen_count;
-            }
-
-            configurationValues.put(ConfigurationEntry.FIELD_TOTAL_LISTEN_COUNT, Long.valueOf(sAllListenCount));
-            SQLiteHelper.updateConfiguration(getAdvertId(), configurationValues);
-        }
-        else {
-            LogHelper.e(TAG, "markEpisodeAsHeardAndIncrementPlayCount: *** SQLITE: - INCREMENT LISTEN COUNT - no getConfigurationDevice SQL record, email="+getEmail()+", deviceId="+getAdvertId());
-            if (mConfiguration == null) {
-                LogHelper.w(TAG, "*** THE GLOBAL CONFIGURATION IS NULL! - INITIALIZING IT NOW. ***");
-
-                //#IFDEF 'PAID'
-                //mConfiguration = createConfiguration(true, true, true);
-                //#ENDIF
-
-                //#IFDEF 'TRIAL'
-                mConfiguration = createConfiguration(false, false, false);
-                //#ENDIF
-
-            }
-            configurationValues = mConfiguration.values();
-            ++sAllListenCount;
-            configurationValues.put(ConfigurationEntry.FIELD_TOTAL_LISTEN_COUNT, sAllListenCount);
-            try {
-                LogHelper.w(TAG, "markEpisodeAsHeardAndIncrementPlayCount: *** SQLITE: MISSING - TRY UPDATE THE LOCAL DEVICE ENTRY ***");
-                SQLiteHelper.updateConfiguration(getAdvertId(), configurationValues);
-            }
-            catch (Exception e1) {
-                LogHelper.w(TAG, "markEpisodeAsHeardAndIncrementPlayCount: *** SQLITE: MISSING - UPDATE for SQLITE Configuration failed - try INSERT instead *** - e1="+e1.getMessage());
-                try {
-                    LogHelper.w(TAG, "markEpisodeAsHeardAndIncrementPlayCount: *** SQLITE: MISSING - CREATE THE LOCAL DEVICE ENTRY ***");
-                    SQLiteHelper.insertConfiguration(configurationValues);
-                }
-                catch (Exception e2) {
-                    LogHelper.e(TAG, "markEpisodeAsHeardAndIncrementPlayCount: *** SQLITE: MISSING - UNABLE TO INSERT OR UPDATE CONFIGURATION *** - e2="+e2.getMessage());
-                }
-            }
-        }
-
-        if (configurationValues != null && mConfiguration != null && mConfiguration.values() != null) {
-            LogHelper.v(TAG, "markEpisodeAsHeardAndIncrementPlayCount: *** FIREBASE: merge and update local SQLite and Firebase - sAllListenCount="+sAllListenCount);
-            boolean dirty = mergeConfiguratons(configurationValues, mConfiguration.values());
-            if (dirty) {
-                updateTheConfiguration();
-            }
-        }
-
-        // send Analytics record to Firebase for Episode+Heard+Count
-        trackWithFirebaseAnalytics(episodeIndex, duration, "mark HEARD + playcount="+ episodeListenCount +" + allcount="+ total_listen_count);
-        LogHelper.v(TAG, "markEpisodeAsHeardAndIncrementPlayCount: FINISH");
-        LogHelper.v(TAG, "-------------------------------------------------------------------------------- sAllListenCount="+sAllListenCount);
-    }
-
-    public void markEpisodeAs_NOT_Heard(long episodeNumber, String episodeIndex, long duration) {
-        LogHelper.v(TAG, "markEpisodeAs_NOT_Heard: episodeNumber="+episodeNumber+", episodeIndex="+episodeIndex+", duration="+duration);
-        if (episodeNumber == 0) {
-            LogHelper.w(TAG, "unable to markEpisodeAs_NOT_Heard - episodeNumber is zero!");
-            return;
-        }
-        boolean matchError = false;
-        if (! String.valueOf(episodeNumber).equals(episodeIndex)) {
-            LogHelper.e(TAG, "markEpisodeAs_NOT_Heard: The episodeNumber="+episodeNumber+" and episodeIndex "+episodeIndex+" DONT MATCH");
-            matchError = true;
-        }
-
-        // UPDATE SQLITE - mark SQLite config episode as "NOT HEARD" - Also send record to Firebase
-        ConfigEpisodesContentValues existing = SQLiteHelper.getConfigEpisodeForEpisode(episodeIndex);
-        if (existing != null && existing.values() != null && existing.values().size() != 0) {
-            ContentValues configEpisode = existing.values();
-            configEpisode.put(ConfigEpisodesEntry.FIELD_EPISODE_HEARD, false);
-            SQLiteHelper.updateConfigEpisodesEntry(episodeIndex, configEpisode);
-            updateFirebaseConfigEntryValues(episodeIndex, configEpisode, duration);
-            LogHelper.d(TAG, "markEpisodeAs_NOT_Heard: for Episode "+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
-        }
-        else {
-            LogHelper.e(TAG, "*** SQLITE: - unable to getConfigEpisodeForEpisode="+episodeIndex+(matchError ? " *** MATCH ERROR EPISODE="+episodeNumber : ""));
-        }
-
-        // send Analytics record to Firebase for Episode+Heard+Count
-        trackWithFirebaseAnalytics(episodeIndex, duration, "mark NOT HEARD");
-    }
-
-    protected void trackWithFirebaseAnalytics(String episodeIndex, long duration, String comment) {
-        if (mFirebaseAnalytics != null && episodeIndex != null && comment != null) {
-            LogHelper.v(TAG, "ANALYTICS: trackWithFirebaseAnalytics: episode="+episodeIndex+", duration="+duration+", comment="+comment);
-            if (Long.valueOf(episodeIndex) == 0) {
-                LogHelper.w(TAG, "unable to logToFirebase - episodeIndex is zero!");
-                return;
-            }
-            Bundle bundle = new Bundle();
-            bundle.putString(FirebaseAnalytics.Param.ITEM_ID, episodeIndex);
-            bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, sEpisodeTitle);
-            bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "audio");
-            bundle.putString("episode", episodeIndex);
-
-            //#IFDEF 'PAID'
-            //bundle.putString("user_action", "PAID: "+comment);
-            //#ENDIF
-
-            //#IFDEF 'TRIAL'
-            bundle.putString("user_action", "TRIAL: "+comment);
-            //#ENDIF
-
-            bundle.putLong("listen_duration", duration);
-            mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
-            logToFirebase(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
-        }
-    }
-
-    protected void trackWithFirebaseAnalytics(String event, String email, String comment) {
-        if (mFirebaseAnalytics != null && event != null && email != null && comment != null) {
-            LogHelper.v(TAG, "ANALYTICS: trackWithFirebaseAnalytics: event="+event+", email="+email);
-            if (getEmail() == null) {
-                LogHelper.w(TAG, "unable to logToFirebase - Firebase user is not logged in!");
-                return;
-            }
-            Bundle bundle = new Bundle();
-            bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "event");
-            bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, event);
-            bundle.putString(FirebaseAnalytics.Param.ORIGIN, email);
-
-            //#IFDEF 'PAID'
-            //bundle.putString("user_action", "PAID: "+comment);
-            //#ENDIF
-
-            //#IFDEF 'TRIAL'
-            bundle.putString("user_action", "TRIAL: "+comment);
-            //#ENDIF
-
-            mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
-            logToFirebase(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
-        }
-    }
-
-    protected void trackSignupAttemptWithFirebaseAnalytics(String signup_using) {
-        if (mFirebaseAnalytics != null) {
-            LogHelper.v(TAG, "ANALYTICS: trackSignupAttemptWithFirebaseAnalytics signup_using="+signup_using);
-            Bundle bundle = new Bundle();
-            bundle.putString("using", signup_using);
-            mFirebaseAnalytics.logEvent("signup_method", bundle);
-        }
-    }
-
-    protected void trackSignupWithFirebaseAnalytics() {
-        if (mFirebaseAnalytics != null) {
-            LogHelper.v(TAG, "ANALYTICS: trackSignupWithFirebaseAnalytics email="+getEmail());
-            Bundle bundle = new Bundle();
-            bundle.putString("user", getEmail());
-            mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SIGN_UP, bundle);
-            logToFirebase(FirebaseAnalytics.Event.SIGN_UP, bundle);
-        }
-    }
-
-    protected void trackLoginWithFirebaseAnalytics() {
-        if (mFirebaseAnalytics != null) {
-            LogHelper.v(TAG, "ANALYTICS: trackLoginWithFirebaseAnalytics email="+getEmail());
-            Bundle bundle = new Bundle();
-            bundle.putString("user", getEmail());
-            mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN, bundle);
-            logToFirebase(FirebaseAnalytics.Event.LOGIN, bundle);
-        }
-    }
-
-    protected void trackSearchWithFirebaseAnalytics() {
-        if (mFirebaseAnalytics != null) {
-            LogHelper.v(TAG, "ANALYTICS: trackSearchWithFirebaseAnalytics email="+getEmail());
-            Bundle bundle = new Bundle();
-            bundle.putString("user", getEmail());
-            mFirebaseAnalytics.logEvent("do_search", bundle);
-            logToFirebase("do_search", bundle);
-        }
-    }
-
-    protected void trackSettingsWithFirebaseAnalytics() {
-        if (mFirebaseAnalytics != null) {
-            LogHelper.v(TAG, "ANALYTICS: trackSettingsWithFirebaseAnalytics email="+getEmail());
-            Bundle bundle = new Bundle();
-            bundle.putString("user", getEmail());
-            mFirebaseAnalytics.logEvent("do_settings", bundle);
-            logToFirebase("do_settings", bundle);
-        }
-    }
-
-    protected void trackAboutWithFirebaseAnalytics() {
-        if (mFirebaseAnalytics != null) {
-            LogHelper.v(TAG, "ANALYTICS: trackAboutWithFirebaseAnalytics email="+getEmail());
-            Bundle bundle = new Bundle();
-            bundle.putString("user", getEmail());
-            mFirebaseAnalytics.logEvent("do_about", bundle);
-            logToFirebase("do_about", bundle);
-        }
-    }
-
-    protected void logToFirebase(String action, Bundle bundle) {
-        if (getEmail() == null) { // ensure the Firebase user is logged-in
-            LogHelper.w(TAG, "unable to logToFirebase - Firebase user is not logged in!");
-            return;
-        }
-        String detail = "";
-        if (bundle != null) {
-            detail = "{";
-            for (String key : bundle.keySet()) {
-                detail += " " + key + " => " + bundle.get(key) + ";";
-            }
-            detail += " }";
-        }
-        String logValue = action + " " + detail;
-        LogHelper.v(TAG, "ANALYTICS: logToFirebase - logValue="+logValue);
-        final String key = date_key();
-        if (getDatabase() != null && key != null) {
-            LogHelper.v(TAG, "commit: key=" + key);
-            getDatabase().child("log").child(getUID()).child(key).setValue(logValue, new DatabaseReference.CompletionListener() {
-                @Override
-                public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-                    if (databaseError != null) {
-                        LogHelper.v(TAG, "logToFirebase: onComplete - databaseError=" + databaseError.getMessage());
-                    }
-                    if (databaseReference != null) {
-                        LogHelper.v(TAG, "logToFirebase: onComplete - databaseReference key=" + databaseReference.getKey());
-                    }
-                    if (databaseError == null && databaseReference != null) {
-                        LogHelper.v(TAG, "logToFirebase: key="+key+" - SUCCESS!");
-                    }
-                }
-            });
-        }
-    }
-
-    public String date_key() {
-        return new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.getDefault()).format(new java.util.Date());
     }
 
 }

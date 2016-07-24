@@ -32,7 +32,6 @@ import com.harlie.radiotheater.radiomysterytheater.data.actors.ActorsColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.writers.WritersColumns;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
-import com.harlie.radiotheater.radiomysterytheater.data_helper.SQLiteHelper;
 import com.harlie.radiotheater.radiomysterytheater.util.PollingCheck;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 

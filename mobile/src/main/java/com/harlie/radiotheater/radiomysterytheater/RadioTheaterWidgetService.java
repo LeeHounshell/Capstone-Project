@@ -10,7 +10,7 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import android.widget.RemoteViews;
 
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
-import com.harlie.radiotheater.radiomysterytheater.data_helper.SQLiteHelper;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.DataHelper;
 import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.RadioTheaterWidgetProvider;
@@ -50,13 +50,15 @@ public class RadioTheaterWidgetService extends Service {
             if (intent.getBooleanExtra("BUTTON_PRESS", false)) {
                 LogHelper.v(TAG, "handleCommand: GOT WIDGET BUTTON PRESS!");
                 setGotWidgetButtonPress(true);
-            } else if (intent.getBooleanExtra("VISUAL_ONLY", false)) {
+            }
+            else if (intent.getBooleanExtra("VISUAL_ONLY", false)) {
                 LogHelper.v(TAG, "handleCommand: *** VISUAL BUTTON UPDATE ONLY ***");
                 String initialization = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.initialization);
                 String message = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.update_buttons);
                 Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(initialization, message);
                 RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
-            } else {
+            }
+            else {
                 LogHelper.v(TAG, "handleCommand: not BUTTON_PRESS and not VISUAL_ONLY");
             }
 
@@ -70,11 +72,12 @@ public class RadioTheaterWidgetService extends Service {
             for (int widgetId : allWidgetIds) {
                 RemoteViews theWidgetView = new RemoteViews(this.getApplicationContext().getPackageName(), R.layout.radio_theater_widget);
 
-                boolean enabled = AutoplayActivity.isPurchased() || AutoplayActivity.isTrial();
+                boolean enabled = DataHelper.isPurchased() || DataHelper.isTrial();
                 if (enabled) {
                     LogHelper.v(TAG, "handleCommand: enabled widget, click ok");
                     widgetButtonClick(theWidgetView);
-                } else {
+                }
+                else {
                     LogHelper.v(TAG, "handleCommand: not purchased");
                     disableWidgetButtons(theWidgetView);
                 }
@@ -186,14 +189,14 @@ public class RadioTheaterWidgetService extends Service {
     }
 
     private void startActionPlay() {
-        ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
-        if (AutoplayActivity.getEpisodeDataForCursor(configCursor)) {
+        ConfigEpisodesCursor configCursor = DataHelper.getCursorForNextAvailableEpisode();
+        if (DataHelper.getEpisodeDataForCursor(configCursor)) {
             LogHelper.v(TAG, "PLAY: RadioControlIntentService.startActionPlay");
             RadioControlIntentService.startActionPlay(this.getApplicationContext(),
                     "WIDGET",
-                    String.valueOf(BaseActivity.getEpisodeNumber()),
-                    BaseActivity.getEpisodeDownloadUrl(),
-                    BaseActivity.getEpisodeTitle());
+                    DataHelper.getEpisodeNumberString(),
+                    DataHelper.getEpisodeDownloadUrl(),
+                    DataHelper.getEpisodeTitle());
         }
     }
 
@@ -216,7 +219,10 @@ public class RadioTheaterWidgetService extends Service {
 
     private void startActionPause() {
         LogHelper.v(TAG, "PAUSE: RadioControlIntentService.startActionPause");
-        RadioControlIntentService.startActionPause(this.getApplicationContext(), "WIDGET", String.valueOf(BaseActivity.getEpisodeNumber()), BaseActivity.getEpisodeDownloadUrl());
+        RadioControlIntentService.startActionPause(this.getApplicationContext(),
+                "WIDGET",
+                DataHelper.getEpisodeNumberString(),
+                DataHelper.getEpisodeDownloadUrl());
     }
 
     private void Stop(RemoteViews remoteViews) {
@@ -233,7 +239,10 @@ public class RadioTheaterWidgetService extends Service {
 
     private void startActionStop() {
         LogHelper.v(TAG, "STOP: RadioControlIntentService.startActionStop");
-        RadioControlIntentService.startActionStop(this.getApplicationContext(), "WIDGET", String.valueOf(BaseActivity.getEpisodeNumber()), BaseActivity.getEpisodeDownloadUrl());
+        RadioControlIntentService.startActionStop(this.getApplicationContext(),
+                "WIDGET",
+                DataHelper.getEpisodeNumberString(),
+                DataHelper.getEpisodeDownloadUrl());
     }
 
     public void disableWidgetButtons(RemoteViews remoteViews) {

@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
 import com.harlie.radiotheater.radiomysterytheater.R;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.DataHelper;
 
 
 public class CheckPlayStore {
@@ -27,7 +28,7 @@ public class CheckPlayStore {
         //#ENDIF
 
         //#IFDEF 'TRIAL'
-        if (activity.isPurchased() != true) {
+        if (! DataHelper.isPurchased()) {
             Log.v(TAG, "using TRIAL version.");
             String packageId = activity.getApplicationContext().getPackageName();
             packageId = packageId.replace(".radiomysterytheater", ".radiomysterytheater.paid");

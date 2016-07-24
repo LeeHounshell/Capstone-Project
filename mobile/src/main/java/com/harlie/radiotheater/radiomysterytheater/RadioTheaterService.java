@@ -25,7 +25,7 @@ import com.google.android.gms.cast.ApplicationMetadata;
 import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
 import com.google.android.libraries.cast.companionlibrary.cast.callbacks.VideoCastConsumerImpl;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesCursor;
-import com.harlie.radiotheater.radiomysterytheater.data_helper.SQLiteHelper;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.DataHelper;
 import com.harlie.radiotheater.radiomysterytheater.model.MusicProvider;
 import com.harlie.radiotheater.radiomysterytheater.playback.CastPlayback;
 import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
@@ -145,6 +145,10 @@ public class RadioTheaterService
     // A value of a CMD_NAME key that indicates that the music playback should skip
     // to the previous item in the playback list (see {@link #onStartCommand})
     public static final String CMD_PREV = "CMD_PREV";
+
+    // A value of a CMD_NAME key that indicates that the music playback has completed
+    // and should continue to the next item in the playback list (see {@link #onStartCommand})
+    public static final String CMD_COMPLETE = "CMD_COMPLETE";
 
     // A value of a CMD_NAME key that indicates that the music playback should switch
     // to local playback from cast playback.
@@ -326,20 +330,24 @@ public class RadioTheaterService
             if (CMD_PLAY.equals(command)) {
                 String title = startIntent.getStringExtra(CMD_PARAM_TITLE);
                 String downloadUrl = startIntent.getStringExtra(CMD_PARAM_DOWNLOAD_URL);
+                LogHelper.v(TAG, "---> EXECUTE CMD_PLAY: "+title);
                 startPlaying(episodeId, title, downloadUrl);
             }
 
             else if (CMD_PAUSE.equals(command)) {
+                LogHelper.v(TAG, "---> EXECUTE CMD_PAUSE");
                 mPlaybackManager.handlePauseRequest();
             }
 
             else if (CMD_SEEK.equals(command)) {
                 Integer position = startIntent.getIntExtra(CMD_PARAM_SEEK_POSITION, 0);
+                LogHelper.v(TAG, "---> EXECUTE CMD_SEEK: "+position);
                 mPlaybackManager.handleSeekRequest(position);
             }
 
             else if (CMD_GOBACK.equals(command)) {
                 Integer amount = startIntent.getIntExtra(CMD_PARAM_GOBACK_AMOUNT, 0);
+                LogHelper.v(TAG, "---> EXECUTE CMD_GOBACK: "+amount);
                 int position = LocalPlayback.getCurrentPosition();
                 position -= amount;
                 if (position < 0) {
@@ -349,6 +357,7 @@ public class RadioTheaterService
             }
 
             else if (CMD_STOP.equals(command)) {
+                LogHelper.v(TAG, "---> EXECUTE CMD_STOP");
                 mPlaybackManager.handleStopRequest(null);
             }
 
@@ -358,11 +367,12 @@ public class RadioTheaterService
                 if (episodeId > max_episodes) {
                     episodeId = max_episodes;
                 }
-                EpisodesCursor episodesCursor = SQLiteHelper.getEpisodesCursor(episodeId);
+                EpisodesCursor episodesCursor = DataHelper.getEpisodesCursor(episodeId);
                 if (episodesCursor != null && episodesCursor.moveToNext()) {
                     String title = episodesCursor.getFieldEpisodeTitle();
                     String downloadUrl = Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString();
                     episodesCursor.close();
+                    LogHelper.v(TAG, "---> EXECUTE CMD_NEXT: "+episodeId+" - "+title);
                     startPlaying(episodeId, title, downloadUrl);
                 }
             }
@@ -372,17 +382,29 @@ public class RadioTheaterService
                 if (episodeId <= 0) {
                     episodeId = 1;
                 }
-                EpisodesCursor episodesCursor = SQLiteHelper.getEpisodesCursor(episodeId);
+                EpisodesCursor episodesCursor = DataHelper.getEpisodesCursor(episodeId);
                 if (episodesCursor != null && episodesCursor.moveToNext()) {
                     String title = episodesCursor.getFieldEpisodeTitle();
                     String downloadUrl = Uri.parse("http://" + episodesCursor.getFieldDownloadUrl()).toString();
                     episodesCursor.close();
+                    LogHelper.v(TAG, "---> EXECUTE CMD_PREV: "+episodeId+" - "+title);
                     startPlaying(episodeId, title, downloadUrl);
                 }
             }
 
             else if (CMD_STOP_CASTING.equals(command)) {
+                LogHelper.v(TAG, "---> EXECUTE CMD_STOP_CASTING");
                 VideoCastManager.getInstance().disconnect();
+            }
+
+            else if (CMD_COMPLETE.equals(command)) {
+                LogHelper.v(TAG, "---> EXECUTE CMD_COMPLETE: episode="+episode);
+                Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+                Intent intent = new Intent(context, RadioControlIntentService.class);
+                intent.setAction(ACTION_CMD);
+                intent.putExtra(RadioTheaterService.CMD_NAME, RadioTheaterService.CMD_COMPLETE);
+                intent.putExtra(RadioTheaterService.CMD_PARAM_EPISODE, episode);
+                context.startService(intent);
             }
 
             else {

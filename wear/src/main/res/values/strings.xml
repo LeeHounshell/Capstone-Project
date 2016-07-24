@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">Radio Mystery Theater</string>
-    <string name="hello_world">Hello World!</string>
+    <string name="hello_lee">Hello Lee!</string>
+    <string name="hello_lee_round">Hello Round Lee!</string>
+    <string name="hello_lee_square">Hello Square Lee!</string>
+    <string name="autoplay">Autoplay</string>
 </resources>

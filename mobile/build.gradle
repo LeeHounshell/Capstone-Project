@@ -139,6 +139,8 @@ dependencies {
     compile 'com.android.support:support-annotations:24.0.0'
     compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha4'
 
+    compile 'com.google.android.gms:play-services-wearable:9.2.1'
+
     trialCompile 'com.google.firebase:firebase-ads:9.2.1'
 
     compile 'com.github.jakob-grabner:Circle-Progress-View:v1.2.9'

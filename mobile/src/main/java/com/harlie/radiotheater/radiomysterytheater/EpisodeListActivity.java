@@ -21,7 +21,7 @@ import android.view.Window;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
 import com.harlie.radiotheater.radiomysterytheater.data.episodes.EpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.RadioTheaterContract;
-import com.harlie.radiotheater.radiomysterytheater.data_helper.SQLiteHelper;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.DataHelper;
 import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
 import com.harlie.radiotheater.radiomysterytheater.utils.EpisodeRecyclerViewAdapter;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
@@ -109,7 +109,7 @@ public class EpisodeListActivity extends BaseActivity
             }
         }
 
-        long position = getEpisodeNumber();
+        long position = DataHelper.getEpisodeNumber();
         int lastPlaybackState = LocalPlayback.getCurrentState();
         if (position == 0 || PlaybackStateCompat.STATE_PLAYING == lastPlaybackState) {
             LogHelper.v(TAG, "LIST: using current selection in LocalPlayback");
@@ -118,9 +118,9 @@ public class EpisodeListActivity extends BaseActivity
         }
         if (position == 0) {
             LogHelper.v(TAG, "LIST: unable to locate selection - using NEXT AVAILABLE");
-            ConfigEpisodesCursor configCursor = SQLiteHelper.getCursorForNextAvailableEpisode();
-            getEpisodeDataForCursor(configCursor);
-            position = getEpisodeNumber();
+            ConfigEpisodesCursor configCursor = DataHelper.getCursorForNextAvailableEpisode();
+            DataHelper.getEpisodeDataForCursor(configCursor);
+            position = DataHelper.getEpisodeNumber();
         }
         final int activePosition = (int) position - 1;
         LogHelper.v(TAG, "===> LIST: SET INITIAL SCROLL POSITION TO: "+activePosition);
