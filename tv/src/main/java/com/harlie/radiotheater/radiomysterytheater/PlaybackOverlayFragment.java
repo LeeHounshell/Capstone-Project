@@ -280,7 +280,6 @@ public class PlaybackOverlayFragment extends android.support.v17.leanback.app.Pl
         adapter = mSecondaryActionsAdapter;
         if (adapter.indexOf(action) >= 0) {
             adapter.notifyArrayItemRangeChanged(adapter.indexOf(action), 1);
-            return;
         }
     }
 

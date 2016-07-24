@@ -1,5 +1,6 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -155,7 +156,7 @@ public class AutoplayActivity extends BaseActivity {
         LogHelper.d(TAG, "isBinderAlive()="+mRadioControlIntentServiceBinder.isBinderAlive());
     }
 
-    public Handler radioTheaterControlHandler = new Handler() {
+    public static Handler sRadioTheaterControlHandler = new Handler() {
         public void handleMessage(Message message) {
             Bundle data = message.getData();
         }
@@ -166,7 +167,7 @@ public class AutoplayActivity extends BaseActivity {
         Intent intent = new Intent(this, RadioControlIntentService.class);
         // Create a new Messenger for the communication back
         // From the Service to the Activity
-        Messenger messenger = new Messenger(radioTheaterControlHandler);
+        Messenger messenger = new Messenger(sRadioTheaterControlHandler);
         intent.putExtra("MESSENGER", messenger);
         bindService(intent, radioTheaterControlConnection, Context.BIND_AUTO_CREATE);
     }
@@ -243,7 +244,7 @@ public class AutoplayActivity extends BaseActivity {
                 LogHelper.v(TAG, "---> PLAY_NOW "+episodeId+" <---");
                 displayScrollingText();
                 mAutoPlay.setVisibility(View.VISIBLE);
-                if (sWaitForMedia == false) {
+                if (!sWaitForMedia) {
                     sWaitForMedia = true;
                     if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
                         mAppBarLayout.setExpanded(false);
@@ -304,6 +305,7 @@ public class AutoplayActivity extends BaseActivity {
             getCircularSeekBar().setBackgroundColor(getResources().getColor(R.color.transparent, null));
         }
         else {
+            //noinspection deprecation
             getCircularSeekBar().setBackgroundColor(getResources().getColor(R.color.transparent));
         }
         getCircularSeekBar().setVisibility(View.INVISIBLE);
@@ -336,6 +338,7 @@ public class AutoplayActivity extends BaseActivity {
         //final Drawable pressedButton = ResourcesCompat.getDrawable(getResources(), R.drawable.autoplay_disabled, null);
 
         mAppBarLayout = (AppBarLayout) findViewById(R.id.toolbar_container);
+        //noinspection BooleanMethodIsAlwaysInverted
         getAutoPlay().setOnTouchListener(new OnSwipeTouchListener(this, getHandler(), getAutoPlay(), pressedButton) {
 
             private boolean isTimePassed() {
@@ -553,6 +556,7 @@ public class AutoplayActivity extends BaseActivity {
         final AutoplayActivity activity = this;
         getFabActionButton().setOnTouchListener(new OnSwipeTouchListener(this, getHandler(), getFabActionButton()) {
 
+            @SuppressLint("PrivateResource")
             @Override
             public void onClick() { // FloatingActiionButton
                 int lastPlaybackState = LocalPlayback.getCurrentState();
@@ -746,7 +750,19 @@ public class AutoplayActivity extends BaseActivity {
                 }
 
                 protected void setHorizontalScrollingText(ScrollingTextView horizontalScrollingText) {
-                    horizontalScrollingText.setText("         ... Airdate: " + RadioTheaterContract.airDate(DataHelper.getAirdate())
+                    String remain = "";
+
+                    //#IFDEF 'TRIAL'
+                    int count = DataHelper.MAX_TRIAL_EPISODES - DataHelper.getAllListenCount();
+                    if (count > 0) {
+                        remain = String.valueOf(count) + " " + getResources().getString(R.string.trial_remain);
+                    }
+                    else {
+                        remain = getResources().getString(R.string.trial_complete);
+                    }
+                    //#ENDIF
+
+                    horizontalScrollingText.setText("         "+remain+" ... Airdate: " + RadioTheaterContract.airDate(DataHelper.getAirdate())
                             + " ... Episode #" + DataHelper.getEpisodeNumber() + " ... " + DataHelper.getEpisodeTitle() + " ... " + DataHelper.getEpisodeDescription());
                     horizontalScrollingText.setEnabled(true);
                     horizontalScrollingText.setSelected(true);
@@ -764,6 +780,7 @@ public class AutoplayActivity extends BaseActivity {
         return true;
     }
 
+    @SuppressLint("PrivateResource")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         LogHelper.v(TAG, "onOptionsItemSelected");
@@ -1307,12 +1324,7 @@ public class AutoplayActivity extends BaseActivity {
         getAutoPlay().setBackground(pleaseWaitButton);
         sShowingButton = PLEASE_WAIT;
         getCircularSeekBar().setVisibility(View.INVISIBLE);
-        if (DataHelper.getCurrentPosition() > 0) {
-            return true;
-        }
-        else {
-            return false;
-        }
+        return DataHelper.getCurrentPosition() > 0;
     }
 
     // the player is currently playing

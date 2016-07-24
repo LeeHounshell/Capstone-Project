@@ -78,7 +78,8 @@
     <string name="haunted_url">http://harlie.com/radiotheater/haunted.png</string>
     <string name="error_loading_media">Error Loading Media</string>
     <string name="nothing_unheard">No Unheard Episodes</string>
-    <string name="trial_complete">TRIAL VERSION EXPIRED</string>
+    <string name="trial_remain">TRIAL EPISODES REMAIN</string>
+    <string name="trial_complete">!!! TRIAL EXPIRED !!!</string>
     <string name="all_trial_heard">To continue listening, you must upgrade to the paid version.\n
                   Click OK to visit the Playstore and upgrade!</string>
     <string name="heard_everything">You have listened to all 1399 episodes!\nNo unheard episodes remain.</string>

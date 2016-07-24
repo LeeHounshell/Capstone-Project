@@ -2,12 +2,9 @@ package com.harlie.radiotheater.radiomysterytheater;
 
 import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
-import android.support.wearable.view.BoxInsetLayout;
 import android.support.wearable.view.DelayedConfirmationView;
-import android.support.wearable.view.WatchViewStub;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 

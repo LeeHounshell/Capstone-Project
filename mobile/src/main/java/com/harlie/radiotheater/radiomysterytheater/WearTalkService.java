@@ -22,6 +22,8 @@ import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 import com.harlie.radiotheater.radiomysterytheater.utils.RadioStateHolder;
 
+import java.util.Arrays;
+
 // wear messages come from the watch into the Radio Mystery Theater app
 // from: https://gist.github.com/gabrielemariotti/117b05aad4db251f7534
 public class WearTalkService
@@ -200,7 +202,7 @@ public class WearTalkService
             sendRadioDataToWear(true);
         }
         else {
-            Log.v(TAG, "=========> UNKNOWN MESSAGE messageEvent: path="+messageEvent.getPath()+", data="+messageEvent.getData().toString());
+            Log.v(TAG, "=========> UNKNOWN MESSAGE messageEvent: path="+messageEvent.getPath()+", data="+ Arrays.toString(messageEvent.getData()));
         }
     }
 

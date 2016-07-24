@@ -88,7 +88,7 @@ public class EpisodeRecyclerViewItem implements Parcelable {
             String episode = String.valueOf(episodeNumber);
             ConfigEpisodesContentValues configEpisodesContentValues = DataHelper.getConfigEpisodeForEpisode(episode);
             ContentValues contentValues = configEpisodesContentValues != null ? configEpisodesContentValues.values() : null;
-            heard = contentValues.getAsBoolean(RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_HEARD);
+            heard = contentValues != null ? contentValues.getAsBoolean(RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_HEARD) : null;
             downloaded = contentValues.getAsBoolean(RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_DOWNLOADED);
             //LogHelper.v(TAG, "awesome!!! found matching config for episode="+episodeNumber+", heard="+heard+", and downloaded="+downloaded);
         }

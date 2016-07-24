@@ -293,7 +293,6 @@ public class DataHelper {
         return record;
     }
 
-    @NonNull
     public static ConfigEpisodesContentValues getConfigEpisodesContentValues(ConfigEpisodesCursor cursor) {
         LogHelper.v(TAG, "SQLITE: getConfigEpisodesContentValues: SQL found "+cursor.getCount()+" records");
         ConfigEpisodesContentValues record = new ConfigEpisodesContentValues();
@@ -870,15 +869,15 @@ public class DataHelper {
             // 2) if local SQLite entry doesn't exist, create it
             if (sqliteConfiguration == null) { // no SQLite Configuration either
                 LogHelper.v(TAG, "*** INITIALIZING USER *** - create local SQLite Configuration");
+                Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
 
                 //#IFDEF 'PAID'
                 //sConfiguration = createConfiguration(true, true, true);
-                //RadioTheaterWidgetService.setPaidVersion(this, true);
+                //RadioTheaterWidgetService.setPaidVersion(context, true);
                 //#ENDIF
 
                 //#IFDEF 'TRIAL'
                 sConfiguration = createConfiguration(false, false, false);
-                Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
                 RadioTheaterWidgetService.setPaidVersion(context, false);
                 //#ENDIF
 
@@ -936,8 +935,9 @@ public class DataHelper {
         Boolean firebasePaidVersion = false;
         Boolean firebasePurchaseAccess = false;
         Boolean firebasePurchaseNoads = false;
-        Long sqlite_listen_count = Long.valueOf(0);
-        Long firebase_listen_count = Long.valueOf(0);
+        Long sqlite_listen_count = 0L;
+        Long firebase_listen_count = 0L;
+        Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
 
         //#IFDEF 'PAID'
         //paidVersion = true;
@@ -946,7 +946,7 @@ public class DataHelper {
         //firebasePaidVersion = true;
         //firebasePurchaseAccess = true;
         //firebasePurchaseNoads = true;
-        //RadioTheaterWidgetService.setPaidVersion(this, true);
+        //RadioTheaterWidgetService.setPaidVersion(context, true);
         //#ENDIF
 
         if (sqliteConfiguration == null) {
@@ -962,12 +962,11 @@ public class DataHelper {
 
             //#IFDEF 'PAID'
             //sConfiguration = createConfiguration(true, true, true);
-            //RadioTheaterWidgetService.setPaidVersion(this, true);
+            //RadioTheaterWidgetService.setPaidVersion(context, true);
             //#ENDIF
 
             //#IFDEF 'TRIAL'
             sConfiguration = createConfiguration(false, false, false);
-            Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
             RadioTheaterWidgetService.setPaidVersion(context, false);
             //#ENDIF
 
@@ -1105,7 +1104,6 @@ public class DataHelper {
 
         //#IFDEF 'TRIAL'
         boolean trialMode = (paidVersion != null && paidVersion) || (purchaseAccess != null && purchaseAccess) || DataHelper.isTrial();
-        Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
         RadioTheaterWidgetService.setPaidVersion(context, trialMode);
         //#ENDIF
 
@@ -1123,7 +1121,7 @@ public class DataHelper {
         Long total_listen_count = configurationValues.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
 
         if (total_listen_count < DataHelper.getAllListenCount()) {
-            total_listen_count = Long.valueOf(DataHelper.getAllListenCount());
+            total_listen_count = (long) DataHelper.getAllListenCount();
         }
         else {
             DataHelper.setAllListenCount(total_listen_count.intValue());
@@ -1302,7 +1300,7 @@ public class DataHelper {
         LogHelper.v(TAG, "-------------------------------------------------------------------------------- AllListenCount="+ DataHelper.getAllListenCount());
     }
 
-    public static void markEpisodeAs_NOT_Heard(long episodeNumber, String episodeIndex, long duration) {
+    public static void markEpisodeAs_NOT_Heard(long episodeNumber, String episodeIndex, @SuppressWarnings("SameParameterValue") long duration) {
         LogHelper.v(TAG, "markEpisodeAs_NOT_Heard: episodeNumber="+episodeNumber+", episodeIndex="+episodeIndex+", duration="+duration);
         if (episodeNumber == 0) {
             LogHelper.w(TAG, "unable to markEpisodeAs_NOT_Heard - episodeNumber is zero!");

@@ -34,13 +34,17 @@ public class AuthenticationActivity extends BaseActivity
         getWindow().setWindowAnimations(0);
 
         // first see if Authentication is even needed..
+        //noinspection ConstantConditions
         if (DataHelper.getFirebaseAuth() != null
                 && DataHelper.getFirebaseAuth().getCurrentUser() != null
                 && DataHelper.getFirebaseAuth().getCurrentUser().getEmail() != null
                 && ! doINeedToCreateADatabase())
         {
+            //noinspection ConstantConditions
             DataHelper.setEmail(DataHelper.getFirebaseAuth().getCurrentUser().getEmail());
+            //noinspection ConstantConditions
             DataHelper.setUID(DataHelper.getFirebaseAuth().getCurrentUser().getUid());
+            //noinspection ConstantConditions
             LogHelper.v(TAG, "--> Firebase: user=" + DataHelper.getFirebaseAuth().getCurrentUser().getDisplayName() + " already signed in with email="+ DataHelper.getEmail());
             startAutoplayActivity(false);
             return;

@@ -60,7 +60,7 @@ public class LogHelper {
         log(tag, Log.INFO, null, messages);
     }
 
-    public static void w(String tag, Object... messages) {
+    public static void w(@SuppressWarnings("SameParameterValue") String tag, Object... messages) {
         log(tag, Log.WARN, null, messages);
     }
 
@@ -68,7 +68,7 @@ public class LogHelper {
         log(tag, Log.WARN, t, messages);
     }
 
-    public static void e(String tag, Object... messages) {
+    public static void e(@SuppressWarnings("SameParameterValue") String tag, Object... messages) {
         log(tag, Log.ERROR, null, messages);
     }
 

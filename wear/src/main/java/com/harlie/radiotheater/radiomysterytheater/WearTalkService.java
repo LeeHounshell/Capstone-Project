@@ -5,10 +5,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
-import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.wearable.DataApi;
@@ -23,7 +20,7 @@ import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
-import java.io.IOException;
+import java.util.Arrays;
 
 // data items come from the radiomysterytheater app into the watch
 // from: https://gist.github.com/gabrielemariotti/117b05aad4db251f7534
@@ -125,7 +122,7 @@ public class WearTalkService
                 }
                 else {
                     LogHelper.w(TAG, "UNEXPECTED PATH: "+path);
-                    LogHelper.w(TAG, "UNEXPECTED DATA: "+data);
+                    LogHelper.w(TAG, "UNEXPECTED DATA: "+ Arrays.toString(data));
                 }
             }
         }

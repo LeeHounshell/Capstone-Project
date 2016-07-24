@@ -449,7 +449,16 @@ public class BaseActivity extends AppCompatActivity {
                                 success = checkExceptionReason(task, activity);
                             }
                             if (success) {
-                                String uid = DataHelper.getFirebaseAuth().getCurrentUser().getUid();
+                                String uid;
+                                try {
+                                    uid = DataHelper.getFirebaseAuth().getCurrentUser().getUid();
+                                }
+                                catch (NullPointerException e) {
+                                    LogHelper.e(TAG, "UNABLE TO GET FIREBASE USER ID!");
+                                    userLoginFailed();
+                                    startAuthenticationActivity();
+                                    return;
+                                }
                                 DataHelper.setEmail(email);
                                 DataHelper.setPass(pass);
                                 DataHelper.setUID(uid);
@@ -499,7 +508,11 @@ public class BaseActivity extends AppCompatActivity {
             startAuthenticationActivity();
         }
         else {
-            LogHelper.v(TAG, "*** authentication failed *** reason="+task.getException().getLocalizedMessage());
+            try {
+                //noinspection ConstantConditions
+                LogHelper.v(TAG, "*** authentication failed *** reason=" + task.getException().getLocalizedMessage());
+            }
+            catch (NullPointerException e) { }
             String message = getResources().getString(R.string.auth_fail);
             Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
             startAuthenticationActivity();
@@ -632,6 +645,7 @@ public class BaseActivity extends AppCompatActivity {
         }
         LogHelper.v(TAG, "InputStream is open.");
         OutputStream output = new FileOutputStream(getApplicationContext().getDatabasePath(outFileName));
+        //noinspection ConstantConditions
         if (output == null) {
             //throw new Exception("null output stream for database="+outFileName);
             return "null output stream for database - outFileName="+outFileName;
@@ -641,9 +655,10 @@ public class BaseActivity extends AppCompatActivity {
         int len;
         while ((len = input.read(buffer)) > 0) {
             sCount += len;
+            //noinspection EmptyCatchBlock
             try {
                 Thread.sleep(3);
-            } catch (Exception e) { };
+            } catch (Exception e) { }
             CircleViewHelper.setCircleViewValue((float) sCount, this);
             output.write(buffer, 0, len);
         }
@@ -795,7 +810,7 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     // this kicks off a series of AsyncTasks to load SQL tables from Firebase
-    protected void loadSqliteDatabase(boolean okToCopyDatabase) {
+    protected void loadSqliteDatabase(@SuppressWarnings("SameParameterValue") boolean okToCopyDatabase) {
         LogHelper.v(TAG, "*** loadSqliteDatabase ***");
         mCircleView = (CircleProgressView) getRootView().findViewById(R.id.circle_view);
 

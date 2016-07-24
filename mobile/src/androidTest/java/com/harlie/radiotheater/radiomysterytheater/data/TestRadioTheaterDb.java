@@ -405,7 +405,7 @@ public class TestRadioTheaterDb {
 
         Uri result;
         result = insertActorValues(actorValues);
-        long actorRowId = Long.valueOf(result.toString().lastIndexOf('/')+1);
+        long actorRowId = (long) (result.toString().lastIndexOf('/') + 1);
         Log.v(TAG, "Actor insert actorRowId="+actorRowId+", result="+result);
 
         /*
@@ -416,7 +416,7 @@ public class TestRadioTheaterDb {
         */
 
         result = insertWriterValues(writerValues);
-        long writerRowId = Long.valueOf(result.toString().lastIndexOf('/')+1);
+        long writerRowId = (long) (result.toString().lastIndexOf('/') + 1);
         Log.v(TAG, "Writer insert writerRowId="+writerRowId+", result="+result);
 
         Log.i(TAG, "NOTE: If the above writes for Episode, Actor and Writer worked, then we have a working Content Provider.");
@@ -436,7 +436,7 @@ public class TestRadioTheaterDb {
         result = insertEpisodeValues(episodeValues);
         Log.v(TAG, "Episode insert result="+result);
 
-        long episodeRowId = Long.valueOf(result.toString().lastIndexOf('/')+1);
+        long episodeRowId = (long) (result.toString().lastIndexOf('/') + 1);
         //episodeRowId = db.insert(RadioTheaterContract.EpisodesEntry.TABLE_NAME, null, episodeValues);
         Log.v(TAG, "insertAndVerifyEpisode: episodeRowId=" + episodeRowId);
 

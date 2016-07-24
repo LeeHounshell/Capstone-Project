@@ -56,6 +56,7 @@ public class RadioStateHolder implements Parcelable {
         if (! getTitle().equals(that.getTitle())) return false;
         if (! getDescription().equals(that.getDescription())) return false;
         if (! getAirdate().equals(that.getAirdate())) return false;
+        //noinspection RedundantIfStatement
         if (getRating() != that.getRating()) return false;
         return true;
     }

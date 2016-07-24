@@ -29,7 +29,7 @@ public abstract class PollingCheck {
     public PollingCheck() {
     }
 
-    public PollingCheck(long timeout) {
+    public PollingCheck(@SuppressWarnings("SameParameterValue") long timeout) {
         mTimeout = timeout;
     }
 

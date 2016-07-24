@@ -73,7 +73,11 @@ public class AuthGoogleActivity
             return;
         }
         if (DataHelper.getFirebaseAuth().getCurrentUser() != null && ! doINeedToCreateADatabase()) {
-            LogHelper.v(TAG, "--> Firebase: user=" + DataHelper.getFirebaseAuth().getCurrentUser().getDisplayName() + " already signed in!");
+            try {
+                //noinspection ConstantConditions
+                LogHelper.v(TAG, "--> Firebase: user=" + DataHelper.getFirebaseAuth().getCurrentUser().getDisplayName() + " already signed in!");
+            }
+            catch (NullPointerException e) { }
             startAutoplayActivity(false);
             overridePendingTransition(0,0);
             return;

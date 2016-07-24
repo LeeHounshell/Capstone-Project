@@ -68,9 +68,9 @@ public final class EpisodeList {
         return list;
     }
 
-    private static Episode buildEpisodeInfo(String category, String title,
-                                          String description, String studio, String showUrl, String cardImageUrl,
-                                          String bgImageUrl) {
+    private static Episode buildEpisodeInfo(@SuppressWarnings("SameParameterValue") String category, String title,
+                                            String description, String studio, String showUrl, String cardImageUrl,
+                                            String bgImageUrl) {
         Episode episode = new Episode();
         episode.setId(Episode.getCount());
         Episode.incCount();

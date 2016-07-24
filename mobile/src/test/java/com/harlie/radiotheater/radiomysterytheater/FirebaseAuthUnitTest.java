@@ -85,6 +85,7 @@ public class FirebaseAuthUnitTest extends AndroidTestCase {
         }
     }
 
+    @SuppressWarnings("JUnit4AnnotatedMethodInJUnit3TestCase")
     @Test
     public void testWrite() throws InterruptedException {
         final CountDownLatch writeSignal = new CountDownLatch(1);

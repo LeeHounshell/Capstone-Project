@@ -32,6 +32,7 @@ public class NetworkHelper {
      * @param context to use to check for network connectivity.
      * @return true if connected, false otherwise.
      */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean isOnline(Context context) {
         ConnectivityManager connMgr = (ConnectivityManager)
             context.getSystemService(Context.CONNECTIVITY_SERVICE);

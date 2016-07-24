@@ -1,5 +1,6 @@
 package com.harlie.radiotheater.radiomysterytheater.utils;
 
+import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -20,6 +21,7 @@ public class CheckPlayStore {
     private final static String TAG = "LEE: <" + CheckPlayStore.class.getSimpleName() + ">";
 
     //noinspection ConstantConditions
+    @SuppressLint("PrivateResource")
     @SuppressWarnings("UnusedReturnValue")
     public static void upgradeToPaid(final BaseActivity activity) {
 

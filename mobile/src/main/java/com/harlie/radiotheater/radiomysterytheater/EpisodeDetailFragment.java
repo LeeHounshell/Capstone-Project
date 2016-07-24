@@ -1,5 +1,6 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
@@ -219,6 +220,7 @@ public class EpisodeDetailFragment extends FragmentBase {
             });
 
             webLink.setOnClickListener(new View.OnClickListener() {
+                @SuppressLint("PrivateResource")
                 @Override
                 public void onClick(View view) {
                     String url = "http://" + mItem.getWeblink();

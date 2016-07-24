@@ -29,9 +29,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 
-import com.harlie.radiotheater.radiomysterytheater.BaseActivity;
 import com.harlie.radiotheater.radiomysterytheater.R;
-import com.harlie.radiotheater.radiomysterytheater.RadioControlIntentService;
 import com.harlie.radiotheater.radiomysterytheater.RadioTheaterApplication;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesColumns;
 import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
@@ -107,6 +105,7 @@ public class QueueManager {
             return false;
         }
         String[] currentBrowseHierarchy = MediaIDHelper.getHierarchy(current.getDescription().getMediaId());
+        //noinspection SimplifiableIfStatement
         if (currentBrowseHierarchy == null) {
             return false;
         }
@@ -200,7 +199,7 @@ public class QueueManager {
         }
         else if (getPlayingQueue().size() == 0) {
             //LogHelper.v(TAG, "getCurrentMusic: *** THE PLAYING QUEUE IS EMPTY ***");
-            while (MusicProvider.isMediaLoaded() == false && MusicProvider.isOnMusicCatalogReady() == false) {
+            while (!MusicProvider.isMediaLoaded() && !MusicProvider.isOnMusicCatalogReady()) {
                 //LogHelper.v(TAG, "getCurrentMusic: goto sleep (waiting for MusicProvider Media and catalog..)");
                 waitabit();
             }
@@ -212,18 +211,17 @@ public class QueueManager {
 
     //-------- RADIO THEATER --------
     private void waitabit() {
+        //noinspection EmptyCatchBlock
         try {
             long timeInMills = 1000;
             SystemClock.sleep(timeInMills);
-        }catch (Exception e) {
-            ;
-        }
+        } catch (Exception e) { }
     }
 
     //-------- RADIO THEATER --------
     public String setCurrentIndexFromEpisodeId(int episodeId, String title, String downloadUrl) {
         //LogHelper.v(TAG, "setCurrentIndexFromEpisodeId: episodeId="+episodeId);
-        while (MusicProvider.isMediaLoaded() == false && MusicProvider.isOnMusicCatalogReady() == false) {
+        while (!MusicProvider.isMediaLoaded() && !MusicProvider.isOnMusicCatalogReady()) {
             //LogHelper.v(TAG, "setCurrentIndexFromEpisodeId: goto sleep (waiting for MusicProvider Media and catalog..)");
             waitabit();
         }

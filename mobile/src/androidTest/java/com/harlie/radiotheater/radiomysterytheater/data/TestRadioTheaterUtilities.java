@@ -231,7 +231,7 @@ public class TestRadioTheaterUtilities {
         context.getContentResolver().delete(episode, where, args);
 
         Uri result = context.getContentResolver().insert(episode, testValues);
-        long episodeRowId = Long.valueOf(result.toString().lastIndexOf('/')+1);
+        long episodeRowId = (long) (result.toString().lastIndexOf('/') + 1);
         // Verify we got a row back.
         Log.v(TAG, "insertEpisodeValues: episodeRowId=" + episodeRowId);
         assertTrue("Error: Failure to insert Episode Values", episodeRowId != -1);
