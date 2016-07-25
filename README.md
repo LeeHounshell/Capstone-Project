@@ -48,12 +48,12 @@ All radio shows are property of CBS Corporation and are publicly available to do
 
 
 # Credits
- * Firebase for backend processing\n
+ * Firebase for backend processing
  * Content Provider Generator by Benoit Lubek
  * DAZ Studio used to create the Haunted-House
  * ButterKnife by Jake Warton
  * Circle Progress View by Jakob Grabner
- * Modified Circular Seekbar by Raghav Sood
+ * Circular Seekbar by Raghav Sood and Lee Hounshell
  * StackOverflow.com - an awesome resource!
  * Android Studio / Google + Udacity
  * UAMP - The Android Universal Media Player
