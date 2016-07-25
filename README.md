@@ -7,78 +7,51 @@ This app lets you listen to 1399 fifty­minute radio broadcasts of th
 
 
 ## Features
- * One button play/pause/resume/swipe control with background operation
-
- * Automatically resumes playback on app startup
-
- * Continuous playback skips to next unheard and available show
-
- * Circular Playback Slider Control Widget for manual re­positioning
-
+ * One button play/pause/resume/swipe control
+ * Background playback
+ * Continuous playback skips to next unheard and available show
+ * Resumes playback at last position
+ * Circular Playback Slider Control Widget for manual re­positioning
  * Trial and Paid versions
-
  * Companion Wearable app
-
  * SQLite
-
  * Content Provider and Content Provider Generator
-
  * Playstore integration
-
  * Google Authentication
-
  * Firebase Authentication
-
  * Firebase Database
-
- * Firebase Analytics tracking (including Advertising ID)
-
- * Firebase Logging
-
- * Admob
-
- * Crashlytics
-
- * Unit Test Suite
-
+ * Firebase Analytics tracking (including Advertising ID)
+ * Firebase Logging
+ * Admob
+ * Crashlytics
+ * Unit Test Suite
  * Material Design Theme extends from AppCompat
-
- * Shared Element Transition effect
-
- * CoordinatorLayout + AppBarLayout + CollapsingToolbar
-
- * ConstraintLayout
-
- * RecyclerView
-
- * Butterknife
-
+ * Shared Element Transition effect
+ * CoordinatorLayout + AppBarLayout + CollapsingToolbar
+ * ConstraintLayout
+ * RecyclerView
+ * Butterknife
  * Sharing
-
  * Wearable.DataApi
-
  * Web Browser Integration
-
  * Lint-Free Code
-
  * Integrates Google Universal Media Player functionality
-
- * A Gradle build 'preprocessor' which permits #IFDEF 'flavor' and #IFDEF 'buildType' in  Android Java code
+ * A Gradle build 'preprocessor' which permits #IFDEF 'flavor' and #IFDEF 'buildType' in  Android Java code
 
 ---
 SCREENSHOTS
 ---
 
 
-![screen](../master/screens/tablet_portrait_main.png)
+![screen](../master/screenshots/tablet_portrait_main.png)
 
-![screen](../master/screens/tablet_landscape_main.png)
+![screen](../master/screenshots/tablet_landscape_main.png)
 
-![screen](../master/screens/tablet_master_detail.png)
+![screen](../master/screenshots/tablet_master_detail.png)
 
-![screen](../master/screens/episode_list_view.png)
+![screen](../master/screenshots/episode_list_view.png)
 
-![screen](../master/screens/episode_detail_view.png)
+![screen](../master/screenshots/episode_detail_view.png)
 
 
 
