@@ -83,7 +83,8 @@ public class LogHelper {
             String message;
             if (t == null && messages != null && messages.length == 1) {
                 // handle this common case without the extra cost of creating a stringbuffer:
-                message = messages[0].toString().replace("com.harlie.radiotheater.radiomysterytheater", "harlie.");
+                //message = messages[0].toString().replace("com.harlie.radiotheater.radiomysterytheater", "harlie.");
+                message = messages[0].toString();
             } else {
                 StringBuilder sb = new StringBuilder();
                 if (messages != null) for (Object m : messages) {
@@ -92,7 +93,8 @@ public class LogHelper {
                 if (t != null) {
                     sb.append("\n").append(Log.getStackTraceString(t));
                 }
-                message = sb.toString().replace("com.harlie.radiotheater.radiomysterytheater", "harlie.");
+                //message = sb.toString().replace("com.harlie.radiotheater.radiomysterytheater", "harlie.");
+                message = sb.toString();
             }
             //Log.println(level, tag, message);
             switch (level) {

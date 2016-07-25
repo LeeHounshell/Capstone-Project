@@ -3,8 +3,11 @@
 
 gradle.properties
 local.properties
+
 mobile/src/trial/google-services.json
 mobile/src/paid/google-services.json
+wear/src/trial/google-services.json
+wear/src/paid/google-services.json
 
 mobile/src/main/assets/paid
 mobile/src/main/assets/trial

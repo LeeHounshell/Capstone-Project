@@ -186,6 +186,7 @@ public class RadioTheaterWidgetService extends Service {
             LogHelper.v(TAG, "PLAY: setting WIDGET to 'Autoplay'");
             remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_autoplay_button_selector);
         }
+        WearTalkService.sendRadioDataToWear();
     }
 
     private void startActionPlay() {
@@ -215,6 +216,7 @@ public class RadioTheaterWidgetService extends Service {
             LogHelper.v(TAG, "PAUSE: setting WIDGET to 'Pause'");
             remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_pause_button_selector);
         }
+        WearTalkService.sendRadioDataToWear();
     }
 
     private void startActionPause() {
@@ -235,6 +237,7 @@ public class RadioTheaterWidgetService extends Service {
             LogHelper.v(TAG, "STOP: setting WIDGET to 'Stop'");
             remoteViews.setImageViewResource(R.id.autoplay_widget, R.drawable.radio_theater_stop_button_selector);
         }
+        WearTalkService.sendRadioDataToWear();
     }
 
     private void startActionStop() {

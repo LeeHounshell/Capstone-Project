@@ -26,6 +26,9 @@ public class RadioWearActivity extends WearableActivity {
         setContentView(R.layout.activity_radio);
         setAmbientEnabled();
 
+        LogHelper.v(TAG, "connect WearTalkService..");
+        WearTalkService.connect(this);
+
         autoplayButton = (Button) findViewById(R.id.autoplayButton);
         autoplayButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -37,6 +40,8 @@ public class RadioWearActivity extends WearableActivity {
 
     public void autoplay(View view) {
         LogHelper.v(TAG, "autoplay: CLICK!");
+        // sync with phone now
+        WearTalkService.createSyncMessage(this);
     }
 
 }

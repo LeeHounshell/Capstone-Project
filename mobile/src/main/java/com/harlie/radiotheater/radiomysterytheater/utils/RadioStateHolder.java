@@ -4,28 +4,30 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.google.android.gms.wearable.DataMap;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.DataHelper;
+import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
 
 
 // NOTE: this class needs to maintain Parcelable compatibility with the wear version.
 public class RadioStateHolder implements Parcelable {
     private static final String TAG = "LEE: <" + RadioStateHolder.class.getSimpleName() + ">";
 
-    private Boolean isDirty;
-    private Integer radioState;
-    private Integer episodeNumber;
+    private long theTime;
+    private boolean isDirty;
+    private int radioState;
+    private long episodeNumber;
     private String title;
     private String description;
     private String airdate;
-    private Float rating;
 
     public RadioStateHolder(RadioStateHolder copy) {
+        this.theTime = copy.theTime;
         this.isDirty = copy.isDirty;
         this.radioState = copy.radioState;
         this.episodeNumber = copy.episodeNumber;
         this.title = copy.title;
         this.description = copy.description;
         this.airdate = copy.airdate;
-        this.rating = copy.rating;
     }
 
     public RadioStateHolder() {
@@ -33,13 +35,13 @@ public class RadioStateHolder implements Parcelable {
 
     public DataMap toDataMap() {
         DataMap dmap = new DataMap();
+        dmap.putLong("theTime", theTime);
         dmap.putBoolean("isDirty", isDirty());
         dmap.putInt("radioState", getRadioState());
-        dmap.putInt("episodeNumber", getEpisodeNumber());
+        dmap.putLong("episodeNumber", getEpisodeNumber());
         dmap.putString("title", getTitle());
         dmap.putString("description", getDescription());
         dmap.putString("airdate", getAirdate());
-        dmap.putFloat("rating", getRating());
         return dmap;
     }
 
@@ -56,32 +58,30 @@ public class RadioStateHolder implements Parcelable {
         if (! getTitle().equals(that.getTitle())) return false;
         if (! getDescription().equals(that.getDescription())) return false;
         if (! getAirdate().equals(that.getAirdate())) return false;
-        //noinspection RedundantIfStatement
-        if (getRating() != that.getRating()) return false;
         return true;
     }
 
     @Override
     public int hashCode() {
         int result = (isDirty() ? 1 : 0);
+        result = 31 * result + (int) getTheTime();
         result = 31 * result + getRadioState();
-        result = 31 * result + getEpisodeNumber();
+        result = 31 * result + (int) getEpisodeNumber();
         result = 31 * result + getTitle().length();
         result = 31 * result + getDescription().length();
-        result = 31 * result + getAirdate().hashCode();
-        result = (int) (31 * result + getRating());
+        result = 31 * result + getAirdate().length();
         return result;
     }
 
     public void reset() {
         LogHelper.v(TAG, "reset");
-        isDirty = false;
-        radioState = 0;
-        episodeNumber = 0;
-        title = "";
-        description = "";
-        airdate = "";
-        rating = (float) 0.0;
+        setDirty(false);
+        setTheTime(System.currentTimeMillis());
+        setRadioState(LocalPlayback.getCurrentState());
+        setEpisodeNumber(DataHelper.getEpisodeNumber());
+        setTitle(DataHelper.getEpisodeTitle());
+        setDescription(DataHelper.getEpisodeDescription());
+        setAirdate(DataHelper.getAirdate());
     }
 
     @Override
@@ -91,23 +91,23 @@ public class RadioStateHolder implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeValue(this.theTime);
         dest.writeValue(this.isDirty);
         dest.writeValue(this.radioState);
         dest.writeValue(this.episodeNumber);
         dest.writeString(this.title);
         dest.writeString(this.description);
         dest.writeString(this.airdate);
-        dest.writeValue(this.rating);
     }
 
     protected RadioStateHolder(Parcel in) {
+        this.theTime = (Long) in.readValue(Long.class.getClassLoader());
         this.isDirty = (Boolean) in.readValue(Boolean.class.getClassLoader());
         this.radioState = (Integer) in.readValue(Integer.class.getClassLoader());
         this.episodeNumber = (Integer) in.readValue(Integer.class.getClassLoader());
         this.title = in.readString();
         this.description = in.readString();
         this.airdate = in.readString();
-        this.rating = (Float) in.readValue(Float.class.getClassLoader());
     }
 
     public static final Creator<RadioStateHolder> CREATOR = new Creator<RadioStateHolder>() {
@@ -121,6 +121,14 @@ public class RadioStateHolder implements Parcelable {
             return new RadioStateHolder[size];
         }
     };
+
+    public long getTheTime() {
+        return theTime;
+    }
+
+    public void setTheTime(long theTime) {
+        this.theTime = theTime;
+    }
 
     public boolean isDirty() {
         return isDirty;
@@ -138,11 +146,11 @@ public class RadioStateHolder implements Parcelable {
         this.radioState = radioState;
     }
 
-    public int getEpisodeNumber() {
+    public long getEpisodeNumber() {
         return episodeNumber;
     }
 
-    public void setEpisodeNumber(int episodeNumber) {
+    public void setEpisodeNumber(long episodeNumber) {
         this.episodeNumber = episodeNumber;
     }
 
@@ -168,14 +176,6 @@ public class RadioStateHolder implements Parcelable {
 
     public void setAirdate(String airdate) {
         this.airdate = airdate;
-    }
-
-    public float getRating() {
-        return rating;
-    }
-
-    public void setRating(float rating) {
-        this.rating = rating;
     }
 
 }

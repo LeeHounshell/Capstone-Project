@@ -128,12 +128,14 @@ public class WearTalkService
         }
     }
 
-    public static void createSyncMessage() {
+    public static void createSyncMessage(Context context) {
+        String packageId = context.getPackageName();
+        LogHelper.v(TAG, "createSyncMessage: package=" + packageId);
         new Thread(new Runnable() {
             @Override
             public void run() {
                 DataMap dmap = new DataMap();
-                dmap.putString("hello", "world");
+                dmap.putString("time", String.valueOf(System.currentTimeMillis()));
                 NodeApi.GetConnectedNodesResult nodes = Wearable.NodeApi.
                         getConnectedNodes(sGoogleApiClient).await();
                 for (final Node node : nodes.getNodes()) {
@@ -151,6 +153,10 @@ public class WearTalkService
                             }
                         }
                     });
+                    LogHelper.v(TAG, "*** SYNC MESSAGE SENT FROM WEAR TO PHONE NODE "+node.getDisplayName());
+                }
+                if (nodes.getNodes().size() == 0) {
+                    LogHelper.w(TAG, "*** UNABLE TO SYNC WITH PHONE - NOT CONNECTED ***");
                 }
             }
         }).start();

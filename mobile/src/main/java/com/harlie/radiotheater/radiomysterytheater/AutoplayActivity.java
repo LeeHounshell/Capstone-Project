@@ -17,7 +17,6 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.preference.PreferenceActivity;
-import android.provider.ContactsContract;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentManager;
@@ -280,6 +279,11 @@ public class AutoplayActivity extends BaseActivity {
             enableButtons();
             displayScrollingText();
         }
+
+        LogHelper.v(TAG, "connect WearTalkService..");
+        WearTalkService.connect(RadioTheaterApplication.getInstance().getApplicationContext());
+        LogHelper.v(TAG, "notify WearTalkService..");
+        WearTalkService.sendRadioDataToWear();
     }
 
     private void runSeekbarUpdateThread() {
@@ -864,7 +868,7 @@ public class AutoplayActivity extends BaseActivity {
         LogHelper.v(TAG, "getShareIntent");
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            // FIXED: only set this for API 21+
+            // only set this for API 21+
             shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
         } else {
             // from: http://stackoverflow.com/questions/32941254/is-there-anything-similar-to-flag-activity-new-document-for-older-apis

@@ -5,7 +5,6 @@ android {
     buildToolsVersion "24.0.0"
 
     defaultConfig {
-        applicationId "com.harlie.radiotheater.radiomysterytheater"
         minSdkVersion 21
         targetSdkVersion 24
         versionCode 1
@@ -18,16 +17,16 @@ android {
     }
 
     signingConfigs {
-        trial {
-            keyAlias MyKeyAlias
-            keyPassword MyKeyPassword
-            storeFile file("../keystores-Radio-Mystery-Theater-FREE/lee.hounshell.keystore")
-            storePassword MyStorePassword
-        }
         paid {
             keyAlias MyKeyAlias
             keyPassword MyKeyPassword
             storeFile file("../keystores-Radio-Mystery-Theater-PAID/lee.hounshell.keystore")
+            storePassword MyStorePassword
+        }
+        trial {
+            keyAlias MyKeyAlias
+            keyPassword MyKeyPassword
+            storeFile file("../keystores-Radio-Mystery-Theater-FREE/lee.hounshell.keystore")
             storePassword MyStorePassword
         }
     }
@@ -46,16 +45,8 @@ android {
     }
 
     buildTypes {
-        debug {
-            minifyEnabled false
-            shrinkResources false
-            useProguard false
-            debuggable true
-        }
         release {
-            minifyEnabled true
-            shrinkResources true
-            useProguard true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -64,23 +55,13 @@ android {
         it.buildConfigField 'String', 'FABRIC_API_KEY', MyFabricAPIKey
     }
 
-    productFlavors {
-        paid {
-            applicationId "com.harlie.radiotheater.radiomysterytheater.paid"
-            versionName "1.0-Paid"
-        }
-        free {
-            applicationId "com.harlie.radiotheater.radiomysterytheater"
-            versionName "1.0-Free"
-        }
-    }
-
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.google.android.support:wearable:2.0.0-alpha1'
+    compile 'com.google.android.support:wearable:1.4.0'
     compile 'com.google.android.gms:play-services-wearable:9.2.1'
-    provided 'com.google.android.wearable:wearable:1.0.0'
 }
+
+apply plugin: 'com.google.gms.google-services'
 

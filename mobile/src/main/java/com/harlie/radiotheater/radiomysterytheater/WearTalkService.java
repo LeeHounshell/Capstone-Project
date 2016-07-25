@@ -20,9 +20,12 @@ import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
+import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.RadioStateHolder;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 // wear messages come from the watch into the Radio Mystery Theater app
 // from: https://gist.github.com/gabrielemariotti/117b05aad4db251f7534
@@ -32,7 +35,7 @@ public class WearTalkService
         implements
             MessageApi.MessageListener
 {
-    private static final String TAG = "LEE: <sync." + WearTalkService.class.getSimpleName() + ">";
+    private static final String TAG = "LEE: <" + WearTalkService.class.getSimpleName() + ">";
 
     private static ConnectionHandler sConnectionHandler;
     private static GoogleApiClient sGoogleApiClient;
@@ -48,10 +51,8 @@ public class WearTalkService
     {
         private final String TAG = "LEE: <" + ConnectionHandler.class.getSimpleName() + ">";
         boolean isConnected;
-        boolean isForce;
 
-        public ConnectionHandler(boolean force) {
-            isForce = force;
+        public ConnectionHandler() {
         }
 
         public void connect(Context context) {
@@ -76,8 +77,7 @@ public class WearTalkService
         public void onConnected(@Nullable Bundle bundle) {
             Log.v(TAG, "onConnected");
             isConnected = true;
-            WearTalkService.sendRadioDataToWear(isForce);
-            isForce = false;
+            WearTalkService.sendRadioDataToWear();
         }
 
         @Override
@@ -96,7 +96,7 @@ public class WearTalkService
     public void onCreate() {
         Log.v(TAG, "onCreate");
         super.onCreate();
-        connect(getApplicationContext(), false);
+        connect(getApplicationContext());
     }
 
     @Override
@@ -105,17 +105,16 @@ public class WearTalkService
         super.onDestroy();
     }
 
-    synchronized public static void connect(Context context, boolean force) {
+    synchronized public static void connect(Context context) {
         Log.v(TAG, "connect");
         if (sConnectionHandler == null) {
-            sConnectionHandler = new ConnectionHandler(force);
+            sConnectionHandler = new ConnectionHandler();
         }
         if (! sConnectionHandler.isConnected) {
-            sRadioStateHolder = getRadioStateHolder();
             sConnectionHandler.connect(context);
         }
         else {
-            WearTalkService.sendRadioDataToWear(force);
+            WearTalkService.sendRadioDataToWear();
         }
     }
 
@@ -128,33 +127,37 @@ public class WearTalkService
 
     static RadioStateHolder radioDesignHolderOldValue;
 
-    public static boolean sendRadioDataToWear(final boolean force) {
-        Log.v(TAG, "sendRadioDataToWear");
-        final RadioStateHolder radioDesignHolder = sRadioStateHolder;
-        if (radioDesignHolder == null) {
-            Log.v(TAG, "not connected yet!");
-            return false;
-        }
-        if (force) {
-            radioDesignHolder.setDirty(true);
-            radioDesignHolderOldValue = null;
-        }
-        if (radioDesignHolder.isDirty()
-                && (radioDesignHolderOldValue == null || !radioDesignHolderOldValue.equals(radioDesignHolder)))
+    public static boolean sendRadioDataToWear() {
+        String packageId = RadioTheaterApplication.getRadioTheaterApplicationContext().getPackageName();
+        Log.v(TAG, "sendRadioDataToWear: package="+packageId);
+        sRadioStateHolder = new RadioStateHolder();
+        sRadioStateHolder.reset();
+        sRadioStateHolder.setDirty(true);
+        final RadioStateHolder radioStateHolder = sRadioStateHolder;
+        radioDesignHolderOldValue = null;
+        if (radioStateHolder.isDirty()
+                && (radioDesignHolderOldValue == null || !radioDesignHolderOldValue.equals(radioStateHolder)))
         {
             Log.w(TAG, "episode has changed - need to send message - ok");
+            if (sGoogleApiClient == null) {
+                LogHelper.e(TAG, "*** NOT CONNECTED! - GoogleApiClient is null!");
+                return false;
+            }
 
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     // from: http://stackoverflow.com/questions/33716767/wearlistenerservice-ondatachanged-strange-behavior
                     //NodeApi.GetConnectedNodesResult nodes = Wearable.NodeApi.getConnectedNodes(googleClient);
-                    final DataMap dataMap = radioDesignHolder.toDataMap();
+
+                    final DataMap dataMap = radioStateHolder.toDataMap();
                     PendingResult<NodeApi.GetConnectedNodesResult> nodes = Wearable.NodeApi.getConnectedNodes(sGoogleApiClient);
                     nodes.setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>() {
+
                         @Override
                         public void onResult(NodeApi.GetConnectedNodesResult getConnectedNodesResult) {
-                            for (Node node : getConnectedNodesResult.getNodes()) {
+                            List<Node> nodes = getConnectedNodesResult.getNodes();
+                            for (Node node : nodes) {
                                 final Node node2 = node;
 
                                 // Construct a DataRequest and send over the data layer
@@ -172,22 +175,28 @@ public class WearTalkService
                                     public void onResult(DataApi.DataItemResult dataItemResult) {
                                         if (dataItemResult.getStatus().isSuccess()) {
                                             Log.v(TAG, "radio DataMap: " + dataMap + " requested send to: " + node2.getDisplayName());
-                                            radioDesignHolder.setDirty(false);
-                                            radioDesignHolderOldValue = new RadioStateHolder(radioDesignHolder);
+                                            radioStateHolder.setDirty(false);
+                                            radioDesignHolderOldValue = new RadioStateHolder(radioStateHolder);
                                         } else {
                                             Log.v(TAG, "ERROR: failed to request send radio DataMap to: " + node2.getDisplayName());
                                         }
                                     }
                                 });
+                                LogHelper.v(TAG, "*** MESSAGE SENT FROM PHONE TO WEAR NODE "+node.getDisplayName());
+                            }
+                            if (nodes.size() == 0) {
+                                LogHelper.w(TAG, "*** UNABLE TO SYNC WITH WEARABLE - NO CONNECTED NODES! ***");
                             }
                         }
+
                     });
+
                 }
             }).start();
             return true;
         }
         else{
-            Log.w(TAG, "no radio message sent - isDirty:"+radioDesignHolder.isDirty());
+            Log.w(TAG, "no radio message sent - isDirty:"+radioStateHolder.isDirty());
             return false;
         }
     }
@@ -195,23 +204,15 @@ public class WearTalkService
     // receive the message from wear
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
-        Log.v(TAG, "---------> onMessageReceived");
+        Log.v(TAG, "---------> onMessageReceived FROM WEAR");
         if (messageEvent.getPath().equals(SYNC_PATH)) {
             String data = new String(messageEvent.getData());
             Log.v(TAG, "=========> SYNC MESSAGE RECEIVED: "+data);
-            sendRadioDataToWear(true);
+            sendRadioDataToWear();
         }
         else {
             Log.v(TAG, "=========> UNKNOWN MESSAGE messageEvent: path="+messageEvent.getPath()+", data="+ Arrays.toString(messageEvent.getData()));
         }
-    }
-
-    // a copy of this holder will get sent to the wearable
-    synchronized public static RadioStateHolder getRadioStateHolder() {
-        if (sRadioStateHolder == null) {
-            sRadioStateHolder = new RadioStateHolder();
-        }
-        return sRadioStateHolder;
     }
 
 }
