@@ -18,6 +18,7 @@ public class RadioWearActivity extends WearableActivity {
             new SimpleDateFormat("HH:mm", Locale.US);
 
     private Button autoplayButton;
+    private String state;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +30,7 @@ public class RadioWearActivity extends WearableActivity {
         LogHelper.v(TAG, "connect WearTalkService..");
         WearTalkService.connect(this);
 
+        state = "play";
         autoplayButton = (Button) findViewById(R.id.autoplayButton);
         autoplayButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -41,7 +43,7 @@ public class RadioWearActivity extends WearableActivity {
     public void autoplay(View view) {
         LogHelper.v(TAG, "autoplay: CLICK!");
         // sync with phone now
-        WearTalkService.createSyncMessage(this);
+        WearTalkService.createSyncMessage(this, state);
     }
 
 }

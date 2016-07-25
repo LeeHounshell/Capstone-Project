@@ -4,7 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Log;
+import android.support.v4.media.session.PlaybackStateCompat;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -20,12 +20,17 @@ import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
+import com.harlie.radiotheater.radiomysterytheater.data.configepisodes.ConfigEpisodesCursor;
+import com.harlie.radiotheater.radiomysterytheater.data_helper.DataHelper;
+import com.harlie.radiotheater.radiomysterytheater.playback.LocalPlayback;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.RadioStateHolder;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 // wear messages come from the watch into the Radio Mystery Theater app
 // from: https://gist.github.com/gabrielemariotti/117b05aad4db251f7534
@@ -56,7 +61,7 @@ public class WearTalkService
         }
 
         public void connect(Context context) {
-            Log.v(TAG, "connect");
+            LogHelper.v(TAG, "connect");
             sGoogleApiClient = new GoogleApiClient.Builder(context)
                     .addApi(Wearable.API)
                     .addConnectionCallbacks(this)
@@ -66,7 +71,7 @@ public class WearTalkService
         }
 
         public void disconnect() {
-            Log.v(TAG, "disconnect");
+            LogHelper.v(TAG, "disconnect");
             if (sGoogleApiClient != null && sGoogleApiClient.isConnected()) {
                 sGoogleApiClient.disconnect();
             }
@@ -75,38 +80,38 @@ public class WearTalkService
 
         @Override
         public void onConnected(@Nullable Bundle bundle) {
-            Log.v(TAG, "onConnected");
+            LogHelper.v(TAG, "onConnected");
             isConnected = true;
             WearTalkService.sendRadioDataToWear();
         }
 
         @Override
         public void onConnectionSuspended(int i) {
-            Log.v(TAG, "onConnectionSuspended");
+            LogHelper.v(TAG, "onConnectionSuspended");
         }
 
         @Override
         public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-            Log.v(TAG, "onConnectionFailed");
+            LogHelper.v(TAG, "onConnectionFailed");
         }
 
     }
 
     @Override
     public void onCreate() {
-        Log.v(TAG, "onCreate");
+        LogHelper.v(TAG, "onCreate");
         super.onCreate();
         connect(getApplicationContext());
     }
 
     @Override
     public void onDestroy() {
-        Log.v(TAG, "onDestroy");
+        LogHelper.v(TAG, "onDestroy");
         super.onDestroy();
     }
 
     synchronized public static void connect(Context context) {
-        Log.v(TAG, "connect");
+        LogHelper.v(TAG, "connect");
         if (sConnectionHandler == null) {
             sConnectionHandler = new ConnectionHandler();
         }
@@ -119,7 +124,7 @@ public class WearTalkService
     }
 
     public static void disconnect() {
-        Log.v(TAG, "disconnect");
+        LogHelper.v(TAG, "disconnect");
         if (sConnectionHandler != null) {
             sConnectionHandler.disconnect();
         }
@@ -129,7 +134,7 @@ public class WearTalkService
 
     public static boolean sendRadioDataToWear() {
         String packageId = RadioTheaterApplication.getRadioTheaterApplicationContext().getPackageName();
-        Log.v(TAG, "sendRadioDataToWear: package="+packageId);
+        LogHelper.v(TAG, "sendRadioDataToWear: package="+packageId);
         sRadioStateHolder = new RadioStateHolder();
         sRadioStateHolder.reset();
         sRadioStateHolder.setDirty(true);
@@ -138,7 +143,7 @@ public class WearTalkService
         if (radioStateHolder.isDirty()
                 && (radioDesignHolderOldValue == null || !radioDesignHolderOldValue.equals(radioStateHolder)))
         {
-            Log.w(TAG, "episode has changed - need to send message - ok");
+            LogHelper.w(TAG, "episode has changed - need to send message - ok");
             if (sGoogleApiClient == null) {
                 LogHelper.e(TAG, "*** NOT CONNECTED! - GoogleApiClient is null!");
                 return false;
@@ -168,17 +173,17 @@ public class WearTalkService
                                 PutDataRequest request = putDMR.asPutDataRequest();
                                 request.setUrgent();
 
-                                Log.v(TAG, "requesting send DataMap to " + node.getDisplayName());
+                                LogHelper.v(TAG, "requesting send DataMap to " + node.getDisplayName());
                                 PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(sGoogleApiClient, request);
                                 pendingResult.setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
                                     @Override
                                     public void onResult(DataApi.DataItemResult dataItemResult) {
                                         if (dataItemResult.getStatus().isSuccess()) {
-                                            Log.v(TAG, "radio DataMap: " + dataMap + " requested send to: " + node2.getDisplayName());
+                                            LogHelper.v(TAG, "radio DataMap: " + dataMap + " requested send to: " + node2.getDisplayName());
                                             radioStateHolder.setDirty(false);
                                             radioDesignHolderOldValue = new RadioStateHolder(radioStateHolder);
                                         } else {
-                                            Log.v(TAG, "ERROR: failed to request send radio DataMap to: " + node2.getDisplayName());
+                                            LogHelper.v(TAG, "ERROR: failed to request send radio DataMap to: " + node2.getDisplayName());
                                         }
                                     }
                                 });
@@ -196,7 +201,7 @@ public class WearTalkService
             return true;
         }
         else{
-            Log.w(TAG, "no radio message sent - isDirty:"+radioStateHolder.isDirty());
+            LogHelper.w(TAG, "no radio message sent - isDirty:"+radioStateHolder.isDirty());
             return false;
         }
     }
@@ -204,14 +209,59 @@ public class WearTalkService
     // receive the message from wear
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
-        Log.v(TAG, "---------> onMessageReceived FROM WEAR");
+        LogHelper.v(TAG, "---------> onMessageReceived FROM WEAR");
         if (messageEvent.getPath().equals(SYNC_PATH)) {
             String data = new String(messageEvent.getData());
-            Log.v(TAG, "=========> SYNC MESSAGE RECEIVED: "+data);
+            LogHelper.v(TAG, "=========> SYNC MESSAGE RECEIVED: "+data);
+            long messageTime = 0L;
+            String command = null;
+
+            //
+            // we only need two values from the JSON so use a regex pattern
+            // EXAMPLE JSON:{command=play, time=1469456408954}
+            //
+            Pattern pattern = Pattern.compile(".*command=([^,]+), time=([^}]+).*");
+            Matcher matcher = pattern.matcher((data));
+            if (matcher.find()) {
+                try {
+                    command = matcher.group(1);
+                    messageTime = Long.valueOf(matcher.group(2));
+                }
+                catch (NumberFormatException e) {
+                    LogHelper.e(TAG, "*** UNABLE TO DECODE SYNC COMMAND FROM WEAR *** - data="+data);
+                }
+            }
+
+            LogHelper.v(TAG, "===> messageTime="+messageTime+", command="+command);
             sendRadioDataToWear();
+
+            // for now we ignore the 'command' and 'time' values and just toggle playback ON/OFF
+            // make sure we have an episode loaded before playing anything.
+            int state = LocalPlayback.getCurrentState();
+            Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+            if (state != PlaybackStateCompat.STATE_PLAYING) {
+                if (DataHelper.getEpisodeNumber() == 0) {
+                    // load the next episode
+                    ConfigEpisodesCursor configCursor = DataHelper.getCursorForNextAvailableEpisode();
+                    DataHelper.getEpisodeDataForCursor(configCursor);
+                }
+                LogHelper.v(TAG, "*** WEAR TOGGLE: START PLAYING EPISODE "+DataHelper.getEpisodeNumber());
+                RadioControlIntentService.startActionPlay(context,
+                        "WEAR",
+                        DataHelper.getEpisodeNumberString(),
+                        DataHelper.getEpisodeDownloadUrl(),
+                        DataHelper.getEpisodeTitle());
+            }
+            else {
+                LogHelper.v(TAG, "*** WEAR TOGGLE: PAUSE PLAYING EPISODE "+DataHelper.getEpisodeNumber());
+                RadioControlIntentService.startActionPause(context,
+                        "WEAR",
+                        DataHelper.getEpisodeNumberString(),
+                        DataHelper.getEpisodeDownloadUrl());
+            }
         }
         else {
-            Log.v(TAG, "=========> UNKNOWN MESSAGE messageEvent: path="+messageEvent.getPath()+", data="+ Arrays.toString(messageEvent.getData()));
+            LogHelper.v(TAG, "=========> UNKNOWN MESSAGE messageEvent: path="+messageEvent.getPath()+", data="+ Arrays.toString(messageEvent.getData()));
         }
     }
 

@@ -128,7 +128,7 @@ public class WearTalkService
         }
     }
 
-    public static void createSyncMessage(Context context) {
+    public static void createSyncMessage(Context context, final String command) {
         String packageId = context.getPackageName();
         LogHelper.v(TAG, "createSyncMessage: package=" + packageId);
         new Thread(new Runnable() {
@@ -136,6 +136,7 @@ public class WearTalkService
             public void run() {
                 DataMap dmap = new DataMap();
                 dmap.putString("time", String.valueOf(System.currentTimeMillis()));
+                dmap.putString("command", command);
                 NodeApi.GetConnectedNodesResult nodes = Wearable.NodeApi.
                         getConnectedNodes(sGoogleApiClient).await();
                 for (final Node node : nodes.getNodes()) {
