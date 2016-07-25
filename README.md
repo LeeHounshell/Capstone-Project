@@ -3,7 +3,14 @@ This is P7, the Capstone Final Project for Udacity's Android Nanodegree program.
 
 ## Description
 
-This app lets you listen to 1399 fifty minute radio broadcasts of the “CBS Radio Mystery Theater.” App features continuous, hands free playback where possible. Supports background playback. The app properly handles incoming calls. All radio shows are property of CBS Corporation and are publicly available to download free from http://cbsrmt.com. Two versions are provided: The free app gives each authenticated user access to any 19 shows at no cost. The paid version is entirely unlocked, with no advertising. Both versions are full featured. The app's intended users are “Commuters”, “Seniors” and “Disabled”. This app is ideal for listening while on the go. This app is designed to be easy to see and easy to use and provides access to radio dramas with minimal device interaction. No internationalization is provided; all shows are in English only.  
+This app lets you listen to 1399 fifty minute radio broadcasts of the “CBS Radio Mystery Theater.”
+App features continuous, hands free playback where possible. Supports background playback. The app properly handles incoming calls.
+Two versions are provided: The free app gives each authenticated user access to any 19 shows at no cost.
+The paid version is entirely unlocked, with no advertising. Both versions are full featured.
+The app's intended users are “Commuters”, “Seniors” and “Disabled”. This app is ideal for listening while on the go.
+This app is designed to be easy to see and easy to use and provides access to radio dramas with minimal device interaction.
+No internationalization is provided; all shows are in English only.
+All radio shows are property of CBS Corporation and are publicly available to download free from http://cbsrmt.com.
 
 
 ## Features
@@ -26,6 +33,7 @@ This app lets you listen to 1399 fifty minute radio broadcasts of the
  * Crashlytics
  * Unit Test Suite
  * Material Design Theme extends from AppCompat
+ * App Settings allow changing font size and style
  * Shared Element Transition effect
  * CoordinatorLayout + AppBarLayout + CollapsingToolbar
  * ConstraintLayout
