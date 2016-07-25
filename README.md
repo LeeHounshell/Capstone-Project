@@ -46,6 +46,21 @@ All radio shows are property of CBS Corporation and are publicly available to do
  * Integrates Google Universal Media Player functionality
  * A Gradle build 'preprocessor' which permits #IFDEF 'flavor' and #IFDEF 'buildType' in  Android Java code
 
+
+# Credits
+ * Firebase for backend processing\n
+ * Content Provider Generator by Benoit Lubek
+ * DAZ Studio used to create the Haunted-House
+ * ButterKnife by Jake Warton
+ * Circle Progress View by Jakob Grabner
+ * Modified Circular Seekbar by Raghav Sood
+ * StackOverflow.com - an awesome resource!
+ * Android Studio / Google + Udacity
+ * UAMP - The Android Universal Media Player
+ * Wikipedia for the photo of E. G. Marshall
+ * www.cbsrmt.com - they made this possible
+
+
 ---
 SCREENSHOTS
 ---
@@ -55,9 +70,9 @@ SCREENSHOTS
 
 ![screen](../master/screenshots/tablet_landscape_main.png)
 
-![screen](../master/screenshots/wear_companion_app.png)
-
 ![screen](../master/screenshots/tablet_master_detail.png)
+
+![screen](../master/screenshots/wear_companion_app.png)
 
 ![screen](../master/screenshots/episode_list_view.png)
 
