@@ -33,6 +33,7 @@ All radio shows are property of CBS Corporation and are publicly available to do
  * Crashlytics
  * Unit Test Suite
  * Material Design Theme extends from AppCompat
+ * List items change color after being heard
  * App Settings allow changing font size and style
  * Shared Element Transition effect
  * CoordinatorLayout + AppBarLayout + CollapsingToolbar
