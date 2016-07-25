@@ -3,7 +3,15 @@ This is P7, the Capstone Final Project for Udacity's Android Nanodegree program.
 
 ## Description
 
-This app lets you listen to 1399 fifty­minute radio broadcasts of the “CBS Radio Mystery Theater.” App features continuous, hands free playback where possible. Supports background playback. The app properly handles incoming calls. Download episodes for offline listening or stream shows live. All radio shows are property of CBS Corporation and are publicly available to download free from http://cbsrmt.com Two versions: The free app gives each authenticated user access to any 19 shows at no cost. The paid version is entirely unlocked, with no advertising. Both versions are full­featured. App Intended User: “Commuters”, “Seniors” and “Disabled” are the primary intended users. This app is designed to be easy to see and easy to use. It provides access to radio dramas with minimal device interaction, making “Radio Mystery Theater” ideal for listening while on the go. No internationalization is provided; all shows are in English only.  
+This app lets you listen to 1399 fifty­minute radio broadcasts of the “CBS Radio Mystery Theater.”
+App features continuous, hands free playback where possible. Supports background playback.
+The app properly handles incoming calls.
+All radio shows are property of CBS Corporation and are publicly available to download free from http://cbsrmt.com
+Two versions: The free app gives each authenticated user access to any 19 shows at no cost.
+The paid version is entirely unlocked, with no advertising. Both versions are full­featured.
+App Intended User: “Commuters”, “Seniors” and “Disabled” are the primary intended users.
+This app is designed to be easy to see and easy to use and provides access to radio dramas with minimal device interaction.
+“Radio Mystery Theater” is ideal for listening while on the go. No internationalization is provided; all shows are in English only.  
 
 
 ## Features
@@ -46,6 +54,8 @@ SCREENSHOTS
 ![screen](../master/screenshots/tablet_portrait_main.png)
 
 ![screen](../master/screenshots/tablet_landscape_main.png)
+
+![screen](../master/screenshots/wear_companion_app.png)
 
 ![screen](../master/screenshots/tablet_master_detail.png)
 
