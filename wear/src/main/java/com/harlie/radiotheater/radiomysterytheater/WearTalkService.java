@@ -1,6 +1,7 @@
 package com.harlie.radiotheater.radiomysterytheater;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -34,6 +35,16 @@ public class WearTalkService
 
     private static ConnectionHandler sConnectionHandler;
     private static GoogleApiClient sGoogleApiClient;
+
+    private static long theTime;
+    private static boolean isDirty;
+    private static long radioState;
+    private static long episodeNumber;
+    private static long position;
+    private static long duration;
+    private static String title;
+    private static String description;
+    private static String airdate;
 
     public static final String RADIO_INFO_PATH = "/radiomysterytheater/episode";
     public static final String SYNC_PATH = "/radiomysterytheater/sync";
@@ -117,8 +128,28 @@ public class WearTalkService
                 String path = event.getDataItem().getUri().getPath();
                 byte[] data = event.getDataItem().getData();
                 if (WearTalkService.RADIO_INFO_PATH.equals(path.substring(0, WearTalkService.RADIO_INFO_PATH.length()))) {
+                    // EXAMPLE: dmap={title=The Old Ones Are Hard to Kill, episodeNumber=1, description=An old lady rents a room to a sick boarder. She runs into problems with his strange deathbed confession., theTime=1469474279353, airdate=1974-01-06, isDirty=true, radioState=3, duration=2522201, position=13926}
                     DataMap dmap = DataMapItem.fromDataItem(event.getDataItem()).getDataMap();
                     LogHelper.v(TAG, "---> GOT RADIO_INFO_PATH="+path+", dmap="+dmap.toString());
+                    // decode the dmap
+                    theTime = dmap.getLong("theTime");
+                    isDirty = dmap.getBoolean("isDirty");
+                    radioState = dmap.getLong("radioState");
+                    episodeNumber = dmap.getLong("episodeNumber");
+                    position = dmap.getLong("position");
+                    duration = dmap.getLong("duration");
+                    title = dmap.getString("title");
+                    description = dmap.getString("description");
+                    airdate = dmap.getString("airDate");
+                    // notify the RadioWearActivity of the changes
+                    Context context = getApplicationContext();
+                    String wear_control_command = context.getResources().getString(R.string.wear_control_command);
+                    String message = String.valueOf(radioState);
+                    Intent intentMessage = new Intent("com.harlie.radiotheater.radiomysterytheater.WEAR").putExtra(wear_control_command, message);
+                    context.sendBroadcast(intentMessage);
+                    LogHelper.v(TAG, "---> theTime="+theTime+", isDirty="+isDirty+", radioState="+radioState+", episodeNumber="+episodeNumber
+                            +", position="+position+", duration="+duration+", title="+title+", description="+description+", airdate="+airdate);
+                    LogHelper.v(TAG, "---> message sent to RadioWearActivity");
                 }
                 else {
                     LogHelper.w(TAG, "UNEXPECTED PATH: "+path);
@@ -161,6 +192,42 @@ public class WearTalkService
                 }
             }
         }).start();
+    }
+
+    public static long getTheTime() {
+        return theTime;
+    }
+
+    public static boolean isDirty() {
+        return isDirty;
+    }
+
+    public static long getRadioState() {
+        return radioState;
+    }
+
+    public static long getEpisodeNumber() {
+        return episodeNumber;
+    }
+
+    public static long getPosition() {
+        return position;
+    }
+
+    public static long getDuration() {
+        return duration;
+    }
+
+    public static String getTitle() {
+        return title;
+    }
+
+    public static String getDescription() {
+        return description;
+    }
+
+    public static String getAirdate() {
+        return airdate;
     }
 
 }

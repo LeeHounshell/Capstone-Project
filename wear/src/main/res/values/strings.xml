@@ -2,4 +2,5 @@
     <string name="app_name">Radio Mystery Theater</string>
     <string name="autoplay">Autoplay</string>
     <string name="autoplay_next">Autoplay next episode</string>
+    <string name="wear_control_command">wearControl</string>
 </resources>

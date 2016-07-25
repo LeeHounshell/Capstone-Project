@@ -218,7 +218,7 @@ public class WearTalkService
 
             //
             // we only need two values from the JSON so use a regex pattern
-            // EXAMPLE JSON:{command=play, time=1469456408954}
+            // EXAMPLE JSON:{command=toggle, time=1469456408954}
             //
             Pattern pattern = Pattern.compile(".*command=([^,]+), time=([^}]+).*");
             Matcher matcher = pattern.matcher((data));

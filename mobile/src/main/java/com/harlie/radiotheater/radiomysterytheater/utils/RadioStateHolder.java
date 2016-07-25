@@ -14,7 +14,7 @@ public class RadioStateHolder implements Parcelable {
 
     private long theTime;
     private boolean isDirty;
-    private int radioState;
+    private long radioState;
     private long episodeNumber;
     private long position;
     private long duration;
@@ -41,7 +41,7 @@ public class RadioStateHolder implements Parcelable {
         DataMap dmap = new DataMap();
         dmap.putLong("theTime", theTime);
         dmap.putBoolean("isDirty", isDirty());
-        dmap.putInt("radioState", getRadioState());
+        dmap.putLong("radioState", getRadioState());
         dmap.putLong("episodeNumber", getEpisodeNumber());
         dmap.putLong("position", getPosition());
         dmap.putLong("duration", getDuration());
@@ -71,7 +71,7 @@ public class RadioStateHolder implements Parcelable {
     public int hashCode() {
         int result = (isDirty() ? 1 : 0);
         result = 31 * result + (int) getTheTime();
-        result = 31 * result + getRadioState();
+        result = 31 * result + (int) getRadioState();
         result = 31 * result + (int) getEpisodeNumber();
         result = 31 * result + (int) getPosition();
         result = 31 * result + (int) getDuration();
@@ -150,11 +150,11 @@ public class RadioStateHolder implements Parcelable {
         isDirty = dirty;
     }
 
-    public int getRadioState() {
+    public long getRadioState() {
         return radioState;
     }
 
-    public void setRadioState(int radioState) {
+    public void setRadioState(long radioState) {
         this.radioState = radioState;
     }
 
