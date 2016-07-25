@@ -16,6 +16,8 @@ public class RadioStateHolder implements Parcelable {
     private boolean isDirty;
     private int radioState;
     private long episodeNumber;
+    private long position;
+    private long duration;
     private String title;
     private String description;
     private String airdate;
@@ -25,6 +27,8 @@ public class RadioStateHolder implements Parcelable {
         this.isDirty = copy.isDirty;
         this.radioState = copy.radioState;
         this.episodeNumber = copy.episodeNumber;
+        this.position = copy.position;
+        this.duration = copy.duration;
         this.title = copy.title;
         this.description = copy.description;
         this.airdate = copy.airdate;
@@ -39,6 +43,8 @@ public class RadioStateHolder implements Parcelable {
         dmap.putBoolean("isDirty", isDirty());
         dmap.putInt("radioState", getRadioState());
         dmap.putLong("episodeNumber", getEpisodeNumber());
+        dmap.putLong("position", getPosition());
+        dmap.putLong("duration", getDuration());
         dmap.putString("title", getTitle());
         dmap.putString("description", getDescription());
         dmap.putString("airdate", getAirdate());
@@ -67,6 +73,8 @@ public class RadioStateHolder implements Parcelable {
         result = 31 * result + (int) getTheTime();
         result = 31 * result + getRadioState();
         result = 31 * result + (int) getEpisodeNumber();
+        result = 31 * result + (int) getPosition();
+        result = 31 * result + (int) getDuration();
         result = 31 * result + getTitle().length();
         result = 31 * result + getDescription().length();
         result = 31 * result + getAirdate().length();
@@ -95,6 +103,8 @@ public class RadioStateHolder implements Parcelable {
         dest.writeValue(this.isDirty);
         dest.writeValue(this.radioState);
         dest.writeValue(this.episodeNumber);
+        dest.writeValue(this.position);
+        dest.writeValue(this.duration);
         dest.writeString(this.title);
         dest.writeString(this.description);
         dest.writeString(this.airdate);
@@ -105,6 +115,8 @@ public class RadioStateHolder implements Parcelable {
         this.isDirty = (Boolean) in.readValue(Boolean.class.getClassLoader());
         this.radioState = (Integer) in.readValue(Integer.class.getClassLoader());
         this.episodeNumber = (Integer) in.readValue(Integer.class.getClassLoader());
+        this.position = (Integer) in.readValue(Integer.class.getClassLoader());
+        this.duration = (Integer) in.readValue(Integer.class.getClassLoader());
         this.title = in.readString();
         this.description = in.readString();
         this.airdate = in.readString();
@@ -152,6 +164,14 @@ public class RadioStateHolder implements Parcelable {
 
     public void setEpisodeNumber(long episodeNumber) {
         this.episodeNumber = episodeNumber;
+    }
+
+    public long getPosition() {
+        return DataHelper.getCurrentPosition();
+    }
+
+    public long getDuration() {
+        return DataHelper.getDuration();
     }
 
     public String getTitle() {

@@ -1412,6 +1412,7 @@ public class AutoplayActivity extends BaseActivity {
                             DataHelper.checkUpdateWidget(autoplayActivity, DataHelper.getAllListenCount());
                         }
                     });
+                    WearTalkService.sendRadioDataToWear();
                 }
 
                 // LOAD_FAIL
@@ -1427,6 +1428,7 @@ public class AutoplayActivity extends BaseActivity {
                             showExpectedControls("LOAD_FAIL");
                         }
                     });
+                    WearTalkService.sendRadioDataToWear();
                 }
 
                 // UPDATE_SCROLLTEXT
@@ -1439,6 +1441,7 @@ public class AutoplayActivity extends BaseActivity {
                             displayScrollingText();
                         }
                     });
+                    WearTalkService.sendRadioDataToWear();
                 }
 
                 // UPDATE_BUTTONS
@@ -1451,6 +1454,7 @@ public class AutoplayActivity extends BaseActivity {
                             showExpectedControls("UPDATE_BUTTONS");
                         }
                     });
+                    WearTalkService.sendRadioDataToWear();
                 }
 
                 // DURATION
@@ -1474,6 +1478,7 @@ public class AutoplayActivity extends BaseActivity {
                             do_UpdateControls();
                         }
                     });
+                    WearTalkService.sendRadioDataToWear();
                 }
 
                 // ERROR
@@ -1490,6 +1495,7 @@ public class AutoplayActivity extends BaseActivity {
                             problemWithPlayback();
                         }
                     });
+                    WearTalkService.sendRadioDataToWear();
                 }
 
                 // REQUEST
@@ -1515,6 +1521,7 @@ public class AutoplayActivity extends BaseActivity {
                                     DataHelper.getEpisodeTitle());
                         }
                     });
+                    WearTalkService.sendRadioDataToWear();
                 }
 
                 // PLAYING
@@ -1543,6 +1550,7 @@ public class AutoplayActivity extends BaseActivity {
                             }
                         }
                     });
+                    WearTalkService.sendRadioDataToWear();
                 }
 
                 // NOPLAY
@@ -1559,6 +1567,7 @@ public class AutoplayActivity extends BaseActivity {
                             problemWithPlayback();
                         }
                     });
+                    WearTalkService.sendRadioDataToWear();
                 }
 
                 // COMPLETION
@@ -1604,6 +1613,7 @@ public class AutoplayActivity extends BaseActivity {
                             }
                         }, DEFAULT_MEDIA_LOADING_DELAY);
                     }
+                    WearTalkService.sendRadioDataToWear();
                 }
 
                 // UNKNOWN
