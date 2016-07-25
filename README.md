@@ -53,7 +53,7 @@ All radio shows are property of CBS Corporation and are publicly available to do
  * DAZ Studio used to create the Haunted-House
  * ButterKnife by Jake Warton
  * Circle Progress View by Jakob Grabner
- * Circular Seekbar by Raghav Sood and Lee Hounshell
+ * Circular Seekbar Widget by Raghav Sood and Lee Hounshell
  * StackOverflow.com - an awesome resource!
  * Android Studio / Google + Udacity
  * UAMP - The Android Universal Media Player
