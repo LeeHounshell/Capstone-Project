@@ -83,9 +83,16 @@ public class LocalPlayback
 
     private final Context mContext;
     private final WifiManager.WifiLock mWifiLock;
-    private boolean mPlayOnFocusGain;
-    private Callback mCallback;
+    private final AudioManager mAudioManager;
     private final MusicProvider mMusicProvider;
+
+    // Type of audio focus we have:
+    private int mAudioFocus = AUDIO_NO_FOCUS_NO_DUCK;
+
+    private MediaPlayer mMediaPlayer;
+    private QueueItem mItem;
+    private Callback mCallback;
+    private boolean mPlayOnFocusGain;
 
     private volatile static boolean sPlaybackEnabled;
     private volatile static boolean sAudioNoisyReceiverRegistered;
@@ -96,14 +103,11 @@ public class LocalPlayback
     private volatile static int sCurrentNotifyState;
     private volatile static String sCurrentMediaId;
 
-    // Type of audio focus we have:
-    private int mAudioFocus = AUDIO_NO_FOCUS_NO_DUCK;
-    private final AudioManager mAudioManager;
-    private MediaPlayer mMediaPlayer;
-
+    // volumne down intent
     private final IntentFilter mAudioNoisyIntentFilter =
             new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
 
+    // volumne down receiver
     private final BroadcastReceiver mAudioNoisyReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -232,7 +236,7 @@ public class LocalPlayback
     private void notifyEpisodeDuration() {
         String radio_control_command = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.radio_control_command);
         String duration = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.duration);
-        String message = duration + String.valueOf(mMediaPlayer.getDuration());
+        String message = duration + String.valueOf(mMediaPlayer == null ? 0 : mMediaPlayer.getDuration());
         LogHelper.v(TAG, "notifyEpisodeDuration: message="+message);
         Intent intentMessage = new Intent("android.intent.action.MAIN").putExtra(radio_control_command, message);
         RadioTheaterApplication.getRadioTheaterApplicationContext().sendBroadcast(intentMessage);
@@ -281,6 +285,11 @@ public class LocalPlayback
     @Override
     public void play(QueueItem item) {
         LogHelper.v(TAG, "PLAY: item="+item.getDescription().getMediaId()+", title="+item.getDescription().getTitle());
+        if (item == null) {
+            LogHelper.e(TAG, "PLAY: QueueItem is null! - STOPPED.");
+            return;
+        }
+        mItem = item;
         sPlaybackRequested = true;
         String mediaId = item.getDescription().getMediaId();
         boolean mediaHasChanged = !TextUtils.equals(mediaId, sCurrentMediaId);
@@ -289,10 +298,16 @@ public class LocalPlayback
             sCurrentMediaId = mediaId;
             notifyEpisodePlaying();
         }
-        if (! sPlaybackEnabled
-                || (getCurrentState() == PlaybackStateCompat.STATE_PLAYING && ! mediaHasChanged))
+        if (! sPlaybackEnabled || (getCurrentState() == PlaybackStateCompat.STATE_PLAYING && ! mediaHasChanged))
         {
-            LogHelper.v(TAG, "PLAY: *** IGNORED 'play' REQUEST *** - mediaId="+mediaId+", enabled="+sPlaybackEnabled+", current state="+getCurrentState());
+            if (getCurrentState() == PlaybackStateCompat.STATE_BUFFERING) {
+                LogHelper.v(TAG, "PLAY: the previous play request is in STATE_BUFFERING. wait for it.");
+                return;
+            }
+            LogHelper.v(TAG, "PLAY: *** EXTRA 'play' REQUEST??! *** - mediaId="+mediaId+", enabled="+sPlaybackEnabled+", current state="+getCurrentState());
+            if (mMediaPlayer != null) {
+                mMediaPlayer.start();
+            }
             Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
             RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
             return;
@@ -390,11 +405,13 @@ public class LocalPlayback
 
     @Override
     public void pause() {
+        LogHelper.v(TAG, "pause");
         sPlaybackRequested = false;
+        mPlayOnFocusGain = false;
         if (getState() == PlaybackStateCompat.STATE_PLAYING) {
-            LogHelper.v(TAG, "pause - ok, stop playing");
             // Pause media player and cancel the 'foreground service' state.
-            if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
+            if (mMediaPlayer != null) {
+                LogHelper.v(TAG, "PAUSE - stop playing NOW");
                 mMediaPlayer.pause();
                 setCurrentStreamPosition(mMediaPlayer.getCurrentPosition());
             }
@@ -429,6 +446,10 @@ public class LocalPlayback
                 mMediaPlayer.seekTo(position);
                 if (mCallback != null) {
                     mCallback.onPlaybackStatusChanged(getCurrentState());
+                }
+                mMediaPlayer.start();
+                if (mMediaPlayer.isPlaying()) {
+                    setCurrentState(PlaybackStateCompat.STATE_PLAYING);
                 }
             }
         }
@@ -514,9 +535,9 @@ public class LocalPlayback
         if (mAudioFocus == AUDIO_NO_FOCUS_NO_DUCK) {
             // If we don't have audio focus and can't duck, we have to pause,
             if (getCurrentState() == PlaybackStateCompat.STATE_PLAYING) {
-                Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
-                stop(true);
-                RadioControlIntentService.startActionStop(context, "NO_FOCUS", String.valueOf(LocalPlayback.getCurrentEpisode()), "INCOMING CALL?");
+                pause();
+                mPlayOnFocusGain = true;
+                return;
             }
         } else {  // we have audio focus:
             if (mAudioFocus == AUDIO_NO_FOCUS_CAN_DUCK) {
@@ -528,9 +549,9 @@ public class LocalPlayback
             }
             // If we were playing when we lost focus, we need to resume playing.
             if (mPlayOnFocusGain) {
-                LogHelper.v(TAG, "*** mPlayOnFocusGain ***");
-                startPlaying();
+                LogHelper.v(TAG, "*** mPlayOnFocusGain *** - STARTPLAYING");
                 mPlayOnFocusGain = false;
+                startPlaying();
             }
         }
         if (mCallback != null) {
@@ -557,7 +578,10 @@ public class LocalPlayback
             }
         }
         else {
-            LogHelper.v(TAG, "*** IGNORED 'startPlaying' REQUEST *** - enabled="+sPlaybackEnabled+", current state="+getCurrentState());
+            LogHelper.v(TAG, "*** DUPLICATE 'startPlaying' REQUEST *** - enabled="+sPlaybackEnabled+", current state="+getCurrentState());
+            if (mMediaPlayer != null) {
+                mMediaPlayer.start();
+            }
         }
         Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
         RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
@@ -587,6 +611,8 @@ public class LocalPlayback
             if (getCurrentState() == PlaybackStateCompat.STATE_PLAYING && !canDuck) {
                 // If we don't have audio focus and can't duck, we save the information that
                 // we were playing, so that we can resume playback once we get the focus back.
+                LogHelper.v(TAG, "*** NO AUDIO FOCUS CAN NOT DUCK *** - PAUSE");
+                pause();
                 mPlayOnFocusGain = true;
             }
         } else {
@@ -658,7 +684,7 @@ public class LocalPlayback
      */
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
-        LogHelper.e(TAG, "onError: what=" + what + ", extra=" + extra);
+        LogHelper.e(TAG, "********* onError: what=" + what + ", extra=" + extra + " *********");
         if (what == 1 && extra == -2147483648) {
             // The '1' value corresponds to the constant in MediaPlayer.MEDIA_ERROR_UNKNOWN
             // -2147483648 corresponds to hexadecimal 0x80000000 which is defined as UNKNOWN_ERROR in frameworks/native/include/utils/Errors.h
@@ -668,14 +694,16 @@ public class LocalPlayback
         if (mCallback != null) {
             mCallback.onError("MediaPlayer error " + what + " (" + extra + ")");
         }
+        Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
         if (what == -38) {
             LogHelper.v(TAG, "*** MEDIA PLAYER NEEDS RESET - ERROR=-38 ***");
+            RadioControlIntentService.startActionReset(context, "ERROR -38", LocalPlayback.getCurrentEpisode(), getCurrentPosition());
         }
-        stop(true);
-        relaxResources(true);
-        // LocalPlayback is stopped now, but still need to notify the app that display buttons should update their state..
-        Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
-        RadioControlIntentService.startActionStop(context, "ERROR", String.valueOf(LocalPlayback.getCurrentEpisode()), "error="+String.valueOf(what));
+        else {
+            relaxResources(true);
+            // LocalPlayback is stopped now, but still need to notify the app that display buttons should update their state..
+            RadioControlIntentService.startActionStop(context, "ERROR", String.valueOf(LocalPlayback.getCurrentEpisode()), "error=" + String.valueOf(what));
+        }
         return true; // true indicates we handled the error
     }
 

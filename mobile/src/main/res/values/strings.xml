@@ -76,6 +76,7 @@
     <string name="icon_url">http://harlie.com/radiotheater/logo_icon.png</string>
     <string name="key_art_url">http://harlie.com/radiotheater/e_g_marshal_1970.jpg</string>
     <string name="haunted_url">http://harlie.com/radiotheater/haunted.png</string>
+    <string name="sqlite_failed">SQLite Database Failed</string>
     <string name="error_loading_media">Error Loading Media</string>
     <string name="nothing_unheard">No Unheard Episodes</string>
     <string name="trial_remain">TRIAL EPISODES REMAIN</string>

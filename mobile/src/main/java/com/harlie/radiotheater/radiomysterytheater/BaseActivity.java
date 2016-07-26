@@ -908,7 +908,22 @@ public class BaseActivity extends AppCompatActivity {
         }
     }
 
-    private void problemExistingDatabase(String fileName) {
+    protected void problemWithSQLiteDatabase() {
+        LogHelper.v(TAG, "problemWithSQLiteDatabase");
+        AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+        alertDialog.setTitle(getResources().getString(R.string.sqlite_failed));
+        alertDialog.setMessage(getResources().getString(R.string.database_loading_problem));
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getResources().getString(R.string.ok),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        DataHelper.trackWithFirebaseAnalytics(DataHelper.getEpisodeNumberString(), DataHelper.getCurrentPosition(), "sqlite database failed");
+                        dialog.dismiss();
+                    }
+                });
+        alertDialog.show();
+    }
+
+    protected void problemExistingDatabase(String fileName) {
         LogHelper.w(TAG, "problemExistingDatabase, fileName="+fileName);
         DataHelper.setCurrentPosition(0);
         AlertDialog alertDialog = new AlertDialog.Builder(BaseActivity.this).create();
@@ -926,7 +941,7 @@ public class BaseActivity extends AppCompatActivity {
         alertDialog.show();
     }
 
-    private void problemMissingDatabase(String fileName) {
+    protected void problemMissingDatabase(String fileName) {
         LogHelper.w(TAG, "problemMissingDatabase: fileName="+fileName);
         DataHelper.setCurrentPosition(0);
         AlertDialog alertDialog = new AlertDialog.Builder(BaseActivity.this).create();
@@ -944,7 +959,7 @@ public class BaseActivity extends AppCompatActivity {
         alertDialog.show();
     }
 
-    private void problemLoadingDatabase(String error) {
+    protected void problemLoadingDatabase(String error) {
         LogHelper.w(TAG, "problemLoadingDatabase: error="+error);
         DataHelper.setCurrentPosition(0);
         AlertDialog alertDialog = new AlertDialog.Builder(BaseActivity.this).create();

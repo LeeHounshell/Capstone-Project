@@ -119,7 +119,17 @@ public class EpisodeListActivity extends BaseActivity
         if (position == 0) {
             LogHelper.v(TAG, "LIST: unable to locate selection - using NEXT AVAILABLE");
             ConfigEpisodesCursor configCursor = DataHelper.getCursorForNextAvailableEpisode();
-            DataHelper.getEpisodeDataForCursor(configCursor);
+            if (configCursor == null) {
+                getHandler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        activity.problemWithSQLiteDatabase();
+                    }
+                });
+            }
+            else {
+                DataHelper.getEpisodeDataForCursor(configCursor);
+            }
             position = DataHelper.getEpisodeNumber();
         }
         final int activePosition = (int) position - 1;

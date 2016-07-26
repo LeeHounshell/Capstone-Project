@@ -397,6 +397,15 @@ public class AutoplayActivity extends BaseActivity {
                 else {
                     LogHelper.v(TAG, "onClick: need to getCursorForNextAvailableEpisode");
                     ConfigEpisodesCursor configCursor = DataHelper.getCursorForNextAvailableEpisode();
+                    if (configCursor == null) {
+                        getHandler().post(new Runnable() {
+                            @Override
+                            public void run() {
+                                problemWithSQLiteDatabase();
+                            }
+                        });
+                        return;
+                    }
                     if (!DataHelper.getEpisodeDataForCursor(configCursor)) {
                         LogHelper.v(TAG, "popup alert - ALL EPISODES ARE HEARD!");
                         mAppBarLayout.setExpanded(true);
@@ -571,7 +580,16 @@ public class AutoplayActivity extends BaseActivity {
                 DataHelper.getEpisodeInfoFor(DataHelper.getEpisodeNumber());
                 if (PlaybackStateCompat.STATE_PLAYING != lastPlaybackState) {
                     ConfigEpisodesCursor configCursor = DataHelper.getCursorForNextAvailableEpisode();
-                    if (DataHelper.getEpisodeDataForCursor(configCursor)) {
+                    if (configCursor == null) {
+                        getHandler().post(new Runnable() {
+                            @Override
+                            public void run() {
+                                problemWithSQLiteDatabase();
+                            }
+                        });
+                        return;
+                    }
+                    else if (DataHelper.getEpisodeDataForCursor(configCursor)) {
                         displayScrollingText();
                     }
                 }
@@ -677,7 +695,7 @@ public class AutoplayActivity extends BaseActivity {
         showExpectedControls("updateControls");
     }
 
-    private void heardAllEpisodes() {
+    protected void heardAllEpisodes() {
         AlertDialog alertDialog = new AlertDialog.Builder(AutoplayActivity.this).create();
         alertDialog.setTitle(getResources().getString(R.string.nothing_unheard));
         alertDialog.setMessage(getResources().getString(R.string.heard_everything));
@@ -691,7 +709,7 @@ public class AutoplayActivity extends BaseActivity {
         alertDialog.show();
     }
 
-    private void problemLoadingMetadata() {
+    protected void problemLoadingMetadata() {
         LogHelper.v(TAG, "problemLoadingMetadata");
         DataHelper.setCurrentPosition(0);
         AlertDialog alertDialog = new AlertDialog.Builder(AutoplayActivity.this).create();
@@ -707,7 +725,7 @@ public class AutoplayActivity extends BaseActivity {
         alertDialog.show();
     }
 
-    private void problemWithPlayback() {
+    protected void problemWithPlayback() {
         LogHelper.v(TAG, "problemWithPlayback");
         DataHelper.setCurrentPosition(0);
         AlertDialog alertDialog = new AlertDialog.Builder(AutoplayActivity.this).create();
@@ -812,6 +830,10 @@ public class AutoplayActivity extends BaseActivity {
                 LogHelper.v(TAG, "-> SHARE <-");
                 if (episode == 0) {
                     ConfigEpisodesCursor configCursor = DataHelper.getCursorForNextAvailableEpisode();
+                    if (configCursor == null) {
+                        problemWithSQLiteDatabase();
+                        return true;
+                    }
                     DataHelper.getEpisodeDataForCursor(configCursor);
                     episode = DataHelper.getEpisodeNumber();
                     if (episode == 0) {
@@ -1598,7 +1620,15 @@ public class AutoplayActivity extends BaseActivity {
                     }
                     initializeForEpisode();
                     ConfigEpisodesCursor configCursor = DataHelper.getCursorForNextAvailableEpisode();
-                    if (! DataHelper.getEpisodeDataForCursor(configCursor)) {
+                    if (configCursor == null) {
+                        getHandler().post(new Runnable() {
+                            @Override
+                            public void run() {
+                                problemWithSQLiteDatabase();
+                            }
+                        });
+                    }
+                    else if (! DataHelper.getEpisodeDataForCursor(configCursor)) {
                         getHandler().post(new Runnable() {
                             @Override
                             public void run() {

@@ -76,6 +76,7 @@ public class RadioControlIntentService extends IntentService {
     private static final String ACTION_START = "com.harlie.radiotheater.radiomysterytheater.action.START";
     private static final String ACTION_PLAY = "com.harlie.radiotheater.radiomysterytheater.action.PLAY";
     private static final String ACTION_PAUSE = "com.harlie.radiotheater.radiomysterytheater.action.PAUSE";
+    private static final String ACTION_RESET = "com.harlie.radiotheater.radiomysterytheater.action.RESET";
     private static final String ACTION_SEEK = "com.harlie.radiotheater.radiomysterytheater.action.SEEK";
     private static final String ACTION_GOBACK = "com.harlie.radiotheater.radiomysterytheater.action.GOBACK";
     private static final String ACTION_STOP = "com.harlie.radiotheater.radiomysterytheater.action.STOP";
@@ -251,43 +252,61 @@ public class RadioControlIntentService extends IntentService {
                 final String param2 = intent.getStringExtra(EXTRA_PARAM2);
                 LogHelper.v(TAG, "onHandleIntent: handleActionStart:"+episode);
                 handleActionStart(episode, param2);
-            } else if (ACTION_PLAY.equals(action)) {
+            }
+            else if (ACTION_PLAY.equals(action)) {
                 final String episode = intent.getStringExtra(EXTRA_EPISODE);
                 final String downloadUrl = intent.getStringExtra(EXTRA_PARAM2);
                 final String title = intent.getStringExtra(EXTRA_TITLE);
                 LogHelper.v(TAG, "onHandleIntent: handleActionPlay:"+episode);
                 handleActionPlay(episode, downloadUrl, title);
-            } else if (ACTION_PAUSE.equals(action)) {
+            }
+            else if (ACTION_PAUSE.equals(action)) {
                 final String episode = intent.getStringExtra(EXTRA_EPISODE);
                 final String param2 = intent.getStringExtra(EXTRA_PARAM2);
                 LogHelper.v(TAG, "onHandleIntent: handleActionPause:"+episode);
                 handleActionPause(episode, param2);
-            } else if (ACTION_SEEK.equals(action)) {
+            }
+            else if (ACTION_RESET.equals(action)) {
+                final String episode = intent.getStringExtra(EXTRA_EPISODE);
+                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
+                LogHelper.v(TAG, "onHandleIntent: ACTION_RESET ALREADY HANDLED:"+episode);
+            }
+            else if (ACTION_COMPLETE.equals(action)) {
+                final String episode = intent.getStringExtra(EXTRA_EPISODE);
+                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
+                LogHelper.v(TAG, "onHandleIntent: ACTION_COMPLETE ALREADY HANDLED:"+episode);
+            }
+            else if (ACTION_SEEK.equals(action)) {
                 final String episode = intent.getStringExtra(EXTRA_EPISODE);
                 final String position = intent.getStringExtra(EXTRA_PARAM2);
                 LogHelper.v(TAG, "onHandleIntent: handleActionSeek:"+episode);
                 handleActionSeek(episode, position);
-            } else if (ACTION_GOBACK.equals(action)) {
+            }
+            else if (ACTION_GOBACK.equals(action)) {
                 final String episode = intent.getStringExtra(EXTRA_EPISODE);
                 final String amount = intent.getStringExtra(EXTRA_PARAM2);
                 LogHelper.v(TAG, "onHandleIntent: handleActionGoback:"+episode);
                 handleActionGoback(episode, amount);
-            } else if (ACTION_STOP.equals(action)) {
+            }
+            else if (ACTION_STOP.equals(action)) {
                 final String episode = intent.getStringExtra(EXTRA_EPISODE);
                 final String param2 = intent.getStringExtra(EXTRA_PARAM2);
                 LogHelper.v(TAG, "onHandleIntent: handleActionStop:"+episode);
                 handleActionStop(episode, param2);
-            } else if (ACTION_NEXT.equals(action)) {
+            }
+            else if (ACTION_NEXT.equals(action)) {
                 final String episode = intent.getStringExtra(EXTRA_EPISODE);
                 final String param2 = intent.getStringExtra(EXTRA_PARAM2);
                 LogHelper.v(TAG, "onHandleIntent: handleActionNext:"+episode);
                 handleActionNext(episode, param2);
-            } else if (ACTION_PREV.equals(action)) {
+            }
+            else if (ACTION_PREV.equals(action)) {
                 final String episode = intent.getStringExtra(EXTRA_EPISODE);
                 final String param2 = intent.getStringExtra(EXTRA_PARAM2);
                 LogHelper.v(TAG, "onHandleIntent: handleActionPrev:"+episode);
                 handleActionPrev(episode, param2);
-            } else if (ACTION_CMD.equals(action)) {
+            }
+            else if (ACTION_CMD.equals(action)) {
                 final String cmd_name = intent.getStringExtra(CMD_NAME);
                 if (cmd_name != null && cmd_name.equals(CMD_COMPLETE)) {
                     final String episode = intent.getStringExtra(RadioTheaterService.CMD_PARAM_EPISODE);
@@ -436,6 +455,22 @@ public class RadioControlIntentService extends IntentService {
             LogHelper.v(TAG, "*** ignored startActionPause (not playing) ***");
             changeUpdateNotification(context, false);
         }
+    }
+
+    /**
+     * Starts this service to perform action RESET with the given parameters. If
+     * the service is already performing a task this action will be queued.
+     *
+     * @see IntentService
+     */
+    public static void startActionReset(Context context, String from, int episode, int currentPosition) {
+        LogHelper.v(TAG, "=====> startActionReset: from=" + from + ", episode=" + episode + ", currentPosition=" + currentPosition);
+        LocalPlayback.setPlaybackEnabled(false);
+        startActionStop(context, from, String.valueOf(episode), "RESET");
+        startActionSeek(context, from, String.valueOf(episode), String.valueOf(currentPosition));
+        DataHelper.getEpisodeInfoFor(episode);
+        LocalPlayback.setPlaybackEnabled(true);
+        startActionPlay(context, from, DataHelper.getEpisodeNumberString(), DataHelper.getEpisodeDownloadUrl(), DataHelper.getEpisodeTitle());
     }
 
     /**
@@ -691,7 +726,10 @@ public class RadioControlIntentService extends IntentService {
             LogHelper.v(TAG, "---> NEED TO START NEXT EPISODE FROM A SERVICE.");
             DataHelper.markEpisodeAsHeardAndIncrementPlayCount(DataHelper.getEpisodeNumber(), DataHelper.getEpisodeNumberString(), DataHelper.getCurrentPosition());
             ConfigEpisodesCursor configCursor = DataHelper.getCursorForNextAvailableEpisode();
-            if (DataHelper.getEpisodeDataForCursor(configCursor)) {
+            if (configCursor == null) {
+                LogHelper.e(TAG, "handleActionComplete("+episode+") - getCursorForNextAvailableEpisode: ********* SQLite FAILURE *********");
+            }
+            else if (DataHelper.getEpisodeDataForCursor(configCursor)) {
                 final long nextEpisode = DataHelper.getEpisodeNumber();
                 DataHelper.setEpisodeNumber(nextEpisode);
                 DataHelper.getEpisodeInfoFor(DataHelper.getEpisodeNumber());

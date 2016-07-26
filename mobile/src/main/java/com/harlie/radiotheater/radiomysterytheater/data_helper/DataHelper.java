@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -235,24 +236,30 @@ public class DataHelper {
 
     public static ConfigEpisodesCursor getCursorForNextAvailableEpisode() {
         LogHelper.v(TAG, "SQLITE: getCursorForNextAvailableEpisode");
-        ConfigEpisodesSelection where = new ConfigEpisodesSelection();
-        // find the next unwatched episode, in airdate order
-        where.fieldEpisodeHeard(false);
-        if (! NetworkHelper.isOnline(RadioTheaterApplication.getRadioTheaterApplicationContext())) {
-            // find the next DOWNLOADED unwatched episode, in airdate order
-            where.fieldEpisodeDownloaded(true);
+        try {
+            ConfigEpisodesSelection where = new ConfigEpisodesSelection();
+            // find the next unwatched episode, in airdate order
+            where.fieldEpisodeHeard(false);
+            if (!NetworkHelper.isOnline(RadioTheaterApplication.getRadioTheaterApplicationContext())) {
+                // find the next DOWNLOADED unwatched episode, in airdate order
+                where.fieldEpisodeDownloaded(true);
+            }
+
+            String order_limit = RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_NUMBER + " ASC LIMIT 1";
+
+            Cursor cursor = RadioTheaterApplication.getRadioTheaterApplicationContext().getContentResolver().query(
+                    ConfigEpisodesColumns.CONTENT_URI,  // the 'content://' Uri to query
+                    null,                               // projection String[] - leaving "columns" null just returns all the columns.
+                    where.sel(),                        // selection - SQL where
+                    where.args(),                       // selection args String[] - values for the "where" clause
+                    order_limit);                       // sort order and limit (String)
+
+            return (cursor != null) ? new ConfigEpisodesCursor(cursor) : null;
         }
-
-        String order_limit = RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_NUMBER + " ASC LIMIT 1";
-
-        Cursor cursor = RadioTheaterApplication.getRadioTheaterApplicationContext().getContentResolver().query(
-                ConfigEpisodesColumns.CONTENT_URI,  // the 'content://' Uri to query
-                null,                               // projection String[] - leaving "columns" null just returns all the columns.
-                where.sel(),                        // selection - SQL where
-                where.args(),                       // selection args String[] - values for the "where" clause
-                order_limit);                       // sort order and limit (String)
-
-        return (cursor != null) ? new ConfigEpisodesCursor(cursor) : null;
+        catch (SQLException e) {
+            LogHelper.e(TAG, "********* getCursorForNextAvailableEpisode: SQL Exception ********* - e="+e);
+        }
+        return null;
     }
 
     public static ConfigurationContentValues getConfigurationContentValues(ConfigurationCursor cursor) {
