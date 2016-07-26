@@ -304,10 +304,13 @@ public class LocalPlayback
                 LogHelper.v(TAG, "PLAY: the previous play request is in STATE_BUFFERING. wait for it.");
                 return;
             }
-            LogHelper.v(TAG, "PLAY: *** EXTRA 'play' REQUEST??! *** - mediaId="+mediaId+", enabled="+sPlaybackEnabled+", current state="+getCurrentState());
             if (mMediaPlayer != null) {
                 mMediaPlayer.start();
+                if (mMediaPlayer.isPlaying()) {
+                    setCurrentState(PlaybackStateCompat.STATE_PLAYING);
+                }
             }
+            LogHelper.v(TAG, "PLAY: *** CONTINUE PLAYBACK! *** - mediaId="+mediaId+", enabled="+sPlaybackEnabled+", current state="+getCurrentState());
             Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
             RadioTheaterWidgetProvider.notifyWidget(context, AppWidgetManager.getInstance(context), false);
             return;
@@ -568,7 +571,9 @@ public class LocalPlayback
                 if (sCurrentPosition == mMediaPlayer.getCurrentPosition()) {
                     LogHelper.v(TAG, "startPlaying: ********* START PLAYING *********");
                     mMediaPlayer.start();
-                    setCurrentState(PlaybackStateCompat.STATE_PLAYING);
+                    if (mMediaPlayer.isPlaying()) {
+                        setCurrentState(PlaybackStateCompat.STATE_PLAYING);
+                    }
                 } else {
                     LogHelper.v(TAG, "startPlaying: ********* BUFFERING *********");
                     sCurrentPosition = mMediaPlayer.getCurrentPosition();
@@ -581,6 +586,9 @@ public class LocalPlayback
             LogHelper.v(TAG, "*** DUPLICATE 'startPlaying' REQUEST *** - enabled="+sPlaybackEnabled+", current state="+getCurrentState());
             if (mMediaPlayer != null) {
                 mMediaPlayer.start();
+                if (mMediaPlayer.isPlaying()) {
+                    setCurrentState(PlaybackStateCompat.STATE_PLAYING);
+                }
             }
         }
         Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
@@ -634,7 +642,9 @@ public class LocalPlayback
         setCurrentStreamPosition(mp.getCurrentPosition());
         if (getCurrentState() == PlaybackStateCompat.STATE_BUFFERING) {
             mMediaPlayer.start();
-            setCurrentState(PlaybackStateCompat.STATE_PLAYING);
+            if (mMediaPlayer.isPlaying()) {
+                setCurrentState(PlaybackStateCompat.STATE_PLAYING);
+            }
         }
         if (mCallback != null) {
             mCallback.onPlaybackStatusChanged(getCurrentState());
