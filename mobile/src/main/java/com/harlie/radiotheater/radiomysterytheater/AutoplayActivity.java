@@ -284,6 +284,16 @@ public class AutoplayActivity extends BaseActivity {
         WearTalkService.connect(RadioTheaterApplication.getInstance().getApplicationContext());
         LogHelper.v(TAG, "notify WearTalkService..");
         WearTalkService.sendRadioDataToWear();
+
+        // ensure the buttons are always available
+        getHandler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                enableButtons();
+                displayScrollingText();
+                showExpectedControls("postDelayed");
+            }
+        }, 6000);
     }
 
     private void runSeekbarUpdateThread() {
@@ -558,6 +568,7 @@ public class AutoplayActivity extends BaseActivity {
             @Override
             public void onClick() { // FloatingActiionButton
                 int lastPlaybackState = LocalPlayback.getCurrentState();
+                DataHelper.getEpisodeInfoFor(DataHelper.getEpisodeNumber());
                 if (PlaybackStateCompat.STATE_PLAYING != lastPlaybackState) {
                     ConfigEpisodesCursor configCursor = DataHelper.getCursorForNextAvailableEpisode();
                     if (DataHelper.getEpisodeDataForCursor(configCursor)) {
@@ -1247,6 +1258,10 @@ public class AutoplayActivity extends BaseActivity {
                 }
                 case PlaybackStateCompat.STATE_ERROR: {
                     //LogHelper.v(TAG, "PlaybackStateCompat.STATE_ERROR");
+                    RadioControlIntentService.startActionStop(this,
+                            "RECOVER",
+                            DataHelper.getEpisodeNumberString(),
+                            DataHelper.getEpisodeDownloadUrl());
                     showAutoplayButton(playbackState);
                     break;
                 }

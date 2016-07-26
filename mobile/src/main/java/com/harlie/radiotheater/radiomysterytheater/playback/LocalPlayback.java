@@ -514,7 +514,9 @@ public class LocalPlayback
         if (mAudioFocus == AUDIO_NO_FOCUS_NO_DUCK) {
             // If we don't have audio focus and can't duck, we have to pause,
             if (getCurrentState() == PlaybackStateCompat.STATE_PLAYING) {
-                pause();
+                Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
+                stop(true);
+                RadioControlIntentService.startActionStop(context, "NO_FOCUS", String.valueOf(LocalPlayback.getCurrentEpisode()), "INCOMING CALL?");
             }
         } else {  // we have audio focus:
             if (mAudioFocus == AUDIO_NO_FOCUS_CAN_DUCK) {
