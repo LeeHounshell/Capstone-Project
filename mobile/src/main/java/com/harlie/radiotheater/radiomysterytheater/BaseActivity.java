@@ -925,7 +925,6 @@ public class BaseActivity extends AppCompatActivity {
 
     protected void problemExistingDatabase(String fileName) {
         LogHelper.w(TAG, "problemExistingDatabase, fileName="+fileName);
-        DataHelper.setCurrentPosition(0);
         AlertDialog alertDialog = new AlertDialog.Builder(BaseActivity.this).create();
         alertDialog.setTitle(getResources().getString(R.string.existing_database));
         alertDialog.setMessage(getResources().getString(R.string.database_existing_problem) + "\n\nfile="+fileName);
@@ -943,7 +942,6 @@ public class BaseActivity extends AppCompatActivity {
 
     protected void problemMissingDatabase(String fileName) {
         LogHelper.w(TAG, "problemMissingDatabase: fileName="+fileName);
-        DataHelper.setCurrentPosition(0);
         AlertDialog alertDialog = new AlertDialog.Builder(BaseActivity.this).create();
         alertDialog.setTitle(getResources().getString(R.string.missing_database));
         alertDialog.setMessage(getResources().getString(R.string.database_missing_problem) + "\n\nfile="+fileName);
@@ -961,7 +959,6 @@ public class BaseActivity extends AppCompatActivity {
 
     protected void problemLoadingDatabase(String error) {
         LogHelper.w(TAG, "problemLoadingDatabase: error="+error);
-        DataHelper.setCurrentPosition(0);
         AlertDialog alertDialog = new AlertDialog.Builder(BaseActivity.this).create();
         alertDialog.setTitle(getResources().getString(R.string.missing_database));
         alertDialog.setMessage(getResources().getString(R.string.database_loading_problem) + "\n\nerror=" + error);

@@ -711,7 +711,6 @@ public class AutoplayActivity extends BaseActivity {
 
     protected void problemLoadingMetadata() {
         LogHelper.v(TAG, "problemLoadingMetadata");
-        DataHelper.setCurrentPosition(0);
         AlertDialog alertDialog = new AlertDialog.Builder(AutoplayActivity.this).create();
         alertDialog.setTitle(getResources().getString(R.string.no_metadata));
         alertDialog.setMessage(getResources().getString(R.string.metadata_loading_problem));
@@ -727,7 +726,6 @@ public class AutoplayActivity extends BaseActivity {
 
     protected void problemWithPlayback() {
         LogHelper.v(TAG, "problemWithPlayback");
-        DataHelper.setCurrentPosition(0);
         AlertDialog alertDialog = new AlertDialog.Builder(AutoplayActivity.this).create();
         alertDialog.setTitle(getResources().getString(R.string.unable_to_load));
         alertDialog.setMessage(getResources().getString(R.string.playback_problem));
@@ -1002,7 +1000,9 @@ public class AutoplayActivity extends BaseActivity {
                 if (getCircularSeekBar() != null && !getCircularSeekBar().isProcessingTouchEvents()) {
                     LoadingAsyncTask.sDoneLoading = true;
                     // we need to determine the current bar location and update the display
-                    DataHelper.setCurrentPosition((long) LocalPlayback.getCurrentPosition());
+                    long new_position = (long) LocalPlayback.getCurrentPosition();
+                    LogHelper.v(TAG, "--> setCurrentPosition: "+new_position);
+                    DataHelper.setCurrentPosition(new_position);
                     getCircularSeekBar().setProgress((int) DataHelper.getCurrentPosition());
                     if (sShowingButton != PLEASE_WAIT) {
                         if (DataHelper.getCurrentPosition() > 0) {
@@ -1144,6 +1144,7 @@ public class AutoplayActivity extends BaseActivity {
     }
 
     private void initializeForEpisode() {
+        LogHelper.v(TAG, "initializeForEpisode");
         sHaveRealDuration = false;
         DataHelper.setDuration(DEFAULT_DURATION); // fifty-minutes in ms
         DataHelper.setCurrentPosition(0);
