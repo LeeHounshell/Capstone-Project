@@ -9,7 +9,7 @@ Two versions are provided: The free app gives each authenticated user access to 
 The paid version is entirely unlocked, with no advertising. Both versions are full featured.
 The app's intended users are "Commuters", "Seniors" and "Disabled." This app is ideal for listening while on the go.
 This app is designed to be easy to see and easy to use. It provides access to radio dramas with minimal device interaction.
-No internationalization is proviced; all shows are in English only.
+No internationalization is provided; all shows are in English only. Includes companion Wear app.
 All radio shows are property of CBS Corporation and are publicly available to download free from http://cbsrmt.com.
 
 
