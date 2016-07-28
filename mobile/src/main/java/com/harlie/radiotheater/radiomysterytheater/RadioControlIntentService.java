@@ -361,6 +361,10 @@ public class RadioControlIntentService extends IntentService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent == null) {
+            LogHelper.e(TAG, "=========>>> onStartCommand: intent is null! - flags="+flags+", startId="+startId);
+            return START_REDELIVER_INTENT;
+        }
         LogHelper.v(TAG, "onStartCommand: intent="+intent.toString());
         super.onStartCommand(intent, flags, startId);
         return START_STICKY; // sticky hint for service to run until explicitly stopped
