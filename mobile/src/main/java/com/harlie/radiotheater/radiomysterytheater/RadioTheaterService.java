@@ -103,6 +103,8 @@ public class RadioTheaterService
 {
     private final static String TAG = "LEE: <" + RadioTheaterService.class.getSimpleName() + ">";
 
+    private DataHelper mDataHelper;
+
     // Extra on MediaSession that contains the Cast device name currently connected to
     public static final String EXTRA_CONNECTED_CAST = "com.harlie.radiotheater.radiomysterytheater.CAST_NAME";
     // The action of the incoming Intent indicating that it contains a command
@@ -169,6 +171,13 @@ public class RadioTheaterService
 
     private boolean mIsConnectedToCar;
     private BroadcastReceiver mCarConnectionReceiver;
+
+
+    public RadioTheaterService() {
+        super();
+        mDataHelper = DataHelper.getInstance();
+        mDataHelper.dummyWork();
+    }
 
     /**
      * Consumer responsible for switching the Playback instances depending on whether
@@ -326,6 +335,7 @@ public class RadioTheaterService
 
         if (ACTION_CMD.equals(action)) {
             LogHelper.v(TAG, "=========>>> ACTION: "+action+", COMMAND="+command+", EPISODE="+episode);
+            mDataHelper.showCurrentInfo();
 
             if (CMD_PLAY.equals(command)) {
                 String title = startIntent.getStringExtra(CMD_PARAM_TITLE);

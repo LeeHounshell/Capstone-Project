@@ -44,6 +44,8 @@ public class RadioControlIntentService extends IntentService {
 
     private final IBinder mBinder = new RadioControlServiceBinder();
 
+    private DataHelper mDataHelper;
+
     public IBinder onBind(Intent arg0) {
         Bundle extras = arg0.getExtras();
         LogHelper.d(TAG,"RadioControlServiceBinder: service - onBind");
@@ -91,6 +93,8 @@ public class RadioControlIntentService extends IntentService {
 
     public RadioControlIntentService() {
         super("RadioControlIntentService");
+        mDataHelper = DataHelper.getInstance();
+        mDataHelper.dummyWork();
     }
 
     @Override
@@ -245,6 +249,7 @@ public class RadioControlIntentService extends IntentService {
     public void onHandleIntent(Intent intent) {
         LogHelper.v(TAG, "onHandleIntent");
         if (intent != null) {
+            mDataHelper.showCurrentInfo();
             final String action = intent.getAction();
             LogHelper.v(TAG, "onHandleIntent: action="+action);
             if (ACTION_START.equals(action)) {
@@ -581,13 +586,14 @@ public class RadioControlIntentService extends IntentService {
             LogHelper.e(TAG, "*** UNABLE TO PLAY *** - handleActionPlay: null episode");
             return;
         }
+        if (episodeDownloadUrl == null || title == null) {
+            DataHelper.getEpisodeInfoFor(Long.parseLong(episode));
+        }
         if (episodeDownloadUrl == null) {
-            LogHelper.e(TAG, "*** UNABLE TO PLAY *** - handleActionPlay: null episodeDownloadUrl");
-            return;
+            episodeDownloadUrl = DataHelper.getEpisodeDownloadUrl();
         }
         if (title == null) {
-            LogHelper.e(TAG, "*** UNABLE TO PLAY *** - handleActionPlay: null title");
-            return;
+            title = DataHelper.getEpisodeTitle();
         }
         mMediaId = RadioTheaterApplication.getRadioTheaterApplicationContext().getResources().getString(R.string.genre);
         LogHelper.d(TAG, "*** INITIALIZE PLAYBACK ***  mMediaId=" + mMediaId + ", episodeDownloadUrl=" + episodeDownloadUrl + ", title=" + title);

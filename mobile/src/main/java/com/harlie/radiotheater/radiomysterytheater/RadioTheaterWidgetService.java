@@ -19,11 +19,16 @@ import com.harlie.radiotheater.radiomysterytheater.utils.RadioTheaterWidgetProvi
 public class RadioTheaterWidgetService extends Service {
     private final static String TAG = "LEE: <" + RadioTheaterWidgetService.class.getSimpleName() + ">";
 
+    private DataHelper mDataHelper;
+
     //private MediaPlayer mp;
 
     private static volatile boolean sGotWidgetButtonPress;
 
     public RadioTheaterWidgetService() {
+        super();
+        mDataHelper = DataHelper.getInstance();
+        mDataHelper.dummyWork();
     }
 
     @Override
@@ -35,6 +40,8 @@ public class RadioTheaterWidgetService extends Service {
 
     private void handleCommand(Intent intent) {
         LogHelper.v(TAG, "handleCommand: intent="+intent.getAction());
+        mDataHelper.showCurrentInfo();
+
         //mp = MediaPlayer.create(this, R.raw.click);
         //mp.start();
 

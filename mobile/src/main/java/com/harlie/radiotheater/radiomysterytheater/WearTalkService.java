@@ -42,12 +42,21 @@ public class WearTalkService
 {
     private static final String TAG = "LEE: <" + WearTalkService.class.getSimpleName() + ">";
 
+    private DataHelper mDataHelper;
+
     private static ConnectionHandler sConnectionHandler;
     private static GoogleApiClient sGoogleApiClient;
     private static RadioStateHolder sRadioStateHolder;
 
     public static final String SYNC_PATH = "/radiomysterytheater/sync";
     public static final String RADIO_INFO_PATH = "/radiomysterytheater/episode";
+
+    public WearTalkService() {
+        super();
+        LogHelper.v(TAG, "WearTalkService");
+        mDataHelper = DataHelper.getInstance();
+        mDataHelper.dummyWork();
+    }
 
     private static class ConnectionHandler
             implements
@@ -259,6 +268,7 @@ public class WearTalkService
                         DataHelper.getEpisodeNumberString(),
                         DataHelper.getEpisodeDownloadUrl());
             }
+            mDataHelper.showCurrentInfo();
         }
         else {
             LogHelper.v(TAG, "=========> UNKNOWN MESSAGE messageEvent: path="+messageEvent.getPath()+", data="+ Arrays.toString(messageEvent.getData()));

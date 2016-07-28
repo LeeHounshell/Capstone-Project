@@ -83,6 +83,8 @@ public class BaseActivity extends AppCompatActivity {
 
     protected static final boolean COPY_PREBUILT_SQLITE_DATABASE = true;
 
+    private DataHelper mDataHelper;
+
     protected static final int MIN_EMAIL_LENGTH = 5;
     protected static final int MIN_PASSWORD_LENGTH = 6;
     protected static final int TOTAL_SIZE_TO_COPY_IN_BYTES = 1347584;
@@ -123,6 +125,9 @@ public class BaseActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         LogHelper.v(TAG, "onCreate");
+        mDataHelper = DataHelper.getInstance();
+        mDataHelper.dummyWork();
+
         sOnRestoreInstanceComplete = false;
 
         Transition enterTransition = new android.transition.Fade();
@@ -364,6 +369,7 @@ public class BaseActivity extends AppCompatActivity {
         LogHelper.v(TAG, "onResume");
         super.onResume();
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        mDataHelper.showCurrentInfo();
     }
 
     @Override
@@ -1353,7 +1359,7 @@ public class BaseActivity extends AppCompatActivity {
                     +", EpisodeWeblinkUrl="+ DataHelper.getEpisodeWeblinkUrl() +", EpisodeDownloadUrl="+ DataHelper.getEpisodeDownloadUrl()
                     +" <<<=========");
 
-            DataHelper.showCurrentInfo();
+            mDataHelper.showCurrentInfo();
         }
     }
 

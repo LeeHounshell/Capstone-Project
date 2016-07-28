@@ -93,6 +93,64 @@ public class DataHelper {
     protected static volatile FirebaseAnalytics sFirebaseAnalytics;
     protected static volatile ConfigurationContentValues sConfiguration;
 
+    private static DataHelper singletonInstance;
+
+    //--------------------------------------------------------------------------------
+    // these are only used to keep an active reference to the statice objects above
+
+    private String mAdvId;
+    private String mName;
+    private String mEmail;
+    private String mPassword;
+    private String mUID;
+
+    private String mAirdate;
+    private String mEpisodeTitle;
+    private String mEpisodeDescription;
+    private String mEpisodeWeblinkUrl;
+    private String mEpisodeDownloadUrl;
+
+    private FirebaseAuth mFirebaseAuth;
+    private Firebase mFirebase;
+    private DatabaseReference mDatabase;
+    private FirebaseAnalytics mFirebaseAnalytics;
+    private ConfigurationContentValues mConfiguration;
+
+    //--------------------------------------------------------------------------------
+
+    private DataHelper() {
+    }
+
+    public void dummyWork() {
+        // none of these are actually used anyplace
+        // this is here to just try and keep Android from reclaiming the static memory above (by referencing it inside an object)
+        mAdvId = sAdvId;
+        mName = sName;
+        mEmail = sEmail;
+        mPassword = sPassword;
+        mUID = sUID;
+
+        mAirdate = sAirdate;
+        mEpisodeTitle = sEpisodeTitle;
+        mEpisodeDescription = sEpisodeDescription;
+        mEpisodeWeblinkUrl = sEpisodeWeblinkUrl;
+        mEpisodeDownloadUrl = sEpisodeDownloadUrl;
+
+        mFirebaseAuth = sFirebaseAuth;
+        mFirebase = sFirebase;
+        mDatabase = sDatabase;
+        mFirebaseAnalytics = sFirebaseAnalytics;
+        mConfiguration = sConfiguration;
+    }
+
+    public static DataHelper getInstance() {
+        LogHelper.v(TAG, "DataHelper: getInstance");
+        if (singletonInstance == null) {
+            singletonInstance = new DataHelper();
+        }
+        return singletonInstance;
+    }
+
     public static ConfigEpisodesContentValues getConfigEpisodeForEpisode(String episode) {
         LogHelper.v(TAG, "SQLITE: getConfigEpisodeForEpisode: episode="+episode);
         if (Long.valueOf(episode) == 0) {
@@ -718,21 +776,6 @@ public class DataHelper {
         return sConfiguration;
     }
 
-    public static void showCurrentInfo() {
-        LogHelper.v(TAG, "===> EPISODE INFO"
-                + ": AllListenCount=" + getAllListenCount()
-                + ": EpisodeTitle=" + getEpisodeTitle()
-                + ": EpisodeNumber=" + getEpisodeNumber()
-                + ": Airdate=" + getAirdate()
-                + ": EpisodeDescription=" + getEpisodeDescription()
-                + ": EpisodeWeblinkUrl=" + getEpisodeWeblinkUrl()
-                + ": EpisodeDownloadUrl=" + getEpisodeDownloadUrl()
-                + ", Purchased=" + isPurchased()
-                + ", NoAdsForShow=" + isNoAdsForShow()
-                + ", Downloaded=" + isDownloaded()
-                + ", EpisodeHeard=" + isEpisodeHeard());
-    }
-
     public static void initializeFirebase() {
         Context context = RadioTheaterApplication.getRadioTheaterApplicationContext();
         Firebase.setAndroidContext(context);
@@ -817,7 +860,9 @@ public class DataHelper {
                         LogHelper.e(TAG, "*** UNABLE TO DECODE LISTEN_COUNT FROM FIREBASE *** - NumberFormatException: configuration="+configurationJSON);
                     }
                 }
-                sConfiguration.putFieldTotalListenCount(decodedListenCount);
+                if (sConfiguration != null) {
+                    sConfiguration.putFieldTotalListenCount(decodedListenCount);
+                }
                 LogHelper.v(TAG, "*** -------------------------------------------------------------------------------- ***");
             }
 
@@ -1500,5 +1545,22 @@ public class DataHelper {
     public static String date_key() {
         return new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.getDefault()).format(new java.util.Date());
     }
+
+    public void showCurrentInfo() {
+        dummyWork();
+        LogHelper.v(TAG, "===> EPISODE INFO"
+                + ": AllListenCount=" + getAllListenCount()
+                + ": EpisodeTitle=" + mEpisodeTitle
+                + ": EpisodeNumber=" + getEpisodeNumber()
+                + ": Airdate=" + mAirdate
+                + ": EpisodeDescription=" + mEpisodeDescription
+                + ": EpisodeWeblinkUrl=" + mEpisodeDownloadUrl
+                + ": EpisodeDownloadUrl=" + mEpisodeDownloadUrl
+                + ", Purchased=" + isPurchased()
+                + ", NoAdsForShow=" + isNoAdsForShow()
+                + ", Downloaded=" + isDownloaded()
+                + ", EpisodeHeard=" + isEpisodeHeard());
+    }
+
 }
 
