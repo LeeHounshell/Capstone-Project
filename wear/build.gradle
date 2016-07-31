@@ -17,16 +17,28 @@ android {
     }
 
     signingConfigs {
-        paid {
+        trialDebug {
+            storeFile file("../keystores-Radio-Mystery-Theater-FREE-DEBUG/lee.hounshell.keystore")
             keyAlias MyKeyAlias
             keyPassword MyKeyPassword
-            storeFile file("../keystores-Radio-Mystery-Theater-PAID/lee.hounshell.keystore")
             storePassword MyStorePassword
         }
-        trial {
+        paidDebug {
+            storeFile file("../keystores-Radio-Mystery-Theater-PAID-DEBUG/lee.hounshell.keystore")
             keyAlias MyKeyAlias
             keyPassword MyKeyPassword
-            storeFile file("../keystores-Radio-Mystery-Theater-FREE/lee.hounshell.keystore")
+            storePassword MyStorePassword
+        }
+        trialRelease {
+            storeFile file("../keystores-Radio-Mystery-Theater-FREE-RELEASE/lee.hounshell.keystore")
+            keyAlias MyKeyAlias
+            keyPassword MyKeyPassword
+            storePassword MyStorePassword
+        }
+        paidRelease {
+            storeFile file("../keystores-Radio-Mystery-Theater-PAID-RELEASE/lee.hounshell.keystore")
+            keyAlias MyKeyAlias
+            keyPassword MyKeyPassword
             storePassword MyStorePassword
         }
     }
@@ -35,17 +47,22 @@ android {
         paid {
             applicationId "com.harlie.radiotheater.radiomysterytheater.paid"
             versionName "1.0-Paid"
-            signingConfig signingConfigs.paid
         }
         trial {
             applicationId "com.harlie.radiotheater.radiomysterytheater"
             versionName "1.0-Trial"
-            signingConfig signingConfigs.trial
         }
     }
 
     buildTypes {
+        debug {
+            productFlavors.paid.signingConfig signingConfigs.paidDebug
+            productFlavors.trial.signingConfig signingConfigs.trialDebug
+        }
         release {
+            productFlavors.paid.signingConfig signingConfigs.paidRelease
+            productFlavors.trial.signingConfig signingConfigs.trialRelease
+            
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
