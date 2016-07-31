@@ -148,7 +148,7 @@ public class RemoteJSONSource implements MusicProviderSource {
         // the session metadata can be accessed by notification listeners.
 
         //--------------------------------------------------------------------------------
-        // FIXME - FAILED BINDER TRANSACTION error with images.  (removed the images from MetaData for temp fix)
+        // TODO - "FAILED BINDER TRANSACTION" error with images.  (removed the images from MetaData for temp fix)
         /*
         07-11 00:50:33.274 8581-8581/com.harlie.radiotheater.radiomysterytheater.paid V/LEE: <QueueManager>: ---------> getCurrentMusic: mediaId=881854013, episodeMediaId=__BY_GENRE__/__RADIO_DRAMA__|881854013, title=The Old Ones Are Hard to Kill
         07-11 00:50:33.274 8581-8581/com.harlie.radiotheater.radiomysterytheater.paid V/LEE: <MusicProvider>: getMusicsByGenre: genre=__RADIO_DRAMA__

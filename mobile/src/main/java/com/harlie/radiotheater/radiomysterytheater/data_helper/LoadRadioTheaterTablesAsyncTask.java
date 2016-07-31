@@ -351,12 +351,12 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
                     //#ENDIF
 
                     //#IFDEF 'TRIAL'
-                    configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS, false); // FIXME: update from Firebase if present
-                    configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_PURCHASED_NOADS, false);  // FIXME: update from Firebase if present
+                    configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_PURCHASED_ACCESS, false); // TODO: update from Firebase if present
+                    configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_PURCHASED_NOADS, false);  // TODO: update from Firebase if present
                     //#ENDIF
 
-                    configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_HEARD, false);    // FIXME: update from Firebase if present
-                    configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_LISTEN_COUNT, 0);         // FIXME: update from Firebase if present
+                    configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_HEARD, false);    // TODO: update from Firebase if present
+                    configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_LISTEN_COUNT, 0);         // TODO: update from Firebase if present
                     configEntry.put(RadioTheaterContract.ConfigEpisodesEntry.FIELD_EPISODE_DOWNLOADED, false);
                     try {
                         Uri result = insertConfigEntryValues(configEntry);
@@ -469,14 +469,12 @@ public class LoadRadioTheaterTablesAsyncTask extends AsyncTask<BaseActivity, Voi
 
     public Uri insertConfigurationValues(ContentValues configurationValues) {
         LogHelper.v(TAG, "insertConfigEntry");
-        // FIXME: need to "update" Firebase record for this user's configuration
         Uri configuration = RadioTheaterContract.ConfigurationEntry.buildConfigurationUri();
         return mActivity.getContentResolver().insert(configuration, configurationValues);
     }
 
     public Uri insertConfigEntryValues(ContentValues configEntryValues) {
         LogHelper.v(TAG, "insertConfigEntry");
-        // FIXME: need to "update" Firebase record for this episode and user
         Uri configEntry = RadioTheaterContract.ConfigEpisodesEntry.buildConfigEpisodesUri();
         return mActivity.getContentResolver().insert(configEntry, configEntryValues);
     }

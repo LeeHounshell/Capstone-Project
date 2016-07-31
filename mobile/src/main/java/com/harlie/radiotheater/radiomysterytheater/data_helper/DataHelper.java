@@ -840,7 +840,7 @@ public class DataHelper {
                 int decodedListenCount = 0;
                 //
                 // since we only need a single value from the JSON use a regex pattern
-                // EXAMPLE JSON: {firebase_user_name=colefklbBSTHPrRWGPt9BWYcCYS2, firebase_device_id=bf5874b5-0cd5-4457-9401-6fd384edb579, firebase_email=lee@harlie.com, firebase_authenticated=true, firebase_total_listen_count=19}
+                // EXAMPLE JSON: {firebase_user_name=colefklbBSTHPrRWGPt9BWYcCYS2, firebase_device_id=bf5874b5-0cd5-4457-9401-6fd384edb579, firebase_email=lee@harlie.com, firebase_authenticated=1469832828393, firebase_total_listen_count=18}
                 //
                 Pattern pattern = Pattern.compile(".*firebase_total_listen_count=([0-9]+).*");
                 Matcher matcher = pattern.matcher((configurationJSON));
@@ -1184,7 +1184,7 @@ public class DataHelper {
             initializeFirebase();
         }
         String  email = getEmail();
-        Boolean authenticated = email != null;
+        Long authenticated = System.currentTimeMillis();
         Long total_listen_count = configurationValues.getAsLong(ConfigurationColumns.FIELD_TOTAL_LISTEN_COUNT);
 
         if (total_listen_count < DataHelper.getAllListenCount()) {
@@ -1443,8 +1443,8 @@ public class DataHelper {
             bundle.putString("user_action", "TRIAL: "+comment);
             //#ENDIF
 
-            sFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
-            logToFirebase(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+            sFirebaseAnalytics.logEvent("special_action", bundle);
+            logToFirebase("special_action", bundle);
         }
     }
 

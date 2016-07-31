@@ -48,7 +48,8 @@ public class CheckPlayStore {
                 intent.addCategory(Intent.CATEGORY_BROWSABLE);
                 intent.setData(Uri.parse(upgradeLink));
                 LogHelper.v(TAG, "STARTACTIVITY: upgradeLink");
-                activity.startActivity(intent); //FIXME: log 'upgrade' web-click to Firebase
+                activity.startActivity(intent);
+                DataHelper.trackWithFirebaseAnalytics("upgrade click", DataHelper.getEmail(), "trial expired. click "+upgradeLink);
                 activity.overridePendingTransition(R.anim.abc_fade_in, R.anim.abc_fade_out);
             }
             catch (ActivityNotFoundException e) {
@@ -73,7 +74,7 @@ public class CheckPlayStore {
                 });
         AlertDialog alertDialog = alertDialogBuilder.create();
         alertDialog.show();
-        //FIXME: log 'upgrade' failure to Firebase
+        DataHelper.trackWithFirebaseAnalytics("upgrade failure", DataHelper.getEmail(), "trial expired. app not on playstore.");
     }
 
     // from: http://stackoverflow.com/questions/15401748/how-to-detect-if-google-play-is-installed-not-market

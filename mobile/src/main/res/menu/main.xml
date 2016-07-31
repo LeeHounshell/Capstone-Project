@@ -6,7 +6,7 @@
 
 <!--
 
-FIXME: because of time-limitations, the voice-search and play-now functionality will be built last, time permitting.
+TODO: voice-search
 
     <item
         android:id="@+id/search"

@@ -107,31 +107,34 @@ public class AuthEmailActivity extends BaseActivity
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        cancelTimer = true;
                         boolean success = false;
-                        if (DataHelper.getEmail() != null && DataHelper.getPass() != null) {
-                            success = task.isSuccessful();
-                            LogHelper.d(TAG, "signInWithEmailAndPassword:onComplete: success=" + success);
+                        try {
+                            cancelTimer = true;
+                            if (task != null && DataHelper.getEmail() != null && DataHelper.getPass() != null) {
+                                success = task.isSuccessful();
+                                LogHelper.d(TAG, "signInWithEmailAndPassword:onComplete: success=" + success);
 
-                            // If sign in fails, display a message to the user. If sign in succeeds
-                            // the auth state listener will be notified and logic to handle the
-                            // signed in user can be handled in the listener.
-                            if (!success) {
-                                success = checkExceptionReason(task, activity);
+                                // If sign in fails, display a message to the user. If sign in succeeds
+                                // the auth state listener will be notified and logic to handle the
+                                // signed in user can be handled in the listener.
                                 if (!success) {
-                                    LogHelper.v(TAG, "no success. signin failed.");
-                                    startAuthenticationActivity();
-                                    return;
+                                    success = checkExceptionReason(task, activity);
+                                    if (!success) {
+                                        LogHelper.v(TAG, "no success. signin failed.");
+                                        startAuthenticationActivity();
+                                        return;
+                                    }
                                 }
+                                if (DataHelper.getUID() == null) {
+                                    @SuppressWarnings("ConstantConditions") String uid = DataHelper.getFirebaseAuth().getCurrentUser().getUid();
+                                    DataHelper.setUID(uid);
+                                }
+                                DataHelper.trackLoginWithFirebaseAnalytics();
+                            } else {
+                                LogHelper.e(TAG, "task or email or password is null!");
                             }
-                            if (DataHelper.getUID() == null) {
-                                @SuppressWarnings("ConstantConditions") String uid = DataHelper.getFirebaseAuth().getCurrentUser().getUid();
-                                DataHelper.setUID(uid);
-                            }
-                            DataHelper.trackLoginWithFirebaseAnalytics();
-                        }
-                        else {
-                            LogHelper.e(TAG, "email or password is null!");
+                        } catch (NullPointerException e) {
+                            LogHelper.e(TAG, "NPE: e=" + e);
                         }
                         handleAuthenticationRequestResult(success);
                     }

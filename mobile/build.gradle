@@ -39,15 +39,15 @@ android {
 
     signingConfigs {
         trial {
+            storeFile file("../keystores-Radio-Mystery-Theater-FREE/lee.hounshell.keystore")
             keyAlias MyKeyAlias
             keyPassword MyKeyPassword
-            storeFile file("../keystores-Radio-Mystery-Theater-FREE/lee.hounshell.keystore")
             storePassword MyStorePassword
         }
         paid {
+            storeFile file("../keystores-Radio-Mystery-Theater-PAID/lee.hounshell.keystore")
             keyAlias MyKeyAlias
             keyPassword MyKeyPassword
-            storeFile file("../keystores-Radio-Mystery-Theater-PAID/lee.hounshell.keystore")
             storePassword MyStorePassword
         }
     }

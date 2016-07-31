@@ -784,9 +784,8 @@ public class BaseActivity extends AppCompatActivity {
             editor.putBoolean("userPaid", paid);
             editor.apply();
 
-            // FIXME: add in-app-payments, allow purchase
-            // FIXME: update local SQLite Configuration table with user info
-            // FIXME: update Firebase record for this user's email to be PAID
+            // TODO: add in-app-payments, allow in-app purchase
+            // TODO: update local SQLite Configuration table with user info
         }
         else {
             // see if a record already exists for this episode

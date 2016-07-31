@@ -12,7 +12,7 @@ public class FirebaseConfiguration {
     public String  firebase_email;
     public String  firebase_user_name;
     public String  firebase_device_id;
-    public Boolean firebase_authenticated;
+    public Long    firebase_authenticated;
     public Boolean firebase_paid_version;
     public Boolean firebase_purchase_access;
     public Boolean firebase_purchase_noads;
@@ -27,7 +27,7 @@ public class FirebaseConfiguration {
             String  email,
             String  user_name,
             String  device_id,
-            Boolean authenticated,
+            Long    authenticated,
             Boolean paid_version,
             Boolean purchase_access,
             Boolean purchase_noads,
@@ -81,7 +81,7 @@ public class FirebaseConfiguration {
         return firebase_user_name;
     }
 
-    public Boolean getFirebase_authenticated() {
+    public Long getFirebase_authenticated() {
         return firebase_authenticated;
     }
 

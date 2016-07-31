@@ -613,6 +613,11 @@ public class AutoplayActivity extends BaseActivity {
 
     private void setupAdMob() {
         // initialize AdMob
+        boolean release = true;
+        //#IFDEF 'DEBUG'
+        release = false;
+        //#ENDIF
+
         //#IFDEF 'TRIAL'
         if (! DataHelper.isPurchased() && ! DataHelper.isNoAdsForShow()) {
             LogHelper.v(TAG, "setupAdMob");
@@ -622,11 +627,23 @@ public class AutoplayActivity extends BaseActivity {
             final TelephonyManager tm = (TelephonyManager) getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
 
             AdView mAdView = (AdView) findViewById(R.id.adView);
-            AdRequest adRequest = new AdRequest.Builder()
+
+            AdRequest adRequest;
+
+            if (release) {
+                LogHelper.v(TAG, "setupAdMob: release");
+                adRequest = new AdRequest.Builder().build();
+            }
+            else {
+                LogHelper.v(TAG, "setupAdMob: debug");
+                adRequest = new AdRequest.Builder()
                     .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)        // All emulators
                     .addTestDevice(getResources().getString(R.string.test_device1))
                     .addTestDevice(getResources().getString(R.string.test_device2))
                     .build();
+            }
+
+            LogHelper.v(TAG, "setupAdMob: loadAd");
             mAdView.loadAd(adRequest);
         }
         //#ENDIF
@@ -815,9 +832,8 @@ public class AutoplayActivity extends BaseActivity {
 /*
             case R.id.search: {
                 LogHelper.v(TAG, "-> SEARCH <-");
-                // FIXME: voice search
-                // FIXME: this 'search' button needs to build a new playlist and then submit that to be the new active playlist.
-                // FIXME: because of time-limitations, this feature will be built last, time permitting.
+                // TODO: voice search
+                // TODO: search function needs to build a new playlist and then submit that to be the new active playlist.
                 trackSearchWithFirebaseAnalytics();
                 return true;
             }

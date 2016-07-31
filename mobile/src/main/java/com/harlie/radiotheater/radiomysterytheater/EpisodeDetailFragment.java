@@ -224,7 +224,7 @@ public class EpisodeDetailFragment extends FragmentBase {
                 @Override
                 public void onClick(View view) {
                     String url = "http://" + mItem.getWeblink();
-                    url = url.replace("episode_name-", "episode-"); // FIXME: database bug for weblink
+                    url = url.replace("episode_name-", "episode-"); // TODO: fix existing database bug for weblink, low priority
                     LogHelper.v(TAG, "onClick - WEB LINK - url="+url);
                     Intent webLinkIntent = new Intent(Intent.ACTION_VIEW);
                     webLinkIntent.setData(Uri.parse(url));

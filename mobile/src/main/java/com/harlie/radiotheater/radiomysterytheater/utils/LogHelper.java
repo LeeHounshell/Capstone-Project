@@ -20,6 +20,7 @@
 
 package com.harlie.radiotheater.radiomysterytheater.utils;
 
+import android.support.v7.appcompat.BuildConfig;
 import android.util.Log;
 
 public class LogHelper {
@@ -44,16 +45,16 @@ public class LogHelper {
 
     public static void v(String tag, Object... messages) {
         // Only log VERBOSE if build type is DEBUG
-        //if (BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG) {
             log(tag, Log.VERBOSE, null, messages);
-        //}
+        }
     }
 
     public static void d(String tag, Object... messages) {
         // Only log DEBUG if build type is DEBUG
-        //if (BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG) {
             log(tag, Log.DEBUG, null, messages);
-        //}
+        }
     }
 
     public static void i(String tag, Object... messages) {
@@ -77,13 +78,11 @@ public class LogHelper {
     }
 
     public static void log(String tag, int level, Throwable t, Object... messages) {
-        //tag = tag.substring(0, Math.min(tag.length(), MAX_LOG_TAG_LENGTH));
-        // FIXME
-        //if (Log.isLoggable(tag, level)) {
+        tag = tag.substring(0, Math.min(tag.length(), MAX_LOG_TAG_LENGTH));
+        if (Log.isLoggable(tag, level)) {
             String message;
             if (t == null && messages != null && messages.length == 1) {
                 // handle this common case without the extra cost of creating a stringbuffer:
-                //message = messages[0].toString().replace("com.harlie.radiotheater.radiomysterytheater", "harlie.");
                 message = messages[0].toString();
             } else {
                 StringBuilder sb = new StringBuilder();
@@ -93,7 +92,6 @@ public class LogHelper {
                 if (t != null) {
                     sb.append("\n").append(Log.getStackTraceString(t));
                 }
-                //message = sb.toString().replace("com.harlie.radiotheater.radiomysterytheater", "harlie.");
                 message = sb.toString();
             }
             //Log.println(level, tag, message);
@@ -119,6 +117,6 @@ public class LogHelper {
                     break;
                 }
             }
-        //}
+        }
     }
 }

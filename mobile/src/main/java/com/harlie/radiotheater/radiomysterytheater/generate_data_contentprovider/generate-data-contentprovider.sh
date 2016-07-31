@@ -20,19 +20,19 @@ mv ${TMP}/com/harlie/radiotheater/radiomysterytheater/data ${OUTPUT}
 rm -fr ${TMP}
 cd ${ORIG_DIR}
 
-#
-# FIXME: remember to hand-edit the data/RadioTheaterProvider.java
-# FIXME: use different content AUTHORITY via #IFDEF 'PAID' and 'TRIAL'
-#
+echo
+echo " TODO: remember to hand-edit the data/RadioTheaterProvider.java"
+echo " TODO: use different content AUTHORITY via #IFDEF 'PAID' and 'TRIAL', e.g.:"
+echo
 
-#
-#    // NOTE: these values must match the values/values.xml:radio_theater_content_authority
-#
-#//#IFDEF 'PAID'
-#    //public static final String AUTHORITY = "com.harlie.radiotheater.radiomysterytheater.paid.data.radiotheaterprovider";
-#//#ENDIF
-#
-#//#IFDEF 'TRIAL'
-#    public static final String AUTHORITY = "com.harlie.radiotheater.radiomysterytheater.trial.data.radiotheaterprovider";
-#//#ENDIF
-#
+echo
+echo "    // NOTE: these values must match the values/values.xml:radio_theater_content_authority"
+echo
+echo "//#IFDEF 'PAID'"
+echo '    //public static final String AUTHORITY = "com.harlie.radiotheater.radiomysterytheater.paid.data.radiotheaterprovider";'
+echo "//#ENDIF"
+echo
+echo "//#IFDEF 'TRIAL'"
+echo '    public static final String AUTHORITY = "com.harlie.radiotheater.radiomysterytheater.trial.data.radiotheaterprovider";'
+echo "//#ENDIF"
+echo

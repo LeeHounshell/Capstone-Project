@@ -8,7 +8,7 @@ import android.support.v7.widget.Toolbar;
 import com.harlie.radiotheater.radiomysterytheater.data_helper.DataHelper;
 import com.harlie.radiotheater.radiomysterytheater.utils.LogHelper;
 
-// FIXME
+// TODO
 public class AuthTwitterActivity extends BaseActivity
 {
     private final static String TAG = "LEE: <" + AuthTwitterActivity.class.getSimpleName() + ">";

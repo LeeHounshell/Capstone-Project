@@ -205,7 +205,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
         }
 
         @Override
-        public boolean onDoubleTap(MotionEvent e) { // FIXME
+        public boolean onDoubleTap(MotionEvent e) {
             LogHelper.v(TAG, "onDoubleTap");
             onDoubleClick();
             return super.onDoubleTap(e);

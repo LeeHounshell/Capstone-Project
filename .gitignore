@@ -15,6 +15,10 @@ mobile/src/main/assets/trial
 keystores-Radio-Mystery-Theater-FREE
 keystores-Radio-Mystery-Theater-PAID
 
+configuration-list.txt
+configuration.tar
+new-gradle.properties
+
 .gradle
 .DS_Store
 
